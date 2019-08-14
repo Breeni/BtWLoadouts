@@ -1,0 +1,8 @@
+## Interface: 80200
+## Title: BtWSets
+## Version: 1
+## Notes: 
+## Author: Breen
+## SavedVariables: BtWSetsSets, BtWSetsSpecInfo, BtWSetsRoleInfo
+
+BtWSets.xml
