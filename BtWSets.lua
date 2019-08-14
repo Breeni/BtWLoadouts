@@ -1418,13 +1418,13 @@ local specInfo = {
 	},
 };
 local roleInfo = {
-	[1] = {
+	["TANK"] = {
 		essences = {},
 	},
-	[2] = {
+	["HEALER"] = {
 		essences = {},
 	},
-	[3] = {
+	["DAMAGER"] = {
 		essences = {},
 	},
 };
@@ -1480,13 +1480,16 @@ local function GetPvPTalentInfoForSpecID(specID, index)
     end
 end
 local MAX_ESSENCES = 11;
+local function GetEssenceInfoByID(essenceID)
+	return BtWSetsEssenceInfo and BtWSetsEssenceInfo[essenceID] or C_AzeriteEssence.GetEssenceInfo(essenceID);
+end
 local function GetEssenceInfoForRole(role, index)
-    if BtWSetsRoleInfo[role] and BtWSetsRoleInfo[role].essences and BtWSetsRoleInfo[role].essences[index] then
-        return C_AzeriteEssence.GetEssenceInfo(BtWSetsRoleInfo[role].essences[index]);
+	if BtWSetsRoleInfo[role] and BtWSetsRoleInfo[role].essences and BtWSetsRoleInfo[role].essences[index] then
+        return GetEssenceInfoByID(BtWSetsRoleInfo[role].essences[index]);
     end
 
     if roleInfo[role] and roleInfo[role].essences and roleInfo[role].essences[index] then
-        return C_AzeriteEssence.GetEssenceInfo(roleInfo[role].essences[index]);
+        return GetEssenceInfoByID(roleInfo[role].essences[index]);
     end
 end
 
@@ -1603,7 +1606,7 @@ local function AddEssenceSet()
     selected[117] = C_AzeriteEssence.GetMilestoneEssence(117);
 
     local set = {
-        role = roleIndexes[role],
+        role = role,
         name = name,
         essences = selected,
     };
@@ -1656,6 +1659,56 @@ local function GetTabFrame(self, tabID)
         return self.Essences;
     elseif tabID == TAB_EQUIPMENT then
         return self.Equipment;
+    end
+end
+
+local function RoleDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+    if selectedTab == TAB_ESSENCES then
+        local temp = tab.temp;
+        -- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
+        -- the temp table instead of copying the talentIDs around
+
+        -- We are going to copy the currently selected talents for the currently selected spec into
+        -- a temporary table incase the user switches specs back
+        local role = set.role;
+        if temp[role] then
+            wipe(temp[role]);
+        else
+            temp[role] = {};
+        end
+        for milestoneID, essenceID in pairs(set.essences) do
+            temp[role][milestoneID] = essenceID;
+        end
+
+        -- Clear the current talents and copy back the previously selected talents if they exist
+        role = arg1;
+        set.role = role;
+        wipe(set.essences);
+        if temp[role] then
+            for milestoneID, essenceID in pairs(temp[role]) do
+                set.essences[milestoneID] = essenceID;
+            end
+        end
+    end
+    BtWSetsFrame:Update();
+end
+local function RoleDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+    
+    if (level or 1) == 1 then
+        for _,role in ipairs(roles) do
+            info.text = _G[role];
+            info.arg1 = role;
+            info.func = RoleDropDown_OnClick;
+            info.checked = self:GetParent().set.role == role;
+            UIDropDownMenu_AddButton(info, level);
+        end
     end
 end
 
@@ -1848,7 +1901,7 @@ local function EssencesDropDownInit(self, level, menuList)
         
         local set = tab.set;
 
-        local role = roleIndexes[select(5, GetSpecializationInfoByID(set.specID))];
+        local role = select(5, GetSpecializationInfoByID(set.specID));
     
         wipe(setsFiltered);
         local sets = BtWSetsSets.essences;
@@ -1953,7 +2006,7 @@ function BtWSetsSetsScrollFrame_Update()
 
             button.isHeader = item.isHeader;
 			if item.isHeader then
-                button:SetID(item.id);
+                button.id = item.id;
 
                 button.SelectedBar:Hide();
 
@@ -1966,7 +2019,7 @@ function BtWSetsSetsScrollFrame_Update()
                 end
             else
                 if not item.isAdd then
-                    button:SetID(item.id);
+					button.id = item.id;
                 
                     button.SelectedBar:SetShown(item.selected);
                 end
@@ -2068,14 +2121,14 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
         setsFiltered[set.role][#setsFiltered[set.role]+1] = setID;
     end
 
-	local role = roleIndexes[select(5, GetSpecializationInfo(GetSpecialization()))];
+	local role = select(5, GetSpecializationInfo(GetSpecialization()));
 	local isCollapsed = collapsed[role] and true or false;
 	if setsFiltered[role] then
 		setScrollItems[#setScrollItems+1] = {
 			id = role,
 			isHeader = true,
 			isCollapsed = isCollapsed,
-			name = _G[roles[role]],
+			name = _G[role],
 		};
 		if not isCollapsed then
 			sort(setsFiltered[role], function (a,b)
@@ -2092,7 +2145,7 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
 	end
 
 	local playerRole = role;
-	for role=1,3 do
+	for _,role in ipairs(roles) do
 		if role ~= playerRole then
 			local isCollapsed = collapsed[role] and true or false;
 			if setsFiltered[role] then
@@ -2100,7 +2153,7 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
 					id = role,
 					isHeader = true,
 					isCollapsed = isCollapsed,
-					name = _G[roles[role]],
+					name = _G[role],
 				};
 				if not isCollapsed then
 					sort(setsFiltered[role], function (a,b)
@@ -2347,7 +2400,7 @@ local function TalentsTabUpdate(self)
             local item = self.rows[tier].talents[column];
             local talentID, name, texture, _, _, spellID = GetTalentInfoForSpecID(specID, tier, column);
 
-            item:SetID(talentID);
+			item.id = talentID;
             item.name:SetText(name);
             item.icon:SetTexture(texture);
             
@@ -2467,7 +2520,7 @@ local function PvPTalentsTabUpdate(self)
         local talentID, name, texture, _, _, spellID = GetPvPTrinketTalentInfo(specID, column);
 
 		item.isPvP = true;
-        item:SetID(talentID);
+		item.id = talentID;
         item.name:SetText(name);
         item.icon:SetTexture(texture);
         
@@ -2495,7 +2548,7 @@ local function PvPTalentsTabUpdate(self)
 		
 		if talentID then
 			item.isPvP = true;
-			item:SetID(talentID);
+			item.id = talentID;
 			item.name:SetText(name);
 			item.icon:SetTexture(texture);
 			
@@ -2533,7 +2586,7 @@ local function EssenceScrollFrameUpdate(self)
 		local essence = GetEssenceInfoForRole(role, index);
 		
 		if essence then
-			item:SetID(essence.ID);
+			item.id = essence.ID;
 			item.Name:SetText(essence.name);
 			item.Icon:SetTexture(essence.icon);
 			item.ActivatedMarkerMain:SetShown(selected[115] == essence.ID);
@@ -2550,50 +2603,42 @@ local function EssenceScrollFrameUpdate(self)
 end
 local function EssencesTabUpdate(self)
     if not self.set.role then
-        self.set.role = roleIndexes[select(5, GetSpecializationInfo(GetSpecialization()))];
+        self.set.role = select(5, GetSpecializationInfo(GetSpecialization()));
 	end
 
     local role = self.set.role;
     local selected = self.set.essences;
 	
-    -- UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
+    UIDropDownMenu_SetText(self.RoleDropDown, _G[self.set.role]);
 
-    -- if self.set.inUse then
-    --     UIDropDownMenu_DisableDropDown(self.SpecDropDown);
-    -- else
-    --     UIDropDownMenu_EnableDropDown(self.SpecDropDown);
-    -- end
+    if self.set.inUse then
+        UIDropDownMenu_DisableDropDown(self.RoleDropDown);
+    else
+        UIDropDownMenu_EnableDropDown(self.RoleDropDown);
+    end
 
-	-- self.Name:SetText(self.set.name or "");
+	self.Name:SetText(self.set.name or "");
 
     for milestoneID,item in pairs(self.Slots) do
 		local essenceID = self.set.essences[milestoneID];
 		item.milestoneID = milestoneID;
 
 		if essenceID then
-			local info = C_AzeriteEssence.GetEssenceInfo(essenceID);
+			local info = GetEssenceInfoByID(essenceID);
 
-			item:SetID(essenceID);
+			item.id = essenceID;
 			
 			item.Icon:Show();
 			item.Icon:SetTexture(info.icon);
 			item.EmptyGlow:Hide();
 			item.EmptyIcon:Hide();
 		else
+			item.id = nil;
+
 			item.Icon:Hide();
 			item.EmptyGlow:Show();
 			item.EmptyIcon:Show();
 		end
-        -- item.name:SetText(name);
-        -- item.icon:SetTexture(texture);
-        
-        -- if selected[talentID] then
-        --     item.knownSelection:Show();
-        --     item.icon:SetDesaturated(false);
-        -- else
-        --     item.knownSelection:Hide();
-        --     item.icon:SetDesaturated(true);
-        -- end
 	end
 	
 	EssenceScrollFrameUpdate(self.EssenceList);
@@ -2655,6 +2700,11 @@ function BtWSetsFrameMixin:OnLoad()
     UIDropDownMenu_SetWidth(self.PvPTalents.SpecDropDown, 170);
     UIDropDownMenu_Initialize(self.PvPTalents.SpecDropDown, SpecDropDownInit);
 	UIDropDownMenu_JustifyText(self.PvPTalents.SpecDropDown, "LEFT");
+
+
+    UIDropDownMenu_SetWidth(self.Essences.RoleDropDown, 170);
+    UIDropDownMenu_Initialize(self.Essences.RoleDropDown, RoleDropDownInit);
+	UIDropDownMenu_JustifyText(self.Essences.RoleDropDown, "LEFT");
 	
 
 	self.Essences.Slots = {
@@ -2736,10 +2786,10 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:SetFocus();
             end)
         elseif button.isHeader then
-            profilesCollapsedBySpecID[button:GetID()] = not profilesCollapsedBySpecID[button:GetID()] and true or nil;
+            profilesCollapsedBySpecID[button.id] = not profilesCollapsedBySpecID[button.id] and true or nil;
             ProfilesTabUpdate(frame);
         else
-            self:SetProfile(GetProfile(button:GetID()));
+            self:SetProfile(GetProfile(button.id));
             frame.Name:ClearFocus();
         end
     elseif selectedTab == TAB_TALENTS then
@@ -2751,10 +2801,10 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 Talents.Name:SetFocus();
             end)
         elseif button.isHeader then
-            talentSetsCollapsedBySpecID[button:GetID()] = not talentSetsCollapsedBySpecID[button:GetID()] and true or nil;
+            talentSetsCollapsedBySpecID[button.id] = not talentSetsCollapsedBySpecID[button.id] and true or nil;
             TalentsTabUpdate(self.Talents);
         else
-            self:SetTalentSet(GetTalentSet(button:GetID()));
+            self:SetTalentSet(GetTalentSet(button.id));
             Talents.Name:ClearFocus();
         end
     elseif selectedTab == TAB_PVP_TALENTS then
@@ -2766,10 +2816,10 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 PvPTalents.Name:SetFocus();
             end)
         elseif button.isHeader then
-            pvpTalentSetsCollapsedBySpecID[button:GetID()] = not pvpTalentSetsCollapsedBySpecID[button:GetID()] and true or nil;
+            pvpTalentSetsCollapsedBySpecID[button.id] = not pvpTalentSetsCollapsedBySpecID[button.id] and true or nil;
             PvPTalentsTabUpdate(self.PvPTalents);
         else
-            self:SetPvPTalentSet(GetPvPTalentSet(button:GetID()));
+            self:SetPvPTalentSet(GetPvPTalentSet(button.id));
             PvPTalents.Name:ClearFocus();
         end
     elseif selectedTab == TAB_ESSENCES then
@@ -2781,10 +2831,10 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:SetFocus();
             end)
         elseif button.isHeader then
-            essenceSetsCollapsedByRole[button:GetID()] = not essenceSetsCollapsedByRole[button:GetID()] and true or nil;
+            essenceSetsCollapsedByRole[button.id] = not essenceSetsCollapsedByRole[button.id] and true or nil;
             EssencesTabUpdate(frame);
         else
-            self:SetEssenceSet(GetEssenceSet(button:GetID()));
+            self:SetEssenceSet(GetEssenceSet(button.id));
             frame.Name:ClearFocus();
         end
     end
@@ -2797,7 +2847,7 @@ end
 function BtWSetsTalentButtonMixin:OnClick()
     local row = self:GetParent();
     local talents = row:GetParent();
-    local talentID = self:GetID();
+    local talentID = self.id;
 
     if talents.set.talents[talentID] then
         talents.set.talents[talentID] = nil;
@@ -2812,7 +2862,7 @@ function BtWSetsTalentButtonMixin:OnClick()
 
         for _,item in ipairs(row.talents) do
             if item ~= self then
-                talents.set.talents[item:GetID()] = nil;
+                talents.set.talents[item.id] = nil;
 
 			    item.knownSelection:Hide();
                 item.icon:SetDesaturated(true);
@@ -2823,9 +2873,9 @@ end
 function BtWSetsTalentButtonMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 	if self.isPvP then
-		GameTooltip:SetPvpTalent(self:GetID(), true);
+		GameTooltip:SetPvpTalent(self.id, true);
 	else
-		GameTooltip:SetTalent(self:GetID(), true);
+		GameTooltip:SetTalent(self.id, true);
 	end
 end
 function BtWSetsTalentButtonMixin:OnLeave()
@@ -2836,7 +2886,7 @@ BtWSetsTalentGridButtonMixin = CreateFromMixins(BtWSetsTalentButtonMixin);
 function BtWSetsTalentGridButtonMixin:OnClick()
     local grid = self:GetParent();
     local talents = grid:GetParent();
-    local talentID = self:GetID();
+    local talentID = self.id;
 
     if talents.set.talents[talentID] then
         talents.set.talents[talentID] = nil;
@@ -2858,9 +2908,9 @@ function BtWSetsAzeriteMilestoneSlotMixin:OnLoad()
 	self.EmptyGlow.Anim:Play();
 end
 function BtWSetsAzeriteMilestoneSlotMixin:OnEnter()
-	if self:GetID() then
+	if self.id then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-		GameTooltip:SetAzeriteEssence(self:GetID(), 4);
+		GameTooltip:SetAzeriteEssence(self.id, 4);
 		GameTooltip_SetBackdropStyle(GameTooltip, GAME_TOOLTIP_BACKDROP_STYLE_AZERITE_ITEM);
 	end
 
@@ -2896,13 +2946,13 @@ end
 BtWSetsAzeriteEssenceButtonMixin = {};
 function BtWSetsAzeriteEssenceButtonMixin:OnClick()
 	SetCursor("interface/cursor/cast.blp");
-	BtWSetsFrame.Essences.pending = self:GetID();
+	BtWSetsFrame.Essences.pending = self.id;
 	BtWSetsFrame:Update();
 end
 function BtWSetsAzeriteEssenceButtonMixin:OnEnter()
-	if self:GetID() then
+	if self.id then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-		GameTooltip:SetAzeriteEssence(self:GetID(), 4);
+		GameTooltip:SetAzeriteEssence(self.id, 4);
 	end
 
 	if BtWSetsFrame.Essences.pending then
@@ -3243,7 +3293,7 @@ function frame:ADDON_LOADED(...)
             },
             essences = {
                 [1] = {
-                    role = 3,
+                    role = "DAMAGER",
                     name = "Outlaw M+",
                     essences = {
                         [115] = 5,
@@ -3258,6 +3308,7 @@ function frame:ADDON_LOADED(...)
 
         BtWSetsSpecInfo = BtWSetsSpecInfo or {};
         BtWSetsRoleInfo = BtWSetsRoleInfo or {};
+        BtWSetsEssenceInfo = BtWSetsEssenceInfo or {};
     end
 end
 function frame:PLAYER_ENTERING_WORLD()
@@ -3309,7 +3360,7 @@ function frame:PLAYER_ENTERING_WORLD()
 	end
 
 	do
-		local roleID = roleIndexes[select(5, GetSpecializationInfo(GetSpecialization()))];
+		local roleID = select(5, GetSpecializationInfo(GetSpecialization()));
 		local role = BtWSetsRoleInfo[roleID] or {};
 		
 		role.essences = role.essences or {};
@@ -3322,6 +3373,14 @@ function frame:PLAYER_ENTERING_WORLD()
 			if essence.valid then
 				role.essences[#role.essences+1] = essence.ID;
 			end
+
+			local essenceInfo = BtWSetsEssenceInfo[essence.ID] or {};
+			wipe(essenceInfo);
+			essenceInfo.ID = essence.ID;
+			essenceInfo.name = essence.name;
+			essenceInfo.icon = essence.icon;
+
+			BtWSetsEssenceInfo[essence.ID] = essenceInfo;
 		end
 
 		BtWSetsRoleInfo[roleID] = role;

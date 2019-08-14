@@ -645,7 +645,7 @@
 			</OnClick>
 		</Scripts>
 	</Button>
-	<Frame name="BtWSetsFrame" mixin="BtWSetsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="MEDIUM" movable="true">
+	<Frame name="BtWSetsFrame" mixin="BtWSetsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true">
 		<Size x="779" y="436"/>
 		<Anchors>
 			<Anchor point="CENTER"/>
@@ -970,9 +970,30 @@
 					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
 				</Anchors>
 				<Frames>
+					<Frame name="$parentRoleDropDown" parentKey="RoleDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="0" y="0"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
+					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
+						<Size x="0" y="22"/>
+						<Anchors>
+							<Anchor point="LEFT" relativeKey="$parent.RoleDropDown" relativePoint="RIGHT" x="10" y="3"/>
+							<Anchor point="RIGHT" x="0" y="0"/>
+						</Anchors>
+						<Scripts>
+							<OnTextChanged>
+								self:GetParent().set.name = self:GetText();
+								BtWSetsFrame:Update();
+							</OnTextChanged>
+							<OnEnterPressed function="EditBox_ClearFocus"/>
+						</Scripts>
+					</EditBox>
 					<Button inherits="BtWSetsAzeriteMilestoneMajorSlotTemplate" parentKey="MajorSlot" virtual="true">
 						<Anchors>
-							<Anchor point="CENTER" relativePoint="CENTER" x="-100" y="0"/>
+							<Anchor point="CENTER" relativePoint="CENTER" x="-100" y="-20"/>
 						</Anchors>
 					</Button>
 					<Button inherits="BtWSetsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1" virtual="true">
@@ -988,7 +1009,7 @@
 					<ScrollFrame parentKey="EssenceList" inherits="HybridScrollFrameTemplate">
 						<Size x="185" y="250"/>
 						<Anchors>
-							<Anchor point="TOPRIGHT" x="-20" y="0"/>
+							<Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="-20" y="-10"/>
 							<Anchor point="BOTTOM" x="-20" y="0"/>
 						</Anchors>
 						<Frames>
