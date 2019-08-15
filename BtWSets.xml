@@ -633,6 +633,7 @@
         <Scripts>
             <OnLoad method="OnLoad"/>
             <OnClick method="OnClick"/>
+            <OnReceiveDrag method="OnReceiveDrag"/>
             <!-- <OnEvent>
 				BtWSetsItemSlotButton_OnEvent(self, event, ...);
 			</OnEvent>

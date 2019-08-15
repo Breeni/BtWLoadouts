@@ -2072,13 +2072,20 @@ function BtWSetsSetsScrollFrame_Update()
 
                 button.ExpandedIcon:Hide();
                 button.CollapsedIcon:Hide();
-            end
-
-			if item.character then
-				button.name:SetText(format("%s |cFFD5D5D5(%s)|r", item.name, item.character));
-			else
-				button.name:SetText(item.name);
 			end
+			
+			local name;
+			if item.character then
+				local characterInfo = GetCharacterInfo(item.character);
+				-- local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+				-- name = format("%s |cFFD5D5D5(%s|cFFD5D5D5 - %s)|r", item.name, classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+				
+				name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
+				-- button.name:SetText(format("%s |cFFD5D5D5(%s)|r", item.name, item.character));
+			else
+				name = item.name;
+			end
+			button.name:SetText(name);
             button:Show();
         else
             button:Hide();
@@ -2249,11 +2256,14 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 	local character = realm .. "-" .. name;
 	if setsFiltered[character] then
 		local isCollapsed = collapsed[character] and true or false;
+		local characterInfo = GetCharacterInfo(character);
+		local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+		local name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
 		setScrollItems[#setScrollItems+1] = {
 			id = character,
 			isHeader = true,
 			isCollapsed = isCollapsed,
-			name = character,
+			name = name,
 		};
 		if not isCollapsed then
 			sort(setsFiltered[character], function (a,b)
@@ -2274,11 +2284,14 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 		if character ~= playerCharacter then
 			if setsFiltered[character] then
 				local isCollapsed = collapsed[character] and true or false;
+				local characterInfo = GetCharacterInfo(character);
+				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+				local name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
 				setScrollItems[#setScrollItems+1] = {
 					id = character,
 					isHeader = true,
 					isCollapsed = isCollapsed,
-					name = character,
+					name = name,
 				};
 				if not isCollapsed then
 					sort(setsFiltered[character], function (a,b)
@@ -3116,6 +3129,14 @@ function BtWSetsItemSlotButtonMixin:OnClick()
 		self:SetItem(nil);
 	end
 end
+function BtWSetsItemSlotButtonMixin:OnReceiveDrag()
+	local cursorType, _, itemLink = GetCursorInfo();
+	if cursorType == "item" then
+		if self:SetItem(itemLink) then
+			ClearCursor();
+		end
+	end
+end
 function BtWSetsItemSlotButtonMixin:GetSlot()
 	return self.slot;
 end
@@ -3594,7 +3615,7 @@ function frame:PLAYER_ENTERING_WORLD()
 		local race = select(3, UnitRace("player"));
 		local sex = UnitSex("player") - 2;
 
-		BtWSetsCharacterInfo[realm .. "-" .. name] = {class = class, race = race, sex = sex};
+		BtWSetsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
 	end
 end
 function frame:PLAYER_ENTER_COMBAT()
