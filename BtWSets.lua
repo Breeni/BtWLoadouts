@@ -1429,22 +1429,6 @@ local roleInfo = {
 	},
 };
 local MAX_PVP_TALENTS = 15;
--- local function GetClassIDForSpecID(specID)
---     for specIndex=1,GetNumSpecializations() do
---         local playerSpecID = GetSpecializationInfo(specIndex);
---         if playerSpecID == specID then
---             return GetTalentInfoBySpecialization(specIndex, tier, column);
---         end
---     end
-
---     if BtWSetsSpecInfo[specID] then
---         return GetTalentInfoByID(BtWSetsSpecInfo[specID].talents[tier][column]);
---     end
-
---     if specInfo[specID] then
---         return GetTalentInfoByID(specInfo[specID].talents[tier][column]);
---     end
--- end
 local function GetTalentInfoForSpecID(specID, tier, column)
     for specIndex=1,GetNumSpecializations() do
         local playerSpecID = GetSpecializationInfo(specIndex);
@@ -1683,24 +1667,15 @@ end
 
 local setsFiltered = {};
 
-local NUM_TABS = 5;
+local NUM_TABS = 6;
 local TAB_PROFILES = 1;
 local TAB_TALENTS = 2;
 local TAB_PVP_TALENTS = 3;
 local TAB_ESSENCES = 4;
 local TAB_EQUIPMENT = 5;
+local TAB_CONDITIONS = 6;
 local function GetTabFrame(self, tabID)
-	if tabID == TAB_PROFILES then
-        return self.Profiles;
-    elseif tabID == TAB_TALENTS then
-        return self.Talents;
-    elseif tabID == TAB_PVP_TALENTS then
-        return self.PvPTalents;
-    elseif tabID == TAB_ESSENCES then
-        return self.Essences;
-    elseif tabID == TAB_EQUIPMENT then
-        return self.Equipment;
-    end
+	return self.TabFrames[tabID];
 end
 
 local function RoleDropDown_OnClick(self, arg1, arg2, checked)
@@ -2315,6 +2290,30 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
     };
     BtWSetsSetsScrollFrame_Update();
 end
+local function SetsScrollFrame_NoFilter(selected, sets)
+    wipe(setScrollItems);
+    wipe(setsFiltered);
+    for setID,set in pairs(sets) do
+        setsFiltered[#setsFiltered+1] = setID;
+	end
+	sort(setsFiltered, function (a,b)
+		return sets[a].name < sets[b].name;
+	end)
+
+	for _,setID in ipairs(setsFiltered) do
+		setScrollItems[#setScrollItems+1] = {
+			id = setID,
+			name = sets[setID].name,
+			selected = sets[setID] == selected,
+		};
+	end
+
+    setScrollItems[#setScrollItems+1] = {
+        isAdd = true,
+        name = "Add New",
+    };
+    BtWSetsSetsScrollFrame_Update();
+end
 
 local function ProfilesTabUpdate(self)
     if not self.set.specID then
@@ -2739,6 +2738,9 @@ local function EquipmentTabUpdate(self)
 
 	SetsScrollFrame_CharacterFilter(self.set, BtWSetsSets.equipment, equipmentSetsCollapsedByCharacter);
 end
+local function ConditionsTabUpdate(self)
+    SetsScrollFrame_NoFilter(self.set, BtWSetsSets.conditions);
+end
 
 BtWSetsFrameMixin = {};
 function BtWSetsFrameMixin:OnLoad()
@@ -2797,8 +2799,6 @@ function BtWSetsFrameMixin:OnLoad()
     UIDropDownMenu_SetWidth(self.Essences.RoleDropDown, 170);
     UIDropDownMenu_Initialize(self.Essences.RoleDropDown, RoleDropDownInit);
 	UIDropDownMenu_JustifyText(self.Essences.RoleDropDown, "LEFT");
-	
-
 	self.Essences.Slots = {
 		[115] = self.Essences.MajorSlot,
 		[116] = self.Essences.MinorSlot1,
@@ -2808,6 +2808,7 @@ function BtWSetsFrameMixin:OnLoad()
 	HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWSetsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 	self.Essences.EssenceList.update = EssenceScrollFrameUpdate;
 
+	
 	self.Equipment.flyoutSettings = {
 		onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,
 		getItemsFunc = PaperDollFrameItemFlyout_GetItems,
@@ -2879,7 +2880,9 @@ function BtWSetsFrameMixin:Update()
     elseif selectedTab == TAB_ESSENCES then
         EssencesTabUpdate(self.Essences);
     elseif selectedTab == TAB_EQUIPMENT then
-        EquipmentTabUpdate(self.Equipment);
+		EquipmentTabUpdate(self.Equipment);
+	elseif selectedTab == TAB_CONDITIONS then
+		ConditionsTabUpdate(self.Conditions);
     end
 end
 function BtWSetsFrameMixin:ScrollItemClick(button)
@@ -3086,6 +3089,7 @@ end
 BtWSetsItemSlotButtonMixin = {};
 function BtWSetsItemSlotButtonMixin:OnLoad()
 	self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+	-- self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 
 	local id, textureName, checkRelic = GetInventorySlotInfo(self:GetSlot());
 	self:SetID(id);
@@ -3137,6 +3141,36 @@ function BtWSetsItemSlotButtonMixin:OnReceiveDrag()
 		end
 	end
 end
+function BtWSetsItemSlotButtonMixin:OnEvent(event, itemID, success)
+	if success then
+		local set = self:GetParent().set;
+		local slot = self:GetID();
+		local itemLink = set.equipment[slot];
+
+		if itemLink and itemID == GetItemInfoInstant(itemLink) then
+			self:Update();
+			self:UnregisterEvent("GET_ITEM_INFO_RECEIVED");
+		end
+	end
+end
+function BtWSetsItemSlotButtonMixin:OnEnter()
+	local set = self:GetParent().set;
+	local slot = self:GetID();
+	local itemLink = set.equipment[slot];
+
+	if itemLink then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:SetHyperlink(itemLink);
+	end
+end
+function BtWSetsItemSlotButtonMixin:OnLeave()
+	GameTooltip:Hide();
+end
+function BtWSetsItemSlotButtonMixin:OnUpdate()
+	if GameTooltip:IsOwned(self) then
+		self:OnEnter();
+	end
+end
 function BtWSetsItemSlotButtonMixin:GetSlot()
 	return self.slot;
 end
@@ -3171,6 +3205,9 @@ function BtWSetsItemSlotButtonMixin:Update()
 	if itemLink then
 		local itemID = GetItemInfoInstant(itemLink);
 		local _, _, quality, _, _, _, _, _, _, texture = GetItemInfo(itemLink);
+		if quality == nil or texture == nil then
+			self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
+		end
 
 		SetItemButtonTexture(self, texture);
 		SetItemButtonQuality(self, quality, itemID);
@@ -3524,6 +3561,9 @@ function frame:ADDON_LOADED(...)
                 },
             },
             equipment = {
+
+            },
+            conditions = {
 
             },
         };

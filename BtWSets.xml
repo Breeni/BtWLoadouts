@@ -634,6 +634,10 @@
             <OnLoad method="OnLoad"/>
             <OnClick method="OnClick"/>
             <OnReceiveDrag method="OnReceiveDrag"/>
+            <OnEvent method="OnEvent"/>
+            <OnEnter method="OnEnter"/>
+            <OnLeave method="OnLeave"/>
+            <OnUpdate method="OnUpdate"/>
             <!-- <OnEvent>
 				BtWSetsItemSlotButton_OnEvent(self, event, ...);
 			</OnEvent>
@@ -1390,6 +1394,14 @@
 					</ItemButton>
 				</Frames>
 			</Frame>
+			<Frame parentKey="Conditions" parentArray="TabFrames">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
+				</Anchors>
+				<Frames>
+				</Frames>
+			</Frame>
             <Button name="$parentTab1" inherits="BtWSetsFrameTabTemplate" id="1" text="PROFILES">
                	<Anchors>
 					<Anchor point="BOTTOMLEFT" x="7" y="-30"/>
@@ -1413,6 +1425,11 @@
             <Button name="$parentTab5" inherits="BtWSetsFrameTabTemplate" id="5" text="BAG_FILTER_EQUIPMENT">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab4" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+            </Button>
+            <Button name="$parentTab6" inherits="BtWSetsFrameTabTemplate" id="6" text="CONDITIONS">
+               	<Anchors>
+                   <Anchor point="LEFT" relativeTo="$parentTab5" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
 		</Frames>
