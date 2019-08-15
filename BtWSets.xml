@@ -748,7 +748,7 @@
 		</Scripts>
 	</Button>
 	<Frame name="BtWSetsFrame" mixin="BtWSetsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true">
-		<Size x="779" y="436"/>
+		<Size x="779" y="462"/>
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
@@ -758,6 +758,19 @@
 					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="5.6" y="5"/>
 				</Anchors>
 			</Button>
+			<Frame parentKey="ScrollInset" useParentLevel="true" inherits="InsetFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="4" y="-26" />
+					<Anchor point="BOTTOM" x="0" y="26" />
+				</Anchors>
+				<Size x="188" y="0"/>
+			</Frame>
+			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.ScrollInset" relativePoint="TOPRIGHT" x="4" y="0" />
+					<Anchor point="BOTTOMRIGHT" x="-6" y="26" />
+				</Anchors>
+			</Frame>
 			<ScrollFrame parentKey="Scroll" inherits="FauxScrollFrameTemplate">
 				<Size x="160" y="0"/>
 				<Anchors>
@@ -863,7 +876,7 @@
 			<Frame parentKey="Profiles" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
@@ -966,7 +979,7 @@
 			<Frame parentKey="Talents" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
 				</Anchors>
 				<Frames>
 					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
@@ -1030,7 +1043,7 @@
 			<Frame parentKey="PvPTalents" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
 				</Anchors>
 				<Frames>
 					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
@@ -1069,7 +1082,7 @@
 			<Frame parentKey="Essences" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
 				</Anchors>
 				<Frames>
 					<Frame name="$parentRoleDropDown" parentKey="RoleDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
@@ -1128,13 +1141,13 @@
 			<Frame parentKey="Equipment" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
 				</Anchors>
 				<Frames>
 					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
-							<Anchor point="TOPLEFT" x="0" y="-2"/>
+							<Anchor point="TOPLEFT" x="4" y="-2"/>
 							<Anchor point="RIGHT" x="0" y="0"/>
 						</Anchors>
 						<Scripts>
@@ -1163,7 +1176,7 @@
 							<KeyValue type="string" key="invType" value="INVTYPE_HEAD"/>
 						</KeyValues>
 						<Anchors>
-							<Anchor point="TOPLEFT" x="4" y="-32"/>
+							<Anchor point="TOPLEFT" x="12" y="-32"/>
 						</Anchors>
 					</ItemButton>
 					<ItemButton parentKey="NeckSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
@@ -1263,7 +1276,7 @@
 							<KeyValue type="string" key="invType" value="INVTYPE_HAND"/>
 						</KeyValues>
 						<Anchors>
-							<Anchor point="TOPRIGHT" x="-4" y="-32"/>
+							<Anchor point="TOPRIGHT" x="-12" y="-32"/>
 						</Anchors>
 					</ItemButton>
 					<ItemButton parentKey="WaistSlot" inherits="BtWSetsItemSlotButtonRightTemplate">
@@ -1365,7 +1378,7 @@
 						<Anchors>
 							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM">
 								<Offset>
-									<AbsDimension x="-3" y="16"/>
+									<AbsDimension x="-3" y="8"/>
 								</Offset>
 							</Anchor>
 						</Anchors>
@@ -1397,7 +1410,7 @@
 			<Frame parentKey="Conditions" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
 				</Anchors>
 				<Frames>
 				</Frames>
