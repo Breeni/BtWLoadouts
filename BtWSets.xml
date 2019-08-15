@@ -603,6 +603,103 @@
 		<HighlightTexture atlas="heartofazeroth-list-item-highlight" alphaMode="ADD"/>
 	</Button>
 
+	<Button name="BtWSetsEquipmentFlyoutPopoutButtonTemplate" hidden="true" virtual="true">
+		<Size>
+			<AbsDimension x="16" y="32"/>
+		</Size>
+		<Anchors>
+			<Anchor point="LEFT" relativePoint="RIGHT"/>
+		</Anchors>
+		<Scripts>
+			<OnClick function="EquipmentFlyoutPopoutButton_OnClick"/>
+		</Scripts>
+		<NormalTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
+		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
+	</Button>	
+    <ItemButton name="BtWSetsItemSlotButtonTemplate" parentArray="Slots" mixin="BtWSetsItemSlotButtonMixin" virtual="true">
+    	<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
+					<Size x="40" y="40"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentPopoutButton" parentKey="popoutButton" inherits="BtWSetsEquipmentFlyoutPopoutButtonTemplate"/>
+		</Frames>
+        <Scripts>
+            <OnLoad method="OnLoad"/>
+            <OnClick method="OnClick"/>
+            <!-- <OnEvent>
+				BtWSetsItemSlotButton_OnEvent(self, event, ...);
+			</OnEvent>
+			<OnUpdate>
+				CursorOnUpdate(self);
+				if ( GameTooltip:IsOwned(self) ) then
+					BtWSetsItemSlotButton_OnEnter(self);
+				end
+			</OnUpdate>
+            <OnEnter>
+				BtWSetsItemSlotButton_OnEnter(self, motion);
+			</OnEnter>
+            <OnLeave>
+				GameTooltip:Hide();
+				ResetCursor();
+			</OnLeave> -->
+        </Scripts>
+		<NormalTexture file="Interface\Buttons\UI-Quickslot2">
+			<Size>
+				<AbsDimension x="64" y="64"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="-1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</NormalTexture>
+    </ItemButton>
+	<ItemButton name="BtWSetsItemSlotButtonLeftTemplate" inherits="BtWSetsItemSlotButtonTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture name="$parentFrame" inherits="Char-LeftSlot">	
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-4"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ItemButton>
+	<ItemButton name="BtWSetsItemSlotButtonRightTemplate" inherits="BtWSetsItemSlotButtonTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture name="$parentFrame" inherits="Char-RightSlot">	
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="4"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ItemButton>
+	<ItemButton name="BtWSetsItemSlotButtonBottomTemplate" inherits="BtWSetsItemSlotButtonTemplate" virtual="true">
+		<KeyValues>
+			<KeyValue type="boolean" key="verticalFlyout" value="true"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture name="$parentFrame" inherits="Char-BottomSlot">	
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-4" y="8"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ItemButton>
+
 	<Button name="BtWSetsScrollListItem" parentArray="ScrollButtons" virtual="true">
 		<Size x="160" y="22"/>
 		<Layers>
@@ -1023,11 +1120,274 @@
 					</ScrollFrame>
 				</Frames>
 			</Frame>
-			<Frame parentKey="EquipmentTab" parentArray="TabFrames">
+			<Frame parentKey="Equipment" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="10"/>
 				</Anchors>
+				<Frames>
+					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
+						<Size x="0" y="22"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="0" y="-2"/>
+							<Anchor point="RIGHT" x="0" y="0"/>
+						</Anchors>
+						<Scripts>
+							<OnTextChanged>
+								self:GetParent().set.name = self:GetText();
+								BtWSetsFrame:Update();
+							</OnTextChanged>
+							<OnEnterPressed function="EditBox_ClearFocus"/>
+						</Scripts>
+					</EditBox>		
+					<DressUpModel parentKey="Model" modelScale="1.0" inherits="ModelWithControlsTemplate">
+						<Size>
+							<AbsDimension x="172" y="400"/>
+						</Size>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="150" y="-40"/>
+							<Anchor point="BOTTOMRIGHT" x="-150" y="60"/>
+						</Anchors>
+						<Scripts>
+							<!-- <OnLoad method="OnLoad" /> -->
+						</Scripts>
+					</DressUpModel>	
+					<ItemButton parentKey="HeadSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="HeadSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_HEAD"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="4" y="-32"/>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="NeckSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="NeckSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_NECK"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.HeadSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="ShoulderSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="ShoulderSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_SHOULDER"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.NeckSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="BackSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="BackSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_CLOAK"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ShoulderSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="ChestSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="ChestSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_CHEST"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.BackSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="ShirtSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="ShirtSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_BODY"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ChestSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="TabardSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="TabardSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_TABARD"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ShirtSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="WristSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="WristSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_WRIST"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.TabardSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="HandsSlot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="HandsSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_HAND"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPRIGHT" x="-4" y="-32"/>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="WaistSlot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="WaistSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_WAIST"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.HandsSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="LegsSlot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="LegsSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_LEGS"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.WaistSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="FeetSlot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="FeetSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_FEET"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.LegsSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="Finger0Slot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="Finger0Slot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_FINGER"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.FeetSlot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="Finger1Slot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="Finger1Slot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_FINGER"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Finger0Slot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="Trinket0Slot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="Trinket0Slot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_TRINKET"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Finger1Slot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="Trinket1Slot" inherits="BtWSetsItemSlotButtonRightTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="Trinket1Slot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_TRINKET"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Trinket0Slot" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-4"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+					<ItemButton parentKey="MainHandSlot" inherits="BtWSetsItemSlotButtonBottomTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="MainHandSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_WEAPON"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM">
+								<Offset>
+									<AbsDimension x="-3" y="16"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Layers>
+							<Layer level="BACKGROUND">
+								<Texture inherits="Char-Slot-Bottom-Left">
+									<Anchors>
+										<Anchor point="TOPRIGHT" relativeTo="$parentFrame" relativePoint="TOPLEFT"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+					</ItemButton>
+					<ItemButton parentKey="SecondaryHandSlot" inherits="BtWSetsItemSlotButtonBottomTemplate">
+						<KeyValues>
+							<KeyValue type="string" key="slot" value="SecondaryHandSlot"/>
+							<KeyValue type="string" key="invType" value="INVTYPE_WEAPON"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.MainHandSlot" relativePoint="TOPRIGHT">
+								<Offset>
+									<AbsDimension x="5" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</ItemButton>
+				</Frames>
 			</Frame>
             <Button name="$parentTab1" inherits="BtWSetsFrameTabTemplate" id="1" text="PROFILES">
                	<Anchors>

@@ -3,6 +3,6 @@
 ## Version: 1
 ## Notes: 
 ## Author: Breen
-## SavedVariables: BtWSetsSets, BtWSetsSpecInfo, BtWSetsRoleInfo, BtWSetsEssenceInfo
+## SavedVariables: BtWSetsSets, BtWSetsSpecInfo, BtWSetsRoleInfo, BtWSetsEssenceInfo, BtWSetsCharacterInfo
 
 BtWSets.xml

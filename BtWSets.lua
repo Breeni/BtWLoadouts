@@ -1429,6 +1429,22 @@ local roleInfo = {
 	},
 };
 local MAX_PVP_TALENTS = 15;
+-- local function GetClassIDForSpecID(specID)
+--     for specIndex=1,GetNumSpecializations() do
+--         local playerSpecID = GetSpecializationInfo(specIndex);
+--         if playerSpecID == specID then
+--             return GetTalentInfoBySpecialization(specIndex, tier, column);
+--         end
+--     end
+
+--     if BtWSetsSpecInfo[specID] then
+--         return GetTalentInfoByID(BtWSetsSpecInfo[specID].talents[tier][column]);
+--     end
+
+--     if specInfo[specID] then
+--         return GetTalentInfoByID(specInfo[specID].talents[tier][column]);
+--     end
+-- end
 local function GetTalentInfoForSpecID(specID, tier, column)
     for specIndex=1,GetNumSpecializations() do
         local playerSpecID = GetSpecializationInfo(specIndex);
@@ -1491,6 +1507,9 @@ local function GetEssenceInfoForRole(role, index)
     if roleInfo[role] and roleInfo[role].essences and roleInfo[role].essences[index] then
         return GetEssenceInfoByID(roleInfo[role].essences[index]);
     end
+end
+local function GetCharacterInfo(character)
+	return BtWSetsCharacterInfo and BtWSetsCharacterInfo[character];
 end
 
 local function AddProfile()
@@ -1634,8 +1653,30 @@ local function IsEquipmentSetActive(set)
 
     return true;
 end
+local function AddEquipmentSet()
+    local characterName, characterRealm = UnitFullName("player");
+    local name = format("New %s Equipment Set", characterName);
+	local equipment = {};
+	local ignored = {};
+	
+	for inventorySlotId=INVSLOT_HEAD,INVSLOT_TABARD do
+		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
+		if equipment[inventorySlotId] == nil then
+			ignored[inventorySlotId] = true;
+		end
+	end
+
+    local set = {
+        character = characterRealm .. "-" .. characterName,
+        name = name,
+		equipment = equipment,
+		ignored = ignored,
+    };
+    BtWSetsSets.equipment[#BtWSetsSets.equipment+1] = set;
+    return set;
+end
 local function GetEquipmentSet(id)
-    return BtWSetsSets.equipments[id];
+    return BtWSetsSets.equipment[id];
 end
 local function ActivateEquipmentSet(set)
 end
@@ -1724,7 +1765,7 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
         set.talentSet = nil;
         set.pvpTalentSet = nil;
         set.essencesSet = nil;
-        set.equipmentSEt = nil;
+        set.equipmentSet = nil;
     elseif selectedTab == TAB_TALENTS or selectedTab == TAB_PVP_TALENTS then
         local temp = tab.temp;
         -- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
@@ -1936,12 +1977,13 @@ local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
     local set = tab.set;
-    set.essencesSet = arg1;
+	set.equipmentSet = arg1;
+	set.character = arg2;
 
     BtWSetsFrame:Update();
 end
 local function EquipmentDropDownInit(self, level, menuList)
-    if not BtWSetsSets or not BtWSetsSets.essences then
+    if not BtWSetsSets or not BtWSetsSets.equipment then
         return;
     end
 
@@ -1950,12 +1992,14 @@ local function EquipmentDropDownInit(self, level, menuList)
         local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
         local tab = GetTabFrame(frame, selectedTab);
         
-        local set = tab.set;
+		local set = tab.set;
+		local class = select(6, GetSpecializationInfoByID(set.specID));
     
         wipe(setsFiltered);
-        local sets = BtWSetsSets.essences;
-        for setID,talentSet in pairs(sets) do
-            if talentSet.specID == set.specID then
+        local sets = BtWSetsSets.equipment;
+		for setID,equipmentSet in pairs(sets) do
+			local characterInfo = GetCharacterInfo(equipmentSet.character)
+            if characterInfo.class == class then
                 setsFiltered[#setsFiltered+1] = setID;
             end
         end
@@ -1965,15 +2009,16 @@ local function EquipmentDropDownInit(self, level, menuList)
 
         local info = UIDropDownMenu_CreateInfo();
         info.text = NONE;
-        info.func = EssencesDropDown_OnClick;
-        info.checked = set.essencesSet == nil;
+        info.func = EquipmentDropDown_OnClick;
+        info.checked = set.equipmentSet == nil;
         UIDropDownMenu_AddButton(info, level);
         
         for _,setID in ipairs(setsFiltered) do
             info.text = sets[setID].name;
             info.arg1 = setID;
-            info.func = EssencesDropDown_OnClick;
-            info.checked = set.essencesSet == setID;
+            info.arg2 = sets[setID].character;
+            info.func = EquipmentDropDown_OnClick;
+            info.checked = set.equipmentSet == setID;
             UIDropDownMenu_AddButton(info, level);
         end
     end
@@ -1987,6 +2032,7 @@ local profilesCollapsedBySpecID = {};
 local talentSetsCollapsedBySpecID = {};
 local pvpTalentSetsCollapsedBySpecID = {};
 local essenceSetsCollapsedByRole = {};
+local equipmentSetsCollapsedByCharacter = {};
 function BtWSetsSetsScrollFrame_Update()
     local Talents = BtWSetsFrame.Talents;
 
@@ -2028,7 +2074,11 @@ function BtWSetsSetsScrollFrame_Update()
                 button.CollapsedIcon:Hide();
             end
 
-            button.name:SetText(item.name);
+			if item.character then
+				button.name:SetText(format("%s |cFFD5D5D5(%s)|r", item.name, item.character));
+			else
+				button.name:SetText(item.name);
+			end
             button:Show();
         else
             button:Hide();
@@ -2066,6 +2116,7 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
                     setScrollItems[#setScrollItems+1] = {
                         id = setID,
                         name = sets[setID].name,
+                        character = sets[setID].character,
                         selected = sets[setID] == selected,
                     };
                 end
@@ -2098,6 +2149,7 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
                             setScrollItems[#setScrollItems+1] = {
                                 id = setID,
                                 name = sets[setID].name,
+								character = sets[setID].character,
                                 selected = sets[setID] == selected,
                             };
                         end
@@ -2198,7 +2250,7 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 	if setsFiltered[character] then
 		local isCollapsed = collapsed[character] and true or false;
 		setScrollItems[#setScrollItems+1] = {
-			character = character,
+			id = character,
 			isHeader = true,
 			isCollapsed = isCollapsed,
 			name = character,
@@ -2209,7 +2261,7 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 			end)
 			for _,setID in ipairs(setsFiltered[character]) do
 				setScrollItems[#setScrollItems+1] = {
-					setID = setID,
+					id = setID,
 					name = sets[setID].name,
 					selected = sets[setID] == selected,
 				};
@@ -2223,7 +2275,7 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 			if setsFiltered[character] then
 				local isCollapsed = collapsed[character] and true or false;
 				setScrollItems[#setScrollItems+1] = {
-					character = character,
+					id = character,
 					isHeader = true,
 					isCollapsed = isCollapsed,
 					name = character,
@@ -2234,7 +2286,7 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 					end)
 					for _,setID in ipairs(setsFiltered[character]) do
 						setScrollItems[#setScrollItems+1] = {
-							setID = setID,
+							id = setID,
 							name = sets[setID].name,
 							selected = sets[setID] == selected,
 						};
@@ -2645,9 +2697,34 @@ local function EssencesTabUpdate(self)
 	SetsScrollFrame_RoleFilter(self.set, BtWSetsSets.essences, essenceSetsCollapsedByRole);
 end
 local function EquipmentTabUpdate(self)
-    wipe(setScrollItems);
-    wipe(setsFiltered);
-    BtWSetsSetsScrollFrame_Update();
+	local set = self.set;
+	local character = set.character;
+	local characterInfo = GetCharacterInfo(character);
+	local equipment = set.equipment;
+	
+	self.Name:SetText(self.set.name or "");
+	
+	local characterName, characterRealm = UnitFullName("player");
+	local playerCharacter = characterRealm .. "-" .. characterName;
+
+	local model = self.Model;
+	if not characterInfo or character == playerCharacter then
+		model:SetUnit("player");
+	else
+		model:SetCustomRace(characterInfo.race, characterInfo.sex);
+	end
+	model:Undress();
+
+	for _,item in pairs(self.Slots) do
+		if equipment[item:GetID()] then
+			model:TryOn(equipment[item:GetID()]);
+		end
+
+		item:Update();
+		item:SetEnabled(character == playerCharacter);
+	end
+
+	SetsScrollFrame_CharacterFilter(self.set, BtWSetsSets.equipment, equipmentSetsCollapsedByCharacter);
 end
 
 BtWSetsFrameMixin = {};
@@ -2666,6 +2743,8 @@ function BtWSetsFrameMixin:OnLoad()
     self.Essences.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
 	self.Essences.set = {essences = {}};
 	self.Essences.pending = nil;
+
+	self.Equipment.set = {equipment = {}, ignored = {}};
 
 	PanelTemplates_SetNumTabs(self, NUM_TABS);
     PanelTemplates_SetTab(self, TAB_PROFILES);
@@ -2715,6 +2794,18 @@ function BtWSetsFrameMixin:OnLoad()
 	
 	HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWSetsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 	self.Essences.EssenceList.update = EssenceScrollFrameUpdate;
+
+	self.Equipment.flyoutSettings = {
+		onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,
+		getItemsFunc = PaperDollFrameItemFlyout_GetItems,
+		-- postGetItemsFunc = PaperDollFrameItemFlyout_PostGetItems,
+		hasPopouts = true,
+		parent = self.Equipment,
+		anchorX = 0,
+		anchorY = -3,
+		verticalAnchorX = 0,
+		verticalAnchorY = 0,
+	};
 end
 function BtWSetsFrameMixin:OnDragStart()
     self:StartMoving();
@@ -2754,6 +2845,10 @@ end
 function BtWSetsFrameMixin:SetEssenceSet(set)
     self.Essences.set = set;
     wipe(self.Essences.temp);
+    self:Update();
+end
+function BtWSetsFrameMixin:SetEquipmentSet(set)
+    self.Equipment.set = set;
     self:Update();
 end
 function BtWSetsFrameMixin:Update()
@@ -2835,6 +2930,21 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
             EssencesTabUpdate(frame);
         else
             self:SetEssenceSet(GetEssenceSet(button.id));
+            frame.Name:ClearFocus();
+        end
+    elseif selectedTab == TAB_EQUIPMENT then
+        local frame = self.Equipment;
+        if button.isAdd then
+            self:SetEquipmentSet(AddEquipmentSet());
+            C_Timer.After(0, function ()
+                frame.Name:HighlightText();
+                frame.Name:SetFocus();
+            end)
+        elseif button.isHeader then
+            equipmentSetsCollapsedByCharacter[button.id] = not equipmentSetsCollapsedByCharacter[button.id] and true or nil;
+            EquipmentTabUpdate(frame);
+        else
+            self:SetEquipmentSet(GetEquipmentSet(button.id));
             frame.Name:ClearFocus();
         end
     end
@@ -2958,6 +3068,97 @@ function BtWSetsAzeriteEssenceButtonMixin:OnEnter()
 	if BtWSetsFrame.Essences.pending then
 		SetCursor("interface/cursor/cast.blp");
 	end
+end
+
+BtWSetsItemSlotButtonMixin = {};
+function BtWSetsItemSlotButtonMixin:OnLoad()
+	self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+
+	local id, textureName, checkRelic = GetInventorySlotInfo(self:GetSlot());
+	self:SetID(id);
+	self.icon:SetTexture(textureName);
+	self.backgroundTextureName = textureName;
+	self.ignoreTexture:Hide();
+
+	local popoutButton = self.popoutButton;
+	if ( popoutButton ) then
+		if ( self.verticalFlyout ) then
+			popoutButton:SetHeight(16);
+			popoutButton:SetWidth(38);
+
+			popoutButton:GetNormalTexture():SetTexCoord(0.15625, 0.84375, 0.5, 0);
+			popoutButton:GetHighlightTexture():SetTexCoord(0.15625, 0.84375, 1, 0.5);
+			popoutButton:ClearAllPoints();
+			popoutButton:SetPoint("TOP", self, "BOTTOM", 0, 4);
+		else
+			popoutButton:SetHeight(38);
+			popoutButton:SetWidth(16);
+
+			popoutButton:GetNormalTexture():SetTexCoord(0.15625, 0.5, 0.84375, 0.5, 0.15625, 0, 0.84375, 0);
+			popoutButton:GetHighlightTexture():SetTexCoord(0.15625, 1, 0.84375, 1, 0.15625, 0.5, 0.84375, 0.5);
+			popoutButton:ClearAllPoints();
+			popoutButton:SetPoint("LEFT", self, "RIGHT", -8, 0);
+		end
+
+		-- popoutButton:Show();
+	end
+end
+function BtWSetsItemSlotButtonMixin:OnClick()
+	local cursorType, _, itemLink = GetCursorInfo();
+	if cursorType == "item" then
+		if self:SetItem(itemLink) then
+			ClearCursor();
+		end
+	elseif IsModifiedClick("SHIFT") then
+		local set = self:GetParent().set;
+		self:SetIgnored(not set.ignored[self:GetID()]);
+	else
+		self:SetItem(nil);
+	end
+end
+function BtWSetsItemSlotButtonMixin:GetSlot()
+	return self.slot;
+end
+function BtWSetsItemSlotButtonMixin:SetItem(itemLink)
+	local set = self:GetParent().set;
+	if itemLink == nil then -- Clearing slot
+		set.equipment[self:GetID()] = nil;
+
+		self:Update();
+		return true;
+	else
+		local _, _, quality, _, _, _, _, _, itemEquipLoc, texture, _, itemClassID, itemSubClassID = GetItemInfo(itemLink);
+		if self.invType == itemEquipLoc then
+			set.equipment[self:GetID()] = itemLink;
+
+			self:Update();
+			return true;
+		end
+	end
+	return false;
+end
+function BtWSetsItemSlotButtonMixin:SetIgnored(ignored)
+	local set = self:GetParent().set;
+	set.ignored[self:GetID()] = ignored and true or nil;
+	self:Update();
+end
+function BtWSetsItemSlotButtonMixin:Update()
+	local set = self:GetParent().set;
+	local slot = self:GetID();
+	local ignored = set.ignored[slot];
+	local itemLink = set.equipment[slot];
+	if itemLink then
+		local itemID = GetItemInfoInstant(itemLink);
+		local _, _, quality, _, _, _, _, _, _, texture = GetItemInfo(itemLink);
+
+		SetItemButtonTexture(self, texture);
+		SetItemButtonQuality(self, quality, itemID);
+	else
+		SetItemButtonTexture(self, self.backgroundTextureName);
+		SetItemButtonQuality(self, nil, nil);
+	end
+
+	self.ignoreTexture:SetShown(ignored);
 end
 
 local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
@@ -3308,7 +3509,8 @@ function frame:ADDON_LOADED(...)
 
         BtWSetsSpecInfo = BtWSetsSpecInfo or {};
         BtWSetsRoleInfo = BtWSetsRoleInfo or {};
-        BtWSetsEssenceInfo = BtWSetsEssenceInfo or {};
+		BtWSetsEssenceInfo = BtWSetsEssenceInfo or {};
+		BtWSetsCharacterInfo = BtWSetsCharacterInfo or {};
     end
 end
 function frame:PLAYER_ENTERING_WORLD()
@@ -3384,6 +3586,15 @@ function frame:PLAYER_ENTERING_WORLD()
 		end
 
 		BtWSetsRoleInfo[roleID] = role;
+	end
+
+	do
+		local name, realm = UnitFullName("player");
+		local class = select(2, UnitClass("player"));
+		local race = select(3, UnitRace("player"));
+		local sex = UnitSex("player") - 2;
+
+		BtWSetsCharacterInfo[realm .. "-" .. name] = {class = class, race = race, sex = sex};
 	end
 end
 function frame:PLAYER_ENTER_COMBAT()
