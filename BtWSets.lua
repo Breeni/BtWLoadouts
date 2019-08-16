@@ -1881,8 +1881,8 @@ local function IsProfileValid(set)
 		invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
 	end
 
-	if set.essenceSet then
-		local subSet = GetEssenceSet(set.essenceSet);
+	if set.essencesSet then
+		local subSet = GetEssenceSet(set.essencesSet);
 		role = subSet.role;
 		
 		invalidForPlayer = invalidForPlayer or not IsClassRoleValid(playerClass, role);
@@ -2675,8 +2675,6 @@ local function ProfilesTabUpdate(self)
 	end
 
 	specID = self.set.specID;
-	
-	print(specID);
 
 	if specID == nil or specID == 0 then
 		UIDropDownMenu_SetText(self.SpecDropDown, NONE);
