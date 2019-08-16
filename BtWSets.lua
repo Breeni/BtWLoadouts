@@ -8,6 +8,7 @@
 
 local ADDON_NAME = ...;
 
+local eventHandler = CreateFrame("Frame");
 local L = {};
 
 setmetatable(L, {
@@ -58,6 +59,116 @@ local Settings = SettingsCreate({
         default = true,
     },
 });
+
+
+local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
+tomeButton:SetFrameStrata("DIALOG");
+tomeButton:SetAttribute("*type1", "item");
+tomeButton:SetAttribute("unit", "player");
+tomeButton:SetAttribute("item", "Tome of the Tranquil Mind");
+RegisterStateDriver(tomeButton, "combat", "[combat] hide; show")
+tomeButton:SetAttribute("_onattributechanged", [[ -- (self, name, value)
+    print(name);
+    if name == "active" and value == false then
+        self:Hide();
+    elseif name == "state-combat" and value == "hide" then
+        self:Hide();
+    elseif name ~= "statehidden" and self:GetAttribute("active") and self:GetAttribute("state-combat") == "show" then
+        self:Show();
+    end
+]]);
+tomeButton:SetAttribute("active", false);
+tomeButton:HookScript("OnClick", function (self, ...)
+    self.button:GetScript("OnClick")(self.button, ...);
+end);
+
+StaticPopupDialogs["BTWSETS_REQUESTACTIVATE"] = {
+	text = "Activate spec %s?",
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+	end,
+	OnShow = function(self)
+	end,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_REQUESTACTIVATERESTED"] = {
+	text = "Activate spec %s?\nThis set will require a tome or rested to activate",
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+	end,
+    OnShow = function(self)
+        -- 
+	end,
+	hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
+	text = "Activate spec %s?\nThis will use a Tome",
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+        print("OnAccept");
+	end,
+    OnShow = function(self)
+        print("OnShow");
+        tomeButton:SetParent(self);
+        tomeButton:ClearAllPoints();
+        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
+        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
+        tomeButton.button = self.button1;
+
+        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
+        tomeButton:SetAttribute("active", true);
+	end,
+    OnHide = function(self)
+        print("OnHide");
+        tomeButton:SetParent(UIParent);
+        tomeButton:ClearAllPoints();
+        tomeButton.button = nil;
+        tomeButton:SetAttribute("active", false);
+	end,
+	hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
+-- /run StaticPopup_Show("BTWSETS_NEEDTOME")
+-- 
+StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
+	text = "A tome is needed to continue equiping your set.",
+	button1 = YES,
+	button2 = NO,
+    OnAccept = function(self)
+        print("OnAccept");
+	end,
+    OnCancel = function(self)
+        print("OnCancel");
+	end,
+    OnShow = function(self)
+        print("OnShow");
+        tomeButton:SetParent(self);
+        tomeButton:ClearAllPoints();
+        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
+        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
+        tomeButton.button = self.button1;
+
+        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
+        tomeButton:SetAttribute("active", true);
+	end,
+    OnHide = function(self)
+        print("OnHide");
+        tomeButton:SetParent(UIParent);
+        tomeButton:ClearAllPoints();
+        tomeButton.button = nil;
+        tomeButton:SetAttribute("active", false);
+	end,
+	-- hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
 
 
 local function HelpTipBox_Anchor(self, anchorPoint, frame, offset)
@@ -1590,6 +1701,178 @@ end
 local function IsClassRoleValid(classFile, role)
 	return classInfo[classFile][role] and true or false;
 end
+local talentChangeBuffs = {
+    [227041] = true,
+    [227563] = true,
+    [256231] = true,
+    [228128] = true,
+    [32727] = true,
+    [44521] = true,
+};
+local function PlayerCanChangeTalents()
+    if IsResting() then
+        return true;
+    end
+
+    local index = 1;
+    local name = UnitAura("player", index, "HELPFUL");
+    while name do
+        if talentChangeBuffs[spellId] then
+            return true;
+        end
+
+        index = index + 1;
+        name = UnitAura("player", index, "HELPFUL");
+    end
+    
+    return false;
+end
+local function PlayerNeedsTome()
+    if IsResting() then
+        return false;
+    end
+
+    local index = 1;
+    local name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
+    while name do
+        if talentChangeBuffs[spellId] then
+            return false;
+        end
+
+        index = index + 1;
+        name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
+    end
+
+    return true;
+end
+local function RequestTome()
+    StaticPopup_Show("BTWSETS_NEEDTOME");
+end
+local function IsChangingSpec()
+    local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
+    return spellId == 200749;
+end
+
+
+--[[
+    GetItemUniqueness will sometimes return Unique-Equipped info instead of Legion Legendary info,
+    this is a cache of items with that or similar issues
+]]
+local itemUniquenessCache = {
+    [144259] = {357, 2},
+    [144258] = {357, 2},
+    [144249] = {357, 2},
+    [152626] = {357, 2},
+    [151650] = {357, 2},
+    [151649] = {357, 2},
+    [151647] = {357, 2},
+    [151646] = {357, 2},
+    [151644] = {357, 2},
+    [151643] = {357, 2},
+    [151642] = {357, 2},
+    [151641] = {357, 2},
+    [151640] = {357, 2},
+    [151639] = {357, 2},
+    [151636] = {357, 2},
+    [150936] = {357, 2},
+    [138854] = {357, 2},
+    [137382] = {357, 2},
+    [137276] = {357, 2},
+    [137223] = {357, 2},
+    [137220] = {357, 2},
+    [137055] = {357, 2},
+    [137054] = {357, 2},
+    [137052] = {357, 2},
+    [137051] = {357, 2},
+    [137050] = {357, 2},
+    [137049] = {357, 2},
+    [137048] = {357, 2},
+    [137047] = {357, 2},
+    [137046] = {357, 2},
+    [137045] = {357, 2},
+    [137044] = {357, 2},
+    [137043] = {357, 2},
+    [137042] = {357, 2},
+    [137041] = {357, 2},
+    [137040] = {357, 2},
+    [137039] = {357, 2},
+    [137038] = {357, 2},
+    [137037] = {357, 2},
+    [133974] = {357, 2},
+    [133973] = {357, 2},
+    [132460] = {357, 2},
+    [132452] = {357, 2},
+    [132449] = {357, 2},
+    [132410] = {357, 2},
+    [132378] = {357, 2},
+    [132369] = {357, 2},
+}
+local function EmptyInventorySlot(inventorySlotId)
+    local itemBagType = GetItemFamily(GetInventoryItemLink("player", inventorySlotId))
+
+    local foundSlot = false
+    local containerId, slotId
+    for i = NUM_BAG_SLOTS, 0, -1 do
+        local numFreeSlot, bagType = GetContainerNumFreeSlots(i)
+        if numFreeSlot > 0 and (bit.band(bagType, itemBagType) > 0 or bagType == 0) then
+            local freeSlots = GetContainerFreeSlots(i)
+
+            foundSlot = true
+            containerId = i
+            slotId = freeSlots[1]
+
+            break
+        end
+    end
+
+    if foundSlot then
+        ClearCursor()
+
+        PickupInventoryItem(inventorySlotId)
+        PickupContainerItem(containerId, slotId)
+        
+        ClearCursor()
+
+        return true
+    end
+
+    return false
+end
+local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
+    local itemString = string.match(itemLink, "item[%-?%d:]+")
+    local _, itemID, enchantId, gemId1, gemId2, gemId3, gemId4, suffixId, uniqueId, _, numBonusIds, bonusId1, bonusId2, upgradeValue = strsplit(':', itemString)
+
+    local match = nil
+    for packedLocation, possibleItemID in pairs(possibles) do
+        if possibleItemID == tonumber(itemID) then
+            local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(packedLocation)
+            
+            if not voidStorage and not (player and not bags and slot == inventorySlotId) then
+                match = {
+                    ["slot"] = slot,
+                    ["bag"] = bag,
+                }
+            end
+        end
+    end
+
+    if match then
+        local a, b
+        ClearCursor()
+        if match.bag == nil then
+            PickupInventoryItem(match.slot)
+        else
+            PickupContainerItem(match.bag, match.slot)
+        end
+
+        PickupInventoryItem(inventorySlotId)
+
+        return true
+    end
+
+    return false
+end
+
 
 local function AddProfile()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
@@ -1650,11 +1933,28 @@ end
 local function GetTalentSet(id)
     return BtWSetsSets.talents[id];
 end
+local function GetTalentSets(id, ...)
+	if id ~= nil then
+		return BtWSetsSets.talents[id], GetTalentSets(...);
+	end
+end
+local function GetTalentSetIfNeeded(id)
+	if id == nil then
+		return;
+	end
+
+	local set = GetTalentSet(id);
+	if IsTalentSetActive(set) then
+		return;
+	end
+
+    return set;
+end
 local talentSetsByTier = {};
 local function CombineTalentSets(result, ...)
 	local result = result or {};
-
 	result.talents = {};
+
 	wipe(talentSetsByTier);
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
@@ -1674,8 +1974,8 @@ local function CombineTalentSets(result, ...)
 	return result;
 end
 
-local function IsPvPTalentSetActive(talentIDs)
-    for talentID in ipairs(talentIDs) do
+local function IsPvPTalentSetActive(set)
+    for talentID in pairs(set.talents) do
         local _, _, _, selected, available = GetTalentInfoByID(talentID, 1);
 
         if not selected then
@@ -1740,10 +2040,42 @@ end
 local function GetPvPTalentSet(id)
     return BtWSetsSets.pvptalents[id];
 end
+local function GetPvPTalentSets(id, ...)
+	if id ~= nil then
+		return BtWSetsSets.pvptalents[id], GetPvPTalentSets(...);
+	end
+end
+local function GetPvPTalentSetIfNeeded(id)
+	if id == nil then
+		return;
+	end
 
-local function IsEssenceSetActive(essenceIDs)
-    for milestoneID,essenceID in pairs(essenceIDs) do
-        print(milestoneID,essenceID);
+	local set = GetPvPTalentSet(id);
+	if IsPvPTalentSetActive(set) then
+		return;
+	end
+
+    return set;
+end
+local function CombinePvPTalentSets(result, ...)
+	local result = result or {};
+	result.talents = {};
+
+	wipe(talentSetsByTier);
+	for i=1,select('#', ...) do
+		local set = select(i, ...);
+		for talentID in pairs(set.talents) do
+			if result.talents[talentID] == nil then
+				result.talents[talentID] = true;
+			end
+		end
+	end
+
+	return result;
+end
+
+local function IsEssenceSetActive(set)
+    for milestoneID,essenceID in pairs(set.essences) do
         local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
         if (info.unlocked or info.canUnlock) and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
             return false;
@@ -1751,6 +2083,19 @@ local function IsEssenceSetActive(essenceIDs)
     end
 
     return true;
+end
+local function ActivateEssenceSet(set)
+    for milestoneID,essenceID in pairs(set.essences) do
+        local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
+        if info.canUnlock then
+            C_AzeriteEssence.UnlockMilestone(milestoneID);
+            info.unlocked = true;
+        end
+
+        if info.unlocked then
+            C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
+        end
+    end
 end
 local function AddEssenceSet()
     local role = select(5,GetSpecializationInfo(GetSpecialization()));
@@ -1772,18 +2117,22 @@ end
 local function GetEssenceSet(id)
     return BtWSetsSets.essences[id];
 end
-local function ActivateEssenceSet(set)
-    for milestoneID,essenceID in pairs(set.essences) do
-        local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
-        if info.canUnlock then
-            C_AzeriteEssence.UnlockMilestone(milestoneID);
-            info.unlocked = true;
-        end
+local function GetEssenceSets(id, ...)
+	if id ~= nil then
+		return BtWSetsSets.essences[id], GetEssenceSets(...);
+	end
+end
+local function GetEssenceSetIfNeeded(id)
+	if id == nil then
+		return;
+	end
 
-        if info.unlocked then
-            C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
-        end
-    end
+	local set = GetEssenceSet(id);
+	if IsEssenceSetActive(set) then
+		return;
+	end
+
+    return set;
 end
 local function CombineEssenceSets(result, ...)
 	local result = result or {};
@@ -1802,8 +2151,144 @@ end
 -- A map from the equipment manager ids to our sets
 local equipmentSetMap = {};
 local function IsEquipmentSetActive(set)
+	local ignored = set.ignored;
+	local expected = set.equipment;
 
+    local firstEquipped = INVSLOT_FIRST_EQUIPPED;
+    local lastEquipped = INVSLOT_LAST_EQUIPPED;
+
+    if combatSwap then
+        firstEquipped = INVSLOT_MAINHAND;
+        lastEquipped = INVSLOT_RANGED;
+	end
+	
+	for inventorySlotId = firstEquipped,lastEquipped do
+		if not ignored[inventorySlotId] then
+			if expected[inventorySlotId] then
+				local itemID = GetItemInfoInstant(expected[inventorySlotId]);
+				local currentItemID = GetInventoryItemID("player", inventorySlotId);
+
+				if itemID ~= currentItemID then
+					return false;
+				end
+			elseif GetInventoryItemLink("player", inventorySlotId) ~= nil then
+				return false;
+			end
+		end
+	end
     return true;
+end
+local function ActivateEquipmentSet(set)
+	if set.managerID then
+		C_EquipmentSet.UseEquipmentSet(set.managerID);
+		return;
+	end
+
+	local ignored = {};
+	local expected = {};
+	local possibles = {};
+    local uniqueFamilies = {};
+	
+	for k,v in pairs(set.ignored) do
+		ignored[k] = v;
+	end
+	for k,v in pairs(set.equipment) do
+		expected[k] = v;
+	end
+
+    local firstEquipped = INVSLOT_FIRST_EQUIPPED
+    local lastEquipped = INVSLOT_LAST_EQUIPPED
+
+    if combatSwap then
+        firstEquipped = INVSLOT_MAINHAND
+        lastEquipped = INVSLOT_RANGED 
+	end
+	
+	for inventorySlotId = firstEquipped, lastEquipped do
+		if not ignored[inventorySlotId] then
+			if expected[inventorySlotId] then
+				print(expected[inventorySlotId]);
+				local itemID = GetItemInfoInstant(expected[inventorySlotId]);
+				-- local itemString = string.match(expected[inventorySlotId], "item[%-?%d:]+")
+				-- local _, itemID, enchantId, gemId1, gemId2, gemId3, gemId4, suffixId, uniqueId, _, numBonusIds, bonusId1, bonusId2, upgradeValue = strsplit(':', itemString)
+				-- itemID = tonumber(itemID)
+
+				if GetInventoryItemID("player", inventorySlotId) == itemID then
+					ignored[inventorySlotId] = true;
+				elseif expected[inventorySlotId] ~= nil then
+					local possibleItems = {}
+					GetInventoryItemsForSlot(inventorySlotId, possibleItems)
+					possibles[inventorySlotId] = possibleItems
+
+					local uniqueFamily, maxEquipped
+					if itemUniquenessCache[itemID] then
+						uniqueFamily, maxEquipped = unpack(itemUniquenessCache[itemID])
+					else
+						uniqueFamily, maxEquipped = GetItemUniqueness(expected[inventorySlotId])
+					end
+					
+					if uniqueFamily == -1 then
+						uniqueFamilies[itemID] = maxEquipped
+					elseif uniqueFamily ~= nil then
+						uniqueFamilies[uniqueFamily] = maxEquipped
+					end
+				end
+			else -- Unequip
+				if GetInventoryItemLink("player", inventorySlotId) ~= nil then -- Already empty
+					if EmptyInventorySlot(inventorySlotId) then
+						ignored[inventorySlotId] = true;
+					end
+				end
+			end
+		end
+    end
+
+    -- Swap currently equipped "unique" items
+    for inventorySlotId = firstEquipped, lastEquipped do
+        local itemLink = GetInventoryItemLink("player", inventorySlotId)
+
+        if not ignored[inventorySlotId] and expected[inventorySlotId] and itemLink ~= nil then
+			local itemID = GetItemInfoInstant(itemLink);
+            -- local itemString = string.match(itemLink, "item[%-?%d:]+")
+            -- local _, itemID, enchantId, gemId1, gemId2, gemId3, gemId4, suffixId, uniqueId, _, numBonusIds, bonusId1, bonusId2, upgradeValue = strsplit(':', itemString)
+            -- itemID = tonumber(itemID)
+
+            local uniqueFamily, maxEquipped
+            if itemUniquenessCache[itemID] then
+                uniqueFamily, maxEquipped = unpack(itemUniquenessCache[itemID])
+            else
+                uniqueFamily, maxEquipped = GetItemUniqueness(itemLink)
+            end
+
+            if (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil then
+                if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], possibles[inventorySlotId]) then
+                    ignored[inventorySlotId] = true;
+                end
+            end
+        end
+    end
+    
+    -- Swap out items
+    for inventorySlotId = firstEquipped, lastEquipped do
+        if not ignored[inventorySlotId] and expected[inventorySlotId] then
+            if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], possibles[inventorySlotId]) then
+				ignored[inventorySlotId] = true;
+            end
+        end
+    end
+    
+    -- Unequip items
+    local complete = true
+    for inventorySlotId = firstEquipped, lastEquipped do
+        if not ignored[inventorySlotId] and not expected[inventorySlotId] then -- Unequip
+            if not EmptyInventorySlot(inventorySlotId) then
+                print('Cannot unequip ' .. GetInventoryItemLink("player", inventorySlotId))
+                complete = false
+            end
+        end
+    end
+    
+    ClearCursor()
 end
 local function AddEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
@@ -1842,14 +2327,29 @@ end
 local function GetEquipmentSet(id)
     return BtWSetsSets.equipment[id];
 end
-local function ActivateEquipmentSet(set)
+local function GetEquipmentSets(id, ...)
+	if id ~= nil then
+		return BtWSetsSets.equipment[id], GetEquipmentSets(...);
+	end
+end
+local function GetEquipmentSetIfNeeded(id)
+	if id == nil then
+		return;
+	end
+
+	local set = GetEquipmentSet(id);
+	if IsEquipmentSetActive(set) then
+		return;
+	end
+
+    return set;
 end
 local function CombineEquipmentSets(result, ...)
 	local result = result or {};
 
 	result.equipment = {};
 	result.ignored = {};
-	for i=1,15 do
+	for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		result.ignored[slot] = true;
 	end
 	for i=1,select('#', ...) do
@@ -1932,6 +2432,128 @@ local function IsProfileValid(set)
 	end
 
 	return true, class, specID, role, not invalidForPlayer;
+end
+-- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
+local target = {};
+_G['BtWSetsTarget'] = target; -- @TODO REMOVE
+local function ActivateProfile(profile)
+	local valid, class, specID, role, validForPlayer = IsProfileValid(profile);
+	if not valid or not validForPlayer then
+		--@TODO display an error
+		return;
+	end
+
+	if specID then
+		target.specID = specID or profile.specID;
+	end
+
+	if profile.talentSet then
+		target.talentSets = target.talentSets or {};
+		target.talentSets[#target.talentSets+1] = profile.talentSet;
+	end
+	if profile.pvpTalentSet then
+		target.pvpTalentSets = target.pvpTalentSets or {};
+		target.pvpTalentSets[#target.pvpTalentSets+1] = profile.pvpTalentSet;
+	end
+	if profile.essencesSet then
+		target.essencesSets = target.essencesSets or {};
+		target.essencesSets[#target.essencesSets+1] = profile.essencesSet;
+	end
+	if profile.equipmentSet then
+		target.equipmentSets = target.equipmentSets or {};
+		target.equipmentSets[#target.equipmentSets+1] = profile.equipmentSet;
+	end
+
+    target.dirty = true;
+	eventHandler:Show();
+end
+local function CancelActivateProfile()
+	wipe(target);
+	eventHandler:Hide();
+end
+local function ContinueActivateProfile()
+    local set = target;
+
+	if IsChangingSpec() then
+		set.dirty = false;
+        return;
+    end
+	
+	local specID = set.specID;
+	local playerSpecID = GetSpecializationInfo(GetSpecialization());
+    if specID ~= playerSpecID then
+		for specIndex=1,GetNumSpecializations() do
+			if GetSpecializationInfo(specIndex) == specID then
+				SetSpecialization(specIndex);
+				target.dirty = false;
+				return;
+			end
+		end
+    end
+
+	local talentSet;
+	if set.talentSets then
+		talentSet = CombineTalentSets({}, GetTalentSets(unpack(set.talentSets)));
+	end
+
+	local pvpTalentSet;
+	if set.pvpTalentSets then
+		pvpTalentSet = CombinePvPTalentSets({}, GetPvPTalentSets(unpack(set.pvpTalentSets)));
+	end
+
+	local essencesSet;
+	if set.essencesSets then
+		essencesSet = CombineEssenceSets({}, GetEssenceSets(unpack(set.essencesSets)));
+	end
+
+	if talentSet and not IsTalentSetActive(talentSet) and PlayerNeedsTome() then
+		RequestTome();
+		target.dirty = false;
+		return;
+	end
+
+	-- local talentSet = GetTalentSetIfNeeded(set.talentSet);
+    -- -- if set.talentSet and not IsTalentSetActive(GetTalentSet(set.talentSet)) and PlayerNeedsTome() then
+    -- --     RequestTome();
+    -- --     return;
+    -- -- end
+
+	-- local pvpTalentSet = GetPvPTalentSetIfNeeded(set.pvpTalentSet);
+    -- -- if set.pvpTalentSet and not IsPvPTalentSetActive(GetPvPTalentSet(set.pvpTalentSet)) and PlayerNeedsTome() then
+    -- --     RequestTome();
+    -- --     return;
+    -- -- end
+
+	-- local essencesSet = GetEssenceSetIfNeeded(set.essencesSet);
+    -- -- if set.essencesSet and not IsEssenceSetActive(GetEssenceSet(set.essencesSet)) and PlayerNeedsTome() then
+    -- --     RequestTome();
+    -- --     return;
+    -- -- end
+
+
+    if talentSet then
+        ActivateTalentSet(talentSet);
+    end
+
+    if pvpTalentSet then
+        ActivatePvPTalentSet(pvpTalentSet);
+    end
+
+    if essencesSet then
+        ActivateEssenceSet(essencesSet);
+    end
+
+	local equipmentSet;
+	if set.equipmentSets then
+		equipmentSet = CombineEquipmentSets({}, GetEquipmentSets(unpack(set.equipmentSets)));
+	end
+
+    if equipmentSet then
+        ActivateEquipmentSet(equipmentSet);
+    end
+
+	-- Done
+	CancelActivateProfile();
 end
 
 
@@ -3216,30 +3838,37 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
         elseif button.isHeader then
             profilesCollapsedBySpecID[button.id] = not profilesCollapsedBySpecID[button.id] and true or nil;
             ProfilesTabUpdate(frame);
+        elseif button.isActivate then
+			local set = frame.set;
+			ActivateProfile(set);
         else
-            self:SetProfile(GetProfile(button.id));
-            frame.Name:ClearFocus();
+			if IsModifiedClick("SHIFT") then
+				ActivateProfile(GetProfile(button.id));
+			else
+				self:SetProfile(GetProfile(button.id));
+				frame.Name:ClearFocus();
+			end
         end
     elseif selectedTab == TAB_TALENTS then
-        local Talents = self.Talents;
+        local frame = self.Talents;
         if button.isAdd then
             self:SetTalentSet(AddTalentSet());
             C_Timer.After(0, function ()
-                Talents.Name:HighlightText();
-                Talents.Name:SetFocus();
+                frame.Name:HighlightText();
+                frame.Name:SetFocus();
             end)
         elseif button.isActivate then
-			local set = Talents.set;
+			local set = frame.set;
 			ActivateTalentSet(set);
         elseif button.isHeader then
             talentSetsCollapsedBySpecID[button.id] = not talentSetsCollapsedBySpecID[button.id] and true or nil;
-            TalentsTabUpdate(self.Talents);
+            TalentsTabUpdate(frame);
         else
 			if IsModifiedClick("SHIFT") then
 				ActivateTalentSet(GetTalentSet(button.id));
 			else 
 				self:SetTalentSet(GetTalentSet(button.id));
-				Talents.Name:ClearFocus();
+				frame.Name:ClearFocus();
 			end
         end
     elseif selectedTab == TAB_PVP_TALENTS then
@@ -3672,263 +4301,48 @@ end
 
 
 
-local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
-tomeButton:SetFrameStrata("DIALOG");
-tomeButton:SetAttribute("*type1", "item");
-tomeButton:SetAttribute("unit", "player");
-tomeButton:SetAttribute("item", "Tome of the Tranquil Mind");
-RegisterStateDriver(tomeButton, "combat", "[combat] hide; show")
-tomeButton:SetAttribute("_onattributechanged", [[ -- (self, name, value)
-    print(name);
-    if name == "active" and value == false then
-        self:Hide();
-    elseif name == "state-combat" and value == "hide" then
-        self:Hide();
-    elseif name ~= "statehidden" and self:GetAttribute("active") and self:GetAttribute("state-combat") == "show" then
-        self:Show();
-    end
-]]);
-tomeButton:SetAttribute("active", false);
-tomeButton:HookScript("OnClick", function (self, ...)
-    self.button:GetScript("OnClick")(self.button, ...);
-end);
 
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATE"] = {
-	text = "Activate spec %s?",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self)
-	end,
-	OnShow = function(self)
-	end,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATERESTED"] = {
-	text = "Activate spec %s?\nThis set will require a tome or rested to activate",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self)
-	end,
-    OnShow = function(self)
-        -- 
-	end,
-	hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
-	text = "Activate spec %s?\nThis will use a Tome",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self)
-        print("OnAccept");
-	end,
-    OnShow = function(self)
-        print("OnShow");
-        tomeButton:SetParent(self);
-        tomeButton:ClearAllPoints();
-        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
-        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
-        tomeButton.button = self.button1;
 
-        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
-        tomeButton:SetAttribute("active", true);
-	end,
-    OnHide = function(self)
-        print("OnHide");
-        tomeButton:SetParent(UIParent);
-        tomeButton:ClearAllPoints();
-        tomeButton.button = nil;
-        tomeButton:SetAttribute("active", false);
-	end,
-	hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
--- /run StaticPopup_Show("BTWSETS_NEEDTOME")
--- 
-StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
-	text = "A tome is needed to continue equiping your set.",
-	button1 = YES,
-	button2 = NO,
-    OnAccept = function(self)
-        print("OnAccept");
-	end,
-    OnShow = function(self)
-        print("OnShow");
-        tomeButton:SetParent(self);
-        tomeButton:ClearAllPoints();
-        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
-        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
-        tomeButton.button = self.button1;
-
-        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
-        tomeButton:SetAttribute("active", true);
-	end,
-    OnHide = function(self)
-        print("OnHide");
-        tomeButton:SetParent(UIParent);
-        tomeButton:ClearAllPoints();
-        tomeButton.button = nil;
-        tomeButton:SetAttribute("active", false);
-	end,
-	-- hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-
-local talentChangeBuffs = {
-    [227041] = true,
-    [227563] = true,
-    [256231] = true,
-    [228128] = true,
-    [32727] = true,
-    [44521] = true,
-};
-local function PlayerCanChangeTalents()
-    if IsResting() then
-        return true;
-    end
-
-    local index = 1;
-    local name = UnitAura("player", index, "HELPFUL");
-    while name do
-        if talentChangeBuffs[spellId] then
-            return true;
-        end
-
-        index = index + 1;
-        name = UnitAura("player", index, "HELPFUL");
-    end
+-- local function IsSetActive(set)
+--     local specIndex = GetSpecialization()
+--     if not specIndex then
+--         return false;
+--     end
     
-    return false;
-end
-local function PlayerNeedsTome()
-    if IsResting() then
-        return false;
-    end
+--     local specID = GetSpecializationInfo(specIndex)
+--     if set.specID ~= specID then
+--         return false;
+--     end
 
-    local index = 1;
-    local name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
-    while name do
-        if talentChangeBuffs[spellId] then
-            return false;
-        end
+--     if set.talentSet and not IsTalentSetActive(GetTalentSet(set.talentSet)) then
+--         return false;
+--     end
 
-        index = index + 1;
-        name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
-    end
+--     if set.pvpTalentSet and not IsPvPTalentSetActive(GetPvPTalentSet(set.talentSet)) then
+--         return false;
+--     end
 
-    return true;
-end
+--     if set.essencesSet and not IsEssenceSetActive(GetEssenceSet(set.essencesSet)) then
+--         return false;
+--     end
 
-local function IsSetActive(set)
-    local specIndex = GetSpecialization()
-    if not specIndex then
-        return false;
-    end
-    
-    local specID = GetSpecializationInfo(specIndex)
-    if set.specID ~= specID then
-        return false;
-    end
+--     if set.equipmentSet and not IsEquipmentSetActive(GetEquipmentSet(set.equipmentSet)) then
+--         return false;
+--     end
 
-    if set.talentSet and not IsTalentSetActive(GetTalentSet(set.talentSet)) then
-        return false;
-    end
+--     return true;
+-- end
 
-    if set.pvpTalentSet and not IsPvPTalentSetActive(GetPvPTalentSet(set.talentSet)) then
-        return false;
-    end
-
-    if set.essencesSet and not IsEssenceSetActive(GetEssenceSet(set.essencesSet)) then
-        return false;
-    end
-
-    if set.equipmentSet and not IsEquipmentSetActive(GetEquipmentSet(set.equipmentSet)) then
-        return false;
-    end
-
-    return true;
-end
-
-
-local function IsChangingSpec()
-    local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
-    return spellId == 200749;
-end
-
-local function RequestTome()
-    StaticPopup_Show("BTWSETS_NEEDTOME", nil, nil, nil, tomeButton);
-end
 -- Ask the user if we should active this set
-local function RequestActivateSet(set)
-    if IsSetActive(set) then
-        return;
-    end
+-- local function RequestActivateSet(set)
+--     if IsSetActive(set) then
+--         return;
+--     end
 
-    BtWSetsRequestFrame.set = set;
-    BtWSetsRequestFrame:Show();
-end
--- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
-local targetSet = nil
-local targetDirty = false;
-local function ContinueActivateSet()
-    local set = targetSet;
+--     BtWSetsRequestFrame.set = set;
+--     BtWSetsRequestFrame:Show();
+-- end
 
-    -- Should check if we are currently changing spec
-
-    if IsChangingSpec() then
-        return;
-    end
-
-    local specIndex = GetSpecialization()
-    if set.specIndex ~= specIndex then
-        SetSpecialization(set.specIndex);
-        return;
-    end
-
-
-    if set.talentSet and not IsTalentSetActive(GetTalentSet(set.talentSet)) and PlayerNeedsTome() then
-        RequestTome();
-        return;
-    end
-
-    if set.pvpTalentSet and not IsPvPTalentSetActive(GetPvPTalentSet(set.pvpTalentSet)) and PlayerNeedsTome() then
-        RequestTome();
-        return;
-    end
-
-    if set.essencesSet and not IsEssenceSetActive(GetEssenceSet(set.essencesSet)) and PlayerNeedsTome() then
-        RequestTome();
-        return;
-    end
-
-
-    if set.talentSet then
-        ActivateTalentSet(GetTalentSet(set.talentSet));
-    end
-
-    if set.pvpTalentSet then
-        ActivatePvPTalentSet(GetPvPTalentSet(set.pvpTalentSet));
-    end
-
-    if set.essencesSet then
-        ActivateEssenceSet(GetEssenceSet(set.essencesSet));
-    end
-
-
-    if set.equipmentSet then
-        ActiveEquipmentSet(GetEquipmentSet(set.equipmentSet));
-    end
-
-    targetSet = nil;
-end
-local function BeginActivateSet(set)
-    targetSet = set;
-    targetDirty = true;
-end
 
 local function PlayerNeedsTomeNowForSet(set)
     return;
@@ -3957,24 +4371,23 @@ local function GetBestTome()
     end
 end
 
-local frame = CreateFrame("Frame");
 -- /run BtWSets_ActivateSet("Outlaw M+")
-function BtWSets_ActivateSet(id)
-    local profile = BtWSetsSets.profiles[id];
-    assert(profile);
-    BeginActivateSet(profile);
-    frame:Show();
+-- function BtWSets_ActivateSet(id)
+--     local profile = BtWSetsSets.profiles[id];
+--     assert(profile);
+--     BeginActivateSet(profile);
+--     frame:Show();
 
-    -- local name, link, quality, icon = GetBestTome();
-    -- local r, g, b = GetItemQualityColor(quality); 
-    -- StaticPopup_Show("BTWSETS_REQUESTACTIVATETOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
-end
+--     -- local name, link, quality, icon = GetBestTome();
+--     -- local r, g, b = GetItemQualityColor(quality); 
+--     -- StaticPopup_Show("BTWSETS_REQUESTACTIVATETOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+-- end
 
-
-frame:SetScript("OnEvent", function (self, event, ...)
+-- @TODO check spell cancelled event to cancel changing spec/set
+eventHandler:SetScript("OnEvent", function (self, event, ...)
     self[event](self, ...);
 end);
-function frame:ADDON_LOADED(...)
+function eventHandler:ADDON_LOADED(...)
     if ... == ADDON_NAME then
         BtWSetsSettings = BtWSetsSettings or {};
 		Settings(BtWSetsSettings);
@@ -4049,7 +4462,7 @@ function frame:ADDON_LOADED(...)
 		end
     end
 end
-function frame:PLAYER_ENTERING_WORLD()
+function eventHandler:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
         local specID = GetSpecializationInfo(specIndex);
         local spec = BtWSetsSpecInfo[specID] or {};
@@ -4133,7 +4546,7 @@ function frame:PLAYER_ENTERING_WORLD()
 		BtWSetsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
 	end
 end
-function frame:VARIABLES_LOADED(...)
+function eventHandler:VARIABLES_LOADED(...)
 	print("VARIABLES_LOADED", ...);
 	self:EQUIPMENT_SETS_CHANGED();
 end
@@ -4155,7 +4568,7 @@ local function GetItemLinkByLocation(location)
 	
 	return itemLink;
 end
-function frame:EQUIPMENT_SETS_CHANGED(...)
+function eventHandler:EQUIPMENT_SETS_CHANGED(...)
 	-- Update our saved equipment sets to match the built in equipment sets
 	local managerIDs = C_EquipmentSet.GetEquipmentSetIDs();
 	print("EQUIPMENT_SETS_CHANGED", #managerIDs);
@@ -4183,19 +4596,19 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
 
 	--@TODO unlink or delete sets that are removed from the equipment manager
 end
-function frame:PLAYER_ENTER_COMBAT()
+function eventHandler:PLAYER_ENTER_COMBAT()
     StaticPopup_Hide("BTWSETS_NEEDTOME");
 end
-function frame:PLAYER_UPDATE_RESTING()
+function eventHandler:PLAYER_UPDATE_RESTING()
     if AreTalentsLocked() then
         StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
         StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
         return;
     end
 
-    local _, frame = StaticPopup_Visible("BTWSETS_REQUESTACTIVATETOME");
-    if frame then
-        if not PlayerNeedsTomeNowForSet(frame.data) then
+    local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATETOME");
+    if eventHandler then
+        if not PlayerNeedsTomeNowForSet(eventHandler.data) then
             StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
             StaticPopup_Show("BTWSETS_REQUESTACTIVATE");
         end
@@ -4203,9 +4616,9 @@ function frame:PLAYER_UPDATE_RESTING()
         return;
     end
 
-    local _, frame = StaticPopup_Visible("BTWSETS_REQUESTACTIVATE");
-    if frame then
-        if PlayerNeedsTomeNowForSet(frame.data) then
+    local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATE");
+    if eventHandler then
+        if PlayerNeedsTomeNowForSet(eventHandler.data) then
             StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
             StaticPopup_Show("BTWSETS_REQUESTACTIVATETOME");
         end
@@ -4213,45 +4626,80 @@ function frame:PLAYER_UPDATE_RESTING()
         return;
     end
 
-    local _, frame = StaticPopup_Visible("BTWSETS_NEEDTOME");
-    if frame then
-        if not PlayerNeedsTomeNowForSet(frame.data) then
-            targetDirty = true;
-        end
+    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_NEEDTOME");
+    -- if eventHandler then
+    --     if not PlayerNeedsTomeNowForSet(eventHandler.data) then
+    --         target.dirty = true;
+    --     end
 
-        return;
-    end
+    --     return;
+    -- end
 end
-frame.UNIT_AURA = frame.PLAYER_UPDATE_RESTING;
-function frame:PLAYER_SPECIALIZATION_CHANGED(...)
+function eventHandler:UNIT_AURA()
+	target.dirty = true;
+end
+function eventHandler:PLAYER_SPECIALIZATION_CHANGED(...)
     print("PLAYER_SPECIALIZATION_CHANGED", GetTime(), ...);
-    if targetSet then
-        targetDirty = true;
+	if targetSet then
+		-- Added delay just to be safe
+		C_Timer.After(1, function()
+			target.dirty = true;
+		end)
     end
 end
-function frame:ACTIVE_TALENT_GROUP_CHANGED(...)
+function eventHandler:ACTIVE_TALENT_GROUP_CHANGED(...)
     print("ACTIVE_TALENT_GROUP_CHANGED", GetTime(), ...);
 end
-function frame:ZONE_CHANGED(...)
+function eventHandler:ZONE_CHANGED(...)
 end
-frame.ZONE_CHANGED_INDOORS = frame.ZONE_CHANGED;
-frame:RegisterEvent("ADDON_LOADED");
-frame:RegisterEvent("PLAYER_ENTERING_WORLD");
-frame:RegisterEvent("VARIABLES_LOADED");
-frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
-frame:RegisterEvent("PLAYER_ENTER_COMBAT");
-frame:RegisterEvent("PLAYER_UPDATE_RESTING");
-frame:RegisterUnitEvent("UNIT_AURA", player);
-frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
-frame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
-frame:RegisterEvent("ZONE_CHANGED");
-frame:RegisterEvent("ZONE_CHANGED_INDOORS");
-frame:SetScript("OnUpdate", function (self)
-    if targetSet then
-        if targetDirty then
-            ContinueActivateSet();
-        end
-    else
-        self:Hide();
+eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
+function eventHandler:UNIT_SPELLCAST_STOP(...)
+    -- print("UNIT_SPELLCAST_STOP", GetTime(), ...);
+	-- print(UnitCastingInfo("player"));
+	if IsChangingSpec() then
+		CancelActivateProfile();
+	end
+end
+function eventHandler:UNIT_SPELLCAST_FAILED(...)
+    -- print("UNIT_SPELLCAST_FAILED", GetTime(), ...);
+	-- print(UnitCastingInfo("player"));
+	if IsChangingSpec() then
+		CancelActivateProfile();
+	end
+end
+function eventHandler:UNIT_SPELLCAST_FAILED_QUIET(...)
+    -- print("UNIT_SPELLCAST_FAILED_QUIET", GetTime(), ...);
+	-- print(UnitCastingInfo("player"));
+	if IsChangingSpec() then
+		CancelActivateProfile();
+	end
+end
+function eventHandler:UNIT_SPELLCAST_INTERRUPTED(...)
+	-- print("UNIT_SPELLCAST_INTERRUPTED", GetTime(), ...);
+	-- print(UnitCastingInfo("player"));
+	if IsChangingSpec() then
+		CancelActivateProfile();
+	end
+end
+eventHandler:RegisterEvent("ADDON_LOADED");
+eventHandler:RegisterEvent("PLAYER_ENTERING_WORLD");
+eventHandler:RegisterEvent("VARIABLES_LOADED");
+eventHandler:RegisterEvent("EQUIPMENT_SETS_CHANGED");
+eventHandler:RegisterEvent("PLAYER_ENTER_COMBAT");
+eventHandler:RegisterEvent("PLAYER_UPDATE_RESTING");
+eventHandler:RegisterUnitEvent("UNIT_AURA", "player");
+eventHandler:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+eventHandler:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
+eventHandler:RegisterEvent("ZONE_CHANGED");
+eventHandler:RegisterEvent("ZONE_CHANGED_INDOORS");
+
+eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
+eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
+eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
+eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
+
+eventHandler:SetScript("OnUpdate", function (self)
+    if target.dirty then
+		ContinueActivateProfile();
     end
 end)
