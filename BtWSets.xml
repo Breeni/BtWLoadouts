@@ -967,38 +967,38 @@
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<!-- <FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
-							<Size x="175" y="0"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-70"/>
-							</Anchors>
-							<Color r="0.75" g="0.61" b="0"/>
-						</FontString> -->
-						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-130"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
+						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-190"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EquipmentTitle" text="BAG_FILTER_EQUIPMENT" inherits="GameFontNormalLeft">
+						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-250"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="EquipmentTitle" text="BAG_FILTER_EQUIPMENT" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-310"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
@@ -1019,13 +1019,13 @@
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<!-- <Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
 						<Scripts>
 						</Scripts>
-					</Frame> -->
+					</Frame>
 					<Frame name="$parentTalentsDropDown" parentKey="TalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.TalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>

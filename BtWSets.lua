@@ -1592,9 +1592,11 @@ local function IsClassRoleValid(classFile, role)
 end
 
 local function AddProfile()
-    local name = format("New Profile");
+    local specID, specName = GetSpecializationInfo(GetSpecialization());
+    local name = format("New Profile", specName);
 
     local set = {
+        specID = specID,
         name = name,
     };
     BtWSetsSets.profiles[#BtWSetsSets.profiles+1] = set;
@@ -2005,10 +2007,6 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 
     if selectedTab == TAB_PROFILES then
         set.specID = arg1;
-        set.talentSet = nil;
-        set.pvpTalentSet = nil;
-        set.essencesSet = nil;
-        set.equipmentSet = nil;
     elseif selectedTab == TAB_TALENTS or selectedTab == TAB_PVP_TALENTS then
         local temp = tab.temp;
         -- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
@@ -2041,7 +2039,14 @@ end
 local function SpecDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
     
-    if (level or 1) == 1 then
+	if (level or 1) == 1 then
+		if self.includeNone then
+			info.text = NONE;
+			info.func = SpecDropDown_OnClick;
+			info.checked = self:GetParent().set.specID == nil;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
         for classIndex=1,GetNumClasses() do
             local className, classFile = GetClassInfo(classIndex);
             local classColor = C_ClassColor.GetClassColor(classFile);
@@ -2412,8 +2417,8 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
     wipe(setScrollItems);
     wipe(setsFiltered);
     for setID,set in pairs(sets) do
-        setsFiltered[set.specID] = setsFiltered[set.specID] or {};
-        setsFiltered[set.specID][#setsFiltered[set.specID]+1] = setID;
+        setsFiltered[set.specID or 0] = setsFiltered[set.specID or 0] or {};
+        setsFiltered[set.specID or 0][#setsFiltered[set.specID or 0]+1] = setID;
     end
 
     local className, classFile, classID = UnitClass("player");
@@ -2664,25 +2669,25 @@ local function SetsScrollFrame_NoFilter(selected, sets)
 end
 
 local function ProfilesTabUpdate(self)
-    -- if not self.set.specID then
-    --     self.set.specID = GetSpecializationInfo(GetSpecialization());
-    -- end
-
-    -- local specID = self.set.specID;
-
-    -- local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
-    -- local className = LOCALIZED_CLASS_NAMES_MALE[classID];
-    -- local classColor = C_ClassColor.GetClassColor(classID);
-	-- UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
-	
-	local valid, class, specID, role, validForPlayer = IsProfileValid(self.set);
+    local valid, class, specID, role, validForPlayer = IsProfileValid(self.set);
 	if type(specID) == "number" then
 		self.set.specID = specID;
-	else
-		self.set.specID = 0;
 	end
 
-    local talentSetID = self.set.talentSet;
+	specID = self.set.specID;
+	
+	print(specID);
+
+	if specID == nil or specID == 0 then
+		UIDropDownMenu_SetText(self.SpecDropDown, NONE);
+	else
+		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
+		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
+		local classColor = C_ClassColor.GetClassColor(classID);
+		UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
+	end
+	
+	local talentSetID = self.set.talentSet;
     if talentSetID == nil then
         UIDropDownMenu_SetText(self.TalentsDropDown, NONE);
     else
@@ -3078,9 +3083,10 @@ function BtWSetsFrameMixin:OnLoad()
     PanelTemplates_SetTab(self, TAB_PROFILES);
 
 
-    -- UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
-    -- UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
-    -- UIDropDownMenu_JustifyText(self.Profiles.SpecDropDown, "LEFT");
+	self.Profiles.SpecDropDown.includeNone = true;
+    UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
+    UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
+    UIDropDownMenu_JustifyText(self.Profiles.SpecDropDown, "LEFT");
 
     UIDropDownMenu_SetWidth(self.Profiles.TalentsDropDown, 300);
     UIDropDownMenu_Initialize(self.Profiles.TalentsDropDown, TalentsDropDownInit);
