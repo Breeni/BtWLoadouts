@@ -763,7 +763,7 @@
 					<Anchor point="TOPLEFT" x="4" y="-26" />
 					<Anchor point="BOTTOM" x="0" y="26" />
 				</Anchors>
-				<Size x="188" y="0"/>
+				<Size x="185" y="0"/>
 			</Frame>
 			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
@@ -772,14 +772,30 @@
 				</Anchors>
 			</Frame>
 			<ScrollFrame parentKey="Scroll" inherits="FauxScrollFrameTemplate">
-				<Size x="160" y="0"/>
+				<Size x="153" y="0"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" x="10" y="-30"/>
-					<Anchor point="BOTTOM" x="0" y="36"/>
+					<Anchor point="BOTTOM" x="0" y="28"/>
 				</Anchors>
 				<Layers>
+					<Layer level="BACKGROUND">
+						<Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+							<Size x="31" y="256"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-2" y="5"/>
+							</Anchors>
+							<TexCoords left="0" right="0.484375" top="0" bottom="1.0"/>
+						</Texture>
+						<Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+							<Size x="31" y="108"/>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-2" y="-4"/>
+							</Anchors>
+							<TexCoords left="0.515625" right="1.0" top="0" bottom="0.421875"/>
+						</Texture>
+					</Layer>
 					<Layer level="ARTWORK">
-						<Texture parentKey="ScrollBarTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+						<!-- <Texture parentKey="ScrollBarTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
 							<Size x="27" y="48"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="5"/>
@@ -789,7 +805,7 @@
 						<Texture parentKey="ScrollBarBottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
 							<Size x="27" y="64"/>
 							<Anchors>
-								<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+								<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="-7"/>
 							</Anchors>
 							<TexCoords left="0.515625" right="1.0" top="0.1440625" bottom="0.4140625"/>
 						</Texture>
@@ -799,7 +815,7 @@
 								<Anchor point="BOTTOMRIGHT" relativeKey="$parent.ScrollBarBottom" relativePoint="TOPRIGHT"/>
 							</Anchors>
 							<TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
-						</Texture>
+						</Texture> -->
 
 						<!-- <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
 							<Size>

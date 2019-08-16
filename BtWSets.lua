@@ -1,9 +1,16 @@
---[[
-
-    Profiles should be stored by character
-    Talents and PvPTalent sets should be stored by classId.specIndex
-    Essence sets should be stored by roleId
-    Equipment sets should be stored by character
+--[[@TODO
+	Clean up ui, fix positioning and such
+	Reshape insets for each tab
+	Minimap icon should show progress texture and help box
+	Conditions
+	Update pvp talents, essence, etc. drop downs to show spec, role and such
+	Update activate for non profiles to use the profile system
+	Profiles need to support multiple sets of the same type
+	Equipment sets in the builtin equipment manager need to display they are
+	Delete button
+	Equipment popout
+	Equipment sets should store location
+	Cancel buttons need to cancel
 ]]
 
 local ADDON_NAME = ...;
@@ -59,6 +66,14 @@ local Settings = SettingsCreate({
         default = true,
     },
 });
+
+-- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
+local target = {};
+_G['BtWSetsTarget'] = target; -- @TODO REMOVE
+local function CancelActivateProfile()
+	wipe(target);
+	eventHandler:Hide();
+end
 
 
 local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
@@ -135,8 +150,6 @@ StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
 	timeout = 0,
 	hideOnEscape = 1
 };
--- /run StaticPopup_Show("BTWSETS_NEEDTOME")
--- 
 StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
 	text = "A tome is needed to continue equiping your set.",
 	button1 = YES,
@@ -145,7 +158,8 @@ StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
         print("OnAccept");
 	end,
     OnCancel = function(self)
-        print("OnCancel");
+		print("OnCancel");
+		CancelActivateProfile();
 	end,
     OnShow = function(self)
         print("OnShow");
@@ -165,7 +179,7 @@ StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
         tomeButton.button = nil;
         tomeButton:SetAttribute("active", false);
 	end,
-	-- hasItemFrame = 1,
+	hasItemFrame = 1,
 	timeout = 0,
 	hideOnEscape = 1
 };
@@ -1745,8 +1759,25 @@ local function PlayerNeedsTome()
 
     return true;
 end
+local tomes = {
+    141446
+};
+local function GetBestTome()
+    for _,itemId in ipairs(tomes) do
+        print(itemId);
+        local count = GetItemCount(itemId);
+        print(itemId, count);
+        if count >= 1 then
+            local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
+            print(itemId, name, link, quality, icon);
+            return name, link, quality, icon;
+        end
+    end
+end
 local function RequestTome()
-    StaticPopup_Show("BTWSETS_NEEDTOME");
+	local name, link, quality, icon = GetBestTome();
+	local r, g, b = GetItemQualityColor(quality); 
+	StaticPopup_Show("BTWSETS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
 end
 local function IsChangingSpec()
     local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
@@ -1923,19 +1954,24 @@ local function AddTalentSet()
     end
 
     local set = {
+		setID = #BtWSetsSets.talents + 1,
         specID = specID,
         name = name,
         talents = talents,
     };
-    BtWSetsSets.talents[#BtWSetsSets.talents+1] = set;
+    BtWSetsSets.talents[set.setID] = set;
     return set;
 end
 local function GetTalentSet(id)
-    return BtWSetsSets.talents[id];
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWSetsSets.talents[id];
+	end;
 end
 local function GetTalentSets(id, ...)
 	if id ~= nil then
-		return BtWSetsSets.talents[id], GetTalentSets(...);
+		return GetTalentSet(id), GetTalentSets(...);
 	end
 end
 local function GetTalentSetIfNeeded(id)
@@ -2433,9 +2469,6 @@ local function IsProfileValid(set)
 
 	return true, class, specID, role, not invalidForPlayer;
 end
--- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
-local target = {};
-_G['BtWSetsTarget'] = target; -- @TODO REMOVE
 local function ActivateProfile(profile)
 	local valid, class, specID, role, validForPlayer = IsProfileValid(profile);
 	if not valid or not validForPlayer then
@@ -2467,12 +2500,13 @@ local function ActivateProfile(profile)
     target.dirty = true;
 	eventHandler:Show();
 end
-local function CancelActivateProfile()
-	wipe(target);
-	eventHandler:Hide();
-end
 local function ContinueActivateProfile()
     local set = target;
+
+	if InCombatLockdown() then
+		set.dirty = false;
+        return;
+    end
 
 	if IsChangingSpec() then
 		set.dirty = false;
@@ -2511,6 +2545,20 @@ local function ContinueActivateProfile()
 		target.dirty = false;
 		return;
 	end
+
+	if pvpTalentSet and not IsPvPTalentSetActive(pvpTalentSet) and PlayerNeedsTome() then
+		RequestTome();
+		target.dirty = false;
+		return;
+	end
+
+	if essencesSet and not IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
+		RequestTome();
+		target.dirty = false;
+		return;
+	end
+
+	StaticPopup_Hide("BTWSETS_NEEDTOME");
 
 	-- local talentSet = GetTalentSetIfNeeded(set.talentSet);
     -- -- if set.talentSet and not IsTalentSetActive(GetTalentSet(set.talentSet)) and PlayerNeedsTome() then
@@ -2983,7 +3031,7 @@ function BtWSetsSetsScrollFrame_Update()
 	local hasScrollBar = #setScrollItems > NUM_SCROLL_ITEMS_TO_DISPLAY;
     for index=1,NUM_SCROLL_ITEMS_TO_DISPLAY do
         local button = BtWSetsFrame.ScrollButtons[index];
-        button:SetWidth(hasScrollBar and 160 or 180);
+        button:SetWidth(hasScrollBar and 155 or 175);
         
         local item = setScrollItems[index + offset];
         if item then
@@ -3032,8 +3080,8 @@ function BtWSetsSetsScrollFrame_Update()
         else
             button:Hide();
         end
-    end
-    FauxScrollFrame_Update(BtWSetsFrame.Scroll, #setScrollItems, NUM_SCROLL_ITEMS_TO_DISPLAY, SCROLL_ROW_HEIGHT, nil, nil, nil, nil, nil, nil, true);
+	end
+    FauxScrollFrame_Update(BtWSetsFrame.Scroll, #setScrollItems, NUM_SCROLL_ITEMS_TO_DISPLAY, SCROLL_ROW_HEIGHT, nil, nil, nil, nil, nil, nil, false);
 end
 local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
     wipe(setScrollItems);
@@ -3858,14 +3906,17 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:SetFocus();
             end)
         elseif button.isActivate then
-			local set = frame.set;
-			ActivateTalentSet(set);
+			ActivateProfile({
+				talentSet = frame.set.setID;
+			});
         elseif button.isHeader then
             talentSetsCollapsedBySpecID[button.id] = not talentSetsCollapsedBySpecID[button.id] and true or nil;
             TalentsTabUpdate(frame);
         else
 			if IsModifiedClick("SHIFT") then
-				ActivateTalentSet(GetTalentSet(button.id));
+				ActivateProfile({
+					talentSet = button.id;
+				});
 			else 
 				self:SetTalentSet(GetTalentSet(button.id));
 				frame.Name:ClearFocus();
@@ -3880,14 +3931,17 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 PvPTalents.Name:SetFocus();
             end)
         elseif button.isActivate then
-			local set = PvPTalents.set;
-			ActivatePvPTalentSet(set);
+			ActivateProfile({
+				pvpTalentSet = PvPTalents.set.setID;
+			});
         elseif button.isHeader then
             pvpTalentSetsCollapsedBySpecID[button.id] = not pvpTalentSetsCollapsedBySpecID[button.id] and true or nil;
             PvPTalentsTabUpdate(self.PvPTalents);
         else
 			if IsModifiedClick("SHIFT") then
-				ActivatePvPTalentSet(GetPvPTalentSet(button.id));
+				ActivateProfile({
+					pvpTalentSet = button.id;
+				});
 			else 
 				self:SetPvPTalentSet(GetPvPTalentSet(button.id));
 				PvPTalents.Name:ClearFocus();
@@ -3902,14 +3956,17 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:SetFocus();
             end)
         elseif button.isActivate then
-			local set = frame.set;
-			ActivateEssenceSet(set);
+			ActivateProfile({
+				essencesSet = frame.set.setID;
+			});
         elseif button.isHeader then
             essenceSetsCollapsedByRole[button.id] = not essenceSetsCollapsedByRole[button.id] and true or nil;
             EssencesTabUpdate(frame);
 		else
 			if IsModifiedClick("SHIFT") then
-				ActivateEssenceSet(GetEssenceSet(button.id));
+				ActivateProfile({
+					essencesSet = button.id;
+				});
 			else 
 				self:SetEssenceSet(GetEssenceSet(button.id));
 				frame.Name:ClearFocus();
@@ -3923,12 +3980,22 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:HighlightText();
                 frame.Name:SetFocus();
             end)
+        elseif button.isActivate then
+			ActivateProfile({
+				equipmentSet = frame.set.setID;
+			});
         elseif button.isHeader then
             equipmentSetsCollapsedByCharacter[button.id] = not equipmentSetsCollapsedByCharacter[button.id] and true or nil;
             EquipmentTabUpdate(frame);
         else
-            self:SetEquipmentSet(GetEquipmentSet(button.id));
-            frame.Name:ClearFocus();
+			if IsModifiedClick("SHIFT") then
+				ActivateProfile({
+					equipmentSet = button.id;
+				});
+			else 
+				self:SetEquipmentSet(GetEquipmentSet(button.id));
+				frame.Name:ClearFocus();
+			end
         end
     end
 end
@@ -4355,21 +4422,6 @@ local function PlayerNeedsTomeNowForSet(set)
     -- return PlayerNeedsTome();
 end
 
-local tomes = {
-    141446
-};
-local function GetBestTome()
-    for _,itemId in ipairs(tomes) do
-        print(itemId);
-        local count = GetItemCount(itemId);
-        print(itemId, count);
-        if count >= 1 then
-            local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
-            print(itemId, name, link, quality, icon);
-            return name, link, quality, icon;
-        end
-    end
-end
 
 -- /run BtWSets_ActivateSet("Outlaw M+")
 -- function BtWSets_ActivateSet(id)
@@ -4435,7 +4487,13 @@ function eventHandler:ADDON_LOADED(...)
             conditions = {
 
             },
-        };
+		};
+		
+		for _,sets in pairs(BtWSetsSets) do
+			for setID,set in pairs(sets) do
+				set.setID = setID;
+			end
+		end
 
         BtWSetsSpecInfo = BtWSetsSpecInfo or {};
         BtWSetsRoleInfo = BtWSetsRoleInfo or {};
@@ -4599,6 +4657,9 @@ end
 function eventHandler:PLAYER_ENTER_COMBAT()
     StaticPopup_Hide("BTWSETS_NEEDTOME");
 end
+function eventHandler:PLAYER_LEAVE_COMBAT()
+    target.dirty = true;
+end
 function eventHandler:PLAYER_UPDATE_RESTING()
     if AreTalentsLocked() then
         StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
@@ -4686,6 +4747,7 @@ eventHandler:RegisterEvent("PLAYER_ENTERING_WORLD");
 eventHandler:RegisterEvent("VARIABLES_LOADED");
 eventHandler:RegisterEvent("EQUIPMENT_SETS_CHANGED");
 eventHandler:RegisterEvent("PLAYER_ENTER_COMBAT");
+eventHandler:RegisterEvent("PLAYER_LEAVE_COMBAT");
 eventHandler:RegisterEvent("PLAYER_UPDATE_RESTING");
 eventHandler:RegisterUnitEvent("UNIT_AURA", "player");
 eventHandler:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
