@@ -723,6 +723,7 @@
 					<Size x="145" y="22"/>
 					<Anchors>
 						<Anchor point="LEFT" x="15" y="0"/>
+						<Anchor point="RIGHT" x="-5" y="0"/>
 					</Anchors>
 					<Color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				</FontString>
@@ -765,9 +766,9 @@
 				</Anchors>
 				<Size x="185" y="0"/>
 			</Frame>
-			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate">
+			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.ScrollInset" relativePoint="TOPRIGHT" x="4" y="0" />
+					<Anchor point="TOPLEFT" relativeKey="$parent.ScrollInset" relativePoint="TOPRIGHT" x="6" y="0" />
 					<Anchor point="BOTTOMRIGHT" x="-6" y="26" />
 				</Anchors>
 			</Frame>
@@ -941,38 +942,10 @@
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem17" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button parentKey="Add" inherits="UIPanelButtonTemplate" text="PAPERDOLL_NEWEQUIPMENTSET">
-				<KeyValues>
-					<KeyValue type="boolean" key="isAdd" value="true"/>
-				</KeyValues>
-				<Size x="80" y="22"/>
-				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.ScrollInset" relativePoint="BOTTOM" x="0" y="0"/>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						BtWSetsFrame:ScrollItemClick(self);
-					</OnClick>
-				</Scripts>
-			</Button>
-			<Button parentKey="Activate" inherits="UIPanelButtonTemplate" text="TALENT_SPEC_ACTIVATE">
-				<KeyValues>
-					<KeyValue type="boolean" key="isActivate" value="true"/>
-				</KeyValues>
-				<Size x="80" y="22"/>
-				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.BodyInset" relativePoint="BOTTOM" x="0" y="0"/>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						BtWSetsFrame:ScrollItemClick(self);
-					</OnClick>
-				</Scripts>
-			</Button>
 			<Frame parentKey="Profiles" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
@@ -1021,6 +994,12 @@
 					</Layer>
 				</Layers>
 				<Frames>
+					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-6" y="4" />
+							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+						</Anchors>
+					</Frame>
 					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
@@ -1075,9 +1054,15 @@
 			<Frame parentKey="Talents" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
+					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+						</Anchors>
+					</Frame>
 					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" x="0" y="0"/>
@@ -1101,7 +1086,7 @@
 					</EditBox>
 					<Frame name="$parentTalentRow1" inherits="BtWSetsTalentRowTemplate" parentArray="rows">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="0" y="-46"/>
+							<Anchor point="TOPLEFT" x="0" y="-52"/>
 						</Anchors>
 					</Frame>
 					<Frame name="$parentTalentRow2" inherits="BtWSetsTalentRowTemplate" parentArray="rows">
@@ -1139,9 +1124,15 @@
 			<Frame parentKey="PvPTalents" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
+					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+						</Anchors>
+					</Frame>
 					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" x="0" y="0"/>
@@ -1165,7 +1156,7 @@
 					</EditBox>
 					<Frame name="$parentTalentRow" inherits="BtWSetsTalentRowTemplate" parentKey="trinkets">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="0" y="-46"/>
+							<Anchor point="TOPLEFT" x="0" y="-52"/>
 						</Anchors>
 					</Frame>
 					<Frame name="$parentTalentGrid" inherits="BtWSetsTalentGridTemplate" parentKey="others">
@@ -1178,9 +1169,15 @@
 			<Frame parentKey="Essences" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
+					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+						</Anchors>
+					</Frame>
 					<Frame name="$parentRoleDropDown" parentKey="RoleDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" x="0" y="0"/>
@@ -1204,7 +1201,7 @@
 					</EditBox>
 					<Button inherits="BtWSetsAzeriteMilestoneMajorSlotTemplate" parentKey="MajorSlot" virtual="true">
 						<Anchors>
-							<Anchor point="CENTER" relativePoint="CENTER" x="-100" y="-20"/>
+							<Anchor point="CENTER" relativePoint="CENTER" x="-100" y="-30"/>
 						</Anchors>
 					</Button>
 					<Button inherits="BtWSetsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1" virtual="true">
@@ -1220,8 +1217,8 @@
 					<ScrollFrame parentKey="EssenceList" inherits="HybridScrollFrameTemplate">
 						<Size x="185" y="250"/>
 						<Anchors>
-							<Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="-20" y="-10"/>
-							<Anchor point="BOTTOM" x="-20" y="0"/>
+							<Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="-18" y="-26"/>
+							<Anchor point="BOTTOM" x="0" y="0"/>
 						</Anchors>
 						<Frames>
 							<Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
@@ -1237,9 +1234,15 @@
 			<Frame parentKey="Equipment" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
+					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+						</Anchors>
+					</Frame>
 					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
@@ -1272,7 +1275,7 @@
 							<KeyValue type="string" key="invType" value="INVTYPE_HEAD"/>
 						</KeyValues>
 						<Anchors>
-							<Anchor point="TOPLEFT" x="12" y="-32"/>
+							<Anchor point="TOPLEFT" x="0" y="-46"/>
 						</Anchors>
 					</ItemButton>
 					<ItemButton parentKey="NeckSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
@@ -1372,7 +1375,7 @@
 							<KeyValue type="string" key="invType" value="INVTYPE_HAND"/>
 						</KeyValues>
 						<Anchors>
-							<Anchor point="TOPRIGHT" x="-12" y="-32"/>
+							<Anchor point="TOPRIGHT" x="0" y="-46"/>
 						</Anchors>
 					</ItemButton>
 					<ItemButton parentKey="WaistSlot" inherits="BtWSetsItemSlotButtonRightTemplate">
@@ -1506,7 +1509,7 @@
 			<Frame parentKey="Conditions" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
-					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
@@ -1633,6 +1636,34 @@
 					</Frame>
 				</Frames>
 			</Frame>
+			<Button parentKey="Add" inherits="UIPanelButtonTemplate" text="PAPERDOLL_NEWEQUIPMENTSET">
+				<KeyValues>
+					<KeyValue type="boolean" key="isAdd" value="true"/>
+				</KeyValues>
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="TOP" relativeKey="$parent.ScrollInset" relativePoint="BOTTOM" x="0" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BtWSetsFrame:ScrollItemClick(self);
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button parentKey="Activate" inherits="UIPanelButtonTemplate" text="TALENT_SPEC_ACTIVATE">
+				<KeyValues>
+					<KeyValue type="boolean" key="isActivate" value="true"/>
+				</KeyValues>
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="TOP" relativeKey="$parent.Profiles" relativePoint="BOTTOM" x="0" y="-2"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BtWSetsFrame:ScrollItemClick(self);
+					</OnClick>
+				</Scripts>
+			</Button>
             <Button name="$parentTab1" inherits="BtWSetsFrameTabTemplate" id="1" text="PROFILES">
                	<Anchors>
 					<Anchor point="BOTTOMLEFT" x="7" y="-30"/>

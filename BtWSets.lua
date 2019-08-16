@@ -3031,7 +3031,7 @@ function BtWSetsSetsScrollFrame_Update()
 	local hasScrollBar = #setScrollItems > NUM_SCROLL_ITEMS_TO_DISPLAY;
     for index=1,NUM_SCROLL_ITEMS_TO_DISPLAY do
         local button = BtWSetsFrame.ScrollButtons[index];
-        button:SetWidth(hasScrollBar and 155 or 175);
+        button:SetWidth(hasScrollBar and 153 or 175);
         
         local item = setScrollItems[index + offset];
         if item then
