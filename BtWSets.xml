@@ -775,8 +775,60 @@
 				<Size x="160" y="0"/>
 				<Anchors>
 					<Anchor point="TOPLEFT" x="10" y="-30"/>
-					<Anchor point="BOTTOM" x="0" y="10"/>
+					<Anchor point="BOTTOM" x="0" y="36"/>
 				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="ScrollBarTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+							<Size x="27" y="48"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="5"/>
+							</Anchors>
+							<TexCoords left="0" right="0.484375" top="0" bottom=".20"/>
+						</Texture>
+						<Texture parentKey="ScrollBarBottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+							<Size x="27" y="64"/>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+							</Anchors>
+							<TexCoords left="0.515625" right="1.0" top="0.1440625" bottom="0.4140625"/>
+						</Texture>
+						<Texture parentKey="ScrollBarMiddle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.ScrollBarTop" relativePoint="BOTTOMLEFT"/>
+								<Anchor point="BOTTOMRIGHT" relativeKey="$parent.ScrollBarBottom" relativePoint="TOPRIGHT"/>
+							</Anchors>
+							<TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
+						</Texture>
+
+						<!-- <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+							<Size>
+								<AbsDimension x="31" y="256"/>
+							</Size>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
+									<Offset>
+										<AbsDimension x="-2" y="5"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<TexCoords left="0" right="0.484375" top="0" bottom="1.0"/>
+						</Texture>
+						<Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+							<Size>
+								<AbsDimension x="31" y="106"/>
+							</Size>
+							<Anchors>
+								<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT">
+									<Offset>
+										<AbsDimension x="-2" y="-2"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+							<TexCoords left="0.515625" right="1.0" top="0" bottom="0.4140625"/>
+						</Texture> -->
+					</Layer>
+				</Layers>
 				<Scripts>
 					<OnVerticalScroll>
 						FauxScrollFrame_OnVerticalScroll(self, offset, 22, BtWSetsSetsScrollFrame_Update);
@@ -873,6 +925,34 @@
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem17" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
+			<Button parentKey="Add" inherits="UIPanelButtonTemplate" text="PAPERDOLL_NEWEQUIPMENTSET">
+				<KeyValues>
+					<KeyValue type="boolean" key="isAdd" value="true"/>
+				</KeyValues>
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="TOP" relativeKey="$parent.ScrollInset" relativePoint="BOTTOM" x="0" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BtWSetsFrame:ScrollItemClick(self);
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button parentKey="Activate" inherits="UIPanelButtonTemplate" text="TALENT_SPEC_ACTIVATE">
+				<KeyValues>
+					<KeyValue type="boolean" key="isActivate" value="true"/>
+				</KeyValues>
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="TOP" relativeKey="$parent.BodyInset" relativePoint="BOTTOM" x="0" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BtWSetsFrame:ScrollItemClick(self);
+					</OnClick>
+				</Scripts>
+			</Button>
 			<Frame parentKey="Profiles" parentArray="TabFrames">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
@@ -887,38 +967,38 @@
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
+						<!-- <FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-70"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString> -->
+						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-130"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-190"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
-							<Size x="175" y="0"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-250"/>
-							</Anchors>
-							<Color r="0.75" g="0.61" b="0"/>
-						</FontString>
 						<FontString parentKey="EquipmentTitle" text="BAG_FILTER_EQUIPMENT" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-310"/>
+								<Anchor point="TOPLEFT" x="0" y="-250"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
@@ -939,13 +1019,13 @@
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<!-- <Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
 						<Scripts>
 						</Scripts>
-					</Frame>
+					</Frame> -->
 					<Frame name="$parentTalentsDropDown" parentKey="TalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.TalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
@@ -1130,8 +1210,8 @@
 						<Frames>
 							<Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
 								<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-12"/>
-							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="13"/>
+									<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-12"/>
+									<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="13"/>
 								</Anchors>
 							</Slider>
 						</Frames>
@@ -1412,7 +1492,129 @@
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="36"/>
 				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString parentKey="NameTitle" text="NAME" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-10"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-70"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-130"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-190"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-250"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="EquipmentTitle" text="BAG_FILTER_EQUIPMENT" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="0" y="-310"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+					</Layer>
+				</Layers>
 				<Frames>
+					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
+						<Size x="0" y="22"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.NameTitle" relativePoint="BOTTOMLEFT" x="20" y="-10"/>
+							<Anchor point="RIGHT" x="-10" y="0"/>
+						</Anchors>
+						<Scripts>
+							<OnTextChanged>
+								self:GetParent().set.name = self:GetText();
+								BtWSetsFrame:Update();
+							</OnTextChanged>
+							<OnEnterPressed function="EditBox_ClearFocus"/>
+						</Scripts>
+					</EditBox>
+					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
+					<Frame parentKey="DungeonDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
+					<Frame parentKey="DifficultyDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
+					<EditBox parentKey="SubZoneEditBox" letters="50" autoFocus="false" inherits="InputBoxTemplate">
+						<Size x="0" y="22"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.NameTitle" relativePoint="BOTTOMLEFT" x="20" y="-10"/>
+							<Anchor point="RIGHT" x="-10" y="0"/>
+						</Anchors>
+						<Scripts>
+							<OnTextChanged>
+								BtWSetsFrame:Update();
+							</OnTextChanged>
+							<OnEnterPressed function="EditBox_ClearFocus"/>
+						</Scripts>
+					</EditBox>
+					<Frame parentKey="Affix1DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
+					<Frame parentKey="Affix2DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
+					<Frame parentKey="Affix3DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
+					<Frame parentKey="Affix4DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+						<Scripts>
+						</Scripts>
+					</Frame>
 				</Frames>
 			</Frame>
             <Button name="$parentTab1" inherits="BtWSetsFrameTabTemplate" id="1" text="PROFILES">
@@ -1445,6 +1647,30 @@
                    <Anchor point="LEFT" relativeTo="$parentTab5" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
+			<Frame parentKey="HelpTipBox" inherits="GlowBoxTemplate" enableMouse="true" hidden="true" frameStrata="DIALOG">
+				<Size x="200" y="100"/>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString parentKey="Text" inherits="GameFontHighlightLeft" justifyV="TOP" text="AZERITE_EMPOWERED_UNSELECTED_TRAITS_HELPTIP">
+							<Size x="190" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="10" y="-18"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Button parentKey="CloseButton" inherits="UIPanelCloseButton">
+						<Scripts>
+							<OnClick>
+								<!-- self:GetParent():GetParent():OnHelpTipManuallyClosed(self:GetParent().closeFlag); -->
+								HideParentPanel(self);
+							</OnClick>
+						</Scripts>
+					</Button>
+					<Frame parentKey="Arrow" inherits="GlowBoxArrowTemplate" />
+				</Frames>
+			</Frame>
 		</Frames>
 		<Scripts>
 			<OnLoad method="OnLoad"/>
@@ -1496,4 +1722,47 @@
 
         </Scripts>
     </Frame>
+	
+	<Button name="BtWSetsMinimapButton" mixin="BtWSetsMinimapMixin" parent="Minimap" frameStrata="MEDIUM" frameLevel="8" enableMouse="true" movable="true" hidden="false">
+		<Size>
+			<AbsDimension x="33" y="33"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER" x="-12" y="-80"/>
+		</Anchors>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentIcon" file="Interface\Icons\inv_misc_questionmark">
+					<Size>
+						<AbsDimension x="21" y="21"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="7" y="-6"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+					<Size>
+						<AbsDimension x="56" y="56"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnEvent method="OnEvent"/>
+			<OnDragStart method="OnDragStart"/>
+			<OnDragStop method="OnDragStop"/>
+			<OnClick method="OnClick"/>
+		</Scripts>
+	</Button>
 </Ui>
