@@ -4168,84 +4168,10 @@ local function TalentsTabUpdate(self)
         end
     end
 
+	local activateButton = self:GetParent().Activate;
+	activateButton:SetEnabled(classID == select(2, UnitClass("player")));
+
 	SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.talents, talentSetsCollapsedBySpecID);
-
-    -- wipe(setScrollItems);
-    -- wipe(setsFiltered);
-    -- local sets = BtWSetsSets.talents;
-    -- for setID,set in pairs(sets) do
-    --     setsFiltered[set.specID] = setsFiltered[set.specID] or {};
-    --     setsFiltered[set.specID][#setsFiltered[set.specID]+1] = setID;
-    -- end
-
-    -- local className, classFile, classID = UnitClass("player");
-    -- local classColor = C_ClassColor.GetClassColor(classFile);
-    -- className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-    -- for specIndex=1,GetNumSpecializationsForClassID(classID) do
-    --     local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-    --     local isCollapsed = talentSetsCollapsedBySpecID[specID] and true or false;
-    --     if setsFiltered[specID] then
-    --         setScrollItems[#setScrollItems+1] = {
-    --             specID = specID,
-    --             isHeader = true,
-    --             isCollapsed = isCollapsed,
-    --             name = format("%s: %s", classColor:WrapTextInColorCode(className), specName),
-    --         };
-    --         if not isCollapsed then
-    --             sort(setsFiltered[specID], function (a,b)
-    --                 return sets[a].name < sets[b].name;
-    --             end)
-    --             for _,setID in ipairs(setsFiltered[specID]) do
-    --                 setScrollItems[#setScrollItems+1] = {
-    --                     setID = setID,
-    --                     name = sets[setID].name,
-    --                     selected = sets[setID] == self.set,
-    --                 };
-    --             end
-    --         end
-    --     end
-    -- end
-    -- local playerClassID = classID;
-
-    -- for classID=1,GetNumClasses() do
-    --     if classID ~= playerClassID then
-    --         local className, classFile = GetClassInfo(classID);
-    --         local classColor = C_ClassColor.GetClassColor(classFile);
-    --         className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-    --         for specIndex=1,GetNumSpecializationsForClassID(classID) do
-    --             local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-    --             local isCollapsed = talentSetsCollapsedBySpecID[specID] and true or false;
-    --             if setsFiltered[specID] then
-    --                 setScrollItems[#setScrollItems+1] = {
-    --                     specID = specID,
-    --                     isHeader = true,
-    --                     isCollapsed = isCollapsed,
-    --                     name = format("%s: %s", classColor:WrapTextInColorCode(className), specName),
-    --                 };
-    --                 if not isCollapsed then
-    --                     sort(setsFiltered[specID], function (a,b)
-    --                         return sets[a].name < sets[b].name;
-    --                     end)
-    --                     for _,setID in ipairs(setsFiltered[specID]) do
-    --                         setScrollItems[#setScrollItems+1] = {
-    --                             setID = setID,
-    --                             name = sets[setID].name,
-    --                             selected = sets[setID] == self.set,
-    --                         };
-    --                     end
-    --                 end
-    --             end
-    --         end
-    --     end
-    -- end
-    -- setScrollItems[#setScrollItems+1] = {
-    --     isAdd = true,
-    --     name = "Add New",
-    -- };
-
-    -- BtWSetsSetsScrollFrame_Update();
 end
 local function PvPTalentsTabUpdate(self)
     if not self.set.specID then
@@ -4640,17 +4566,23 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:SetFocus();
             end)
         elseif button.isActivate then
-			ActivateProfile({
-				talentSet = frame.set.setID;
-			});
+			local set = frame.set;
+			if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+				ActivateProfile({
+					talentSet = set.setID;
+				});
+			end
         elseif button.isHeader then
             talentSetsCollapsedBySpecID[button.id] = not talentSetsCollapsedBySpecID[button.id] and true or nil;
             TalentsTabUpdate(frame);
         else
 			if IsModifiedClick("SHIFT") then
-				ActivateProfile({
-					talentSet = button.id;
-				});
+				local set = GetTalentSet(button.id);
+				if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+					ActivateProfile({
+						talentSet = button.id;
+					});
+				end
 			else 
 				self:SetTalentSet(GetTalentSet(button.id));
 				frame.Name:ClearFocus();
