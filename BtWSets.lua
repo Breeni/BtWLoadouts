@@ -8,6 +8,7 @@
 	Ability to redisplay the minimap icon
 	OPIE intergration
 	Profile keybindings
+	Talent, equipment, etc. lock checking
 ]]
 
 local ADDON_NAME = ...;
@@ -2723,7 +2724,8 @@ local function AddProfile()
     local set = {
 		setID = GetNextSetID(BtWSetsSets.profiles),
         specID = specID,
-        name = name,
+		name = name,
+		useCount = 0,
     };
     BtWSetsSets.profiles[set.setID] = set;
     return set;
@@ -2780,6 +2782,7 @@ local function AddTalentSet()
         specID = specID,
         name = name,
         talents = talents,
+		useCount = 0,
     };
     BtWSetsSets.talents[set.setID] = set;
     return set;
@@ -2911,6 +2914,7 @@ local function AddPvPTalentSet()
         specID = specID,
         name = name,
         talents = talents,
+		useCount = 0,
     };
     BtWSetsSets.pvptalents[set.setID] = set;
     return set;
@@ -3008,6 +3012,7 @@ local function AddEssenceSet()
         role = role,
         name = name,
         essences = selected,
+		useCount = 0,
     };
     BtWSetsSets.essences[set.setID] = set;
     return set;
@@ -3232,6 +3237,7 @@ local function AddEquipmentSet()
         name = name,
 		equipment = equipment,
 		ignored = ignored,
+		useCount = 0,
     };
     BtWSetsSets.equipment[set.setID] = set;
     return set;
@@ -3245,6 +3251,7 @@ local function AddBlankEquipmentSet()
         name = name,
 		equipment = {},
 		ignored = {},
+		useCount = 0,
     };
     BtWSetsSets.equipment[set.setID] = set;
     return set;
