@@ -1670,6 +1670,20 @@
 					</OnClick>
 				</Scripts>
 			</Button>
+			<Button parentKey="Delete" inherits="UIPanelButtonTemplate" text="DELETE">
+				<KeyValues>
+					<KeyValue type="boolean" key="isDelete" value="true"/>
+				</KeyValues>
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeKey="$parent.Profiles" relativePoint="BOTTOMRIGHT" x="0" y="-2"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BtWSetsFrame:ScrollItemClick(self);
+					</OnClick>
+				</Scripts>
+			</Button>
             <Button name="$parentTab1" inherits="BtWSetsFrameTabTemplate" id="1" text="PROFILES">
                	<Anchors>
 					<Anchor point="BOTTOMLEFT" x="7" y="-30"/>

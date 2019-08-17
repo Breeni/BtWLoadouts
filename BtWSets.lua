@@ -3,9 +3,9 @@
 	Minimap icon should show progress texture and help box
 	Conditions
 	Profiles need to support multiple sets of the same type
-	Delete button
 	Equipment popout
 	Equipment sets should store location
+	Ability to redisplay the minimap icon
 ]]
 
 local ADDON_NAME = ...;
@@ -143,7 +143,7 @@ StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
 	hideOnEscape = 1
 };
 StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
-	text = "A tome is needed to continue equiping your set.",
+	text = L["A tome is needed to continue equiping your set."],
 	button1 = YES,
 	button2 = NO,
     OnAccept = function(self)
@@ -168,6 +168,26 @@ StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
         tomeButton:SetAttribute("active", false);
 	end,
 	hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_DELETESET"] = {
+	text = L["Are you sure you wish to delete the set \"%s\". This cannot be reversed."],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, data)
+		data.func(data.set);
+	end,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_DELETEINUSESET"] = {
+	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, data)
+		data.func(data.set);
+	end,
 	timeout = 0,
 	hideOnEscape = 1
 };
@@ -2638,19 +2658,57 @@ local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
 end
 
 
+local function GetNextSetID(sets)
+	local nextID = sets.nextID or 1;
+	while sets[nextID] ~= nil do
+		nextID = nextID + 1;
+	end
+	sets.nextID = nextID;
+	return nextID;
+end
+local function DeleteSet(sets, id)
+	if type(id) == "table" then
+		if id.setID then
+			DeleteSet(sets, id.setID);
+		else
+			for k,v in pairs(BtWSetsSets.profiles) do
+				if v == id then
+					sets[k] = nil;
+					break;
+				end
+			end
+		end
+	else
+		sets[id] = nil;
+		if sets.nextID == nil or id < sets.nextID then
+			sets.nextID = id;
+		end
+	end
+end
 local function AddProfile()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
     local name = format("New Profile", specName);
 
     local set = {
+		setID = GetNextSetID(BtWSetsSets.profiles),
         specID = specID,
         name = name,
     };
-    BtWSetsSets.profiles[#BtWSetsSets.profiles+1] = set;
+    BtWSetsSets.profiles[set.setID] = set;
     return set;
 end
 local function GetProfile(id)
     return BtWSetsSets.profiles[id];
+end
+local function DeleteProfile(id)
+	DeleteSet(BtWSetsSets.profiles, id);
+
+	local frame = BtWSetsFrame.Profiles;
+	local set = frame.set;
+	if set == id or set.setID == id then
+		frame.set = select(2,next(BtWSetsSets.profiles)) or {};
+		BtWSetsFrame:Update();
+	end
 end
 
 -- Check if the talents in the table talentIDs are selected
@@ -2687,7 +2745,7 @@ local function AddTalentSet()
     end
 
     local set = {
-		setID = #BtWSetsSets.talents + 1,
+		setID = GetNextSetID(BtWSetsSets.talents),
         specID = specID,
         name = name,
         talents = talents,
@@ -2741,6 +2799,25 @@ local function CombineTalentSets(result, ...)
 	end
 
 	return result;
+end
+local function DeleteTalentSet(id)
+	DeleteSet(BtWSetsSets.talents, id);
+
+	if type(id) == "table" then
+		id = id.setID;
+	end
+	for _,set in pairs(BtWSetsSets.profiles) do
+		if type(set) == "table" and set.talentSet == id then
+			set.talentSet = nil;
+		end
+	end
+
+	local frame = BtWSetsFrame.Talents;
+	local set = frame.set;
+	if set.setID == id then
+		frame.set = select(2,next(BtWSetsSets.talents)) or {};
+		BtWSetsFrame:Update();
+	end
 end
 
 local function IsPvPTalentSetActive(set)
@@ -2799,11 +2876,12 @@ local function AddPvPTalentSet()
     end
 
     local set = {
+		setID = GetNextSetID(BtWSetsSets.pvptalents),
         specID = specID,
         name = name,
         talents = talents,
     };
-    BtWSetsSets.pvptalents[#BtWSetsSets.pvptalents+1] = set;
+    BtWSetsSets.pvptalents[set.setID] = set;
     return set;
 end
 local function GetPvPTalentSet(id)
@@ -2842,6 +2920,25 @@ local function CombinePvPTalentSets(result, ...)
 
 	return result;
 end
+local function DeletePvPTalentSet(id)
+	DeleteSet(BtWSetsSets.pvptalents, id);
+
+	if type(id) == "table" then
+		id = id.setID;
+	end
+	for _,set in pairs(BtWSetsSets.profiles) do
+		if type(set) == "table" and set.pvpTalentSet == id then
+			set.pvpTalentSet = nil;
+		end
+	end
+
+	local frame = BtWSetsFrame.PvPTalents;
+	local set = frame.set;
+	if set.setID == id then
+		frame.set = select(2,next(BtWSetsSets.pvptalents)) or {};
+		BtWSetsFrame:Update();
+	end
+end
 
 local function IsEssenceSetActive(set)
     for milestoneID,essenceID in pairs(set.essences) do
@@ -2876,11 +2973,12 @@ local function AddEssenceSet()
     selected[117] = C_AzeriteEssence.GetMilestoneEssence(117);
 
     local set = {
+		setID = GetNextSetID(BtWSetsSets.essences),
         role = role,
         name = name,
         essences = selected,
     };
-    BtWSetsSets.essences[#BtWSetsSets.essences+1] = set;
+    BtWSetsSets.essences[set.setID] = set;
     return set;
 end
 local function GetEssenceSet(id)
@@ -2915,6 +3013,25 @@ local function CombineEssenceSets(result, ...)
 	end
 
 	return result;
+end
+local function DeleteEssenceSet(id)
+	DeleteSet(BtWSetsSets.essences, id);
+
+	if type(id) == "table" then
+		id = id.setID;
+	end
+	for _,set in pairs(BtWSetsSets.profiles) do
+		if type(set) == "table" and set.essencesSet == id then
+			set.essencesSet = nil;
+		end
+	end
+
+	local frame = BtWSetsFrame.Essences;
+	local set = frame.set;
+	if set.setID == id then
+		frame.set = select(2,next(BtWSetsSets.essences)) or {};
+		BtWSetsFrame:Update();
+	end
 end
 
 -- A map from the equipment manager ids to our sets
@@ -3072,24 +3189,26 @@ local function AddEquipmentSet()
 	end
 
     local set = {
+		setID = GetNextSetID(BtWSetsSets.equipment),
         character = characterRealm .. "-" .. characterName,
         name = name,
 		equipment = equipment,
 		ignored = ignored,
     };
-    BtWSetsSets.equipment[#BtWSetsSets.equipment+1] = set;
+    BtWSetsSets.equipment[set.setID] = set;
     return set;
 end
 -- Adds a blank equipment set for the current character
 local function AddBlankEquipmentSet()
     local characterName, characterRealm = UnitName("player"), GetRealmName();
     local set = {
+		setID = GetNextSetID(BtWSetsSets.equipment),
         character = characterRealm .. "-" .. characterName,
         name = name,
 		equipment = {},
 		ignored = {},
     };
-    BtWSetsSets.equipment[#BtWSetsSets.equipment+1] = set;
+    BtWSetsSets.equipment[set.setID] = set;
     return set;
 end
 local function GetEquipmentSet(id)
@@ -3131,6 +3250,25 @@ local function CombineEquipmentSets(result, ...)
 	end
 
 	return result;
+end
+local function DeleteEquipmentSet(id)
+	DeleteSet(BtWSetsSets.equipment, id);
+
+	if type(id) == "table" then
+		id = id.setID;
+	end
+	for _,set in pairs(BtWSetsSets.profiles) do
+		if type(set) == "table" and set.equipmentSet == id then
+			set.equipmentSet = nil;
+		end
+	end
+
+	local frame = BtWSetsFrame.Equipment;
+	local set = frame.set;
+	if set.setID == id then
+		frame.set = select(2,next(BtWSetsSets.equipment)) or {};
+		BtWSetsFrame:Update();
+	end
 end
 
 -- Check all the pieces of a profile and make sure they are valid together
@@ -3477,8 +3615,19 @@ local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
     local tab = GetTabFrame(BtWSetsFrame, selectedTab);
 
     CloseDropDownMenus();
-    local set = tab.set;
-    set.talentSet = arg1;
+	local set = tab.set;
+	
+	if set.talentSet then
+		local subset = GetTalentSet(set.talentSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	set.talentSet = arg1;
+	
+	if set.talentSet then
+		local subset = GetTalentSet(set.talentSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
 
     BtWSetsFrame:Update();
 end
@@ -3502,8 +3651,10 @@ local function TalentsDropDownInit(self, level, menuList)
 		
         wipe(setsFiltered);
         local sets = BtWSetsSets.talents;
-        for setID,talentSet in pairs(sets) do
-			setsFiltered[talentSet.specID] = true;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.specID] = true;
+			end
 		end
 
 		local className, classFile, classID = UnitClass("player");
@@ -3545,8 +3696,8 @@ local function TalentsDropDownInit(self, level, menuList)
 		
         wipe(setsFiltered);
         local sets = BtWSetsSets.talents;
-		for setID,talentSet in pairs(sets) do
-			if talentSet.specID == specID then
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.specID == specID then
 				setsFiltered[#setsFiltered+1] = setID;
 			end
 		end
@@ -3600,8 +3751,19 @@ local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
     local tab = GetTabFrame(BtWSetsFrame, selectedTab);
 
     CloseDropDownMenus();
-    local set = tab.set;
-    set.pvpTalentSet = arg1;
+	local set = tab.set;
+	
+	if set.pvpTalentSet then
+		local subset = GetPvPTalentSet(set.pvpTalentSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	set.pvpTalentSet = arg1;
+	
+	if set.pvpTalentSet then
+		local subset = GetPvPTalentSet(set.pvpTalentSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
 
     BtWSetsFrame:Update();
 end
@@ -3625,8 +3787,10 @@ local function PvPTalentsDropDownInit(self, level, menuList)
     
         wipe(setsFiltered);
         local sets = BtWSetsSets.pvptalents;
-        for setID,talentSet in pairs(sets) do
-			setsFiltered[talentSet.specID] = true;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.specID] = true;
+			end
         end
 
 		local className, classFile, classID = UnitClass("player");
@@ -3668,8 +3832,8 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 		
         wipe(setsFiltered);
         local sets = BtWSetsSets.pvptalents;
-		for setID,talentSet in pairs(sets) do
-			if talentSet.specID == specID then
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.specID == specID then
 				setsFiltered[#setsFiltered+1] = setID;
 			end
 		end
@@ -3725,7 +3889,18 @@ local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
     local set = tab.set;
+	
+	if set.essencesSet then
+		local subset = GetEssenceSet(set.essencesSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
     set.essencesSet = arg1;
+	
+	if set.essencesSet then
+		local subset = GetEssenceSet(set.essencesSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
 
     BtWSetsFrame:Update();
 end
@@ -3745,13 +3920,15 @@ local function EssencesDropDownInit(self, level, menuList)
     if (level or 1) == 1 then
         info.text = NONE;
         info.func = EssencesDropDown_OnClick;
-        info.checked = set.essenceSet == nil;
+        info.checked = set.essencesSet == nil;
 		UIDropDownMenu_AddButton(info, level);
 		
         wipe(setsFiltered);
         local sets = BtWSetsSets.essences;
         for setID,subset in pairs(sets) do
-			setsFiltered[subset.role] = true;
+			if type(subset) == "table" then
+				setsFiltered[subset.role] = true;
+			end
 		end
 
 		local role = select(5, GetSpecializationInfo(GetSpecialization()));
@@ -3781,7 +3958,7 @@ local function EssencesDropDownInit(self, level, menuList)
         wipe(setsFiltered);
         local sets = BtWSetsSets.essences;
 		for setID,subset in pairs(sets) do
-			if subset.role == role then
+			if type(subset) == "table" and subset.role == role then
 				setsFiltered[#setsFiltered+1] = setID;
 			end
 		end
@@ -3793,7 +3970,7 @@ local function EssencesDropDownInit(self, level, menuList)
             info.text = sets[setID].name;
             info.arg1 = setID;
             info.func = EssencesDropDown_OnClick;
-            info.checked = set.essenceSet == setID;
+            info.checked = set.essencesSet == setID;
             UIDropDownMenu_AddButton(info, level);
 		end
 		
@@ -3838,8 +4015,19 @@ local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
     local set = tab.set;
+	
+	if set.equipmentSet then
+		local subset = GetEquipmentSet(set.equipmentSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
 	set.equipmentSet = arg1;
 	set.character = arg2;
+	
+	if set.equipmentSet then
+		local subset = GetEquipmentSet(set.equipmentSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
 
     BtWSetsFrame:Update();
 end
@@ -3865,7 +4053,9 @@ local function EquipmentDropDownInit(self, level, menuList)
         wipe(setsFiltered);
         local sets = BtWSetsSets.equipment;
         for setID,subset in pairs(sets) do
-			setsFiltered[subset.character] = true;
+			if type(subset) == "table" then
+				setsFiltered[subset.character] = true;
+			end
 		end
 
 		local characters = {};
@@ -3912,7 +4102,7 @@ local function EquipmentDropDownInit(self, level, menuList)
         wipe(setsFiltered);
         local sets = BtWSetsSets.equipment;
 		for setID,subset in pairs(sets) do
-			if subset.character == character then
+			if type(subset) == "table" and subset.character == character then
 				setsFiltered[#setsFiltered+1] = setID;
 			end
 		end
@@ -4036,9 +4226,11 @@ end
 local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
     wipe(setScrollItems);
     wipe(setsFiltered);
-    for setID,set in pairs(sets) do
-        setsFiltered[set.specID or 0] = setsFiltered[set.specID or 0] or {};
-        setsFiltered[set.specID or 0][#setsFiltered[set.specID or 0]+1] = setID;
+	for setID,set in pairs(sets) do
+		if type(set) == "table" then
+        	setsFiltered[set.specID or 0] = setsFiltered[set.specID or 0] or {};
+			setsFiltered[set.specID or 0][#setsFiltered[set.specID or 0]+1] = setID;
+		end
     end
 
     local className, classFile, classID = UnitClass("player");
@@ -4136,8 +4328,10 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
     wipe(setScrollItems);
     wipe(setsFiltered);
     for setID,set in pairs(sets) do
-        setsFiltered[set.role] = setsFiltered[set.role] or {};
-        setsFiltered[set.role][#setsFiltered[set.role]+1] = setID;
+		if type(set) == "table" then
+        	setsFiltered[set.role] = setsFiltered[set.role] or {};
+			setsFiltered[set.role][#setsFiltered[set.role]+1] = setID;
+		end
     end
 
 	local role = select(5, GetSpecializationInfo(GetSpecialization()));
@@ -4196,8 +4390,10 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
     wipe(setScrollItems);
     wipe(setsFiltered);
     for setID,set in pairs(sets) do
-        setsFiltered[set.character] = setsFiltered[set.character] or {};
-        setsFiltered[set.character][#setsFiltered[set.character]+1] = setID;
+		if type(set) == "table" then
+        	setsFiltered[set.character] = setsFiltered[set.character] or {};
+			setsFiltered[set.character][#setsFiltered[set.character]+1] = setID;
+		end
 	end
 	
 	local characters = {};
@@ -4273,7 +4469,9 @@ local function SetsScrollFrame_NoFilter(selected, sets)
     wipe(setScrollItems);
     wipe(setsFiltered);
     for setID,set in pairs(sets) do
-        setsFiltered[#setsFiltered+1] = setID;
+		if type(set) == "table" then
+			setsFiltered[#setsFiltered+1] = setID;
+		end
 	end
 	sort(setsFiltered, function (a,b)
 		return sets[a].name < sets[b].name;
@@ -4343,6 +4541,9 @@ local function ProfilesTabUpdate(self)
 
 	local activateButton = self:GetParent().Activate;
 	activateButton:SetEnabled(validForPlayer);
+
+	local deleteButton = self:GetParent().Delete;
+	deleteButton:SetEnabled(true);
 	
 	local helpTipBox = self:GetParent().HelpTipBox;
 	helpTipBox:Hide();
@@ -4391,6 +4592,9 @@ local function TalentsTabUpdate(self)
 
 	local activateButton = self:GetParent().Activate;
 	activateButton:SetEnabled(classID == select(2, UnitClass("player")));
+
+	local deleteButton = self:GetParent().Delete;
+	deleteButton:SetEnabled(true);
 	
 	local helpTipBox = self:GetParent().HelpTipBox;
 	helpTipBox:Hide();
@@ -4478,6 +4682,9 @@ local function PvPTalentsTabUpdate(self)
 
 	local activateButton = self:GetParent().Activate;
 	activateButton:SetEnabled(classID == select(2, UnitClass("player")));
+
+	local deleteButton = self:GetParent().Delete;
+	deleteButton:SetEnabled(true);
 	
 	local helpTipBox = self:GetParent().HelpTipBox;
 	helpTipBox:Hide();
@@ -4553,6 +4760,9 @@ local function EssencesTabUpdate(self)
 
 	local activateButton = self:GetParent().Activate;
 	activateButton:SetEnabled(role == select(5, GetSpecializationInfo(GetSpecialization())));
+
+	local deleteButton = self:GetParent().Delete;
+	deleteButton:SetEnabled(true);
 	
 	local helpTipBox = self:GetParent().HelpTipBox;
 	helpTipBox:Hide();
@@ -4570,8 +4780,12 @@ local function EquipmentTabUpdate(self)
 	local character = set.character;
 	local characterInfo = GetCharacterInfo(character);
 	local equipment = set.equipment;
+	
+	local characterName, characterRealm = UnitFullName("player");
+	local playerCharacter = characterRealm .. "-" .. characterName;
 
-	if set.managerID then
+	-- Update the name for the built in equipment set, but only for the current player
+	if set.character == playerCharacter and set.managerID then
 		local managerName = C_EquipmentSet.GetEquipmentSetInfo(set.managerID);
 		if managerName ~= set.name then
 			C_EquipmentSet.ModifyEquipmentSet(set.managerID, set.name);
@@ -4579,9 +4793,7 @@ local function EquipmentTabUpdate(self)
 	end
 	
 	self.Name:SetText(self.set.name or "");
-	
-	local characterName, characterRealm = UnitFullName("player");
-	local playerCharacter = characterRealm .. "-" .. characterName;
+	self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
 
 	local model = self.Model;
 	if not characterInfo or character == playerCharacter then
@@ -4603,31 +4815,46 @@ local function EquipmentTabUpdate(self)
 	local activateButton = self:GetParent().Activate;
 	activateButton:SetEnabled(character == playerCharacter);
 
+	local deleteButton = self:GetParent().Delete;
+	deleteButton:SetEnabled(set.managerID == nil);
+
 	local helpTipBox = self:GetParent().HelpTipBox;
-	if set.managerID ~= nil and not helpTipIgnored["EQUIPMENT_MANAGER_BLOCK"] then
-		helpTipBox.closeFlag = "EQUIPMENT_MANAGER_BLOCK";
+	if character ~= playerCharacter then
+		if not helpTipIgnored["INVALID_PLAYER"] then
+			helpTipBox.closeFlag = "INVALID_PLAYER";
 
-		HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
-		
-		helpTipBox:Show();
-		HelpTipBox_SetText(helpTipBox, L["Can not edit equipment manager sets."]);
-	elseif character ~= playerCharacter and not helpTipIgnored["INVALID_PLAYER"] then
-		helpTipBox.closeFlag = "INVALID_PLAYER";
+			HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Can not equip sets for other characters."]);
+		elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
+	elseif set.managerID ~= nil then
+		if not helpTipIgnored["EQUIPMENT_MANAGER_BLOCK"] then
+			helpTipBox.closeFlag = "EQUIPMENT_MANAGER_BLOCK";
 
-		HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
-		
-		helpTipBox:Show();
-		HelpTipBox_SetText(helpTipBox, L["Can not equip sets for other characters."]);
-	elseif not helpTipIgnored["EQUIPMENT_IGNORE"] then
-		helpTipBox.closeFlag = "EQUIPMENT_IGNORE";
+			HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Can not edit equipment manager sets."]);
+		elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
+	else
+		if not helpTipIgnored["EQUIPMENT_IGNORE"] then
+			helpTipBox.closeFlag = "EQUIPMENT_IGNORE";
 
-		HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
-		
-		helpTipBox:Show();
-		HelpTipBox_SetText(helpTipBox, L["Shift+Left Mouse Button to ignore a slot."]);
-	elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
-		helpTipBox.closeFlag = nil;
-		helpTipBox:Hide();
+			HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Shift+Left Mouse Button to ignore a slot."]);
+		elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
 	end
 
 	SetsScrollFrame_CharacterFilter(set, BtWSetsSets.equipment, equipmentSetsCollapsedByCharacter);
@@ -4635,6 +4862,9 @@ end
 local function ConditionsTabUpdate(self)
 	local activateButton = self:GetParent().Activate;
 	activateButton:SetEnabled(false);
+
+	local deleteButton = self:GetParent().Delete;
+	deleteButton:SetEnabled(false);
 	
 	local helpTipBox = self:GetParent().HelpTipBox;
 	helpTipBox:Hide();
@@ -4797,12 +5027,25 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:HighlightText();
                 frame.Name:SetFocus();
             end)
-        elseif button.isHeader then
-            profilesCollapsedBySpecID[button.id] = not profilesCollapsedBySpecID[button.id] and true or nil;
-            ProfilesTabUpdate(frame);
+		elseif button.isDelete then
+			local set = frame.set;
+			if set.useCount > 0 then
+				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+					set = set,
+					func = DeleteProfile,
+				});
+			else
+				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+					set = set,
+					func = DeleteProfile,
+				});
+			end
         elseif button.isActivate then
 			local set = frame.set;
 			ActivateProfile(set);
+        elseif button.isHeader then
+            profilesCollapsedBySpecID[button.id] = not profilesCollapsedBySpecID[button.id] and true or nil;
+            ProfilesTabUpdate(frame);
         else
 			if IsModifiedClick("SHIFT") then
 				ActivateProfile(GetProfile(button.id));
@@ -4819,6 +5062,19 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:HighlightText();
                 frame.Name:SetFocus();
             end)
+		elseif button.isDelete then
+			local set = frame.set;
+			if set.useCount > 0 then
+				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+					set = set,
+					func = DeleteTalentSet,
+				});
+			else
+				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+					set = set,
+					func = DeleteTalentSet,
+				});
+			end
         elseif button.isActivate then
 			local set = frame.set;
 			if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
@@ -4850,6 +5106,19 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:HighlightText();
                 frame.Name:SetFocus();
             end)
+		elseif button.isDelete then
+			local set = frame.set;
+			if set.useCount > 0 then
+				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+					set = set,
+					func = DeletePvPTalentSet,
+				});
+			else
+				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+					set = set,
+					func = DeletePvPTalentSet,
+				});
+			end
         elseif button.isActivate then
 			local set = frame.set;
 			if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
@@ -4881,6 +5150,19 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:HighlightText();
                 frame.Name:SetFocus();
             end)
+		elseif button.isDelete then
+			local set = frame.set;
+			if set.useCount > 0 then
+				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+					set = set,
+					func = DeleteEssenceSet,
+				});
+			else
+				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+					set = set,
+					func = DeleteEssenceSet,
+				});
+			end
         elseif button.isActivate then
 			ActivateProfile({
 				essencesSet = frame.set.setID;
@@ -4906,6 +5188,19 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
                 frame.Name:HighlightText();
                 frame.Name:SetFocus();
             end)
+		elseif button.isDelete then
+			local set = frame.set;
+			if set.useCount > 0 then
+				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+					set = set,
+					func = DeleteEquipmentSet,
+				});
+			else
+				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+					set = set,
+					func = DeleteEquipmentSet,
+				});
+			end
         elseif button.isActivate then
 			ActivateProfile({
 				equipmentSet = frame.set.setID;
@@ -5385,7 +5680,29 @@ function eventHandler:ADDON_LOADED(...)
 		
 		for _,sets in pairs(BtWSetsSets) do
 			for setID,set in pairs(sets) do
-				set.setID = setID;
+				if type(set) == "table" then
+					set.setID = setID;
+					set.useCount = 0;
+				end
+			end
+		end
+		for setID,set in pairs(BtWSetsSets.profiles) do
+			if type(set) == "table" then
+				if set.talentSet then
+					BtWSetsSets.talents[set.talentSet].useCount = BtWSetsSets.talents[set.talentSet].useCount + 1;
+				end
+
+				if set.pvpTalentSet then
+					BtWSetsSets.pvptalents[set.pvpTalentSet].useCount = BtWSetsSets.pvptalents[set.pvpTalentSet].useCount + 1;
+				end
+
+				if set.essencesSet then
+					BtWSetsSets.essences[set.essencesSet].useCount = BtWSetsSets.essences[set.essencesSet].useCount + 1;
+				end
+
+				if set.equipmentSet then
+					BtWSetsSets.equipment[set.equipmentSet].useCount = BtWSetsSets.equipment[set.equipmentSet].useCount + 1;
+				end
 			end
 		end
 
@@ -5406,8 +5723,8 @@ function eventHandler:ADDON_LOADED(...)
 		do
 			local name, realm = UnitName("player"), GetRealmName();
 			local character = format("%s-%s", realm, name);
-			for setID,set in ipairs(BtWSetsSets.equipment) do
-				if set.character == character and set.managerID ~= nil then
+			for setID,set in pairs(BtWSetsSets.equipment) do
+				if type(set) == "table" and set.character == character and set.managerID ~= nil then
 					equipmentSetMap[set.managerID] = set;
 				end
 			end
@@ -5521,12 +5838,14 @@ local function GetItemLinkByLocation(location)
 end
 function eventHandler:EQUIPMENT_SETS_CHANGED(...)
 	-- Update our saved equipment sets to match the built in equipment sets
+	local oldEquipmentSetMap = equipmentSetMap;
+	equipmentSetMap = {};
+
 	local managerIDs = C_EquipmentSet.GetEquipmentSetIDs();
 	for _,managerID in ipairs(managerIDs) do
-		local set = equipmentSetMap[managerID];
+		local set = oldEquipmentSetMap[managerID];
 		if set == nil then
 			set = AddBlankEquipmentSet();
-			equipmentSetMap[managerID] = set;
 		end
 
 		set.managerID = managerID;
@@ -5542,9 +5861,18 @@ function eventHandler:EQUIPMENT_SETS_CHANGED(...)
 				set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
 			end
 		end
+
+		equipmentSetMap[managerID] = set;
+		oldEquipmentSetMap[managerID] = nil;
 	end
 
-	--@TODO unlink or delete sets that are removed from the equipment manager
+	for managerID,set in pairs(oldEquipmentSetMap) do
+		if set.managerID == managerID then
+			set.managerID = nil;
+		end
+	end
+
+	BtWSetsFrame:Update();
 end
 function eventHandler:PLAYER_ENTER_COMBAT()
     StaticPopup_Hide("BTWSETS_NEEDTOME");
