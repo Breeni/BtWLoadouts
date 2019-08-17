@@ -719,7 +719,13 @@
 						<Anchor point="LEFT" x="4" y="0"/>
 					</Anchors>
 				</Texture>
-				<FontString name="$parentName" inherits="GameFontNormalSmall" justifyH="LEFT" parentKey="name">
+				<Texture parentKey="BuiltinIcon" file="Interface\FriendsFrame\Battlenet-WoWicon">
+					<Size x="16" y="16"/>
+					<Anchors>
+						<Anchor point="LEFT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Name" inherits="GameFontNormalSmall" justifyH="LEFT">
 					<Size x="145" y="22"/>
 					<Anchors>
 						<Anchor point="LEFT" x="15" y="0"/>
@@ -729,7 +735,7 @@
 				</FontString>
 			</Layer>
 			<Layer level="OVERLAY">
-				<Texture name="$parentSelectedBar" parentKey="SelectedBar" file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar" alpha="0.4" alphaMode="ADD" hidden="true"/>
+				<Texture parentKey="SelectedBar" file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar" alpha="0.4" alphaMode="ADD" hidden="true"/>
 			</Layer>
 		</Layers>
 		<HighlightTexture file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar-Blue" alphaMode="ADD"/>
@@ -1710,7 +1716,7 @@
 					<Button parentKey="CloseButton" inherits="UIPanelCloseButton">
 						<Scripts>
 							<OnClick>
-								<!-- self:GetParent():GetParent():OnHelpTipManuallyClosed(self:GetParent().closeFlag); -->
+								self:GetParent():GetParent():OnHelpTipManuallyClosed(self:GetParent().closeFlag);
 								HideParentPanel(self);
 							</OnClick>
 						</Scripts>
@@ -1771,32 +1777,28 @@
     </Frame>
 	
 	<Button name="BtWSetsMinimapButton" mixin="BtWSetsMinimapMixin" parent="Minimap" frameStrata="MEDIUM" frameLevel="8" enableMouse="true" movable="true" hidden="false">
-		<Size>
-			<AbsDimension x="33" y="33"/>
-		</Size>
+		<Size x="33" y="33"/>
 		<Anchors>
 			<Anchor point="CENTER" x="-12" y="-80"/>
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="$parentIcon" file="Interface\Icons\inv_misc_questionmark">
-					<Size>
-						<AbsDimension x="21" y="21"/>
-					</Size>
+				<Texture parentKey="Icon" file="Interface\ICONS\Ability_marksmanship">
+					<Size x="21" y="21"/>
 					<Anchors>
-						<Anchor point="TOPLEFT">
-							<Offset>
-								<AbsDimension x="7" y="-6"/>
-							</Offset>
-						</Anchor>
+						<Anchor point="TOPLEFT" x="7" y="-6"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="TomeIcon" file="Interface\ICONS\INV_Relics_LibramofGrace" hidden="true">
+					<Size x="21" y="21"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="7" y="-6"/>
 					</Anchors>
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
 				<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
-					<Size>
-						<AbsDimension x="56" y="56"/>
-					</Size>
+					<Size x="56" y="56"/>
 					<Anchors>
 						<Anchor point="TOPLEFT"/>
 					</Anchors>
