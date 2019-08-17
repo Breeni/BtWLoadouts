@@ -706,7 +706,7 @@
 	</ItemButton>
 
 	<Button name="BtWSetsScrollListItem" parentArray="ScrollButtons" virtual="true">
-		<Size x="160" y="22"/>
+		<Size x="160" y="21"/>
 		<Layers>
 			<Layer level="ARTWORK">
 				<Texture parentKey="ExpandedIcon" inherits="Char-Stat-Minus">
@@ -749,7 +749,7 @@
 		</Scripts>
 	</Button>
 	<Frame name="BtWSetsFrame" mixin="BtWSetsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true">
-		<Size x="779" y="462"/>
+		<Size x="779" y="448"/>
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
@@ -854,7 +854,7 @@
 			</ScrollFrame>
 			<Button name="$parentScrollItem1" inherits="BtWSetsScrollListItem">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.Scroll" relativePoint="TOPLEFT" x="0" y="0"/>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Scroll" relativePoint="TOPLEFT" x="0" y="-4"/>
 				</Anchors>
 			</Button>
 			<Button name="$parentScrollItem2" inherits="BtWSetsScrollListItem">
@@ -952,42 +952,42 @@
 						<FontString parentKey="NameTitle" text="NAME" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-10"/>
+								<Anchor point="TOPLEFT" x="10" y="-10"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-70"/>
+								<Anchor point="TOPLEFT" x="10" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-130"/>
+								<Anchor point="TOPLEFT" x="10" y="-130"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-190"/>
+								<Anchor point="TOPLEFT" x="10" y="-190"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-250"/>
+								<Anchor point="TOPLEFT" x="10" y="-250"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="EquipmentTitle" text="BAG_FILTER_EQUIPMENT" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-310"/>
+								<Anchor point="TOPLEFT" x="10" y="-310"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
@@ -996,7 +996,7 @@
 				<Frames>
 					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="-6" y="4" />
+							<Anchor point="TOPLEFT" x="-4" y="4" />
 							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
 						</Anchors>
 					</Frame>
@@ -1059,7 +1059,7 @@
 				<Frames>
 					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="TOPLEFT" x="-4" y="-31" />
 							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
 						</Anchors>
 					</Frame>
@@ -1086,7 +1086,7 @@
 					</EditBox>
 					<Frame name="$parentTalentRow1" inherits="BtWSetsTalentRowTemplate" parentArray="rows">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="0" y="-52"/>
+							<Anchor point="TOPLEFT" x="0" y="-38"/>
 						</Anchors>
 					</Frame>
 					<Frame name="$parentTalentRow2" inherits="BtWSetsTalentRowTemplate" parentArray="rows">
@@ -1129,7 +1129,7 @@
 				<Frames>
 					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="TOPLEFT" x="-4" y="-31" />
 							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
 						</Anchors>
 					</Frame>
@@ -1143,7 +1143,7 @@
 					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
-							<Anchor point="LEFT" relativeKey="$parent.SpecDropDown" relativePoint="RIGHT" x="10" y="3"/>
+							<Anchor point="LEFT" relativeKey="$parent.SpecDropDown" relativePoint="RIGHT" x="10" y="2"/>
 							<Anchor point="RIGHT" x="0" y="0"/>
 						</Anchors>
 						<Scripts>
@@ -1156,7 +1156,7 @@
 					</EditBox>
 					<Frame name="$parentTalentRow" inherits="BtWSetsTalentRowTemplate" parentKey="trinkets">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="0" y="-52"/>
+							<Anchor point="TOPLEFT" x="0" y="-38"/>
 						</Anchors>
 					</Frame>
 					<Frame name="$parentTalentGrid" inherits="BtWSetsTalentGridTemplate" parentKey="others">
@@ -1174,7 +1174,7 @@
 				<Frames>
 					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="TOPLEFT" x="-4" y="-31"/>
 							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
 						</Anchors>
 					</Frame>
@@ -1188,7 +1188,7 @@
 					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
-							<Anchor point="LEFT" relativeKey="$parent.RoleDropDown" relativePoint="RIGHT" x="10" y="3"/>
+							<Anchor point="LEFT" relativeKey="$parent.RoleDropDown" relativePoint="RIGHT" x="10" y="2"/>
 							<Anchor point="RIGHT" x="0" y="0"/>
 						</Anchors>
 						<Scripts>
@@ -1217,7 +1217,7 @@
 					<ScrollFrame parentKey="EssenceList" inherits="HybridScrollFrameTemplate">
 						<Size x="185" y="250"/>
 						<Anchors>
-							<Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="-18" y="-26"/>
+							<Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="-18" y="-11"/>
 							<Anchor point="BOTTOM" x="0" y="0"/>
 						</Anchors>
 						<Frames>
@@ -1239,7 +1239,7 @@
 				<Frames>
 					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="-4" y="-46" />
+							<Anchor point="TOPLEFT" x="-4" y="-31"/>
 							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
 						</Anchors>
 					</Frame>
@@ -1275,7 +1275,7 @@
 							<KeyValue type="string" key="invType" value="INVTYPE_HEAD"/>
 						</KeyValues>
 						<Anchors>
-							<Anchor point="TOPLEFT" x="0" y="-46"/>
+							<Anchor point="TOPLEFT" x="0" y="-31"/>
 						</Anchors>
 					</ItemButton>
 					<ItemButton parentKey="NeckSlot" inherits="BtWSetsItemSlotButtonLeftTemplate">
@@ -1375,7 +1375,7 @@
 							<KeyValue type="string" key="invType" value="INVTYPE_HAND"/>
 						</KeyValues>
 						<Anchors>
-							<Anchor point="TOPRIGHT" x="0" y="-46"/>
+							<Anchor point="TOPRIGHT" x="0" y="-31"/>
 						</Anchors>
 					</ItemButton>
 					<ItemButton parentKey="WaistSlot" inherits="BtWSetsItemSlotButtonRightTemplate">

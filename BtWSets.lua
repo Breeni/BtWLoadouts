@@ -3752,7 +3752,7 @@ end
 
 
 local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
-local SCROLL_ROW_HEIGHT = 22;
+local SCROLL_ROW_HEIGHT = 21;
 local setScrollItems = {};
 local profilesCollapsedBySpecID = {};
 local talentSetsCollapsedBySpecID = {};
