@@ -70,7 +70,6 @@ local Settings = SettingsCreate({
 local target = {};
 _G['BtWSetsTarget'] = target; -- @TODO REMOVE
 local function CancelActivateProfile()
-	print("CancelActivateProfile", GetTime());
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
@@ -3155,10 +3154,12 @@ local function ActivateEquipmentSet(set)
 					end
 				end
 			else -- Unequip
-				if GetInventoryItemLink("player", inventorySlotId) ~= nil then -- Already empty
+				if GetInventoryItemLink("player", inventorySlotId) ~= nil then
 					if EmptyInventorySlot(inventorySlotId) then
 						ignored[inventorySlotId] = true;
 					end
+				else -- Already unequipped
+					ignored[inventorySlotId] = true;
 				end
 			end
 		end
@@ -3412,11 +3413,10 @@ local function ActivateProfile(profile)
 		target.equipmentSets[#target.equipmentSets+1] = profile.equipmentSet;
 	end
 
-	print("ActivateProfile", GetTime());
     target.dirty = true;
 	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
-	eventHandler:RegisterEvent("PLAYER_ENTER_COMBAT");
-	eventHandler:RegisterEvent("PLAYER_LEAVE_COMBAT");
+	eventHandler:RegisterEvent("PLAYER_REGEN_DISABLED");
+	eventHandler:RegisterEvent("PLAYER_REGEN_ENABLED");
 	eventHandler:RegisterEvent("PLAYER_UPDATE_RESTING");
 	eventHandler:RegisterUnitEvent("UNIT_AURA", "player");
 	eventHandler:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
@@ -3430,7 +3430,6 @@ local function ActivateProfile(profile)
 	eventHandler:Show();
 end
 local function ContinueActivateProfile()
-	print("ContinueActivateProfile", GetTime());
     local set = target;
 
 	if InCombatLockdown() then
@@ -5647,7 +5646,6 @@ end
 
 local frame = CreateFrame("Frame");
 frame:SetScript("OnEvent", function (self, event, ...)
-	print(event, ...);
     self[event](self, ...);
 end);
 function frame:ADDON_LOADED(...)
@@ -5880,18 +5878,15 @@ eventHandler:SetScript("OnEvent", function (self, event, ...)
     self[event](self, ...);
 end);
 function eventHandler:GET_ITEM_INFO_RECEIVED()
-	print("GET_ITEM_INFO_RECEIVED", GetTime());
     target.dirty = true;
 end
-function eventHandler:PLAYER_ENTER_COMBAT()
+function eventHandler:PLAYER_REGEN_DISABLED()
     StaticPopup_Hide("BTWSETS_NEEDTOME");
 end
-function eventHandler:PLAYER_LEAVE_COMBAT()
-	print("PLAYER_LEAVE_COMBAT", GetTime());
+function eventHandler:PLAYER_REGEN_ENABLED()
     target.dirty = true;
 end
 function eventHandler:PLAYER_UPDATE_RESTING()
-	print("PLAYER_UPDATE_RESTING", GetTime());
 	target.dirty = true;
     -- if AreTalentsLocked() then
     --     StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
@@ -5930,21 +5925,18 @@ function eventHandler:PLAYER_UPDATE_RESTING()
 end
 function eventHandler:UNIT_AURA()
 	C_Timer.After(1, function()
-		print("UNIT_AURA", GetTime());
 		target.dirty = true;
 	end);
 end
 function eventHandler:PLAYER_SPECIALIZATION_CHANGED(...)
 	-- Added delay just to be safe
 	C_Timer.After(1, function()
-		print("PLAYER_SPECIALIZATION_CHANGED", GetTime());
 		target.dirty = true;
 	end);
 end
 function eventHandler:ACTIVE_TALENT_GROUP_CHANGED(...)
 end
 function eventHandler:ZONE_CHANGED(...)
-	print("ZONE_CHANGED", GetTime());
 	target.dirty = true;
 end
 eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
