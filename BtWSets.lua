@@ -6,11 +6,14 @@
 	Equipment popout
 	Equipment sets should store location
 	Ability to redisplay the minimap icon
+	OPIE intergration
+	Profile keybindings
 ]]
 
 local ADDON_NAME = ...;
 
 local eventHandler = CreateFrame("Frame");
+eventHandler:Hide();
 local L = {};
 
 setmetatable(L, {
@@ -66,7 +69,9 @@ local Settings = SettingsCreate({
 local target = {};
 _G['BtWSetsTarget'] = target; -- @TODO REMOVE
 local function CancelActivateProfile()
+	print("CancelActivateProfile", GetTime());
 	wipe(target);
+	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 end
 
@@ -148,8 +153,10 @@ StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
 	button2 = NO,
     OnAccept = function(self)
 	end,
-    OnCancel = function(self)
-		CancelActivateProfile();
+	OnCancel = function(self, data, reason)
+		if reason == "clicked" then
+			CancelActivateProfile();
+		end
 	end,
     OnShow = function(self)
         tomeButton:SetParent(self);
@@ -2519,18 +2526,24 @@ local tomes = {
     141446
 };
 local function GetBestTome()
-    for _,itemId in ipairs(tomes) do
+	for _,itemId in ipairs(tomes) do
         local count = GetItemCount(itemId);
         if count >= 1 then
-            local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
-            return name, link, quality, icon;
+			local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
+            return itemId, name, link, quality, icon;
         end
     end
 end
 local function RequestTome()
-	local name, link, quality, icon = GetBestTome();
-	local r, g, b = GetItemQualityColor(quality); 
-	StaticPopup_Show("BTWSETS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+	if not StaticPopup_Visible("BTWSETS_NEEDTOME") then --  and not StaticPopup_Visible("BTWSETS_NEEDRESTED")
+		local itemId, name, link, quality, icon = GetBestTome();
+		if name ~= nil then
+			local r, g, b = GetItemQualityColor(quality or 2); 
+			StaticPopup_Show("BTWSETS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+		elseif itemId == nil then
+			-- StaticPopup_Show("BTWSETS_NEEDRESTED", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+		end
+	end
 end
 local function IsChangingSpec()
     local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
@@ -2655,6 +2668,24 @@ local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
     end
 
     return false
+end
+-- Modified version of EquipmentManager_GetItemInfoByLocation but gets the item link instead
+local function GetItemLinkByLocation(location)
+	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location);
+	if not player and not bank and not bags and not voidStorage then -- Invalid location
+		return;
+	end
+
+	local itemLink;
+	if voidStorage then
+		itemLink = GetVoidItemHyperlinkString(tab, voidSlot);
+	elseif not bags then -- and (player or bank) 
+		itemLink = GetInventoryItemLink("player", slot);
+	else -- bags
+		itemLink = GetContainerItemLink(bag, slot);
+	end
+	
+	return itemLink;
 end
 
 
@@ -3165,15 +3196,22 @@ local function ActivateEquipmentSet(set)
     -- Unequip items
     local complete = true
     for inventorySlotId = firstEquipped, lastEquipped do
-        if not ignored[inventorySlotId] and not expected[inventorySlotId] then -- Unequip
-            if not EmptyInventorySlot(inventorySlotId) then
-                print('Cannot unequip ' .. GetInventoryItemLink("player", inventorySlotId))
-                complete = false
-            end
+		if not ignored[inventorySlotId] then
+			if expected[inventorySlotId] then
+				print('Cannot equip ' .. expected[inventorySlotId])
+				complete = false
+			else -- Unequip
+				if not EmptyInventorySlot(inventorySlotId) then
+					print('Cannot unequip ' .. GetInventoryItemLink("player", inventorySlotId))
+					complete = false
+				end
+			end
         end
     end
     
-    ClearCursor()
+	ClearCursor()
+	
+	return complete;
 end
 local function AddEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
@@ -3367,10 +3405,25 @@ local function ActivateProfile(profile)
 		target.equipmentSets[#target.equipmentSets+1] = profile.equipmentSet;
 	end
 
+	print("ActivateProfile", GetTime());
     target.dirty = true;
+	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
+	eventHandler:RegisterEvent("PLAYER_ENTER_COMBAT");
+	eventHandler:RegisterEvent("PLAYER_LEAVE_COMBAT");
+	eventHandler:RegisterEvent("PLAYER_UPDATE_RESTING");
+	eventHandler:RegisterUnitEvent("UNIT_AURA", "player");
+	eventHandler:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+	eventHandler:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
+	eventHandler:RegisterEvent("ZONE_CHANGED");
+	eventHandler:RegisterEvent("ZONE_CHANGED_INDOORS");
+	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
+	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
+	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
+	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
 	eventHandler:Show();
 end
 local function ContinueActivateProfile()
+	print("ContinueActivateProfile", GetTime());
     local set = target;
 
 	if InCombatLockdown() then
@@ -3429,25 +3482,7 @@ local function ContinueActivateProfile()
 	end
 
 	StaticPopup_Hide("BTWSETS_NEEDTOME");
-
-	-- local talentSet = GetTalentSetIfNeeded(set.talentSet);
-    -- -- if set.talentSet and not IsTalentSetActive(GetTalentSet(set.talentSet)) and PlayerNeedsTome() then
-    -- --     RequestTome();
-    -- --     return;
-    -- -- end
-
-	-- local pvpTalentSet = GetPvPTalentSetIfNeeded(set.pvpTalentSet);
-    -- -- if set.pvpTalentSet and not IsPvPTalentSetActive(GetPvPTalentSet(set.pvpTalentSet)) and PlayerNeedsTome() then
-    -- --     RequestTome();
-    -- --     return;
-    -- -- end
-
-	-- local essencesSet = GetEssenceSetIfNeeded(set.essencesSet);
-    -- -- if set.essencesSet and not IsEssenceSetActive(GetEssenceSet(set.essencesSet)) and PlayerNeedsTome() then
-    -- --     RequestTome();
-    -- --     return;
-    -- -- end
-
+	-- StaticPopup_Hide("BTWSETS_NEEDRESTED");
 
     if talentSet then
         ActivateTalentSet(talentSet);
@@ -3467,7 +3502,9 @@ local function ContinueActivateProfile()
 	end
 
     if equipmentSet then
-        ActivateEquipmentSet(equipmentSet);
+		if not ActivateEquipmentSet(equipmentSet) then
+			return;
+		end
     end
 
 	-- Done
@@ -5590,52 +5627,6 @@ function BtWSetsMinimapMenu_Init(self, level)
     end
 end
 
-
-
-
-
-
--- local function IsSetActive(set)
---     local specIndex = GetSpecialization()
---     if not specIndex then
---         return false;
---     end
-    
---     local specID = GetSpecializationInfo(specIndex)
---     if set.specID ~= specID then
---         return false;
---     end
-
---     if set.talentSet and not IsTalentSetActive(GetTalentSet(set.talentSet)) then
---         return false;
---     end
-
---     if set.pvpTalentSet and not IsPvPTalentSetActive(GetPvPTalentSet(set.talentSet)) then
---         return false;
---     end
-
---     if set.essencesSet and not IsEssenceSetActive(GetEssenceSet(set.essencesSet)) then
---         return false;
---     end
-
---     if set.equipmentSet and not IsEquipmentSetActive(GetEquipmentSet(set.equipmentSet)) then
---         return false;
---     end
-
---     return true;
--- end
-
--- Ask the user if we should active this set
--- local function RequestActivateSet(set)
---     if IsSetActive(set) then
---         return;
---     end
-
---     BtWSetsRequestFrame.set = set;
---     BtWSetsRequestFrame:Show();
--- end
-
-
 local function PlayerNeedsTomeNowForSet(set)
     return;
 
@@ -5647,24 +5638,12 @@ local function PlayerNeedsTomeNowForSet(set)
     -- return PlayerNeedsTome();
 end
 
-
--- /run BtWSets_ActivateSet("Outlaw M+")
--- function BtWSets_ActivateSet(id)
---     local profile = BtWSetsSets.profiles[id];
---     assert(profile);
---     BeginActivateSet(profile);
---     frame:Show();
-
---     -- local name, link, quality, icon = GetBestTome();
---     -- local r, g, b = GetItemQualityColor(quality); 
---     -- StaticPopup_Show("BTWSETS_REQUESTACTIVATETOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
--- end
-
--- @TODO check spell cancelled event to cancel changing spec/set
-eventHandler:SetScript("OnEvent", function (self, event, ...)
+local frame = CreateFrame("Frame");
+frame:SetScript("OnEvent", function (self, event, ...)
+	print(event, ...);
     self[event](self, ...);
 end);
-function eventHandler:ADDON_LOADED(...)
+function frame:ADDON_LOADED(...)
     if ... == ADDON_NAME then
         BtWSetsSettings = BtWSetsSettings or {};
 		Settings(BtWSetsSettings);
@@ -5731,7 +5710,10 @@ function eventHandler:ADDON_LOADED(...)
 		end
     end
 end
-function eventHandler:PLAYER_ENTERING_WORLD()
+function frame:PLAYER_LOGIN(...)
+	self:EQUIPMENT_SETS_CHANGED();
+end
+function frame:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
         local specID = GetSpecializationInfo(specIndex);
         local spec = BtWSetsSpecInfo[specID] or {};
@@ -5815,28 +5797,7 @@ function eventHandler:PLAYER_ENTERING_WORLD()
 		BtWSetsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
 	end
 end
-function eventHandler:VARIABLES_LOADED(...)
-	self:EQUIPMENT_SETS_CHANGED();
-end
--- Modified version of EquipmentManager_GetItemInfoByLocation but gets the item link instead
-local function GetItemLinkByLocation(location)
-	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location);
-	if not player and not bank and not bags and not voidStorage then -- Invalid location
-		return;
-	end
-
-	local itemLink;
-	if voidStorage then
-		itemLink = GetVoidItemHyperlinkString(tab, voidSlot);
-	elseif not bags then -- and (player or bank) 
-		itemLink = GetInventoryItemLink("player", slot);
-	else -- bags
-		itemLink = GetContainerItemLink(bag, slot);
-	end
-	
-	return itemLink;
-end
-function eventHandler:EQUIPMENT_SETS_CHANGED(...)
+function frame:EQUIPMENT_SETS_CHANGED(...)
 	-- Update our saved equipment sets to match the built in equipment sets
 	local oldEquipmentSetMap = equipmentSetMap;
 	equipmentSetMap = {};
@@ -5874,57 +5835,7 @@ function eventHandler:EQUIPMENT_SETS_CHANGED(...)
 
 	BtWSetsFrame:Update();
 end
-function eventHandler:PLAYER_ENTER_COMBAT()
-    StaticPopup_Hide("BTWSETS_NEEDTOME");
-end
-function eventHandler:PLAYER_LEAVE_COMBAT()
-    target.dirty = true;
-end
-function eventHandler:PLAYER_UPDATE_RESTING()
-    if AreTalentsLocked() then
-        StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
-        StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
-        return;
-    end
-
-    local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATETOME");
-    if eventHandler then
-        if not PlayerNeedsTomeNowForSet(eventHandler.data) then
-            StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
-            StaticPopup_Show("BTWSETS_REQUESTACTIVATE");
-        end
-
-        return;
-    end
-
-    local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATE");
-    if eventHandler then
-        if PlayerNeedsTomeNowForSet(eventHandler.data) then
-            StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
-            StaticPopup_Show("BTWSETS_REQUESTACTIVATETOME");
-        end
-
-        return;
-    end
-
-    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_NEEDTOME");
-    -- if eventHandler then
-    --     if not PlayerNeedsTomeNowForSet(eventHandler.data) then
-    --         target.dirty = true;
-    --     end
-
-    --     return;
-    -- end
-end
-function eventHandler:UNIT_AURA()
-	target.dirty = true;
-end
-function eventHandler:PLAYER_SPECIALIZATION_CHANGED(...)
-	-- Added delay just to be safe
-	C_Timer.After(1, function()
-		target.dirty = true;
-	end);
-
+function frame:PLAYER_SPECIALIZATION_CHANGED(...)
 	do
 		local specID = GetSpecializationInfo(GetSpecialization());
 		local spec = BtWSetsSpecInfo[specID] or {};
@@ -5952,9 +5863,82 @@ function eventHandler:PLAYER_SPECIALIZATION_CHANGED(...)
 		BtWSetsSpecInfo[specID] = spec;
 	end
 end
+frame:RegisterEvent("ADDON_LOADED");
+frame:RegisterEvent("PLAYER_LOGIN");
+frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
+frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+
+eventHandler:SetScript("OnEvent", function (self, event, ...)
+    self[event](self, ...);
+end);
+function eventHandler:GET_ITEM_INFO_RECEIVED()
+	print("GET_ITEM_INFO_RECEIVED", GetTime());
+    target.dirty = true;
+end
+function eventHandler:PLAYER_ENTER_COMBAT()
+    StaticPopup_Hide("BTWSETS_NEEDTOME");
+end
+function eventHandler:PLAYER_LEAVE_COMBAT()
+	print("PLAYER_LEAVE_COMBAT", GetTime());
+    target.dirty = true;
+end
+function eventHandler:PLAYER_UPDATE_RESTING()
+	print("PLAYER_UPDATE_RESTING", GetTime());
+	target.dirty = true;
+    -- if AreTalentsLocked() then
+    --     StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
+    --     StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
+    --     return;
+    -- end
+
+    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATETOME");
+    -- if eventHandler then
+    --     if not PlayerNeedsTomeNowForSet(eventHandler.data) then
+    --         StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
+    --         StaticPopup_Show("BTWSETS_REQUESTACTIVATE");
+    --     end
+
+    --     return;
+    -- end
+
+    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATE");
+    -- if eventHandler then
+    --     if PlayerNeedsTomeNowForSet(eventHandler.data) then
+    --         StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
+    --         StaticPopup_Show("BTWSETS_REQUESTACTIVATETOME");
+    --     end
+
+    --     return;
+    -- end
+
+    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_NEEDTOME");
+    -- if eventHandler then
+    --     if not PlayerNeedsTomeNowForSet(eventHandler.data) then
+    --         target.dirty = true;
+    --     end
+
+    --     return;
+    -- end
+end
+function eventHandler:UNIT_AURA()
+	C_Timer.After(1, function()
+		print("UNIT_AURA", GetTime());
+		target.dirty = true;
+	end);
+end
+function eventHandler:PLAYER_SPECIALIZATION_CHANGED(...)
+	-- Added delay just to be safe
+	C_Timer.After(1, function()
+		print("PLAYER_SPECIALIZATION_CHANGED", GetTime());
+		target.dirty = true;
+	end);
+end
 function eventHandler:ACTIVE_TALENT_GROUP_CHANGED(...)
 end
 function eventHandler:ZONE_CHANGED(...)
+	print("ZONE_CHANGED", GetTime());
+	target.dirty = true;
 end
 eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
 function eventHandler:UNIT_SPELLCAST_STOP(...)
@@ -5977,23 +5961,6 @@ function eventHandler:UNIT_SPELLCAST_INTERRUPTED(...)
 		CancelActivateProfile();
 	end
 end
-eventHandler:RegisterEvent("ADDON_LOADED");
-eventHandler:RegisterEvent("PLAYER_ENTERING_WORLD");
-eventHandler:RegisterEvent("VARIABLES_LOADED");
-eventHandler:RegisterEvent("EQUIPMENT_SETS_CHANGED");
-eventHandler:RegisterEvent("PLAYER_ENTER_COMBAT");
-eventHandler:RegisterEvent("PLAYER_LEAVE_COMBAT");
-eventHandler:RegisterEvent("PLAYER_UPDATE_RESTING");
-eventHandler:RegisterUnitEvent("UNIT_AURA", "player");
-eventHandler:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
-eventHandler:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
-eventHandler:RegisterEvent("ZONE_CHANGED");
-eventHandler:RegisterEvent("ZONE_CHANGED_INDOORS");
-
-eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
-eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
-eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
-eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
 
 eventHandler:SetScript("OnUpdate", function (self)
     if target.dirty then
