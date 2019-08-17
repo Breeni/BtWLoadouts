@@ -3129,9 +3129,6 @@ local function ActivateEquipmentSet(set)
 		if not ignored[inventorySlotId] then
 			if expected[inventorySlotId] then
 				local itemID = GetItemInfoInstant(expected[inventorySlotId]);
-				-- local itemString = string.match(expected[inventorySlotId], "item[%-?%d:]+")
-				-- local _, itemID, enchantId, gemId1, gemId2, gemId3, gemId4, suffixId, uniqueId, _, numBonusIds, bonusId1, bonusId2, upgradeValue = strsplit(':', itemString)
-				-- itemID = tonumber(itemID)
 
 				if GetInventoryItemID("player", inventorySlotId) == itemID then
 					ignored[inventorySlotId] = true;
@@ -3139,6 +3136,10 @@ local function ActivateEquipmentSet(set)
 					local possibleItems = {}
 					GetInventoryItemsForSlot(inventorySlotId, possibleItems)
 					possibles[inventorySlotId] = possibleItems
+
+					if next(possibleItems) == nil then
+						ignored[inventorySlotId] = true;
+					end
 
 					local uniqueFamily, maxEquipped
 					if itemUniquenessCache[itemID] then
@@ -3155,7 +3156,7 @@ local function ActivateEquipmentSet(set)
 				end
 			else -- Unequip
 				if GetInventoryItemLink("player", inventorySlotId) ~= nil then
-					if EmptyInventorySlot(inventorySlotId) then
+					if not IsInventoryItemLocked(inventorySlotId) and EmptyInventorySlot(inventorySlotId) then
 						ignored[inventorySlotId] = true;
 					end
 				else -- Already unequipped
@@ -3169,11 +3170,8 @@ local function ActivateEquipmentSet(set)
     for inventorySlotId = firstEquipped, lastEquipped do
         local itemLink = GetInventoryItemLink("player", inventorySlotId)
 
-        if not ignored[inventorySlotId] and expected[inventorySlotId] and itemLink ~= nil then
+        if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] and itemLink ~= nil then
 			local itemID = GetItemInfoInstant(itemLink);
-            -- local itemString = string.match(itemLink, "item[%-?%d:]+")
-            -- local _, itemID, enchantId, gemId1, gemId2, gemId3, gemId4, suffixId, uniqueId, _, numBonusIds, bonusId1, bonusId2, upgradeValue = strsplit(':', itemString)
-            -- itemID = tonumber(itemID)
 
             local uniqueFamily, maxEquipped
             if itemUniquenessCache[itemID] then
@@ -3192,7 +3190,7 @@ local function ActivateEquipmentSet(set)
     
     -- Swap out items
     for inventorySlotId = firstEquipped, lastEquipped do
-        if not ignored[inventorySlotId] and expected[inventorySlotId] then
+        if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
             if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], possibles[inventorySlotId]) then
 				ignored[inventorySlotId] = true;
             end
@@ -3204,11 +3202,15 @@ local function ActivateEquipmentSet(set)
     for inventorySlotId = firstEquipped, lastEquipped do
 		if not ignored[inventorySlotId] then
 			if expected[inventorySlotId] then
-				print('Cannot equip ' .. expected[inventorySlotId])
+				if not IsInventoryItemLocked(inventorySlotId) then
+					print('Cannot equip ' .. expected[inventorySlotId]);
+				end
 				complete = false
 			else -- Unequip
 				if not EmptyInventorySlot(inventorySlotId) then
-					print('Cannot unequip ' .. GetInventoryItemLink("player", inventorySlotId))
+					if not IsInventoryItemLocked(inventorySlotId) then
+						print('Cannot unequip ' .. GetInventoryItemLink("player", inventorySlotId))
+					end
 					complete = false
 				end
 			end
@@ -3423,6 +3425,7 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED");
 	eventHandler:RegisterEvent("ZONE_CHANGED");
 	eventHandler:RegisterEvent("ZONE_CHANGED_INDOORS");
+	eventHandler:RegisterEvent("ITEM_UNLOCKED");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
@@ -3509,6 +3512,7 @@ local function ContinueActivateProfile()
 
     if equipmentSet then
 		if not ActivateEquipmentSet(equipmentSet) then
+			target.dirty = false;
 			return;
 		end
     end
@@ -5940,6 +5944,9 @@ function eventHandler:ZONE_CHANGED(...)
 	target.dirty = true;
 end
 eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
+function eventHandler:ITEM_UNLOCKED(...)
+	target.dirty = true;
+end
 function eventHandler:UNIT_SPELLCAST_STOP(...)
 	if IsChangingSpec() then
 		CancelActivateProfile();
