@@ -955,42 +955,42 @@
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString parentKey="NameTitle" text="NAME" inherits="GameFontNormalLeft">
+						<FontString parentKey="NameTitle" text="BTWSETS_NAME" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-10"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
+						<FontString parentKey="SpecTitle" text="BTWSETS_SPECIALIZATION" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="TalentsTitle" text="BTWSETS_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-130"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="PvPTalentsTitle" text="BTWSETS_PVP_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-190"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
+						<FontString parentKey="EssencesTitle" text="BTWSETS_ESSENCES" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-250"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EquipmentTitle" text="BAG_FILTER_EQUIPMENT" inherits="GameFontNormalLeft">
+						<FontString parentKey="EquipmentTitle" text="BTWSETS_EQUIPMENT" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-310"/>
@@ -1519,42 +1519,42 @@
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString parentKey="NameTitle" text="NAME" inherits="GameFontNormalLeft">
+						<FontString parentKey="NameTitle" text="BTWSETS_NAME" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-10"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="SpecTitle" text="SPECIALIZATION" inherits="GameFontNormalLeft">
+						<FontString parentKey="SpecTitle" text="BTWSETS_SPECIALIZATION" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="TalentsTitle" text="TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="TalentsTitle" text="BTWSETS_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-130"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="PvPTalentsTitle" text="PVP_TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="PvPTalentsTitle" text="BTWSETS_PVP_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-190"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EssencesTitle" text="AZERITE_ESSENCE_ITEM_TYPE" inherits="GameFontNormalLeft">
+						<FontString parentKey="EssencesTitle" text="BTWSETS_ESSENCES" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-250"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EquipmentTitle" text="BAG_FILTER_EQUIPMENT" inherits="GameFontNormalLeft">
+						<FontString parentKey="EquipmentTitle" text="BTWSETS_EQUIPMENT" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="0" y="-310"/>
@@ -1642,7 +1642,7 @@
 					</Frame>
 				</Frames>
 			</Frame>
-			<Button parentKey="Add" inherits="UIPanelButtonTemplate" text="PAPERDOLL_NEWEQUIPMENTSET">
+			<Button parentKey="Add" inherits="UIPanelButtonTemplate" text="BTWSETS_NEW_SET">
 				<KeyValues>
 					<KeyValue type="boolean" key="isAdd" value="true"/>
 				</KeyValues>
@@ -1656,7 +1656,7 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="Activate" inherits="UIPanelButtonTemplate" text="TALENT_SPEC_ACTIVATE">
+			<Button parentKey="Activate" inherits="UIPanelButtonTemplate" text="BTWSETS_ACTIVATE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isActivate" value="true"/>
 				</KeyValues>
@@ -1670,7 +1670,7 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="Delete" inherits="UIPanelButtonTemplate" text="DELETE">
+			<Button parentKey="Delete" inherits="UIPanelButtonTemplate" text="BTWSETS_DELETE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isDelete" value="true"/>
 				</KeyValues>
@@ -1684,32 +1684,32 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-            <Button name="$parentTab1" inherits="BtWSetsFrameTabTemplate" id="1" text="PROFILES">
+            <Button name="$parentTab1" inherits="BtWSetsFrameTabTemplate" id="1" text="BTWSETS_PROFILES">
                	<Anchors>
 					<Anchor point="BOTTOMLEFT" x="7" y="-30"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab2" inherits="BtWSetsFrameTabTemplate" id="2" text="TALENTS">
+            <Button name="$parentTab2" inherits="BtWSetsFrameTabTemplate" id="2" text="BTWSETS_TALENTS">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab1" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab3" inherits="BtWSetsFrameTabTemplate" id="3" text="PVP_TALENTS">
+            <Button name="$parentTab3" inherits="BtWSetsFrameTabTemplate" id="3" text="BTWSETS_PVP_TALENTS">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab2" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab4" inherits="BtWSetsFrameTabTemplate" id="4" text="AZERITE_ESSENCE_ITEM_TYPE">
+            <Button name="$parentTab4" inherits="BtWSetsFrameTabTemplate" id="4" text="BTWSETS_ESSENCES">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab3" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab5" inherits="BtWSetsFrameTabTemplate" id="5" text="BAG_FILTER_EQUIPMENT">
+            <Button name="$parentTab5" inherits="BtWSetsFrameTabTemplate" id="5" text="BTWSETS_EQUIPMENT">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab4" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab6" inherits="BtWSetsFrameTabTemplate" id="6" text="CONDITIONS">
+            <Button name="$parentTab6" inherits="BtWSetsFrameTabTemplate" id="6" text="BTWSETS_CONDITIONS">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab5" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
@@ -1718,7 +1718,7 @@
 				<Size x="200" y="100"/>
 				<Layers>
 					<Layer level="OVERLAY">
-						<FontString parentKey="Text" inherits="GameFontHighlightLeft" justifyV="TOP" text="AZERITE_EMPOWERED_UNSELECTED_TRAITS_HELPTIP">
+						<FontString parentKey="Text" inherits="GameFontHighlightLeft" justifyV="TOP">
 							<Size x="190" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-18"/>

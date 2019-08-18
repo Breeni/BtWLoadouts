@@ -16,12 +16,32 @@ local ADDON_NAME = ...;
 local eventHandler = CreateFrame("Frame");
 eventHandler:Hide();
 local L = {};
-
 setmetatable(L, {
     __index = function (self, key)
         return key;
     end,
 });
+
+L["Talents"] = TALENTS;
+L["PvP Talents"] = PVP_TALENTS;
+L["Equipment"] = BAG_FILTER_EQUIPMENT;
+L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET;
+L["Activate"] = TALENT_SPEC_ACTIVATE;
+L["Delete"] = DELETE;
+L["Name"] = NAME;
+L["Specialization"] = SPECIALIZATION;
+
+BTWSETS_PROFILES = L["Profiles"];
+BTWSETS_TALENTS = L["Talents"];
+BTWSETS_PVP_TALENTS = L["PvP Talents"];
+BTWSETS_ESSENCES = L["Essences"];
+BTWSETS_EQUIPMENT = L["Equipment"];
+BTWSETS_CONDITIONS = L["Conditions"];
+BTWSETS_NEW_SET = L["New Set"];
+BTWSETS_ACTIVATE = L["Activate"];
+BTWSETS_DELETE = L["Delete"];
+BTWSETS_NAME = L["Name"];
+BTWSETS_SPECIALIZATION = L["Specialization"];
 
 local function SettingsCreate(options)
     local optionsByKey = {};
@@ -74,7 +94,6 @@ local function CancelActivateProfile()
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 end
-
 
 local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
 tomeButton:SetFrameStrata("DIALOG");
@@ -3308,6 +3327,7 @@ local function DeleteEquipmentSet(id)
 	for _,set in pairs(BtWSetsSets.profiles) do
 		if type(set) == "table" and set.equipmentSet == id then
 			set.equipmentSet = nil;
+			set.character = nil;
 		end
 	end
 
@@ -4160,6 +4180,7 @@ local function EquipmentDropDownInit(self, level, menuList)
         for _,setID in ipairs(setsFiltered) do
             info.text = sets[setID].name;
             info.arg1 = setID;
+			info.arg2 = sets[setID].character;
             info.func = EquipmentDropDown_OnClick;
             info.checked = set.equipmentSet == setID;
             UIDropDownMenu_AddButton(info, level);
@@ -4541,6 +4562,8 @@ local function ProfilesTabUpdate(self)
 		self.set.specID = specID;
 	end
 
+	self:GetParent().TitleText:SetText(L["Profiles"]);
+
 	specID = self.set.specID;
 
 	if specID == nil or specID == 0 then
@@ -4602,6 +4625,8 @@ local function TalentsTabUpdate(self)
         self.set.specID = GetSpecializationInfo(GetSpecialization());
     end
 
+	self:GetParent().TitleText:SetText(L["Talents"]);
+
     local specID = self.set.specID;
     local selected = self.set.talents;
 
@@ -4652,6 +4677,8 @@ local function PvPTalentsTabUpdate(self)
     if not self.set.specID then
         self.set.specID = GetSpecializationInfo(GetSpecialization());
     end
+
+	self:GetParent().TitleText:SetText(L["PvP Talents"]);
 
     local specID = self.set.specID;
     local selected = self.set.talents;
@@ -4770,6 +4797,8 @@ local function EssencesTabUpdate(self)
         self.set.role = select(5, GetSpecializationInfo(GetSpecialization()));
 	end
 
+	self:GetParent().TitleText:SetText(L["Essences"]);
+
     local role = self.set.role;
     local selected = self.set.essences;
 	
@@ -4827,6 +4856,8 @@ local function EquipmentTabUpdate(self)
 	local character = set.character;
 	local characterInfo = GetCharacterInfo(character);
 	local equipment = set.equipment;
+
+	self:GetParent().TitleText:SetText(L["Equipment"]);
 	
 	local characterName, characterRealm = UnitFullName("player");
 	local playerCharacter = characterRealm .. "-" .. characterName;
@@ -4907,6 +4938,8 @@ local function EquipmentTabUpdate(self)
 	SetsScrollFrame_CharacterFilter(set, BtWSetsSets.equipment, equipmentSetsCollapsedByCharacter);
 end
 local function ConditionsTabUpdate(self)
+	self:GetParent().TitleText:SetText(L["Conditions"]);
+
 	local activateButton = self:GetParent().Activate;
 	activateButton:SetEnabled(false);
 
@@ -4941,6 +4974,8 @@ function BtWSetsFrameMixin:OnLoad()
 	PanelTemplates_SetNumTabs(self, NUM_TABS);
     PanelTemplates_SetTab(self, TAB_PROFILES);
 
+	self.TitleText:SetText(PROFILES);
+	self.TitleText:SetHeight(24);
 
 	self.Profiles.SpecDropDown.includeNone = true;
     UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
