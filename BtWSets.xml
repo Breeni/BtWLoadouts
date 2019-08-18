@@ -963,7 +963,7 @@
 							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
 						</Anchors>
 					</Frame>
-					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
+					<EditBox letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.NameTitle" relativePoint="BOTTOMLEFT" x="20" y="-10"/>
@@ -971,46 +971,35 @@
 						</Anchors>
 						<Scripts>
 							<OnTextChanged>
-								self:GetParent().set.name = self:GetText();
-								BtWSetsFrame:Update();
+								self:GetParent():GetParent():OnNameChanged(self:GetText());
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
-					<Frame name="$parentTalentsDropDown" parentKey="TalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame parentKey="TalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.TalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
-					<Frame name="$parentPvPTalentsDropDown" parentKey="PvPTalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame parentKey="PvPTalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.PvPTalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
-					<Frame name="$parentEssencesDropDown" parentKey="EssencesDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame parentKey="EssencesDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.EssencesTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
-					<Frame name="$parentEquipmentDropDown" parentKey="EquipmentDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame parentKey="EquipmentDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.EquipmentTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
 				</Frames>
 			</Frame>
@@ -1041,8 +1030,7 @@
 						</Anchors>
 						<Scripts>
 							<OnTextChanged>
-								self:GetParent().set.name = self:GetText();
-								BtWSetsFrame:Update();
+								self:GetParent():GetParent():OnNameChanged(self:GetText());
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
@@ -1111,8 +1099,7 @@
 						</Anchors>
 						<Scripts>
 							<OnTextChanged>
-								self:GetParent().set.name = self:GetText();
-								BtWSetsFrame:Update();
+								self:GetParent():GetParent():OnNameChanged(self:GetText());
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
@@ -1156,8 +1143,7 @@
 						</Anchors>
 						<Scripts>
 							<OnTextChanged>
-								self:GetParent().set.name = self:GetText();
-								BtWSetsFrame:Update();
+								self:GetParent():GetParent():OnNameChanged(self:GetText());
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
@@ -1214,8 +1200,7 @@
 						</Anchors>
 						<Scripts>
 							<OnTextChanged>
-								self:GetParent().set.name = self:GetText();
-								BtWSetsFrame:Update();
+								self:GetParent():GetParent():OnNameChanged(self:GetText());
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
@@ -1529,8 +1514,7 @@
 						</Anchors>
 						<Scripts>
 							<OnTextChanged>
-								self:GetParent().set.name = self:GetText();
-								BtWSetsFrame:Update();
+								self:GetParent():GetParent():OnNameChanged(self:GetText());
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
@@ -1599,7 +1583,7 @@
 					</Frame>
 				</Frames>
 			</Frame>
-			<Button parentKey="Add" inherits="UIPanelButtonTemplate" text="BTWSETS_NEW_SET">
+			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWSETS_NEW_SET">
 				<KeyValues>
 					<KeyValue type="boolean" key="isAdd" value="true"/>
 				</KeyValues>
@@ -1607,13 +1591,28 @@
 				<Anchors>
 					<Anchor point="TOP" relativeKey="$parent.ScrollInset" relativePoint="BOTTOM" x="0" y="0"/>
 				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<Texture file="Interface\Buttons\UI-Panel-Button-Glow" alphaMode="ADD" parentKey="Flash" hidden="true">
+							<Size x="124" y="60"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="-7" y="7"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Animations>
+					<AnimationGroup parentKey="FlashAnim" looping="BOUNCE">
+						<Alpha childKey="Flash" fromAlpha="0.75" toAlpha="0" duration="1.0" smoothing="IN_OUT" order="1"/>
+					</AnimationGroup>
+				</Animations>
 				<Scripts>
 					<OnClick>
 						BtWSetsFrame:ScrollItemClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="Activate" inherits="UIPanelButtonTemplate" text="BTWSETS_ACTIVATE">
+			<Button parentKey="ActivateButton" inherits="UIPanelButtonTemplate" text="BTWSETS_ACTIVATE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isActivate" value="true"/>
 				</KeyValues>
@@ -1627,7 +1626,7 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="Delete" inherits="UIPanelButtonTemplate" text="BTWSETS_DELETE">
+			<Button parentKey="DeleteButton" inherits="UIPanelButtonTemplate" text="BTWSETS_DELETE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isDelete" value="true"/>
 				</KeyValues>
@@ -1687,8 +1686,8 @@
 					<Button parentKey="CloseButton" inherits="UIPanelCloseButton">
 						<Scripts>
 							<OnClick>
-								self:GetParent():GetParent():OnHelpTipManuallyClosed(self:GetParent().closeFlag);
 								HideParentPanel(self);
+								self:GetParent():GetParent():OnHelpTipManuallyClosed(self:GetParent().closeFlag);
 							</OnClick>
 						</Scripts>
 					</Button>

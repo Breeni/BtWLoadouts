@@ -13,266 +13,6 @@
 
 local ADDON_NAME = ...;
 
-local eventHandler = CreateFrame("Frame");
-eventHandler:Hide();
-local L = {};
-setmetatable(L, {
-    __index = function (self, key)
-        return key;
-    end,
-});
-
-L["Talents"] = TALENTS;
-L["PvP Talents"] = PVP_TALENTS;
-L["Equipment"] = BAG_FILTER_EQUIPMENT;
-L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET;
-L["Activate"] = TALENT_SPEC_ACTIVATE;
-L["Delete"] = DELETE;
-L["Name"] = NAME;
-L["Specialization"] = SPECIALIZATION;
-
-BTWSETS_PROFILES = L["Profiles"];
-BTWSETS_TALENTS = L["Talents"];
-BTWSETS_PVP_TALENTS = L["PvP Talents"];
-BTWSETS_ESSENCES = L["Essences"];
-BTWSETS_EQUIPMENT = L["Equipment"];
-BTWSETS_CONDITIONS = L["Conditions"];
-BTWSETS_NEW_SET = L["New Set"];
-BTWSETS_ACTIVATE = L["Activate"];
-BTWSETS_DELETE = L["Delete"];
-BTWSETS_NAME = L["Name"];
-BTWSETS_SPECIALIZATION = L["Specialization"];
-
-local function SettingsCreate(options)
-    local optionsByKey = {};
-    local defaults = {};
-    for _,option in ipairs(options) do
-        optionsByKey[option.key] = option;
-        defaults[option.key] = option.default;
-    end
-    
-    local result = Mixin({}, options);
-    local mt = {};
-    function mt:__call (tbl)
-        setmetatable(tbl, {__index = defaults});
-        -- local mt = getmetatable(self);
-        mt.__index = tbl;
-    end
-    function mt:__newindex (key, value)
-        -- local mt = getmetatable(self);
-        mt.__index[key] = value;
-        
-        local option = optionsByKey[key];
-        if option then
-            local func = option.onChange;
-            if func then
-                func(key, value);
-            end
-        end
-    end
-    setmetatable(result, mt);
-    result({});
-
-    return result;
-end
-local Settings = SettingsCreate({
-    {
-        name = L["Show minimap icon"],
-        key = "minimapShown",
-        onChange = function (id, value)
-            BtWSetsMinimapButton:SetShown(value)
-        end,
-        default = true,
-    },
-});
-
--- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
-local target = {};
-_G['BtWSetsTarget'] = target; -- @TODO REMOVE
-local function CancelActivateProfile()
-	wipe(target);
-	eventHandler:UnregisterAllEvents();
-	eventHandler:Hide();
-end
-
-local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
-tomeButton:SetFrameStrata("DIALOG");
-tomeButton:SetAttribute("*type1", "item");
-tomeButton:SetAttribute("unit", "player");
-tomeButton:SetAttribute("item", "Tome of the Tranquil Mind");
-RegisterStateDriver(tomeButton, "combat", "[combat] hide; show")
-tomeButton:SetAttribute("_onattributechanged", [[ -- (self, name, value)
-    if name == "active" and value == false then
-        self:Hide();
-    elseif name == "state-combat" and value == "hide" then
-        self:Hide();
-    elseif name ~= "statehidden" and self:GetAttribute("active") and self:GetAttribute("state-combat") == "show" then
-        self:Show();
-    end
-]]);
-tomeButton:SetAttribute("active", false);
-tomeButton:HookScript("OnClick", function (self, ...)
-    self.button:GetScript("OnClick")(self.button, ...);
-end);
-
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATE"] = {
-	text = "Activate spec %s?",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self)
-	end,
-	OnShow = function(self)
-	end,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATERESTED"] = {
-	text = "Activate spec %s?\nThis set will require a tome or rested to activate",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self)
-	end,
-    OnShow = function(self)
-        -- 
-	end,
-	hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
-	text = "Activate spec %s?\nThis will use a Tome",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self)
-        
-	end,
-    OnShow = function(self)
-        tomeButton:SetParent(self);
-        tomeButton:ClearAllPoints();
-        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
-        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
-        tomeButton.button = self.button1;
-
-        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
-        tomeButton:SetAttribute("active", true);
-	end,
-    OnHide = function(self)
-        tomeButton:SetParent(UIParent);
-        tomeButton:ClearAllPoints();
-        tomeButton.button = nil;
-        tomeButton:SetAttribute("active", false);
-	end,
-	hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
-	text = L["A tome is needed to continue equiping your set."],
-	button1 = YES,
-	button2 = NO,
-    OnAccept = function(self)
-	end,
-	OnCancel = function(self, data, reason)
-		if reason == "clicked" then
-			CancelActivateProfile();
-		end
-	end,
-    OnShow = function(self)
-        tomeButton:SetParent(self);
-        tomeButton:ClearAllPoints();
-        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
-        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
-        tomeButton.button = self.button1;
-
-        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
-        tomeButton:SetAttribute("active", true);
-	end,
-    OnHide = function(self)
-        tomeButton:SetParent(UIParent);
-        tomeButton:ClearAllPoints();
-        tomeButton.button = nil;
-        tomeButton:SetAttribute("active", false);
-	end,
-	hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWSETS_DELETESET"] = {
-	text = L["Are you sure you wish to delete the set \"%s\". This cannot be reversed."],
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self, data)
-		data.func(data.set);
-	end,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWSETS_DELETEINUSESET"] = {
-	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."],
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self, data)
-		data.func(data.set);
-	end,
-	timeout = 0,
-	hideOnEscape = 1
-};
-
-
-local function HelpTipBox_Anchor(self, anchorPoint, frame, offset)
-	local offset = offset or 0;
-
-	self.Arrow:ClearAllPoints();
-	self:ClearAllPoints();
-	self.Arrow.Glow:ClearAllPoints();
-	self:ClearAllPoints();
-
-	self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
-
-	if anchorPoint == "RIGHT" then
-		self:SetPoint("LEFT", frame, "RIGHT", 30, 0);
-
-		self.Arrow.Arrow:SetRotation(-math.pi / 2);
-		self.Arrow.Glow:SetRotation(-math.pi / 2);
-
-		self.Arrow:SetPoint("RIGHT", self, "LEFT", 17, 0);
-		self.Arrow.Glow:SetPoint("CENTER", self.Arrow.Arrow, "CENTER", -3, 0);
-		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 6, 6);
-	elseif anchorPoint == "LEFT" then
-		self:SetPoint("RIGHT", frame, "LEFT", -30, 0);
-
-		self.Arrow.Arrow:SetRotation(math.pi / 2);
-		self.Arrow.Glow:SetRotation(math.pi / 2);
-
-		self.Arrow:SetPoint("LEFT", self, "RIGHT", -17, 0);
-		self.Arrow.Glow:SetPoint("CENTER", self.Arrow.Arrow, "CENTER", 4, 0);
-		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
-	elseif anchorPoint == "TOP" then
-		self:SetPoint("BOTTOM", frame, "TOP", 0, 20 + offset);
-
-		self.Arrow.Arrow:SetRotation(0);
-		self.Arrow.Glow:SetRotation(0);
-
-		self.Arrow:SetPoint("TOP", self, "BOTTOM", 0, 4);
-		self.Arrow.Glow:SetPoint("TOP", self.Arrow.Arrow, "TOP", 0, 0);
-		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
-	elseif anchorPoint == "BOTTOM" then
-		self:SetPoint("TOP", frame, "BOTTOM", 0, -20 - offset);
-
-		self.Arrow.Arrow:SetRotation(math.pi);
-		self.Arrow.Glow:SetRotation(math.pi);
-
-		self.Arrow:SetPoint("BOTTOM", self, "TOP", 0, -3);
-		self.Arrow.Glow:SetPoint("BOTTOM", self.Arrow.Arrow, "BOTTOM", 0, 0);
-		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
-	end
-end
-local function HelpTipBox_SetText(self, text)
-	self.Text:SetText(text);
-	self:SetHeight(self.Text:GetHeight() + 34);
-end
-
-local helpTipIgnored = {};
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};
 local specInfo = {
@@ -2427,6 +2167,7 @@ local roleInfo = {
 	},
 };
 local classInfo = {};
+
 local MAX_PVP_TALENTS = 15;
 local function GetTalentInfoForSpecID(specID, tier, column)
     for specIndex=1,GetNumSpecializations() do
@@ -2567,6 +2308,268 @@ end
 local function IsChangingSpec()
     local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
     return spellId == 200749;
+end
+
+local eventHandler = CreateFrame("Frame");
+eventHandler:Hide();
+local L = {};
+setmetatable(L, {
+    __index = function (self, key)
+        return key;
+    end,
+});
+
+L["Talents"] = TALENTS;
+L["PvP Talents"] = PVP_TALENTS;
+L["Equipment"] = BAG_FILTER_EQUIPMENT;
+L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET;
+L["Activate"] = TALENT_SPEC_ACTIVATE;
+L["Delete"] = DELETE;
+L["Name"] = NAME;
+L["Specialization"] = SPECIALIZATION;
+L["None"] = NONE;
+L["New"] = NEW;
+
+BTWSETS_PROFILES = L["Profiles"];
+BTWSETS_TALENTS = L["Talents"];
+BTWSETS_PVP_TALENTS = L["PvP Talents"];
+BTWSETS_ESSENCES = L["Essences"];
+BTWSETS_EQUIPMENT = L["Equipment"];
+BTWSETS_CONDITIONS = L["Conditions"];
+BTWSETS_NEW_SET = L["New Set"];
+BTWSETS_ACTIVATE = L["Activate"];
+BTWSETS_DELETE = L["Delete"];
+BTWSETS_NAME = L["Name"];
+BTWSETS_SPECIALIZATION = L["Specialization"];
+
+local function SettingsCreate(options)
+    local optionsByKey = {};
+    local defaults = {};
+    for _,option in ipairs(options) do
+        optionsByKey[option.key] = option;
+        defaults[option.key] = option.default;
+    end
+    
+    local result = Mixin({}, options);
+    local mt = {};
+    function mt:__call (tbl)
+        setmetatable(tbl, {__index = defaults});
+        -- local mt = getmetatable(self);
+        mt.__index = tbl;
+    end
+    function mt:__newindex (key, value)
+        -- local mt = getmetatable(self);
+        mt.__index[key] = value;
+        
+        local option = optionsByKey[key];
+        if option then
+            local func = option.onChange;
+            if func then
+                func(key, value);
+            end
+        end
+    end
+    setmetatable(result, mt);
+    result({});
+
+    return result;
+end
+local Settings = SettingsCreate({
+    {
+        name = L["Show minimap icon"],
+        key = "minimapShown",
+        onChange = function (id, value)
+            BtWSetsMinimapButton:SetShown(value)
+        end,
+        default = true,
+    },
+});
+
+-- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
+local target = {};
+_G['BtWSetsTarget'] = target; -- @TODO REMOVE
+local function CancelActivateProfile()
+	wipe(target);
+	eventHandler:UnregisterAllEvents();
+	eventHandler:Hide();
+end
+
+local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
+tomeButton:SetFrameStrata("DIALOG");
+tomeButton:SetAttribute("*type1", "item");
+tomeButton:SetAttribute("unit", "player");
+tomeButton:SetAttribute("item", "Tome of the Tranquil Mind");
+RegisterStateDriver(tomeButton, "combat", "[combat] hide; show")
+tomeButton:SetAttribute("_onattributechanged", [[ -- (self, name, value)
+    if name == "active" and value == false then
+        self:Hide();
+    elseif name == "state-combat" and value == "hide" then
+        self:Hide();
+    elseif name ~= "statehidden" and self:GetAttribute("active") and self:GetAttribute("state-combat") == "show" then
+        self:Show();
+    end
+]]);
+tomeButton:SetAttribute("active", false);
+tomeButton:HookScript("OnClick", function (self, ...)
+    self.button:GetScript("OnClick")(self.button, ...);
+end);
+
+StaticPopupDialogs["BTWSETS_REQUESTACTIVATE"] = {
+	text = "Activate spec %s?",
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+	end,
+	OnShow = function(self)
+	end,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_REQUESTACTIVATERESTED"] = {
+	text = "Activate spec %s?\nThis set will require a tome or rested to activate",
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+	end,
+    OnShow = function(self)
+        -- 
+	end,
+	hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
+	text = "Activate spec %s?\nThis will use a Tome",
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self)
+        
+	end,
+    OnShow = function(self)
+        tomeButton:SetParent(self);
+        tomeButton:ClearAllPoints();
+        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
+        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
+        tomeButton.button = self.button1;
+
+        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
+        tomeButton:SetAttribute("active", true);
+	end,
+    OnHide = function(self)
+        tomeButton:SetParent(UIParent);
+        tomeButton:ClearAllPoints();
+        tomeButton.button = nil;
+        tomeButton:SetAttribute("active", false);
+	end,
+	hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
+	text = L["A tome is needed to continue equiping your set."],
+	button1 = YES,
+	button2 = NO,
+    OnAccept = function(self)
+	end,
+	OnCancel = function(self, data, reason)
+		if reason == "clicked" then
+			CancelActivateProfile();
+		end
+	end,
+    OnShow = function(self)
+        tomeButton:SetParent(self);
+        tomeButton:ClearAllPoints();
+        tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
+        tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
+        tomeButton.button = self.button1;
+
+        tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
+        tomeButton:SetAttribute("active", true);
+	end,
+    OnHide = function(self)
+        tomeButton:SetParent(UIParent);
+        tomeButton:ClearAllPoints();
+        tomeButton.button = nil;
+        tomeButton:SetAttribute("active", false);
+	end,
+	hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_DELETESET"] = {
+	text = L["Are you sure you wish to delete the set \"%s\". This cannot be reversed."],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, data)
+		data.func(data.set);
+	end,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_DELETEINUSESET"] = {
+	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, data)
+		data.func(data.set);
+	end,
+	timeout = 0,
+	hideOnEscape = 1
+};
+
+
+local helpTipIgnored = {};
+local function HelpTipBox_Anchor(self, anchorPoint, frame, offset)
+	local offset = offset or 0;
+
+	self.Arrow:ClearAllPoints();
+	self:ClearAllPoints();
+	self.Arrow.Glow:ClearAllPoints();
+	self:ClearAllPoints();
+
+	self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
+
+	if anchorPoint == "RIGHT" then
+		self:SetPoint("LEFT", frame, "RIGHT", 30, 0);
+
+		self.Arrow.Arrow:SetRotation(-math.pi / 2);
+		self.Arrow.Glow:SetRotation(-math.pi / 2);
+
+		self.Arrow:SetPoint("RIGHT", self, "LEFT", 17, 0);
+		self.Arrow.Glow:SetPoint("CENTER", self.Arrow.Arrow, "CENTER", -3, 0);
+		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 6, 6);
+	elseif anchorPoint == "LEFT" then
+		self:SetPoint("RIGHT", frame, "LEFT", -30, 0);
+
+		self.Arrow.Arrow:SetRotation(math.pi / 2);
+		self.Arrow.Glow:SetRotation(math.pi / 2);
+
+		self.Arrow:SetPoint("LEFT", self, "RIGHT", -17, 0);
+		self.Arrow.Glow:SetPoint("CENTER", self.Arrow.Arrow, "CENTER", 4, 0);
+		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
+	elseif anchorPoint == "TOP" then
+		self:SetPoint("BOTTOM", frame, "TOP", 0, 20 + offset);
+
+		self.Arrow.Arrow:SetRotation(0);
+		self.Arrow.Glow:SetRotation(0);
+
+		self.Arrow:SetPoint("TOP", self, "BOTTOM", 0, 4);
+		self.Arrow.Glow:SetPoint("TOP", self.Arrow.Arrow, "TOP", 0, 0);
+		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
+	elseif anchorPoint == "BOTTOM" then
+		self:SetPoint("TOP", frame, "BOTTOM", 0, -20 - offset);
+
+		self.Arrow.Arrow:SetRotation(math.pi);
+		self.Arrow.Glow:SetRotation(math.pi);
+
+		self.Arrow:SetPoint("BOTTOM", self, "TOP", 0, -3);
+		self.Arrow.Glow:SetPoint("BOTTOM", self.Arrow.Arrow, "BOTTOM", 0, 0);
+		self.CloseButton:SetPoint("TOPRIGHT", self, "TOPRIGHT", 4, 6);
+	end
+end
+local function HelpTipBox_SetText(self, text)
+	self.Text:SetText(text);
+	self:SetHeight(self.Text:GetHeight() + 34);
 end
 
 
@@ -2735,32 +2738,6 @@ local function DeleteSet(sets, id)
 		end
 	end
 end
-local function AddProfile()
-    local specID, specName = GetSpecializationInfo(GetSpecialization());
-    local name = format("New Profile", specName);
-
-    local set = {
-		setID = GetNextSetID(BtWSetsSets.profiles),
-        specID = specID,
-		name = name,
-		useCount = 0,
-    };
-    BtWSetsSets.profiles[set.setID] = set;
-    return set;
-end
-local function GetProfile(id)
-    return BtWSetsSets.profiles[id];
-end
-local function DeleteProfile(id)
-	DeleteSet(BtWSetsSets.profiles, id);
-
-	local frame = BtWSetsFrame.Profiles;
-	local set = frame.set;
-	if set == id or set.setID == id then
-		frame.set = select(2,next(BtWSetsSets.profiles)) or {};
-		BtWSetsFrame:Update();
-	end
-end
 
 -- Check if the talents in the table talentIDs are selected
 local function IsTalentSetActive(set)
@@ -2867,7 +2844,7 @@ local function DeleteTalentSet(id)
 	local frame = BtWSetsFrame.Talents;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = select(2,next(BtWSetsSets.talents)) or {};
+		frame.set = nil;-- = select(2,next(BtWSetsSets.talents)) or {};
 		BtWSetsFrame:Update();
 	end
 end
@@ -2988,7 +2965,7 @@ local function DeletePvPTalentSet(id)
 	local frame = BtWSetsFrame.PvPTalents;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = select(2,next(BtWSetsSets.pvptalents)) or {};
+		frame.set = nil;-- = select(2,next(BtWSetsSets.pvptalents)) or {};
 		BtWSetsFrame:Update();
 	end
 end
@@ -3083,7 +3060,7 @@ local function DeleteEssenceSet(id)
 	local frame = BtWSetsFrame.Essences;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = select(2,next(BtWSetsSets.essences)) or {};
+		frame.set = nil;-- = select(2,next(BtWSetsSets.essences)) or {};
 		BtWSetsFrame:Update();
 	end
 end
@@ -3334,7 +3311,7 @@ local function DeleteEquipmentSet(id)
 	local frame = BtWSetsFrame.Equipment;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = select(2,next(BtWSetsSets.equipment)) or {};
+		frame.set = nil;-- = select(2,next(BtWSetsSets.equipment)) or {};
 		BtWSetsFrame:Update();
 	end
 end
@@ -3406,6 +3383,51 @@ local function IsProfileValid(set)
 	end
 
 	return true, class, specID, role, not invalidForPlayer;
+end
+local function AddProfile()
+    local specID, specName = GetSpecializationInfo(GetSpecialization());
+    local name = format("New Profile", specName);
+
+    local set = {
+		setID = GetNextSetID(BtWSetsSets.profiles),
+        specID = specID,
+		name = name,
+		useCount = 0,
+    };
+    BtWSetsSets.profiles[set.setID] = set;
+    return set;
+end
+local function GetProfile(id)
+    return BtWSetsSets.profiles[id];
+end
+local function DeleteProfile(id)
+	do
+		local set = GetProfile(id);
+		if set.talentSet then
+			local subSet = GetTalentSet(set.talentSet);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
+		if set.pvpTalentSet then
+			local subSet = GetPvPTalentSet(set.pvpTalentSet);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
+		if set.essences then
+			local subSet = GetEssencetSet(set.essences);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
+		if set.equipmentSet then
+			local subSet = GetEquipmentSet(set.equipmentSet);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
+	end
+	DeleteSet(BtWSetsSets.profiles, id);
+
+	local frame = BtWSetsFrame.Profiles;
+	local set = frame.set;
+	if set == id or set.setID == id then
+		frame.set = nil;--select(2,next(BtWSetsSets.profiles)) or {};
+		BtWSetsFrame:Update();
+	end
 end
 local function ActivateProfile(profile)
 	local valid, class, specID, role, validForPlayer = IsProfileValid(profile);
@@ -3594,12 +3616,15 @@ end
 local function RoleDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
     
+	local set = self:GetParent().set;
+	local selected = set and set.role;
+
     if (level or 1) == 1 then
         for _,role in ipairs(roles) do
             info.text = _G[role];
             info.arg1 = role;
             info.func = RoleDropDown_OnClick;
-            info.checked = self:GetParent().set.role == role;
+            info.checked = selected == role;
             UIDropDownMenu_AddButton(info, level);
         end
     end
@@ -3645,12 +3670,15 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 end
 local function SpecDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
-    
+	
+	local set = self:GetParent().set;
+	local selected = set and set.specID;
+
 	if (level or 1) == 1 then
 		if self.includeNone then
 			info.text = NONE;
 			info.func = SpecDropDown_OnClick;
-			info.checked = self:GetParent().set.specID == nil;
+			info.checked = selected == nil;
 			UIDropDownMenu_AddButton(info, level);
 		end
 
@@ -3671,7 +3699,7 @@ local function SpecDropDownInit(self, level, menuList)
             info.icon = icon;
             info.arg1 = specID;
             info.func = SpecDropDown_OnClick;
-            info.checked = self:GetParent().set.specID == specID;
+			info.checked = selected == specID;
             UIDropDownMenu_AddButton(info, level);
         end
     end
@@ -3698,22 +3726,49 @@ local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
 
     BtWSetsFrame:Update();
 end
+local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+	local set = tab.set;
+	
+	if set.talentSet then
+		local subset = GetTalentSet(set.talentSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local talentSet = AddTalentSet();
+	set.talentSet = talentSet.setID;
+	
+	if set.talentSet then
+		local subset = GetTalentSet(set.talentSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWSetsFrame.Talents.set = talentSet;
+	PanelTemplates_SetTab(BtWSetsFrame, TAB_TALENTS);
+
+	helpTipIgnored["TUTORIAL_CREATE_TALENT_SET"] = true;
+    BtWSetsFrame:Update();
+end
 local function TalentsDropDownInit(self, level, menuList)
     if not BtWSetsSets or not BtWSetsSets.talents then
         return;
     end
+    local info = UIDropDownMenu_CreateInfo();
 		
 	local frame = self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 	
 	local set = tab.set;
+	local selected = set and set.TalentSet;
 
-    local info = UIDropDownMenu_CreateInfo();
-    if (level or 1) == 1 then
-        info.text = NONE;
+	if (level or 1) == 1 then
+        info.text = L["None"];
         info.func = TalentsDropDown_OnClick;
-        info.checked = set.talentSet == nil;
+        info.checked = selected == nil;
 		UIDropDownMenu_AddButton(info, level);
 		
         wipe(setsFiltered);
@@ -3758,6 +3813,14 @@ local function TalentsDropDownInit(self, level, menuList)
 				end
 			end
         end
+
+        info.text = L["New Set"];
+        info.func = TalentsDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+        info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
 	else
 		local specID = menuList;
 		
@@ -3776,7 +3839,7 @@ local function TalentsDropDownInit(self, level, menuList)
             info.text = sets[setID].name;
             info.arg1 = setID;
             info.func = TalentsDropDown_OnClick;
-            info.checked = set.talentSet == setID;
+            info.checked = selected == setID;
             UIDropDownMenu_AddButton(info, level);
         end
 		
@@ -3834,22 +3897,49 @@ local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
 
     BtWSetsFrame:Update();
 end
+local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+	local set = tab.set;
+	
+	if set.pvpTalentSet then
+		local subset = GetPvPTalentSet(set.pvpTalentSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = AddPvPTalentSet();
+	set.pvpTalentSet = newSet.setID;
+	
+	if set.pvpTalentSet then
+		local subset = GetPvPTalentSet(set.pvpTalentSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWSetsFrame.PvPTalents.set = newSet;
+	PanelTemplates_SetTab(BtWSetsFrame, TAB_PVP_TALENTS);
+
+    BtWSetsFrame:Update();
+end
 local function PvPTalentsDropDownInit(self, level, menuList)
     if not BtWSetsSets or not BtWSetsSets.pvptalents then
         return;
 	end
+	
+    local info = UIDropDownMenu_CreateInfo();
 	
 	local frame = self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 	
 	local set = tab.set;
+	local selected = set and set.pvpTalentSet;
 
-    local info = UIDropDownMenu_CreateInfo();
     if (level or 1) == 1 then
         info.text = NONE;
         info.func = PvPTalentsDropDown_OnClick;
-        info.checked = set.pvpTalentSet == nil;
+        info.checked = selected == nil;
 		UIDropDownMenu_AddButton(info, level);
     
         wipe(setsFiltered);
@@ -3894,6 +3984,14 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 				end
 			end
 		end
+
+        info.text = L["New Set"];
+        info.func = PvPTalentsDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+        info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
 	else
 		local specID = menuList;
 		
@@ -3912,7 +4010,7 @@ local function PvPTalentsDropDownInit(self, level, menuList)
             info.text = sets[setID].name;
             info.arg1 = setID;
             info.func = PvPTalentsDropDown_OnClick;
-            info.checked = set.pvpTalentSet == setID;
+            info.checked = selected == setID;
             UIDropDownMenu_AddButton(info, level);
         end
 		
@@ -3971,23 +4069,50 @@ local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
 
     BtWSetsFrame:Update();
 end
+local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+	local set = tab.set;
+	
+	if set.essencesSet then
+		local subset = GetEssenceSet(set.essencesSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = AddEssenceSet();
+	set.essencesSet = newSet.setID;
+	
+	if set.essencesSet then
+		local subset = GetEssenceSet(set.essencesSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+
+	BtWSetsFrame.Essences.set = newSet;
+	PanelTemplates_SetTab(BtWSetsFrame, TAB_ESSENCES);
+
+    BtWSetsFrame:Update();
+end
 local function EssencesDropDownInit(self, level, menuList)
     if not BtWSetsSets or not BtWSetsSets.essences then
         return;
     end
+
+    local info = UIDropDownMenu_CreateInfo();
 		
 	local frame = self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 	
 	local set = tab.set;
-
-    local info = UIDropDownMenu_CreateInfo();
+	local selected = set and set.essencesSet;
 
     if (level or 1) == 1 then
         info.text = NONE;
         info.func = EssencesDropDown_OnClick;
-        info.checked = set.essencesSet == nil;
+        info.checked = selected == nil;
 		UIDropDownMenu_AddButton(info, level);
 		
         wipe(setsFiltered);
@@ -4019,6 +4144,14 @@ local function EssencesDropDownInit(self, level, menuList)
 				end
 			end
         end
+
+        info.text = L["New Set"];
+        info.func = EssencesDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+        info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
 	else
 		local role = menuList;
 		
@@ -4037,7 +4170,7 @@ local function EssencesDropDownInit(self, level, menuList)
             info.text = sets[setID].name;
             info.arg1 = setID;
             info.func = EssencesDropDown_OnClick;
-            info.checked = set.essencesSet == setID;
+            info.checked = selected == setID;
             UIDropDownMenu_AddButton(info, level);
 		end
 		
@@ -4098,23 +4231,50 @@ local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
 
     BtWSetsFrame:Update();
 end
+local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+	local set = tab.set;
+	
+	if set.equipmentSet then
+		local subset = GetEquipmentSet(set.equipmentSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = AddEquipmentSet();
+	set.equipmentSet = newSet.setID;
+	set.character = newSet.character;
+	
+	if set.equipmentSet then
+		local subset = GetEquipmentSet(set.equipmentSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWSetsFrame.Equipment.set = newSet;
+	PanelTemplates_SetTab(BtWSetsFrame, TAB_EQUIPMENT);
+
+    BtWSetsFrame:Update();
+end
 local function EquipmentDropDownInit(self, level, menuList)
     if not BtWSetsSets or not BtWSetsSets.equipment then
         return;
     end
+
+    local info = UIDropDownMenu_CreateInfo();
 		
 	local frame = self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 	
 	local set = tab.set;
-
-    local info = UIDropDownMenu_CreateInfo();
+	local selected = set and set.equipmentSet;
 
     if (level or 1) == 1 then
         info.text = NONE;
         info.func = EquipmentDropDown_OnClick;
-        info.checked = set.equipmentSet == nil;
+        info.checked = selected == nil;
 		UIDropDownMenu_AddButton(info, level);
 		
         wipe(setsFiltered);
@@ -4163,6 +4323,14 @@ local function EquipmentDropDownInit(self, level, menuList)
 				end
 			end
         end
+
+        info.text = L["New Set"];
+        info.func = EquipmentDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+        info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
 	else
 		local character = menuList;
 		
@@ -4182,7 +4350,7 @@ local function EquipmentDropDownInit(self, level, menuList)
             info.arg1 = setID;
 			info.arg2 = sets[setID].character;
             info.func = EquipmentDropDown_OnClick;
-            info.checked = set.equipmentSet == setID;
+            info.checked = selected == setID;
             UIDropDownMenu_AddButton(info, level);
 		end
         -- local frame = self:GetParent():GetParent();
@@ -4283,7 +4451,7 @@ function BtWSetsSetsScrollFrame_Update()
 			else
 				name = item.name;
 			end
-			button.Name:SetText(name);
+			button.Name:SetText(name or L["Unnamed"]);
             button:Show();
         else
             button:Hide();
@@ -4318,8 +4486,9 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
             if not isCollapsed then
                 sort(setsFiltered[specID], function (a,b)
                     return sets[a].name < sets[b].name;
-                end)
-                for _,setID in ipairs(setsFiltered[specID]) do
+				end)
+				selected = selected or sets[select(2, next(setsFiltered[specID]))];
+				for _,setID in ipairs(setsFiltered[specID]) do
                     setScrollItems[#setScrollItems+1] = {
                         id = setID,
                         name = sets[setID].name,
@@ -4352,6 +4521,7 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
                         sort(setsFiltered[specID], function (a,b)
                             return sets[a].name < sets[b].name;
                         end)
+						selected = selected or sets[select(2, next(setsFiltered[specID]))];
                         for _,setID in ipairs(setsFiltered[specID]) do
                             setScrollItems[#setScrollItems+1] = {
                                 id = setID,
@@ -4379,6 +4549,7 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
 			sort(setsFiltered[specID], function (a,b)
 				return sets[a].name < sets[b].name;
 			end)
+			selected = selected or sets[select(2, next(setsFiltered[specID]))];
 			for _,setID in ipairs(setsFiltered[specID]) do
 				setScrollItems[#setScrollItems+1] = {
 					id = setID,
@@ -4390,7 +4561,9 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
 		end
 	end
 	
-    BtWSetsSetsScrollFrame_Update();
+	BtWSetsSetsScrollFrame_Update();
+	
+	return selected;
 end
 local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
     wipe(setScrollItems);
@@ -4415,6 +4588,7 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
 			sort(setsFiltered[role], function (a,b)
 				return sets[a].name < sets[b].name;
 			end)
+			selected = selected or sets[select(2, next(setsFiltered[role]))];
 			for _,setID in ipairs(setsFiltered[role]) do
 				setScrollItems[#setScrollItems+1] = {
 					id = setID,
@@ -4440,6 +4614,7 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
 					sort(setsFiltered[role], function (a,b)
 						return sets[a].name < sets[b].name;
 					end)
+					selected = selected or sets[select(2, next(setsFiltered[role]))];
 					for _,setID in ipairs(setsFiltered[role]) do
 						setScrollItems[#setScrollItems+1] = {
 							id = setID,
@@ -4452,7 +4627,9 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
 		end
 	end
 
-    BtWSetsSetsScrollFrame_Update();
+	BtWSetsSetsScrollFrame_Update();
+	
+	return selected;
 end
 local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
     wipe(setScrollItems);
@@ -4489,6 +4666,7 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 			sort(setsFiltered[character], function (a,b)
 				return sets[a].name < sets[b].name;
 			end)
+			selected = selected or sets[select(2, next(setsFiltered[character]))];
 			for _,setID in ipairs(setsFiltered[character]) do
 				setScrollItems[#setScrollItems+1] = {
 					id = setID,
@@ -4518,6 +4696,7 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 					sort(setsFiltered[character], function (a,b)
 						return sets[a].name < sets[b].name;
 					end)
+					selected = selected or sets[select(2, next(setsFiltered[character]))];
 					for _,setID in ipairs(setsFiltered[character]) do
 						setScrollItems[#setScrollItems+1] = {
 							id = setID,
@@ -4531,7 +4710,9 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 		end
 	end
 
-    BtWSetsSetsScrollFrame_Update();
+	BtWSetsSetsScrollFrame_Update();
+	
+	return selected;
 end
 local function SetsScrollFrame_NoFilter(selected, sets)
     wipe(setScrollItems);
@@ -4544,7 +4725,7 @@ local function SetsScrollFrame_NoFilter(selected, sets)
 	sort(setsFiltered, function (a,b)
 		return sets[a].name < sets[b].name;
 	end)
-
+	selected = selected or sets[select(2, next(setsFiltered))];
 	for _,setID in ipairs(setsFiltered) do
 		setScrollItems[#setScrollItems+1] = {
 			id = setID,
@@ -4553,298 +4734,487 @@ local function SetsScrollFrame_NoFilter(selected, sets)
 		};
 	end
 
-    BtWSetsSetsScrollFrame_Update();
+	BtWSetsSetsScrollFrame_Update();
+	
+	return selected;
 end
 
+local tutorialHelpTipFlags = {
+	["TUTORIAL_NEW_SET"] = true,
+	["TUTORIAL_RENAME_SET"] = true,
+	["TUTORIAL_CREATE_TALENT_SET"] = true,
+	["TUTORIAL_ACTIVATE_SET"] = true,
+};
 local function ProfilesTabUpdate(self)
-    local valid, class, specID, role, validForPlayer = IsProfileValid(self.set);
-	if type(specID) == "number" then
-		self.set.specID = specID;
-	end
-
 	self:GetParent().TitleText:SetText(L["Profiles"]);
+	self.set = SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.profiles, profilesCollapsedBySpecID);
 
-	specID = self.set.specID;
+	self.Name:SetEnabled(self.set ~= nil);
+	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
+	self.TalentsDropDown.Button:SetEnabled(self.set ~= nil);
+	self.PvPTalentsDropDown.Button:SetEnabled(self.set ~= nil);
+	self.EssencesDropDown.Button:SetEnabled(self.set ~= nil);
+	self.EquipmentDropDown.Button:SetEnabled(self.set ~= nil);
 
-	if specID == nil or specID == 0 then
-		UIDropDownMenu_SetText(self.SpecDropDown, NONE);
+	if self.set ~= nil then
+		local valid, class, specID, role, validForPlayer = IsProfileValid(self.set);
+		if type(specID) == "number" then
+			self.set.specID = specID;
+		end
+
+		specID = self.set.specID;
+
+		if specID == nil or specID == 0 then
+			UIDropDownMenu_SetText(self.SpecDropDown, NONE);
+		else
+			local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
+			local className = LOCALIZED_CLASS_NAMES_MALE[classID];
+			local classColor = C_ClassColor.GetClassColor(classID);
+			UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
+		end
+		
+		local talentSetID = self.set.talentSet;
+		if talentSetID == nil then
+			UIDropDownMenu_SetText(self.TalentsDropDown, NONE);
+		else
+			local talentSet = GetTalentSet(talentSetID);
+			UIDropDownMenu_SetText(self.TalentsDropDown, talentSet.name);
+		end
+
+		local pvpTalentSetID = self.set.pvpTalentSet;
+		if pvpTalentSetID == nil then
+			UIDropDownMenu_SetText(self.PvPTalentsDropDown, NONE);
+		else
+			local pvpTalentSet = GetPvPTalentSet(pvpTalentSetID);
+			UIDropDownMenu_SetText(self.PvPTalentsDropDown, pvpTalentSet.name);
+		end
+
+		local essencesSetID = self.set.essencesSet;
+		if essencesSetID == nil then
+			UIDropDownMenu_SetText(self.EssencesDropDown, NONE);
+		else
+			local essencesSet = GetEssenceSet(essencesSetID);
+			UIDropDownMenu_SetText(self.EssencesDropDown, essencesSet.name);
+		end
+
+		local equipmentSetID = self.set.equipmentSet;
+		if equipmentSetID == nil then
+			UIDropDownMenu_SetText(self.EquipmentDropDown, NONE);
+		else
+			local equipmentSet = GetEquipmentSet(equipmentSetID);
+			UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
+		end
+
+		self.Name:SetText(self.set.name or "");
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(validForPlayer);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(true);
+		
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+	
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not helpTipIgnored["TUTORIAL_RENAME_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_RENAME_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", self.Name);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Change the name of your new profile."]);
+		elseif not helpTipIgnored["TUTORIAL_CREATE_TALENT_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_CREATE_TALENT_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", self.TalentsDropDown);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Create a talent set for your new profile."]);
+		elseif not helpTipIgnored["TUTORIAL_ACTIVATE_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_ACTIVATE_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Activate your profile."]);
+		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
 	else
+		self.Name:SetText("");
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not helpTipIgnored["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
+	end
+end
+local function TalentsTabUpdate(self)
+	self:GetParent().TitleText:SetText(L["Talents"]);
+	self.set = SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.talents, talentSetsCollapsedBySpecID);
+
+	if self.set ~= nil then
+		self.Name:SetEnabled(true);
+		self.SpecDropDown.Button:SetEnabled(true);
+		for _,row in ipairs(self.rows) do
+			row:SetShown(true);
+		end
+
+		local specID = self.set.specID;
+		local selected = self.set.talents;
+
+		self.Name:SetText(self.set.name or "");
+
 		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
 		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
 		local classColor = C_ClassColor.GetClassColor(classID);
 		UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
-	end
-	
-	local talentSetID = self.set.talentSet;
-    if talentSetID == nil then
-        UIDropDownMenu_SetText(self.TalentsDropDown, NONE);
-    else
-        local talentSet = GetTalentSet(talentSetID);
-        UIDropDownMenu_SetText(self.TalentsDropDown, talentSet.name);
-    end
 
-    local pvpTalentSetID = self.set.pvpTalentSet;
-    if pvpTalentSetID == nil then
-        UIDropDownMenu_SetText(self.PvPTalentsDropDown, NONE);
-    else
-        local pvpTalentSet = GetPvPTalentSet(pvpTalentSetID);
-        UIDropDownMenu_SetText(self.PvPTalentsDropDown, pvpTalentSet.name);
-    end
+		if self.set.inUse then
+			UIDropDownMenu_DisableDropDown(self.SpecDropDown);
+		else
+			UIDropDownMenu_EnableDropDown(self.SpecDropDown);
+		end
 
-    local essencesSetID = self.set.essencesSet;
-    if essencesSetID == nil then
-        UIDropDownMenu_SetText(self.EssencesDropDown, NONE);
-    else
-        local essencesSet = GetEssenceSet(essencesSetID);
-        UIDropDownMenu_SetText(self.EssencesDropDown, essencesSet.name);
-    end
+		for tier=1,MAX_TALENT_TIERS do
+			for column=1,3 do
+				local item = self.rows[tier].talents[column];
+				local talentID, name, texture, _, _, spellID = GetTalentInfoForSpecID(specID, tier, column);
 
-    local equipmentSetID = self.set.equipmentSet;
-    if equipmentSetID == nil then
-        UIDropDownMenu_SetText(self.EquipmentDropDown, NONE);
-    else
-        local equipmentSet = GetEquipmentSet(equipmentSetID);
-        UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
-    end
+				item.id = talentID;
+				item.name:SetText(name);
+				item.icon:SetTexture(texture);
+				
+				if selected[talentID] then
+					item.knownSelection:Show();
+					item.icon:SetDesaturated(false);
+				else
+					item.knownSelection:Hide();
+					item.icon:SetDesaturated(true);
+				end
+			end
+		end
 
-    self.Name:SetText(self.set.name or "");
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(classID == select(2, UnitClass("player")));
 
-	local activateButton = self:GetParent().Activate;
-	activateButton:SetEnabled(validForPlayer);
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(true);
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		helpTipBox:Hide();
 
-	local deleteButton = self:GetParent().Delete;
-	deleteButton:SetEnabled(true);
-	
-	local helpTipBox = self:GetParent().HelpTipBox;
-	helpTipBox:Hide();
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+	else
+		self.Name:SetEnabled(false);
+		self.SpecDropDown.Button:SetEnabled(false);
+		for _,row in ipairs(self.rows) do
+			row:SetShown(false);
+		end
 
-	SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.profiles, profilesCollapsedBySpecID);
-end
-local function TalentsTabUpdate(self)
-    if not self.set.specID then
-        self.set.specID = GetSpecializationInfo(GetSpecialization());
-    end
+		self.Name:SetText("");
 
-	self:GetParent().TitleText:SetText(L["Talents"]);
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
 
-    local specID = self.set.specID;
-    local selected = self.set.talents;
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
 
-    local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
-    local className = LOCALIZED_CLASS_NAMES_MALE[classID];
-    local classColor = C_ClassColor.GetClassColor(classID);
-    UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not helpTipIgnored["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 
-    if self.set.inUse then
-        UIDropDownMenu_DisableDropDown(self.SpecDropDown);
-    else
-        UIDropDownMenu_EnableDropDown(self.SpecDropDown);
-    end
-
-    self.Name:SetText(self.set.name or "");
-
-    for tier=1,MAX_TALENT_TIERS do
-        for column=1,3 do
-            local item = self.rows[tier].talents[column];
-            local talentID, name, texture, _, _, spellID = GetTalentInfoForSpecID(specID, tier, column);
-
-			item.id = talentID;
-            item.name:SetText(name);
-            item.icon:SetTexture(texture);
-            
-            if selected[talentID] then
-                item.knownSelection:Show();
-                item.icon:SetDesaturated(false);
-            else
-			    item.knownSelection:Hide();
-                item.icon:SetDesaturated(true);
-            end
-        end
-    end
-
-	local activateButton = self:GetParent().Activate;
-	activateButton:SetEnabled(classID == select(2, UnitClass("player")));
-
-	local deleteButton = self:GetParent().Delete;
-	deleteButton:SetEnabled(true);
-	
-	local helpTipBox = self:GetParent().HelpTipBox;
-	helpTipBox:Hide();
-
-	SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.talents, talentSetsCollapsedBySpecID);
-end
-local function PvPTalentsTabUpdate(self)
-    if not self.set.specID then
-        self.set.specID = GetSpecializationInfo(GetSpecialization());
-    end
-
-	self:GetParent().TitleText:SetText(L["PvP Talents"]);
-
-    local specID = self.set.specID;
-    local selected = self.set.talents;
-
-    local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
-    local className = LOCALIZED_CLASS_NAMES_MALE[classID];
-    local classColor = C_ClassColor.GetClassColor(classID);
-    UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
-
-    if self.set.inUse then
-        UIDropDownMenu_DisableDropDown(self.SpecDropDown);
-    else
-        UIDropDownMenu_EnableDropDown(self.SpecDropDown);
-    end
-
-    self.Name:SetText(self.set.name or "");
-
-    local trinkets = self.trinkets;
-    for column=1,3 do
-        local item = trinkets.talents[column];
-        local talentID, name, texture, _, _, spellID = GetPvPTrinketTalentInfo(specID, column);
-
-		item.isPvP = true;
-		item.id = talentID;
-        item.name:SetText(name);
-        item.icon:SetTexture(texture);
-        
-        if selected[talentID] then
-            item.knownSelection:Show();
-            item.icon:SetDesaturated(false);
-        else
-            item.knownSelection:Hide();
-            item.icon:SetDesaturated(true);
-        end
-	end
-	
-	local count = 0;
-	for index=1,MAX_PVP_TALENTS do
-        local talentID, name, texture, _, _, spellID = GetPvPTalentInfoForSpecID(specID, index);
-		if talentID and selected[talentID] then
-			count = count + 1;
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
 		end
 	end
-	
-    local others = self.others;
-	for index=1,MAX_PVP_TALENTS do
-        local item = others.talents[index];
-		local talentID, name, texture, _, _, spellID = GetPvPTalentInfoForSpecID(specID, index);
-		
-		if talentID then
+end
+local function PvPTalentsTabUpdate(self)
+	self:GetParent().TitleText:SetText(L["PvP Talents"]);
+	self.set = SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.pvptalents, pvpTalentSetsCollapsedBySpecID);
+
+	if self.set ~= nil then
+		self.Name:SetEnabled(true);
+		self.SpecDropDown.Button:SetEnabled(true);
+		self.trinkets:SetShown(true);
+		self.others:SetShown(true);
+
+		local specID = self.set.specID;
+		local selected = self.set.talents;
+
+		self.Name:SetText(self.set.name or "");
+
+		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
+		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
+		local classColor = C_ClassColor.GetClassColor(classID);
+		UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
+
+		if self.set.inUse then
+			UIDropDownMenu_DisableDropDown(self.SpecDropDown);
+		else
+			UIDropDownMenu_EnableDropDown(self.SpecDropDown);
+		end
+
+		local trinkets = self.trinkets;
+		for column=1,3 do
+			local item = trinkets.talents[column];
+			local talentID, name, texture, _, _, spellID = GetPvPTrinketTalentInfo(specID, column);
+
 			item.isPvP = true;
 			item.id = talentID;
 			item.name:SetText(name);
 			item.icon:SetTexture(texture);
 			
 			if selected[talentID] then
-				item.Cover:SetShown(false);
-				item:SetEnabled(true);
-
 				item.knownSelection:Show();
 				item.icon:SetDesaturated(false);
 			else
-				item.Cover:SetShown(count >= 3);
-				item:SetEnabled(count < 3);
-
 				item.knownSelection:Hide();
 				item.icon:SetDesaturated(true);
 			end
+		end
+		
+		local count = 0;
+		for index=1,MAX_PVP_TALENTS do
+			local talentID, name, texture, _, _, spellID = GetPvPTalentInfoForSpecID(specID, index);
+			if talentID and selected[talentID] then
+				count = count + 1;
+			end
+		end
+		
+		local others = self.others;
+		for index=1,MAX_PVP_TALENTS do
+			local item = others.talents[index];
+			local talentID, name, texture, _, _, spellID = GetPvPTalentInfoForSpecID(specID, index);
+			
+			if talentID then
+				item.isPvP = true;
+				item.id = talentID;
+				item.name:SetText(name);
+				item.icon:SetTexture(texture);
+				
+				if selected[talentID] then
+					item.Cover:SetShown(false);
+					item:SetEnabled(true);
 
-			item:Show();
-		else
-			item:Hide();
+					item.knownSelection:Show();
+					item.icon:SetDesaturated(false);
+				else
+					item.Cover:SetShown(count >= 3);
+					item:SetEnabled(count < 3);
+
+					item.knownSelection:Hide();
+					item.icon:SetDesaturated(true);
+				end
+
+				item:Show();
+			else
+				item:Hide();
+			end
+		end
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(classID == select(2, UnitClass("player")));
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(true);
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		helpTipBox:Hide();
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+	else
+		self.Name:SetEnabled(false);
+		self.SpecDropDown.Button:SetEnabled(false);
+		self.trinkets:SetShown(false);
+		self.others:SetShown(false);
+
+		self.Name:SetText("");
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not helpTipIgnored["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
 		end
 	end
-
-	local activateButton = self:GetParent().Activate;
-	activateButton:SetEnabled(classID == select(2, UnitClass("player")));
-
-	local deleteButton = self:GetParent().Delete;
-	deleteButton:SetEnabled(true);
-	
-	local helpTipBox = self:GetParent().HelpTipBox;
-	helpTipBox:Hide();
-
-	SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.pvptalents, pvpTalentSetsCollapsedBySpecID);
 end
 local function EssenceScrollFrameUpdate(self)
-    local pending = self:GetParent().pending;
-    local role = self:GetParent().set.role;
-	local selected = self:GetParent().set.essences;
-	
-	local offset = HybridScrollFrame_GetOffset(self);
+	local pending = self:GetParent().pending;
+	local set = self:GetParent().set;
 	local buttons = self.buttons;
-	for i,item in ipairs(buttons) do
-		local index = offset + i;
-		local essence = GetEssenceInfoForRole(role, index);
+	if set then
+		local role = set.role;
+		local selected = set.essences;
 		
-		if essence then
-			item.id = essence.ID;
-			item.Name:SetText(essence.name);
-			item.Icon:SetTexture(essence.icon);
-			item.ActivatedMarkerMain:SetShown(selected[115] == essence.ID);
-			item.ActivatedMarkerPassive:SetShown((selected[116] == essence.ID) or (selected[117] == essence.ID));
-			item.PendingGlow:SetShown(pending == essence.ID);
+		local offset = HybridScrollFrame_GetOffset(self);
+		for i,item in ipairs(buttons) do
+			local index = offset + i;
+			local essence = GetEssenceInfoForRole(role, index);
 			
-			item:Show();
-		else
+			if essence then
+				item.id = essence.ID;
+				item.Name:SetText(essence.name);
+				item.Icon:SetTexture(essence.icon);
+				item.ActivatedMarkerMain:SetShown(selected[115] == essence.ID);
+				item.ActivatedMarkerPassive:SetShown((selected[116] == essence.ID) or (selected[117] == essence.ID));
+				item.PendingGlow:SetShown(pending == essence.ID);
+				
+				item:Show();
+			else
+				item:Hide();
+			end
+		end
+		local totalHeight = MAX_ESSENCES * (41 + 1) + 3 * 2;
+		HybridScrollFrame_Update(self, totalHeight, self:GetHeight());
+	else
+		for i,item in ipairs(buttons) do
 			item:Hide();
 		end
+		HybridScrollFrame_Update(self, 0, self:GetHeight());
 	end
-	local totalHeight = MAX_ESSENCES * (41 + 1) + 3 * 2;
-	HybridScrollFrame_Update(self, totalHeight, self:GetHeight());
 end
 local function EssencesTabUpdate(self)
-    if not self.set.role then
-        self.set.role = select(5, GetSpecializationInfo(GetSpecialization()));
-	end
-
 	self:GetParent().TitleText:SetText(L["Essences"]);
+	self.set = SetsScrollFrame_RoleFilter(self.set, BtWSetsSets.essences, essenceSetsCollapsedByRole);
 
-    local role = self.set.role;
-    local selected = self.set.essences;
-	
-    UIDropDownMenu_SetText(self.RoleDropDown, _G[self.set.role]);
+	if self.set ~= nil then
+		self.Name:SetEnabled(true);
+		self.RoleDropDown.Button:SetEnabled(true);
 
-    if self.set.inUse then
-        UIDropDownMenu_DisableDropDown(self.RoleDropDown);
-    else
-        UIDropDownMenu_EnableDropDown(self.RoleDropDown);
-    end
+		local role = self.set.role;
+		local selected = self.set.essences;
+		
+		UIDropDownMenu_SetText(self.RoleDropDown, _G[self.set.role]);
 
-	self.Name:SetText(self.set.name or "");
-
-    for milestoneID,item in pairs(self.Slots) do
-		local essenceID = self.set.essences[milestoneID];
-		item.milestoneID = milestoneID;
-
-		if essenceID then
-			local info = GetEssenceInfoByID(essenceID);
-
-			item.id = essenceID;
-			
-			item.Icon:Show();
-			item.Icon:SetTexture(info.icon);
-			item.EmptyGlow:Hide();
-			item.EmptyIcon:Hide();
+		if self.set.inUse then
+			UIDropDownMenu_DisableDropDown(self.RoleDropDown);
 		else
-			item.id = nil;
+			UIDropDownMenu_EnableDropDown(self.RoleDropDown);
+		end
 
-			item.Icon:Hide();
-			item.EmptyGlow:Show();
-			item.EmptyIcon:Show();
+		self.Name:SetText(self.set.name or "");
+
+		for milestoneID,item in pairs(self.Slots) do
+			local essenceID = self.set.essences[milestoneID];
+			item.milestoneID = milestoneID;
+
+			if essenceID then
+				local info = GetEssenceInfoByID(essenceID);
+
+				item.id = essenceID;
+				
+				item.Icon:Show();
+				item.Icon:SetTexture(info.icon);
+				item.EmptyGlow:Hide();
+				item.EmptyIcon:Hide();
+			else
+				item.id = nil;
+
+				item.Icon:Hide();
+				item.EmptyGlow:Show();
+				item.EmptyIcon:Show();
+			end
+		end
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(role == select(5, GetSpecializationInfo(GetSpecialization())));
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(true);
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		helpTipBox:Hide();
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+	else
+		self.Name:SetEnabled(false);
+		self.RoleDropDown.Button:SetEnabled(false);
+
+		self.Name:SetText("");
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not helpTipIgnored["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+			
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
 		end
 	end
 
-	local activateButton = self:GetParent().Activate;
-	activateButton:SetEnabled(role == select(5, GetSpecializationInfo(GetSpecialization())));
-
-	local deleteButton = self:GetParent().Delete;
-	deleteButton:SetEnabled(true);
-	
-	local helpTipBox = self:GetParent().HelpTipBox;
-	helpTipBox:Hide();
-
 	EssenceScrollFrameUpdate(self.EssenceList);
-	SetsScrollFrame_RoleFilter(self.set, BtWSetsSets.essences, essenceSetsCollapsedByRole);
 end
 local equipmentHelpTipFlags = {
 	["INVALID_PLAYER"] = true,
@@ -4852,104 +5222,143 @@ local equipmentHelpTipFlags = {
 	["EQUIPMENT_IGNORE"] = true,
 };
 local function EquipmentTabUpdate(self)
-	local set = self.set;
-	local character = set.character;
-	local characterInfo = GetCharacterInfo(character);
-	local equipment = set.equipment;
-
 	self:GetParent().TitleText:SetText(L["Equipment"]);
-	
-	local characterName, characterRealm = UnitFullName("player");
-	local playerCharacter = characterRealm .. "-" .. characterName;
+	self.set = SetsScrollFrame_CharacterFilter(self.set, BtWSetsSets.equipment, equipmentSetsCollapsedByCharacter);
 
-	-- Update the name for the built in equipment set, but only for the current player
-	if set.character == playerCharacter and set.managerID then
-		local managerName = C_EquipmentSet.GetEquipmentSetInfo(set.managerID);
-		if managerName ~= set.name then
-			C_EquipmentSet.ModifyEquipmentSet(set.managerID, set.name);
+	if self.set ~= nil then
+		local set = self.set;
+		local character = set.character;
+		local characterInfo = GetCharacterInfo(character);
+		local equipment = set.equipment;
+
+		local characterName, characterRealm = UnitFullName("player");
+		local playerCharacter = characterRealm .. "-" .. characterName;
+
+		-- Update the name for the built in equipment set, but only for the current player
+		if set.character == playerCharacter and set.managerID then
+			local managerName = C_EquipmentSet.GetEquipmentSetInfo(set.managerID);
+			if managerName ~= set.name then
+				C_EquipmentSet.ModifyEquipmentSet(set.managerID, set.name);
+			end
 		end
-	end
-	
-	self.Name:SetText(self.set.name or "");
-	self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
+		
+		self.Name:SetText(self.set.name or "");
+		self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
 
-	local model = self.Model;
-	if not characterInfo or character == playerCharacter then
-		model:SetUnit("player");
+		local model = self.Model;
+		if not characterInfo or character == playerCharacter then
+			model:SetUnit("player");
+		else
+			model:SetCustomRace(characterInfo.race, characterInfo.sex);
+		end
+		model:Undress();
+
+		for _,item in pairs(self.Slots) do
+			if equipment[item:GetID()] then
+				model:TryOn(equipment[item:GetID()]);
+			end
+
+			item:Update();
+			item:SetEnabled(character == playerCharacter and set.managerID == nil);
+		end
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(character == playerCharacter);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(set.managerID == nil);
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+
+		local helpTipBox = self:GetParent().HelpTipBox;
+		if character ~= playerCharacter then
+			if not helpTipIgnored["INVALID_PLAYER"] then
+				helpTipBox.closeFlag = "INVALID_PLAYER";
+
+				HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+				
+				helpTipBox:Show();
+				HelpTipBox_SetText(helpTipBox, L["Can not equip sets for other characters."]);
+			elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+				helpTipBox.closeFlag = nil;
+				helpTipBox:Hide();
+			end
+		elseif set.managerID ~= nil then
+			if not helpTipIgnored["EQUIPMENT_MANAGER_BLOCK"] then
+				helpTipBox.closeFlag = "EQUIPMENT_MANAGER_BLOCK";
+
+				HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
+				
+				helpTipBox:Show();
+				HelpTipBox_SetText(helpTipBox, L["Can not edit equipment manager sets."]);
+			elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+				helpTipBox.closeFlag = nil;
+				helpTipBox:Hide();
+			end
+		else
+			if not helpTipIgnored["EQUIPMENT_IGNORE"] then
+				helpTipBox.closeFlag = "EQUIPMENT_IGNORE";
+
+				HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
+				
+				helpTipBox:Show();
+				HelpTipBox_SetText(helpTipBox, L["Shift+Left Mouse Button to ignore a slot."]);
+			elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+				helpTipBox.closeFlag = nil;
+				helpTipBox:Hide();
+			end
+		end
 	else
-		model:SetCustomRace(characterInfo.race, characterInfo.sex);
-	end
-	model:Undress();
+		self.Name:SetEnabled(false);
+		self.Name:SetText("");
 
-	for _,item in pairs(self.Slots) do
-		if equipment[item:GetID()] then
-			model:TryOn(equipment[item:GetID()]);
+		for _,item in pairs(self.Slots) do
+			item:SetEnabled(false);
 		end
 
-		item:Update();
-		item:SetEnabled(character == playerCharacter and set.managerID == nil);
-	end
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
 
-	local activateButton = self:GetParent().Activate;
-	activateButton:SetEnabled(character == playerCharacter);
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
 
-	local deleteButton = self:GetParent().Delete;
-	deleteButton:SetEnabled(set.managerID == nil);
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not helpTipIgnored["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 
-	local helpTipBox = self:GetParent().HelpTipBox;
-	if character ~= playerCharacter then
-		if not helpTipIgnored["INVALID_PLAYER"] then
-			helpTipBox.closeFlag = "INVALID_PLAYER";
-
-			HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
 			
 			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["Can not equip sets for other characters."]);
-		elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
-			helpTipBox.closeFlag = nil;
-			helpTipBox:Hide();
-		end
-	elseif set.managerID ~= nil then
-		if not helpTipIgnored["EQUIPMENT_MANAGER_BLOCK"] then
-			helpTipBox.closeFlag = "EQUIPMENT_MANAGER_BLOCK";
-
-			HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
-			
-			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["Can not edit equipment manager sets."]);
-		elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
-			helpTipBox.closeFlag = nil;
-			helpTipBox:Hide();
-		end
-	else
-		if not helpTipIgnored["EQUIPMENT_IGNORE"] then
-			helpTipBox.closeFlag = "EQUIPMENT_IGNORE";
-
-			HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
-			
-			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["Shift+Left Mouse Button to ignore a slot."]);
-		elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
 	end
-
-	SetsScrollFrame_CharacterFilter(set, BtWSetsSets.equipment, equipmentSetsCollapsedByCharacter);
 end
 local function ConditionsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Conditions"]);
+    SetsScrollFrame_NoFilter(self.set, BtWSetsSets.conditions);
 
-	local activateButton = self:GetParent().Activate;
+	local activateButton = self:GetParent().ActivateButton;
 	activateButton:SetEnabled(false);
 
-	local deleteButton = self:GetParent().Delete;
+	local deleteButton =  self:GetParent().DeleteButton;
 	deleteButton:SetEnabled(false);
 	
 	local helpTipBox = self:GetParent().HelpTipBox;
 	helpTipBox:Hide();
-
-    SetsScrollFrame_NoFilter(self.set, BtWSetsSets.conditions);
+	
+	local addButton = self:GetParent().AddButton;
+	addButton.Flash:Hide();
+	addButton.FlashAnim:Stop();
 end
 
 BtWSetsFrameMixin = {};
@@ -4957,19 +5366,19 @@ function BtWSetsFrameMixin:OnLoad()
     tinsert(UISpecialFrames, self:GetName());
     self:RegisterForDrag("LeftButton");
     
-    self.Profiles.set = {};
+    -- self.Profiles.set = {};
     
     self.Talents.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
-    self.Talents.set = {talents = {}};
+    -- self.Talents.set = {talents = {}};
 
     self.PvPTalents.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
-    self.PvPTalents.set = {talents = {}};
+    -- self.PvPTalents.set = {talents = {}};
 
     self.Essences.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
-	self.Essences.set = {essences = {}};
+	-- self.Essences.set = {essences = {}};
 	self.Essences.pending = nil;
 
-	self.Equipment.set = {equipment = {}, ignored = {}};
+	-- self.Equipment.set = {equipment = {}, ignored = {}};
 
 	PanelTemplates_SetNumTabs(self, NUM_TABS);
     PanelTemplates_SetTab(self, TAB_PROFILES);
@@ -5103,7 +5512,9 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
     local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
     if selectedTab == TAB_PROFILES then
         local frame = self.Profiles;
-        if button.isAdd then
+		if button.isAdd then
+			helpTipIgnored["TUTORIAL_NEW_SET"] = true;
+
             self:SetProfile(AddProfile());
             C_Timer.After(0, function ()
                 frame.Name:HighlightText();
@@ -5123,8 +5534,12 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
 				});
 			end
         elseif button.isActivate then
+			helpTipIgnored["TUTORIAL_ACTIVATE_SET"] = true;
+
 			local set = frame.set;
 			ActivateProfile(set);
+
+			ProfilesTabUpdate(frame);
         elseif button.isHeader then
             profilesCollapsedBySpecID[button.id] = not profilesCollapsedBySpecID[button.id] and true or nil;
             ProfilesTabUpdate(frame);
@@ -5305,6 +5720,15 @@ end
 function BtWSetsFrameMixin:OnHelpTipManuallyClosed(closeFlag)
 	helpTipIgnored[closeFlag] = true;
 	self:Update();
+end
+function BtWSetsFrameMixin:OnNameChanged(text)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+	local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+	if tab.set and tab.set.name ~= text then
+		tab.set.name = text;
+		helpTipIgnored["TUTORIAL_RENAME_SET"] = true;
+		self:Update();
+	end
 end
 
 BtWSetsTalentButtonMixin = {};
@@ -5752,6 +6176,12 @@ function frame:ADDON_LOADED(...)
 				end
 			end
 		end
+
+		BtWSetsHelpTipFlags = BtWSetsHelpTipFlags or {};
+		for k in pairs(helpTipIgnored) do
+			BtWSetsHelpTipFlags[k] = true;
+		end
+		helpTipIgnored = BtWSetsHelpTipFlags;
     end
 end
 function frame:PLAYER_LOGIN(...)
@@ -5760,10 +6190,9 @@ end
 function frame:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
         local specID = GetSpecializationInfo(specIndex);
-        local spec = BtWSetsSpecInfo[specID] or {};
-		local talents = spec.talents;
-		
+        local spec = BtWSetsSpecInfo[specID] or {talents = {}};
 		spec.talents = spec.talents or {};
+		local talents = spec.talents;
         for tier=1,MAX_TALENT_TIERS do
             local tierItems = talents[tier] or {};
 
@@ -5781,7 +6210,6 @@ function frame:PLAYER_ENTERING_WORLD()
 	do
 		local specID = GetSpecializationInfo(GetSpecialization());
 		local spec = BtWSetsSpecInfo[specID] or {};
-
 		spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
 		wipe(spec.pvptalenttrinkets);
 		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
