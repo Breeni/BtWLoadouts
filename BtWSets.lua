@@ -3402,7 +3402,7 @@ local function GetProfile(id)
 end
 local function DeleteProfile(id)
 	do
-		local set = GetProfile(id);
+		local set = type(id) == "table" and id or GetProfile(id);
 		if set.talentSet then
 			local subSet = GetTalentSet(set.talentSet);
 			subSet.useCount = (subSet.useCount or 1) - 1;
