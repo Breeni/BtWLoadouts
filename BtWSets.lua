@@ -4840,7 +4840,7 @@ local function ProfilesTabUpdate(self)
 			
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["Activate your profile."]);
-		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
@@ -4866,7 +4866,7 @@ local function ProfilesTabUpdate(self)
 			
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
@@ -4958,7 +4958,7 @@ local function TalentsTabUpdate(self)
 			
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
@@ -5087,7 +5087,7 @@ local function PvPTalentsTabUpdate(self)
 			
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
@@ -5208,7 +5208,7 @@ local function EssencesTabUpdate(self)
 			
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
@@ -5281,7 +5281,7 @@ local function EquipmentTabUpdate(self)
 				
 				helpTipBox:Show();
 				HelpTipBox_SetText(helpTipBox, L["Can not equip sets for other characters."]);
-			elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+			else
 				helpTipBox.closeFlag = nil;
 				helpTipBox:Hide();
 			end
@@ -5293,7 +5293,7 @@ local function EquipmentTabUpdate(self)
 				
 				helpTipBox:Show();
 				HelpTipBox_SetText(helpTipBox, L["Can not edit equipment manager sets."]);
-			elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+			else
 				helpTipBox.closeFlag = nil;
 				helpTipBox:Hide();
 			end
@@ -5305,7 +5305,7 @@ local function EquipmentTabUpdate(self)
 				
 				helpTipBox:Show();
 				HelpTipBox_SetText(helpTipBox, L["Shift+Left Mouse Button to ignore a slot."]);
-			elseif equipmentHelpTipFlags[helpTipBox.closeFlag] then
+			else
 				helpTipBox.closeFlag = nil;
 				helpTipBox:Hide();
 			end
@@ -5337,7 +5337,7 @@ local function EquipmentTabUpdate(self)
 			
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-		elseif tutorialHelpTipFlags[helpTipBox.closeFlag] then
+		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
