@@ -754,7 +754,7 @@
 			</OnClick>
 		</Scripts>
 	</Button>
-	<Frame name="BtWSetsFrame" mixin="BtWSetsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true">
+	<Frame name="BtWSetsFrame" mixin="BtWSetsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true" hidden="true">
 		<Size x="779" y="448"/>
 		<Anchors>
 			<Anchor point="CENTER"/>
@@ -1464,49 +1464,34 @@
 						<FontString parentKey="NameTitle" text="BTWSETS_NAME" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-10"/>
+								<Anchor point="TOPLEFT" x="10" y="-10"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="SpecTitle" text="BTWSETS_SPECIALIZATION" inherits="GameFontNormalLeft">
+						<FontString parentKey="ProfileTitle" text="BTWSETS_PROFILE" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-70"/>
+								<Anchor point="TOPLEFT" x="10" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="TalentsTitle" text="BTWSETS_TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="ConditionsTitle" text="BTWSETS_CONDITIONS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-130"/>
-							</Anchors>
-							<Color r="0.75" g="0.61" b="0"/>
-						</FontString>
-						<FontString parentKey="PvPTalentsTitle" text="BTWSETS_PVP_TALENTS" inherits="GameFontNormalLeft">
-							<Size x="175" y="0"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-190"/>
-							</Anchors>
-							<Color r="0.75" g="0.61" b="0"/>
-						</FontString>
-						<FontString parentKey="EssencesTitle" text="BTWSETS_ESSENCES" inherits="GameFontNormalLeft">
-							<Size x="175" y="0"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-250"/>
-							</Anchors>
-							<Color r="0.75" g="0.61" b="0"/>
-						</FontString>
-						<FontString parentKey="EquipmentTitle" text="BTWSETS_EQUIPMENT" inherits="GameFontNormalLeft">
-							<Size x="175" y="0"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" x="0" y="-310"/>
+								<Anchor point="TOPLEFT" x="10" y="-130"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 					</Layer>
 				</Layers>
 				<Frames>
-					<EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
+					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-4" y="4" />
+							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+						</Anchors>
+					</Frame>
+					<EditBox letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.NameTitle" relativePoint="BOTTOMLEFT" x="20" y="-10"/>
@@ -1519,28 +1504,27 @@
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame parentKey="ProfileDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ProfileTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
-					<Frame parentKey="DungeonDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame parentKey="ConditionTypeDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ConditionsTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
+					</Frame>
+					<Frame parentKey="InstanceDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ConditionTypeDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
 					</Frame>
 					<Frame parentKey="DifficultyDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="LEFT" relativeKey="$parent.InstanceDropDown" relativePoint="RIGHT" x="0" y="0"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
-					<EditBox parentKey="SubZoneEditBox" letters="50" autoFocus="false" inherits="InputBoxTemplate">
+					<!-- <EditBox parentKey="SubZoneEditBox" letters="50" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.NameTitle" relativePoint="BOTTOMLEFT" x="20" y="-10"/>
@@ -1580,7 +1564,7 @@
 						</Anchors>
 						<Scripts>
 						</Scripts>
-					</Frame>
+					</Frame> -->
 				</Frames>
 			</Frame>
 			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWSETS_NEW_SET">
@@ -1702,6 +1686,7 @@
 			<OnMouseUp method="OnMouseUp"/>
 			<OnEnter method="OnEnter"/>
 			<OnLeave method="OnLeave"/>
+			<OnHide method="OnHide"/>
 		</Scripts>
 	</Frame>
     

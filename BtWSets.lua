@@ -13,6 +13,41 @@
 
 local ADDON_NAME = ...;
 
+local L = {};
+setmetatable(L, {
+    __index = function (self, key)
+        return key;
+    end,
+});
+
+L["Talents"] = TALENTS;
+L["PvP Talents"] = PVP_TALENTS;
+L["Equipment"] = BAG_FILTER_EQUIPMENT;
+L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET;
+L["Activate"] = TALENT_SPEC_ACTIVATE;
+L["Delete"] = DELETE;
+L["Name"] = NAME;
+L["Specialization"] = SPECIALIZATION;
+L["None"] = NONE;
+L["New"] = NEW;
+L["World"] = WORLD;
+L["Dungeons"] = DUNGEONS;
+L["Raids"] = RAIDS;
+L["Arena"] = ARENA;
+L["Battlegrounds"] = BATTLEGROUNDS;
+
+BTWSETS_PROFILES = L["Profiles"];
+BTWSETS_TALENTS = L["Talents"];
+BTWSETS_PVP_TALENTS = L["PvP Talents"];
+BTWSETS_ESSENCES = L["Essences"];
+BTWSETS_EQUIPMENT = L["Equipment"];
+BTWSETS_CONDITIONS = L["Conditions"];
+BTWSETS_NEW_SET = L["New Set"];
+BTWSETS_ACTIVATE = L["Activate"];
+BTWSETS_DELETE = L["Delete"];
+BTWSETS_NAME = L["Name"];
+BTWSETS_SPECIALIZATION = L["Specialization"];
+
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};
 local specInfo = {
@@ -2167,6 +2202,67 @@ local roleInfo = {
 	},
 };
 local classInfo = {};
+local instanceDifficulties = {
+	[1754] = {1,2,23,8},
+	[2097] = {23},
+};
+local dungeonInfo = {
+	{
+		name = L["Classic"],
+		dungeons = {
+		},
+	},
+	{
+		name = L["TBC"],
+		dungeons = {
+		},
+	},
+	{
+		name = L["Wrath"],
+		dungeons = {
+		},
+	},
+	{
+		name = L["Cata"],
+		dungeons = {
+		},
+	},
+	{
+		name = L["Panda"],
+		dungeons = {
+		},
+	},
+	{
+		name = L["WoD"],
+		dungeons = {
+		},
+	},
+	{
+		name = L["Legion"],
+		dungeons = {
+		},
+	},
+	{
+		name = L["Battle For Azeroth"],
+		dungeons = {
+			1754,
+			2097,
+		},
+	}
+};
+
+local CONDITION_TYPE_WORLD = 1;
+local CONDITION_TYPE_DUNGEONS = 2;
+local CONDITION_TYPE_RAIDS = 3;
+local CONDITION_TYPE_ARENA = 4;
+local CONDITION_TYPE_BATTLEGROUND = 5;
+local CONDITION_TYPE_NAMES = {
+	[CONDITION_TYPE_WORLD] = L["World"],
+	[CONDITION_TYPE_DUNGEONS] = L["Dungeons"],
+	[CONDITION_TYPE_RAIDS] = L["Raids"],
+	[CONDITION_TYPE_ARENA] = L["Arena"],
+	[CONDITION_TYPE_BATTLEGROUND] = L["Battlegrounds"],
+}
 
 local MAX_PVP_TALENTS = 15;
 local function GetTalentInfoForSpecID(specID, tier, column)
@@ -2312,35 +2408,6 @@ end
 
 local eventHandler = CreateFrame("Frame");
 eventHandler:Hide();
-local L = {};
-setmetatable(L, {
-    __index = function (self, key)
-        return key;
-    end,
-});
-
-L["Talents"] = TALENTS;
-L["PvP Talents"] = PVP_TALENTS;
-L["Equipment"] = BAG_FILTER_EQUIPMENT;
-L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET;
-L["Activate"] = TALENT_SPEC_ACTIVATE;
-L["Delete"] = DELETE;
-L["Name"] = NAME;
-L["Specialization"] = SPECIALIZATION;
-L["None"] = NONE;
-L["New"] = NEW;
-
-BTWSETS_PROFILES = L["Profiles"];
-BTWSETS_TALENTS = L["Talents"];
-BTWSETS_PVP_TALENTS = L["PvP Talents"];
-BTWSETS_ESSENCES = L["Essences"];
-BTWSETS_EQUIPMENT = L["Equipment"];
-BTWSETS_CONDITIONS = L["Conditions"];
-BTWSETS_NEW_SET = L["New Set"];
-BTWSETS_ACTIVATE = L["Activate"];
-BTWSETS_DELETE = L["Delete"];
-BTWSETS_NAME = L["Name"];
-BTWSETS_SPECIALIZATION = L["Specialization"];
 
 local function SettingsCreate(options)
     local optionsByKey = {};
@@ -2414,13 +2481,55 @@ tomeButton:HookScript("OnClick", function (self, ...)
     self.button:GetScript("OnClick")(self.button, ...);
 end);
 
+local setsFiltered = {};
+local activeConditionSelection;
+local activeConditions = {}; -- List of the currently active conditions profiles
+local conditionProfilesDropDown = CreateFrame("FRAME", "BtWSetsConditionProfilesDropDown", UIParent, "UIDropDownMenuTemplate");
+local function ConditionProfilesDropDown_OnClick(self, arg1, arg2, checked)
+	activeConditionSelection = arg1;
+	UIDropDownMenu_SetText(conditionProfilesDropDown, arg1.name);
+end
+local function ConditionProfilesDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+
+    if (level or 1) == 1 then
+        wipe(setsFiltered);
+		for subset in pairs(activeConditions) do
+			setsFiltered[#setsFiltered+1] = subset;
+		end
+        sort(setsFiltered, function (a,b)
+            return a.name < b.name;
+		end)
+		
+		for _,set in ipairs(setsFiltered) do
+            info.text = set.name;
+            info.arg1 = set;
+            info.func = ConditionProfilesDropDown_OnClick;
+            info.checked = activeConditionSelection == set;
+            UIDropDownMenu_AddButton(info, level);
+        end
+    end
+end
+UIDropDownMenu_SetWidth(conditionProfilesDropDown, 170);
+UIDropDownMenu_Initialize(conditionProfilesDropDown, ConditionProfilesDropDownInit);
+UIDropDownMenu_JustifyText(conditionProfilesDropDown, "LEFT");
+
 StaticPopupDialogs["BTWSETS_REQUESTACTIVATE"] = {
-	text = "Activate spec %s?",
+	text = L["Activate profile %s?"],
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function(self)
+	OnAccept = function(self, data)
+		data.func(data.set);
 	end,
-	OnShow = function(self)
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWSETS_REQUESTMULTIACTIVATE"] = {
+	text = L["Activate the following profile?\n"],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, data)
+		data.func(activeConditions[activeConditionSelection]);
 	end,
 	timeout = 0,
 	hideOnEscape = 1
@@ -2504,7 +2613,8 @@ StaticPopupDialogs["BTWSETS_DELETESET"] = {
 		data.func(data.set);
 	end,
 	timeout = 0,
-	hideOnEscape = 1
+	whileDead = 1,
+	showAlert = 1
 };
 StaticPopupDialogs["BTWSETS_DELETEINUSESET"] = {
 	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."],
@@ -2514,7 +2624,8 @@ StaticPopupDialogs["BTWSETS_DELETEINUSESET"] = {
 		data.func(data.set);
 	end,
 	timeout = 0,
-	hideOnEscape = 1
+	whileDead = 1,
+	showAlert = 1
 };
 
 
@@ -2850,8 +2961,8 @@ local function DeleteTalentSet(id)
 end
 
 local function IsPvPTalentSetActive(set)
-    for talentID in pairs(set.talents) do
-        local _, _, _, selected, available = GetTalentInfoByID(talentID, 1);
+	for talentID in pairs(set.talents) do
+        local _, _, _, selected, available = GetPvpTalentInfoByID(talentID, 1);
 
         if not selected then
             return false;
@@ -3316,6 +3427,37 @@ local function DeleteEquipmentSet(id)
 	end
 end
 
+
+local function AddConditionSet()
+	local name = L["New Condition Set"];
+	
+    local set = {
+		setID = GetNextSetID(BtWSetsSets.conditions),
+		name = name,
+		type = CONDITION_TYPE_WORLD,
+		map = {},
+    };
+    BtWSetsSets.conditions[set.setID] = set;
+    return set;
+end
+local function GetConditionSet(id)
+    return BtWSetsSets.conditions[id];
+end
+local function DeleteConditionSet(id)
+	DeleteSet(BtWSetsSets.conditions, id);
+
+	if type(id) == "table" then
+		id = id.setID;
+	end
+
+	local frame = BtWSetsFrame.Conditions;
+	local set = frame.set;
+	if set.setID == id then
+		frame.set = nil;
+		BtWSetsFrame:Update();
+	end
+end
+
 -- Check all the pieces of a profile and make sure they are valid together
 local function IsProfileValid(set)
 	local class, specID, role, invalidForPlayer;
@@ -3385,8 +3527,7 @@ local function IsProfileValid(set)
 	return true, class, specID, role, not invalidForPlayer;
 end
 local function AddProfile()
-    local specID, specName = GetSpecializationInfo(GetSpecialization());
-    local name = format("New Profile", specName);
+    local name = L["New Profile"];
 
     local set = {
 		setID = GetNextSetID(BtWSetsSets.profiles),
@@ -3436,6 +3577,8 @@ local function ActivateProfile(profile)
 		return;
 	end
 
+	target.active = true;
+
 	if specID then
 		target.specID = specID or profile.specID;
 	end
@@ -3473,6 +3616,48 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
 	eventHandler:Show();
+end
+local function IsProfileActive(set)
+	if set.specID then
+		local playerSpecID = GetSpecializationInfo(GetSpecialization());
+		if set.specID ~= playerSpecID then
+			return false;
+		end
+	end
+
+	if set.talentSets then
+		-- local talentSet = CombineTalentSets({}, GetTalentSets(unpack(set.talentSets)));
+		local talentSet = GetTalentSet(set.talentSet);
+		if not IsTalentSetActive(talentSet) then
+			return false;
+		end
+	end
+
+	if set.pvpTalentSets then
+		-- local pvpTalentSet = CombinePvPTalentSets({}, GetPvPTalentSets(unpack(set.pvpTalentSets)));
+		local pvpTalentSet = GetPvPTalentSet(set.pvpTalentSet);
+		if not IsPvPTalentSetActive(pvpTalentSet) then
+			return false;
+		end
+	end
+
+	if set.essencesSet then
+		-- local essencesSet = CombineEssenceSets({}, GetEssenceSets(unpack(set.essencesSets)));
+		local essencesSet = GetEssenceSet(set.essencesSet);
+		if not IsEssenceSetActive(essencesSet) then
+			return false;
+		end
+	end
+
+	if set.equipmentSets then
+		-- local equipmentSet = CombineEquipmentSets({}, GetEquipmentSets(unpack(set.equipmentSets)));
+		local equipmentSet = GetEquipmentSet(set.equipmentSet);
+		if not IsEquipmentSetActive(equipmentSet) then
+			return false;
+		end
+	end
+
+	return true;
 end
 local function ContinueActivateProfile()
     local set = target;
@@ -3515,18 +3700,21 @@ local function ContinueActivateProfile()
 	end
 
 	if talentSet and not IsTalentSetActive(talentSet) and PlayerNeedsTome() then
+		print("1");
 		RequestTome();
 		target.dirty = false;
 		return;
 	end
 
 	if pvpTalentSet and not IsPvPTalentSetActive(pvpTalentSet) and PlayerNeedsTome() then
+		print("2");
 		RequestTome();
 		target.dirty = false;
 		return;
 	end
 
 	if essencesSet and not IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
+		print("3");
 		RequestTome();
 		target.dirty = false;
 		return;
@@ -3563,8 +3751,125 @@ local function ContinueActivateProfile()
 	CancelActivateProfile();
 end
 
+-- Maps condition flags to condition groups
+local conditionMap = {
+	instanceType = {},
+	difficultyID = {},
+	instanceID = {},
+	subzone = {},
+};
+_G['BtWSetsConditionMap'] = conditionMap; --@TODO Remove
+local function ActivateConditionMap(map, key)
+	if key ~= nil and map[key] ~= nil then
+		local tbl = map[key];
+		for k,v in pairs(tbl) do
+			tbl[k] = true;
+		end
+	end
+end
+local function DeactivateConditionMap(map, key)
+	if key ~= nil and map[key] ~= nil then
+		local tbl = map[key];
+		for k,v in pairs(tbl) do
+			tbl[k] = false;
+		end
+	end
+end
+local function AddConditionToMap(set)
+	if set.profileSet ~= nil then
+		local profile = GetProfile(set.profileSet);
+		local valid = select(5, IsProfileValid(profile));
+		if valid then
+			for k,v in pairs(set.map) do
+				conditionMap[k][v] = conditionMap[k][v] or {};
+				conditionMap[k][v][set] = false;
+			end
+		end
+	end
+end
+local function RemoveConditionFromMap(set)
+	for k,v in pairs(set.map) do
+		conditionMap[k][v] = conditionMap[k][v] or {};
+		conditionMap[k][v][set] = nil;
+	end
+end
+local function IsConditionActive(condition)
+	for k,v in pairs(condition.map) do
+		if not conditionMap[k][v][condition] then
+			return false;
+		end
+	end
 
-local setsFiltered = {};
+	return true;
+end
+local previousInstanceInfo = {};
+_G['BtWSetsPreviousInstanceInfo'] = conditionMap; --@TODO Remove
+local function UpdateConditionsForInstance()
+	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
+	if previousInstanceInfo.instanceType ~= instanceType then
+		DeactivateConditionMap(conditionMap.instanceType, previousInstanceInfo.instanceType);
+		ActivateConditionMap(conditionMap.instanceType, instanceType);
+		previousInstanceInfo.instanceType = instanceType;
+	end
+	if previousInstanceInfo.difficultyID ~= difficultyID then
+		DeactivateConditionMap(conditionMap.difficultyID, previousInstanceInfo.difficultyID);
+		ActivateConditionMap(conditionMap.difficultyID, difficultyID);
+		previousInstanceInfo.difficultyID = difficultyID;
+	end
+	if previousInstanceInfo.instanceID ~= instanceID then
+		DeactivateConditionMap(conditionMap.instanceID, previousInstanceInfo.instanceID);
+		ActivateConditionMap(conditionMap.instanceID, instanceID);
+		previousInstanceInfo.instanceID = instanceID;
+	end
+end
+local previousSubZone;
+local function UpdateConditionsForSubZone()
+	local subzone = GetSubZoneText();
+	if previousSubZone ~= subzone then
+		DeactivateConditionMap(conditionMap.subzone, previousSubZone);
+		ActivateConditionMap(conditionMap.subzone, subzone);
+		previousSubZone = subzone;
+	end
+end
+-- Loops through conditions and checks if they are active
+local function TriggerConditions()
+	-- Generally speaking people wont want a popup asking to switch stuff if they are editing things
+	if BtWSetsFrame:IsShown() or target.active then
+		return;
+	end
+
+	wipe(activeConditions);
+	for setID,set in pairs(BtWSetsSets.conditions) do
+		if type(set) == "table" and set.profileSet ~= nil then
+			local profile = GetProfile(set.profileSet);
+			local valid = select(5, IsProfileValid(profile));
+			if valid and IsConditionActive(set) then
+				activeConditions[set] = profile;
+			end
+		end
+	end
+
+	local firstSet,firstProfile = next(activeConditions);
+	if firstSet ~= nil then
+		local second = next(activeConditions, firstSet);
+		if second == nil then
+			if not IsProfileActive(firstProfile) then
+				StaticPopup_Hide("BTWSETS_REQUESTMULTIACTIVATE");
+				StaticPopup_Show("BTWSETS_REQUESTACTIVATE", firstSet.name, nil, {
+					set = firstProfile,
+					func = ActivateProfile,
+				});
+			end
+		else
+			activeConditionSelection = firstSet;
+			UIDropDownMenu_SetText(conditionProfilesDropDown, firstSet.name);
+			StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
+			StaticPopup_Show("BTWSETS_REQUESTMULTIACTIVATE", nil, nil, {
+				func = ActivateProfile,
+			}, conditionProfilesDropDown);
+		end
+	end
+end
 
 local NUM_TABS = 6;
 local TAB_PROFILES = 1;
@@ -4387,6 +4692,273 @@ local function EquipmentDropDownInit(self, level, menuList)
         --     UIDropDownMenu_AddButton(info, level);
         -- end
     end
+end
+
+local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+	
+	if set.profileSet then
+		local subset = GetProfile(set.profileSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	set.profileSet = arg1;
+	
+	if set.profileSet then
+		local subset = GetProfile(set.profileSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+    BtWSetsFrame:Update();
+end
+local function ProfilesDropDown_NewOnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+	local set = tab.set;
+	
+	if set.profileSet then
+		local subset = GetProfile(set.profileSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = AddProfile();
+	set.equipmenprofileSettSet = newSet.setID;
+	
+	if set.profileSet then
+		local subset = GetProfile(set.profileSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWSetsFrame.Profiles.set = newSet;
+	PanelTemplates_SetTab(BtWSetsFrame, TAB_PROFILES);
+
+    BtWSetsFrame:Update();
+end
+local function ProfilesDropDownInit(self, level, menuList)
+    if not BtWSetsSets or not BtWSetsSets.profiles then
+        return;
+    end
+
+    local info = UIDropDownMenu_CreateInfo();
+		
+	local frame = self:GetParent():GetParent();
+	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
+	local tab = GetTabFrame(frame, selectedTab);
+	
+	local set = tab.set;
+	local selected = set and set.profileID;
+
+    if (level or 1) == 1 then
+        info.text = NONE;
+        info.func = ProfilesDropDown_OnClick;
+        info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+    
+        wipe(setsFiltered);
+        local sets = BtWSetsSets.profiles;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.specID] = true;
+			end
+        end
+
+		local className, classFile, classID = UnitClass("player");
+		local classColor = C_ClassColor.GetClassColor(classFile);
+		className = classColor and classColor:WrapTextInColorCode(className) or className;
+	
+		for specIndex=1,GetNumSpecializationsForClassID(classID) do
+			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
+			if setsFiltered[specID] then
+				info.text = format("%s: %s", className, specName);
+				info.hasArrow, info.menuList = true, specID;
+				info.keepShownOnClick = true;
+				info.notCheckable = true;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+		
+		local playerClassID = classID;
+		for classID=1,GetNumClasses() do
+			if classID ~= playerClassID then
+            	local className, classFile = GetClassInfo(classID);
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				className = classColor and classColor:WrapTextInColorCode(className) or className;
+
+				for specIndex=1,GetNumSpecializationsForClassID(classID) do
+					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
+					if setsFiltered[specID] then
+						info.text = format("%s: %s", className, specName);
+						info.hasArrow, info.menuList = true, specID;
+						info.keepShownOnClick = true;
+						info.notCheckable = true;
+						UIDropDownMenu_AddButton(info, level);
+					end
+				end
+			end
+		end
+
+        info.text = L["New Set"];
+        info.func = ProfilesDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+        info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	else
+		local specID = menuList;
+		
+        wipe(setsFiltered);
+        local sets = BtWSetsSets.profiles;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.specID == specID then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+        sort(setsFiltered, function (a,b)
+            return sets[a].name < sets[b].name;
+		end)
+		
+        for _,setID in ipairs(setsFiltered) do
+            info.text = sets[setID].name;
+            info.arg1 = setID;
+            info.func = ProfilesDropDown_OnClick;
+            info.checked = selected == setID;
+            UIDropDownMenu_AddButton(info, level);
+        end
+    end
+end
+
+local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+	set.type = arg1;
+
+    BtWSetsFrame:Update();
+end
+local function ConditionTypeDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+	
+	local set = self:GetParent().set;
+	local selected = set and set.type;
+
+	if (level or 1) == 1 then
+		for conditionType=CONDITION_TYPE_WORLD,CONDITION_TYPE_BATTLEGROUND do
+			info.text = CONDITION_TYPE_NAMES[conditionType];
+			info.arg1 = conditionType;
+			info.func = ConditionTypeDropDown_OnClick;
+			info.checked = selected == conditionType;
+			UIDropDownMenu_AddButton(info, level);
+		end
+    end
+end
+
+
+local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+	set.instanceID = arg1;
+	if set.difficultyID ~= nil then
+		local supportsDifficulty = (set.instanceID == nil);
+		if not supportsDifficulty then
+			for _,difficultyID in ipairs(instanceDifficulties[set.instanceID]) do
+				if difficultyID == set.difficultyID then
+					supportsDifficulty = true;
+					break;
+				end
+			end
+		end
+
+		if not supportsDifficulty then
+			set.difficultyID = nil;
+		end
+	end
+
+    BtWSetsFrame:Update();
+end
+local function InstanceDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+	
+	local set = self:GetParent().set;
+	local dungeonType = set and set.type;
+	local selected = set and set.instanceID;
+
+	if dungeonType == CONDITION_TYPE_DUNGEONS then
+		if (level or 1) == 1 then
+			info.text = L["Any"];
+			info.func = InstanceDropDown_OnClick;
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+
+			for expansion,expansionData in ipairs(dungeonInfo) do
+				info.text = expansionData.name;
+				info.hasArrow, info.menuList = true, expansion;
+				info.keepShownOnClick = true;
+				info.notCheckable = true;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		else
+			local expansion = menuList;
+			for _,instanceID in ipairs(dungeonInfo[expansion].dungeons) do
+				info.text = GetRealZoneText(instanceID);
+				info.arg1 = instanceID;
+				info.func = InstanceDropDown_OnClick;
+				info.checked = selected == instanceID;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+	elseif dungeonType == CONDITION_TYPE_RAIDS then
+	end
+end
+
+
+local function DifficultyDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
+    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+	set.difficultyID = arg1;
+
+    BtWSetsFrame:Update();
+end
+local function DifficultyDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+	
+	local set = self:GetParent().set;
+	local instanceID = set and set.instanceID;
+	local selected = set and set.difficultyID;
+
+	if instanceID ~= nil then
+		if (level or 1) == 1 then
+			info.text = L["Any"];
+			info.func = DifficultyDropDown_OnClick;
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+
+			for _,difficultyID in ipairs(instanceDifficulties[instanceID]) do
+				info.text = GetDifficultyInfo(difficultyID);
+				info.arg1 = difficultyID;
+				info.func = DifficultyDropDown_OnClick;
+				info.checked = selected == difficultyID;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+	end
 end
 
 
@@ -5242,7 +5814,7 @@ local function EquipmentTabUpdate(self)
 			end
 		end
 		
-		self.Name:SetText(self.set.name or "");
+		self.Name:SetText(set.name or "");
 		self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
 
 		local model = self.Model;
@@ -5345,20 +5917,83 @@ local function EquipmentTabUpdate(self)
 end
 local function ConditionsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Conditions"]);
-    SetsScrollFrame_NoFilter(self.set, BtWSetsSets.conditions);
+    self.set = SetsScrollFrame_NoFilter(self.set, BtWSetsSets.conditions);
 
-	local activateButton = self:GetParent().ActivateButton;
-	activateButton:SetEnabled(false);
+	if self.set ~= nil then
+		local set = self.set;
 
-	local deleteButton =  self:GetParent().DeleteButton;
-	deleteButton:SetEnabled(false);
-	
-	local helpTipBox = self:GetParent().HelpTipBox;
-	helpTipBox:Hide();
-	
-	local addButton = self:GetParent().AddButton;
-	addButton.Flash:Hide();
-	addButton.FlashAnim:Stop();
+		-- 8 is M+ and 23 is Mythic, since we cant change specs inside a M+ we need to check trigger within the mythic but still,
+		-- show in the editor as Mythic Keystone whatever.
+		if set.difficultyID == 8 then
+			set.mapDifficultyID = 23;
+		else
+			set.mapDifficultyID = set.difficultyID;
+		end
+
+		if set.map.instanceID ~= set.instanceID or set.map.difficultyID ~= set.mapDifficultyID or set.mapProfileSet ~= set.profileSet then
+			RemoveConditionFromMap(set);
+
+			set.mapProfileSet = set.profileSet; -- Used to check if we should handle the condition
+			set.map.instanceID = set.instanceID;
+			set.map.difficultyID = set.mapDifficultyID;
+
+			AddConditionToMap(set);
+		end
+
+		self.Name:SetText(set.name or "");
+
+		if set.profileSet == nil then
+			UIDropDownMenu_SetText(self.ProfileDropDown, NONE);
+		else
+			local subset = GetProfile(set.profileSet);
+			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
+		end
+		
+		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[self.set.type]);
+		if set.instanceID == nil then
+			UIDropDownMenu_SetText(self.InstanceDropDown, L["Any"]);
+		else
+			UIDropDownMenu_SetText(self.InstanceDropDown, GetRealZoneText(set.instanceID));
+		end
+		if set.difficultyID == nil then
+			UIDropDownMenu_SetText(self.DifficultyDropDown, L["Any"]);
+		else
+			UIDropDownMenu_SetText(self.DifficultyDropDown, GetDifficultyInfo(set.difficultyID));
+		end
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(true);
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		helpTipBox:Hide();
+		
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+	else
+		self.Name:SetEnabled(false);
+		self.Name:SetText("");
+
+		self.ConditionTypeDropDown.Button:SetEnabled(false);
+		self.InstanceDropDown.Button:SetEnabled(false);
+		self.DifficultyDropDown.Button:SetEnabled(false);
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
+		
+		local helpTipBox = self:GetParent().HelpTipBox;
+		helpTipBox:Hide();
+		
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+	end
 end
 
 BtWSetsFrameMixin = {};
@@ -5430,7 +6065,6 @@ function BtWSetsFrameMixin:OnLoad()
 	HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWSetsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 	self.Essences.EssenceList.update = EssenceScrollFrameUpdate;
 
-	
 	self.Equipment.flyoutSettings = {
 		onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,
 		getItemsFunc = PaperDollFrameItemFlyout_GetItems,
@@ -5442,6 +6076,22 @@ function BtWSetsFrameMixin:OnLoad()
 		verticalAnchorX = 0,
 		verticalAnchorY = 0,
 	};
+	
+    UIDropDownMenu_SetWidth(self.Conditions.ProfileDropDown, 300);
+    UIDropDownMenu_Initialize(self.Conditions.ProfileDropDown, ProfilesDropDownInit);
+    UIDropDownMenu_JustifyText(self.Conditions.ProfileDropDown, "LEFT");
+	
+    UIDropDownMenu_SetWidth(self.Conditions.ConditionTypeDropDown, 300);
+    UIDropDownMenu_Initialize(self.Conditions.ConditionTypeDropDown, ConditionTypeDropDownInit);
+    UIDropDownMenu_JustifyText(self.Conditions.ConditionTypeDropDown, "LEFT");
+	
+    UIDropDownMenu_SetWidth(self.Conditions.InstanceDropDown, 200);
+    UIDropDownMenu_Initialize(self.Conditions.InstanceDropDown, InstanceDropDownInit);
+	UIDropDownMenu_JustifyText(self.Conditions.InstanceDropDown, "LEFT");
+	
+    UIDropDownMenu_SetWidth(self.Conditions.DifficultyDropDown, 200);
+    UIDropDownMenu_Initialize(self.Conditions.DifficultyDropDown, DifficultyDropDownInit);
+	UIDropDownMenu_JustifyText(self.Conditions.DifficultyDropDown, "LEFT");
 end
 function BtWSetsFrameMixin:OnDragStart()
     self:StartMoving();
@@ -5485,6 +6135,10 @@ function BtWSetsFrameMixin:SetEssenceSet(set)
 end
 function BtWSetsFrameMixin:SetEquipmentSet(set)
     self.Equipment.set = set;
+    self:Update();
+end
+function BtWSetsFrameMixin:SetConditionSet(set)
+    self.Conditions.set = set;
     self:Update();
 end
 function BtWSetsFrameMixin:Update()
@@ -5684,7 +6338,7 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
             C_Timer.After(0, function ()
                 frame.Name:HighlightText();
                 frame.Name:SetFocus();
-            end)
+            end);
 		elseif button.isDelete then
 			local set = frame.set;
 			if set.useCount > 0 then
@@ -5715,6 +6369,24 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
 				frame.Name:ClearFocus();
 			end
         end
+    elseif selectedTab == TAB_CONDITIONS then
+        local frame = self.Conditions;
+        if button.isAdd then
+            self:SetConditionSet(AddConditionSet());
+            C_Timer.After(0, function ()
+                frame.Name:HighlightText();
+                frame.Name:SetFocus();
+            end);
+		elseif button.isDelete then
+			local set = frame.set;
+			StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+				set = set,
+				func = DeleteConditionSet,
+			});
+        else
+			self:SetConditionSet(GetConditionSet(button.id));
+			frame.Name:ClearFocus();
+        end
     end
 end
 function BtWSetsFrameMixin:OnHelpTipManuallyClosed(closeFlag)
@@ -5729,6 +6401,13 @@ function BtWSetsFrameMixin:OnNameChanged(text)
 		helpTipIgnored["TUTORIAL_RENAME_SET"] = true;
 		self:Update();
 	end
+end
+function BtWSetsFrameMixin:OnHide()
+	-- When hiding the main window we are going to assume that something has dramatically changed and completely redo everything
+	wipe(previousInstanceInfo);
+	previousSubZone = nil
+	UpdateConditionsForInstance();
+    TriggerConditions();
 end
 
 BtWSetsTalentButtonMixin = {};
@@ -5985,8 +6664,6 @@ function BtWSetsItemSlotButtonMixin:Update()
 end
 
 
-
-
 local GetMinimapShape = GetMinimapShape;
 local GetCursorPosition = GetCursorPosition;
 
@@ -6182,13 +6859,19 @@ function frame:ADDON_LOADED(...)
 			BtWSetsHelpTipFlags[k] = true;
 		end
 		helpTipIgnored = BtWSetsHelpTipFlags;
+
+		for _,set in pairs(BtWSetsSets.conditions) do
+			if type(set) == "table" then
+				AddConditionToMap(set);
+			end
+		end
     end
 end
 function frame:PLAYER_LOGIN(...)
 	self:EQUIPMENT_SETS_CHANGED();
 end
 function frame:PLAYER_ENTERING_WORLD()
-    for specIndex=1,GetNumSpecializations() do
+	for specIndex=1,GetNumSpecializations() do
         local specID = GetSpecializationInfo(specIndex);
         local spec = BtWSetsSpecInfo[specID] or {talents = {}};
 		spec.talents = spec.talents or {};
@@ -6267,6 +6950,12 @@ function frame:PLAYER_ENTERING_WORLD()
 		local sex = UnitSex("player") - 2;
 
 		BtWSetsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
+	end
+
+	-- Run conditions for instance info
+	do
+		UpdateConditionsForInstance();
+		TriggerConditions();
 	end
 end
 function frame:EQUIPMENT_SETS_CHANGED(...)
