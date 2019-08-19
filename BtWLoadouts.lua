@@ -6080,7 +6080,13 @@ local function ConditionsTabUpdate(self)
 			AddConditionToMap(set);
 		end
 
+		self.Name:SetEnabled(true);
 		self.Name:SetText(set.name or "");
+
+		self.ProfileDropDown.Button:SetEnabled(true);
+		self.ConditionTypeDropDown.Button:SetEnabled(true);
+		self.InstanceDropDown.Button:SetEnabled(true);
+		self.DifficultyDropDown.Button:SetEnabled(true);
 
 		if set.profileSet == nil then
 			UIDropDownMenu_SetText(self.ProfileDropDown, NONE);
@@ -6119,6 +6125,7 @@ local function ConditionsTabUpdate(self)
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");
 
+		self.ProfileDropDown.Button:SetEnabled(false);
 		self.ConditionTypeDropDown.Button:SetEnabled(false);
 		self.InstanceDropDown.Button:SetEnabled(false);
 		self.DifficultyDropDown.Button:SetEnabled(false);
