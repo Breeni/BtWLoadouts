@@ -1,8 +1,0 @@
-## Interface: 80200
-## Title: BtWRespec
-## Version: 1
-## Notes: Change your characters spec, talents, equipment and essences all at once
-## Author: Breen
-## SavedVariables: BtWRespecSets, BtWRespecSpecInfo, BtWRespecRoleInfo, BtWRespecEssenceInfo, BtWRespecCharacterInfo, BtWRespecHelpTipFlags, BtWRespecSettings
-
-BtWRespec.xml

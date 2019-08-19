@@ -1,8 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
-	<Script file="BtWRespec.lua"/>
+	<Script file="BtWLoadouts.lua"/>
     
-	<Button name="BtWRespecTalentButtonTemplate" mixin="BtWRespecTalentButtonMixin" virtual="true">
+	<Button name="BtWLoadoutsTalentButtonTemplate" mixin="BtWLoadoutsTalentButtonMixin" virtual="true">
 		<Size x="190" y="42"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -56,10 +56,10 @@
 			<OnLeave method="OnLeave"/>
 		</Scripts>
 	</Button>
-	<Button name="BtWRespecTalentGridButtonTemplate" inherits="BtWRespecTalentButtonTemplate" mixin="BtWRespecTalentGridButtonMixin" virtual="true">
+	<Button name="BtWLoadoutsTalentGridButtonTemplate" inherits="BtWLoadoutsTalentButtonTemplate" mixin="BtWLoadoutsTalentGridButtonMixin" virtual="true">
 	</Button>
 
-	<Frame name="BtWRespecTalentRowTemplate" virtual="true">
+	<Frame name="BtWLoadoutsTalentRowTemplate" virtual="true">
 		<Size x="570" y="42"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -115,17 +115,17 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentTalent1" inherits="BtWRespecTalentButtonTemplate" parentKey="talent1" id="1" parentArray="talents">
+			<Button name="$parentTalent1" inherits="BtWLoadoutsTalentButtonTemplate" parentKey="talent1" id="1" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent2" inherits="BtWRespecTalentButtonTemplate" parentKey="talent2" id="2" parentArray="talents">
+			<Button name="$parentTalent2" inherits="BtWLoadoutsTalentButtonTemplate" parentKey="talent2" id="2" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeTo="$parentSeparator1" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent3" inherits="BtWRespecTalentButtonTemplate" parentKey="talent3" id="3" parentArray="talents">
+			<Button name="$parentTalent3" inherits="BtWLoadoutsTalentButtonTemplate" parentKey="talent3" id="3" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeTo="$parentSeparator2" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
@@ -140,7 +140,7 @@
 		<Scripts>
 		</Scripts>
 	</Frame>
-	<Frame name="BtWRespecTalentGridTemplate" virtual="true">
+	<Frame name="BtWLoadoutsTalentGridTemplate" virtual="true">
 		<Size x="570" y="210"/>
 		<Layers>
 			<Layer level="BACKGROUND">
@@ -319,81 +319,81 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentTalent1" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent1" id="1" parentArray="talents">
+			<Button name="$parentTalent1" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent1" id="1" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row1LeftCap" relativePoint="LEFT" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent2" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent2" id="2" parentArray="talents">
+			<Button name="$parentTalent2" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent2" id="2" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row1Separator1" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent3" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent3" id="3" parentArray="talents">
+			<Button name="$parentTalent3" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent3" id="3" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row1Separator2" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
 
-			<Button name="$parentTalent4" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent4" id="4" parentArray="talents">
+			<Button name="$parentTalent4" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent4" id="4" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row2LeftCap" relativePoint="LEFT" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent5" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent5" id="5" parentArray="talents">
+			<Button name="$parentTalent5" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent5" id="5" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row2Separator1" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent6" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent6" id="6" parentArray="talents">
+			<Button name="$parentTalent6" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent6" id="6" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row2Separator2" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
 
-			<Button name="$parentTalent7" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent7" id="7" parentArray="talents">
+			<Button name="$parentTalent7" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent7" id="7" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row3LeftCap" relativePoint="LEFT" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent8" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent8" id="8" parentArray="talents">
+			<Button name="$parentTalent8" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent8" id="8" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row3Separator1" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent9" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent9" id="9" parentArray="talents">
+			<Button name="$parentTalent9" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent9" id="9" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row3Separator2" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
 
-			<Button name="$parentTalent10" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent10" id="10" parentArray="talents">
+			<Button name="$parentTalent10" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent10" id="10" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row4LeftCap" relativePoint="LEFT" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent11" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent11" id="11" parentArray="talents">
+			<Button name="$parentTalent11" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent11" id="11" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row4Separator1" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent12" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent12" id="12" parentArray="talents">
+			<Button name="$parentTalent12" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent12" id="12" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row4Separator2" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
 
-			<Button name="$parentTalent13" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent13" id="13" parentArray="talents">
+			<Button name="$parentTalent13" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent13" id="13" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row5LeftCap" relativePoint="LEFT" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent14" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent14" id="14" parentArray="talents">
+			<Button name="$parentTalent14" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent14" id="14" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row5Separator1" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentTalent15" inherits="BtWRespecTalentGridButtonTemplate" parentKey="talent15" id="15" parentArray="talents">
+			<Button name="$parentTalent15" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent15" id="15" parentArray="talents">
 				<Anchors>
 					<Anchor point="LEFT" relativeKey="$parent.Row5Separator2" relativePoint="CENTER" x="0" y="0"/>
 				</Anchors>
@@ -401,7 +401,7 @@
 		</Frames>
 	</Frame>
 
-	<Button name="BtWRespecAzeriteMilestoneSlotTemplate" mixin="BtWRespecAzeriteMilestoneSlotMixin" virtual="true">
+	<Button name="BtWLoadoutsAzeriteMilestoneSlotTemplate" mixin="BtWLoadoutsAzeriteMilestoneSlotMixin" virtual="true">
 		<Scripts>
 			<OnLoad method="OnLoad"/>
 			<OnEnter method="OnEnter"/>
@@ -409,7 +409,7 @@
 			<OnClick method="OnClick"/>
 		</Scripts>
 	</Button>
-	<Button name="BtWRespecAzeriteMilestoneMajorSlotTemplate" inherits="BtWRespecAzeriteMilestoneSlotTemplate" virtual="true">
+	<Button name="BtWLoadoutsAzeriteMilestoneMajorSlotTemplate" inherits="BtWLoadoutsAzeriteMilestoneSlotTemplate" virtual="true">
 		<Size x="110" y="82"/>>
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="-1">
@@ -496,7 +496,7 @@
 			</ModelScene>
 		</Frames>
 	</Button>
-	<Button name="BtWRespecAzeriteMilestoneMinorSlotTemplate" inherits="BtWRespecAzeriteMilestoneSlotTemplate" virtual="true">
+	<Button name="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" inherits="BtWLoadoutsAzeriteMilestoneSlotTemplate" virtual="true">
 		<Size x="66" y="66"/>
 		<Layers>
 			<Layer level="BORDER">
@@ -549,7 +549,7 @@
 		</Frames>
 	</Button>
 
-	<Button name="BtWRespecAzeriteEssenceButtonTemplate" virtual="true" mixin="BtWRespecAzeriteEssenceButtonMixin" registerForClicks="LeftButtonUp, RightButtonUp">
+	<Button name="BtWLoadoutsAzeriteEssenceButtonTemplate" virtual="true" mixin="BtWLoadoutsAzeriteEssenceButtonMixin" registerForClicks="LeftButtonUp, RightButtonUp">
 		<Size x="178" y="41"/>
 		<Layers>
 			<Layer level="OVERLAY" textureSubLevel="-1">
@@ -603,7 +603,7 @@
 		<HighlightTexture atlas="heartofazeroth-list-item-highlight" alphaMode="ADD"/>
 	</Button>
 
-	<Button name="BtWRespecEquipmentFlyoutPopoutButtonTemplate" hidden="true" virtual="true">
+	<Button name="BtWLoadoutsEquipmentFlyoutPopoutButtonTemplate" hidden="true" virtual="true">
 		<Size>
 			<AbsDimension x="16" y="32"/>
 		</Size>
@@ -616,7 +616,7 @@
 		<NormalTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
 		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
 	</Button>	
-    <ItemButton name="BtWRespecItemSlotButtonTemplate" parentArray="Slots" mixin="BtWRespecItemSlotButtonMixin" virtual="true">
+    <ItemButton name="BtWLoadoutsItemSlotButtonTemplate" parentArray="Slots" mixin="BtWLoadoutsItemSlotButtonMixin" virtual="true">
     	<Layers>
 			<Layer level="OVERLAY">
 				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
@@ -628,7 +628,7 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentPopoutButton" parentKey="popoutButton" inherits="BtWRespecEquipmentFlyoutPopoutButtonTemplate"/>
+			<Button name="$parentPopoutButton" parentKey="popoutButton" inherits="BtWLoadoutsEquipmentFlyoutPopoutButtonTemplate"/>
 		</Frames>
         <Scripts>
             <OnLoad method="OnLoad"/>
@@ -639,16 +639,16 @@
             <OnLeave method="OnLeave"/>
             <OnUpdate method="OnUpdate"/>
             <!-- <OnEvent>
-				BtWRespecItemSlotButton_OnEvent(self, event, ...);
+				BtWLoadoutsItemSlotButton_OnEvent(self, event, ...);
 			</OnEvent>
 			<OnUpdate>
 				CursorOnUpdate(self);
 				if ( GameTooltip:IsOwned(self) ) then
-					BtWRespecItemSlotButton_OnEnter(self);
+					BtWLoadoutsItemSlotButton_OnEnter(self);
 				end
 			</OnUpdate>
             <OnEnter>
-				BtWRespecItemSlotButton_OnEnter(self, motion);
+				BtWLoadoutsItemSlotButton_OnEnter(self, motion);
 			</OnEnter>
             <OnLeave>
 				GameTooltip:Hide();
@@ -668,7 +668,7 @@
 			</Anchors>
 		</NormalTexture>
     </ItemButton>
-	<ItemButton name="BtWRespecItemSlotButtonLeftTemplate" inherits="BtWRespecItemSlotButtonTemplate" virtual="true">
+	<ItemButton name="BtWLoadoutsItemSlotButtonLeftTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="-1">
 				<Texture name="$parentFrame" inherits="Char-LeftSlot">	
@@ -679,7 +679,7 @@
 			</Layer>
 		</Layers>
 	</ItemButton>
-	<ItemButton name="BtWRespecItemSlotButtonRightTemplate" inherits="BtWRespecItemSlotButtonTemplate" virtual="true">
+	<ItemButton name="BtWLoadoutsItemSlotButtonRightTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="-1">
 				<Texture name="$parentFrame" inherits="Char-RightSlot">	
@@ -690,7 +690,7 @@
 			</Layer>
 		</Layers>
 	</ItemButton>
-	<ItemButton name="BtWRespecItemSlotButtonBottomTemplate" inherits="BtWRespecItemSlotButtonTemplate" virtual="true">
+	<ItemButton name="BtWLoadoutsItemSlotButtonBottomTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
 		<KeyValues>
 			<KeyValue type="boolean" key="verticalFlyout" value="true"/>
 		</KeyValues>
@@ -705,7 +705,7 @@
 		</Layers>
 	</ItemButton>
 
-	<Button name="BtWRespecScrollListItem" parentArray="ScrollButtons" virtual="true">
+	<Button name="BtWLoadoutsScrollListItem" parentArray="ScrollButtons" virtual="true">
 		<Size x="160" y="21"/>
 		<Layers>
 			<Layer level="ARTWORK">
@@ -741,20 +741,20 @@
 		<HighlightTexture file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar-Blue" alphaMode="ADD"/>
 		<Scripts>
 			<OnClick>
-				BtWRespecFrame:ScrollItemClick(self);
+				BtWLoadoutsFrame:ScrollItemClick(self);
 			</OnClick>
 		</Scripts>
 	</Button>
 
-	<Button name="BtWRespecFrameTabTemplate" inherits="CharacterFrameTabButtonTemplate" parentArray="Tabs" virtual="true">
+	<Button name="BtWLoadoutsFrameTabTemplate" inherits="CharacterFrameTabButtonTemplate" parentArray="Tabs" virtual="true">
 		<Scripts>
 			<OnClick>
-				PanelTemplates_Tab_OnClick(self, BtWRespecFrame);
-				BtWRespecFrame:Update();
+				PanelTemplates_Tab_OnClick(self, BtWLoadoutsFrame);
+				BtWLoadoutsFrame:Update();
 			</OnClick>
 		</Scripts>
 	</Button>
-	<Frame name="BtWRespecFrame" mixin="BtWRespecFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true" hidden="true">
+	<Frame name="BtWLoadoutsFrame" mixin="BtWLoadoutsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true" hidden="true">
 		<Size x="779" y="448"/>
 		<Anchors>
 			<Anchor point="CENTER"/>
@@ -811,96 +811,96 @@
 				</Layers>
 				<Scripts>
 					<OnVerticalScroll>
-						FauxScrollFrame_OnVerticalScroll(self, offset, 22, BtWRespecSetsScrollFrame_Update);
+						FauxScrollFrame_OnVerticalScroll(self, offset, 22, BtWLoadoutsSetsScrollFrame_Update);
 					</OnVerticalScroll>
 				</Scripts>
 			</ScrollFrame>
-			<Button name="$parentScrollItem1" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem1" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.Scroll" relativePoint="TOPLEFT" x="0" y="-4"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem2" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem2" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem1" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem3" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem3" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem2" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem4" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem4" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem3" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem5" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem5" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem4" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem6" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem6" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem5" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem7" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem7" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem6" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem8" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem8" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem7" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem9" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem9" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem8" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem10" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem10" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem9" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem11" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem11" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem10" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem12" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem12" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem11" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem13" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem13" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem12" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem14" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem14" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem13" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem15" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem15" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem14" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem16" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem16" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem15" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem17" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem17" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem16" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
 			</Button>
-			<Button name="$parentScrollItem18" inherits="BtWRespecScrollListItem">
+			<Button name="$parentScrollItem18" inherits="BtWLoadoutsScrollListItem">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem17" relativePoint="BOTTOMLEFT"/>
 				</Anchors>
@@ -912,42 +912,42 @@
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString parentKey="NameTitle" text="BTWRESPEC_NAME" inherits="GameFontNormalLeft">
+						<FontString parentKey="NameTitle" text="BTWLOADOUTS_NAME" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-10"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="SpecTitle" text="BTWRESPEC_SPECIALIZATION" inherits="GameFontNormalLeft">
+						<FontString parentKey="SpecTitle" text="BTWLOADOUTS_SPECIALIZATION" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="TalentsTitle" text="BTWRESPEC_TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="TalentsTitle" text="BTWLOADOUTS_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-130"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="PvPTalentsTitle" text="BTWRESPEC_PVP_TALENTS" inherits="GameFontNormalLeft">
+						<FontString parentKey="PvPTalentsTitle" text="BTWLOADOUTS_PVP_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-190"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EssencesTitle" text="BTWRESPEC_ESSENCES" inherits="GameFontNormalLeft">
+						<FontString parentKey="EssencesTitle" text="BTWLOADOUTS_ESSENCES" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-250"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="EquipmentTitle" text="BTWRESPEC_EQUIPMENT" inherits="GameFontNormalLeft">
+						<FontString parentKey="EquipmentTitle" text="BTWLOADOUTS_EQUIPMENT" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-310"/>
@@ -1035,37 +1035,37 @@
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<Frame name="$parentTalentRow1" inherits="BtWRespecTalentRowTemplate" parentArray="rows">
+					<Frame name="$parentTalentRow1" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
 						<Anchors>
 							<Anchor point="TOPLEFT" x="0" y="-38"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentTalentRow2" inherits="BtWRespecTalentRowTemplate" parentArray="rows">
+					<Frame name="$parentTalentRow2" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
 						<Anchors>
 							<Anchor point="TOP" relativeTo="$parentTalentRow1" relativePoint="BOTTOM" x="0" y="-9"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentTalentRow3" inherits="BtWRespecTalentRowTemplate" parentArray="rows">
+					<Frame name="$parentTalentRow3" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
 						<Anchors>
 							<Anchor point="TOP" relativeTo="$parentTalentRow2" relativePoint="BOTTOM" x="0" y="-9"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentTalentRow4" inherits="BtWRespecTalentRowTemplate" parentArray="rows">
+					<Frame name="$parentTalentRow4" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
 						<Anchors>
 							<Anchor point="TOP" relativeTo="$parentTalentRow3" relativePoint="BOTTOM" x="0" y="-9"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentTalentRow5" inherits="BtWRespecTalentRowTemplate" parentArray="rows">
+					<Frame name="$parentTalentRow5" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
 						<Anchors>
 							<Anchor point="TOP" relativeTo="$parentTalentRow4" relativePoint="BOTTOM" x="0" y="-9"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentTalentRow6" inherits="BtWRespecTalentRowTemplate" parentArray="rows">
+					<Frame name="$parentTalentRow6" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
 						<Anchors>
 							<Anchor point="TOP" relativeTo="$parentTalentRow5" relativePoint="BOTTOM" x="0" y="-9"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentTalentRow7" inherits="BtWRespecTalentRowTemplate" parentArray="rows">
+					<Frame name="$parentTalentRow7" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
 						<Anchors>
 							<Anchor point="TOP" relativeTo="$parentTalentRow6" relativePoint="BOTTOM" x="0" y="-9"/>
 						</Anchors>
@@ -1104,12 +1104,12 @@
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<Frame name="$parentTalentRow" inherits="BtWRespecTalentRowTemplate" parentKey="trinkets">
+					<Frame name="$parentTalentRow" inherits="BtWLoadoutsTalentRowTemplate" parentKey="trinkets">
 						<Anchors>
 							<Anchor point="TOPLEFT" x="0" y="-38"/>
 						</Anchors>
 					</Frame>
-					<Frame name="$parentTalentGrid" inherits="BtWRespecTalentGridTemplate" parentKey="others">
+					<Frame name="$parentTalentGrid" inherits="BtWLoadoutsTalentGridTemplate" parentKey="others">
 						<Anchors>
 							<Anchor point="TOP" relativeTo="$parentTalentRow" relativePoint="BOTTOM" x="0" y="-9"/>
 						</Anchors>
@@ -1148,17 +1148,17 @@
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<Button inherits="BtWRespecAzeriteMilestoneMajorSlotTemplate" parentKey="MajorSlot" virtual="true">
+					<Button inherits="BtWLoadoutsAzeriteMilestoneMajorSlotTemplate" parentKey="MajorSlot" virtual="true">
 						<Anchors>
 							<Anchor point="CENTER" relativePoint="CENTER" x="-100" y="-30"/>
 						</Anchors>
 					</Button>
-					<Button inherits="BtWRespecAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1" virtual="true">
+					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1" virtual="true">
 						<Anchors>
 							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="-120" y="-75"/>
 						</Anchors>
 					</Button>
-					<Button inherits="BtWRespecAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot2" virtual="true">
+					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot2" virtual="true">
 						<Anchors>
 							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="119" y="75"/>
 						</Anchors>
@@ -1217,7 +1217,7 @@
 							<!-- <OnLoad method="OnLoad" /> -->
 						</Scripts>
 					</DressUpModel>	
-					<ItemButton parentKey="HeadSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="HeadSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="HeadSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_HEAD"/>
@@ -1226,7 +1226,7 @@
 							<Anchor point="TOPLEFT" x="0" y="-31"/>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="NeckSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="NeckSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="NeckSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_NECK"/>
@@ -1239,7 +1239,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="ShoulderSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="ShoulderSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="ShoulderSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_SHOULDER"/>
@@ -1252,7 +1252,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="BackSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="BackSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="BackSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_CLOAK"/>
@@ -1265,7 +1265,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="ChestSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="ChestSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="ChestSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_CHEST"/>
@@ -1278,7 +1278,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="ShirtSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="ShirtSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="ShirtSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_BODY"/>
@@ -1291,7 +1291,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="TabardSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="TabardSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="TabardSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_TABARD"/>
@@ -1304,7 +1304,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="WristSlot" inherits="BtWRespecItemSlotButtonLeftTemplate">
+					<ItemButton parentKey="WristSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="WristSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_WRIST"/>
@@ -1317,7 +1317,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="HandsSlot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="HandsSlot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="HandsSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_HAND"/>
@@ -1326,7 +1326,7 @@
 							<Anchor point="TOPRIGHT" x="0" y="-31"/>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="WaistSlot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="WaistSlot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="WaistSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_WAIST"/>
@@ -1339,7 +1339,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="LegsSlot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="LegsSlot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="LegsSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_LEGS"/>
@@ -1352,7 +1352,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="FeetSlot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="FeetSlot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="FeetSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_FEET"/>
@@ -1365,7 +1365,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="Finger0Slot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="Finger0Slot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="Finger0Slot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_FINGER"/>
@@ -1378,7 +1378,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="Finger1Slot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="Finger1Slot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="Finger1Slot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_FINGER"/>
@@ -1391,7 +1391,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="Trinket0Slot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="Trinket0Slot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="Trinket0Slot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_TRINKET"/>
@@ -1404,7 +1404,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="Trinket1Slot" inherits="BtWRespecItemSlotButtonRightTemplate">
+					<ItemButton parentKey="Trinket1Slot" inherits="BtWLoadoutsItemSlotButtonRightTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="Trinket1Slot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_TRINKET"/>
@@ -1417,7 +1417,7 @@
 							</Anchor>
 						</Anchors>
 					</ItemButton>
-					<ItemButton parentKey="MainHandSlot" inherits="BtWRespecItemSlotButtonBottomTemplate">
+					<ItemButton parentKey="MainHandSlot" inherits="BtWLoadoutsItemSlotButtonBottomTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="MainHandSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_WEAPON"/>
@@ -1439,7 +1439,7 @@
 							</Layer>
 						</Layers>
 					</ItemButton>
-					<ItemButton parentKey="SecondaryHandSlot" inherits="BtWRespecItemSlotButtonBottomTemplate">
+					<ItemButton parentKey="SecondaryHandSlot" inherits="BtWLoadoutsItemSlotButtonBottomTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="SecondaryHandSlot"/>
 							<KeyValue type="string" key="invType" value="INVTYPE_WEAPON"/>
@@ -1461,21 +1461,21 @@
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
-						<FontString parentKey="NameTitle" text="BTWRESPEC_NAME" inherits="GameFontNormalLeft">
+						<FontString parentKey="NameTitle" text="BTWLOADOUTS_NAME" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-10"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="ProfileTitle" text="BTWRESPEC_PROFILE" inherits="GameFontNormalLeft">
+						<FontString parentKey="ProfileTitle" text="BTWLOADOUTS_PROFILE" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-70"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
-						<FontString parentKey="ConditionsTitle" text="BTWRESPEC_CONDITIONS" inherits="GameFontNormalLeft">
+						<FontString parentKey="ConditionsTitle" text="BTWLOADOUTS_CONDITIONS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-130"/>
@@ -1532,7 +1532,7 @@
 						</Anchors>
 						<Scripts>
 							<OnTextChanged>
-								BtWRespecFrame:Update();
+								BtWLoadoutsFrame:Update();
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
@@ -1567,7 +1567,7 @@
 					</Frame> -->
 				</Frames>
 			</Frame>
-			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWRESPEC_NEW_SET">
+			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_NEW_SET">
 				<KeyValues>
 					<KeyValue type="boolean" key="isAdd" value="true"/>
 				</KeyValues>
@@ -1592,11 +1592,11 @@
 				</Animations>
 				<Scripts>
 					<OnClick>
-						BtWRespecFrame:ScrollItemClick(self);
+						BtWLoadoutsFrame:ScrollItemClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="ActivateButton" inherits="UIPanelButtonTemplate" text="BTWRESPEC_ACTIVATE">
+			<Button parentKey="ActivateButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_ACTIVATE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isActivate" value="true"/>
 				</KeyValues>
@@ -1606,11 +1606,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						BtWRespecFrame:ScrollItemClick(self);
+						BtWLoadoutsFrame:ScrollItemClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button parentKey="DeleteButton" inherits="UIPanelButtonTemplate" text="BTWRESPEC_DELETE">
+			<Button parentKey="DeleteButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_DELETE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isDelete" value="true"/>
 				</KeyValues>
@@ -1620,36 +1620,36 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						BtWRespecFrame:ScrollItemClick(self);
+						BtWLoadoutsFrame:ScrollItemClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
-            <Button name="$parentTab1" inherits="BtWRespecFrameTabTemplate" id="1" text="BTWRESPEC_PROFILES">
+            <Button name="$parentTab1" inherits="BtWLoadoutsFrameTabTemplate" id="1" text="BTWLOADOUTS_PROFILES">
                	<Anchors>
 					<Anchor point="BOTTOMLEFT" x="7" y="-30"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab2" inherits="BtWRespecFrameTabTemplate" id="2" text="BTWRESPEC_TALENTS">
+            <Button name="$parentTab2" inherits="BtWLoadoutsFrameTabTemplate" id="2" text="BTWLOADOUTS_TALENTS">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab1" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab3" inherits="BtWRespecFrameTabTemplate" id="3" text="BTWRESPEC_PVP_TALENTS">
+            <Button name="$parentTab3" inherits="BtWLoadoutsFrameTabTemplate" id="3" text="BTWLOADOUTS_PVP_TALENTS">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab2" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab4" inherits="BtWRespecFrameTabTemplate" id="4" text="BTWRESPEC_ESSENCES">
+            <Button name="$parentTab4" inherits="BtWLoadoutsFrameTabTemplate" id="4" text="BTWLOADOUTS_ESSENCES">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab3" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab5" inherits="BtWRespecFrameTabTemplate" id="5" text="BTWRESPEC_EQUIPMENT">
+            <Button name="$parentTab5" inherits="BtWLoadoutsFrameTabTemplate" id="5" text="BTWLOADOUTS_EQUIPMENT">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab4" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
             </Button>
-            <Button name="$parentTab6" inherits="BtWRespecFrameTabTemplate" id="6" text="BTWRESPEC_CONDITIONS">
+            <Button name="$parentTab6" inherits="BtWLoadoutsFrameTabTemplate" id="6" text="BTWLOADOUTS_CONDITIONS">
                	<Anchors>
                    <Anchor point="LEFT" relativeTo="$parentTab5" relativePoint="RIGHT" x="-16" y="0"/>
 				</Anchors>
@@ -1690,7 +1690,7 @@
 		</Scripts>
 	</Frame>
     
-    <Frame name="BtWRespecRequestFrame" hidden="true">
+    <Frame name="BtWLoadoutsRequestFrame" hidden="true">
         <Size>
 			<AbsDimension x="33" y="33"/>
 		</Size>
@@ -1731,7 +1731,7 @@
         </Scripts>
     </Frame>
 	
-	<Button name="BtWRespecMinimapButton" mixin="BtWRespecMinimapMixin" parent="Minimap" frameStrata="MEDIUM" frameLevel="8" enableMouse="true" movable="true" hidden="false">
+	<Button name="BtWLoadoutsMinimapButton" mixin="BtWLoadoutsMinimapMixin" parent="Minimap" frameStrata="MEDIUM" frameLevel="8" enableMouse="true" movable="true" hidden="false">
 		<Size x="33" y="33"/>
 		<Anchors>
 			<Anchor point="CENTER" x="-12" y="-80"/>
