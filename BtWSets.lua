@@ -3507,44 +3507,6 @@ local function DeleteEquipmentSet(id)
 	end
 end
 
-
-local function AddConditionSet()
-	local name = L["New Condition Set"];
-	
-    local set = {
-		setID = GetNextSetID(BtWSetsSets.conditions),
-		name = name,
-		type = CONDITION_TYPE_WORLD,
-		map = {},
-    };
-    BtWSetsSets.conditions[set.setID] = set;
-    return set;
-end
-local function GetConditionSet(id)
-    return BtWSetsSets.conditions[id];
-end
-local function DeleteConditionSet(id)
-	local set = type(id) == "table" and id or GetProfile(id);
-	if set.profileSet then
-		local subSet = GetProfile(set.profileSet);
-		subSet.useCount = (subSet.useCount or 1) - 1;
-	end
-	RemoveConditionFromMap(set);
-
-	DeleteSet(BtWSetsSets.conditions, id);
-
-	if type(id) == "table" then
-		id = id.setID;
-	end
-
-	local frame = BtWSetsFrame.Conditions;
-	local set = frame.set;
-	if set.setID == id then
-		frame.set = nil;
-		BtWSetsFrame:Update();
-	end
-end
-
 -- Check all the pieces of a profile and make sure they are valid together
 local function IsProfileValid(set)
 	local class, specID, role, invalidForPlayer;
@@ -3888,6 +3850,42 @@ local function IsConditionActive(condition)
 	end
 
 	return true;
+end
+local function AddConditionSet()
+	local name = L["New Condition Set"];
+	
+    local set = {
+		setID = GetNextSetID(BtWSetsSets.conditions),
+		name = name,
+		type = CONDITION_TYPE_WORLD,
+		map = {},
+    };
+    BtWSetsSets.conditions[set.setID] = set;
+    return set;
+end
+local function GetConditionSet(id)
+    return BtWSetsSets.conditions[id];
+end
+local function DeleteConditionSet(id)
+	local set = type(id) == "table" and id or GetProfile(id);
+	if set.profileSet then
+		local subSet = GetProfile(set.profileSet);
+		subSet.useCount = (subSet.useCount or 1) - 1;
+	end
+	RemoveConditionFromMap(set);
+
+	DeleteSet(BtWSetsSets.conditions, id);
+
+	if type(id) == "table" then
+		id = id.setID;
+	end
+
+	local frame = BtWSetsFrame.Conditions;
+	local set = frame.set;
+	if set.setID == id then
+		frame.set = nil;
+		BtWSetsFrame:Update();
+	end
 end
 local previousInstanceInfo = {};
 _G['BtWSetsPreviousInstanceInfo'] = conditionMap; --@TODO Remove
