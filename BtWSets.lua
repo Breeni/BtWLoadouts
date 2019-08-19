@@ -36,6 +36,7 @@ L["Raids"] = RAIDS;
 L["Arena"] = ARENA;
 L["Battlegrounds"] = BATTLEGROUNDS;
 
+BTWSETS_PROFILE = L["Profile"];
 BTWSETS_PROFILES = L["Profiles"];
 BTWSETS_TALENTS = L["Talents"];
 BTWSETS_PVP_TALENTS = L["PvP Talents"];
