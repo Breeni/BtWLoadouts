@@ -36,18 +36,18 @@ L["Raids"] = RAIDS;
 L["Arena"] = ARENA;
 L["Battlegrounds"] = BATTLEGROUNDS;
 
-BTWSETS_PROFILE = L["Profile"];
-BTWSETS_PROFILES = L["Profiles"];
-BTWSETS_TALENTS = L["Talents"];
-BTWSETS_PVP_TALENTS = L["PvP Talents"];
-BTWSETS_ESSENCES = L["Essences"];
-BTWSETS_EQUIPMENT = L["Equipment"];
-BTWSETS_CONDITIONS = L["Conditions"];
-BTWSETS_NEW_SET = L["New Set"];
-BTWSETS_ACTIVATE = L["Activate"];
-BTWSETS_DELETE = L["Delete"];
-BTWSETS_NAME = L["Name"];
-BTWSETS_SPECIALIZATION = L["Specialization"];
+BTWRESPEC_PROFILE = L["Profile"];
+BTWRESPEC_PROFILES = L["Profiles"];
+BTWRESPEC_TALENTS = L["Talents"];
+BTWRESPEC_PVP_TALENTS = L["PvP Talents"];
+BTWRESPEC_ESSENCES = L["Essences"];
+BTWRESPEC_EQUIPMENT = L["Equipment"];
+BTWRESPEC_CONDITIONS = L["Conditions"];
+BTWRESPEC_NEW_SET = L["New Set"];
+BTWRESPEC_ACTIVATE = L["Activate"];
+BTWRESPEC_DELETE = L["Delete"];
+BTWRESPEC_NAME = L["Name"];
+BTWRESPEC_SPECIALIZATION = L["Specialization"];
 
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};
@@ -2353,8 +2353,8 @@ local function GetTalentInfoForSpecID(specID, tier, column)
         end
     end
 
-    if BtWSetsSpecInfo[specID] then
-        return GetTalentInfoByID(BtWSetsSpecInfo[specID].talents[tier][column]);
+    if BtWRespecSpecInfo[specID] then
+        return GetTalentInfoByID(BtWRespecSpecInfo[specID].talents[tier][column]);
     end
 
     if specInfo[specID] then
@@ -2370,8 +2370,8 @@ local function GetPvPTrinketTalentInfo(specID, index)
 		end
 	end
 
-    if BtWSetsSpecInfo[specID] and BtWSetsSpecInfo[specID].pvptalenttrinkets and BtWSetsSpecInfo[specID].pvptalenttrinkets[index] then
-        return GetPvpTalentInfoByID(BtWSetsSpecInfo[specID].pvptalenttrinkets[index]);
+    if BtWRespecSpecInfo[specID] and BtWRespecSpecInfo[specID].pvptalenttrinkets and BtWRespecSpecInfo[specID].pvptalenttrinkets[index] then
+        return GetPvpTalentInfoByID(BtWRespecSpecInfo[specID].pvptalenttrinkets[index]);
     end
 
     if specInfo[specID] and specInfo[specID].pvptalenttrinkets and specInfo[specID].pvptalenttrinkets[index] then
@@ -2387,8 +2387,8 @@ local function GetPvPTalentInfoForSpecID(specID, index)
 		end
 	end
 
-    if BtWSetsSpecInfo[specID] and BtWSetsSpecInfo[specID].pvptalents and BtWSetsSpecInfo[specID].pvptalents[index] then
-        return GetPvpTalentInfoByID(BtWSetsSpecInfo[specID].pvptalents[index]);
+    if BtWRespecSpecInfo[specID] and BtWRespecSpecInfo[specID].pvptalents and BtWRespecSpecInfo[specID].pvptalents[index] then
+        return GetPvpTalentInfoByID(BtWRespecSpecInfo[specID].pvptalents[index]);
     end
 
     if specInfo[specID] and specInfo[specID].pvptalents and specInfo[specID].pvptalents[index] then
@@ -2397,11 +2397,11 @@ local function GetPvPTalentInfoForSpecID(specID, index)
 end
 local MAX_ESSENCES = 11;
 local function GetEssenceInfoByID(essenceID)
-	return BtWSetsEssenceInfo and BtWSetsEssenceInfo[essenceID] or C_AzeriteEssence.GetEssenceInfo(essenceID);
+	return BtWRespecEssenceInfo and BtWRespecEssenceInfo[essenceID] or C_AzeriteEssence.GetEssenceInfo(essenceID);
 end
 local function GetEssenceInfoForRole(role, index)
-	if BtWSetsRoleInfo[role] and BtWSetsRoleInfo[role].essences and BtWSetsRoleInfo[role].essences[index] then
-        return GetEssenceInfoByID(BtWSetsRoleInfo[role].essences[index]);
+	if BtWRespecRoleInfo[role] and BtWRespecRoleInfo[role].essences and BtWRespecRoleInfo[role].essences[index] then
+        return GetEssenceInfoByID(BtWRespecRoleInfo[role].essences[index]);
     end
 
     if roleInfo[role] and roleInfo[role].essences and roleInfo[role].essences[index] then
@@ -2409,7 +2409,7 @@ local function GetEssenceInfoForRole(role, index)
     end
 end
 local function GetCharacterInfo(character)
-	return BtWSetsCharacterInfo and BtWSetsCharacterInfo[character];
+	return BtWRespecCharacterInfo and BtWRespecCharacterInfo[character];
 end
 local function IsClassRoleValid(classFile, role)
 	return classInfo[classFile][role] and true or false;
@@ -2471,13 +2471,13 @@ local function GetBestTome()
     end
 end
 local function RequestTome()
-	if not StaticPopup_Visible("BTWSETS_NEEDTOME") then --  and not StaticPopup_Visible("BTWSETS_NEEDRESTED")
+	if not StaticPopup_Visible("BTWRESPEC_NEEDTOME") then --  and not StaticPopup_Visible("BTWRESPEC_NEEDRESTED")
 		local itemId, name, link, quality, icon = GetBestTome();
 		if name ~= nil then
 			local r, g, b = GetItemQualityColor(quality or 2); 
-			StaticPopup_Show("BTWSETS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+			StaticPopup_Show("BTWRESPEC_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
 		elseif itemId == nil then
-			-- StaticPopup_Show("BTWSETS_NEEDRESTED", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+			-- StaticPopup_Show("BTWRESPEC_NEEDRESTED", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
 		end
 	end
 end
@@ -2526,7 +2526,7 @@ local Settings = SettingsCreate({
         name = L["Show minimap icon"],
         key = "minimapShown",
         onChange = function (id, value)
-            BtWSetsMinimapButton:SetShown(value);
+            BtWRespecMinimapButton:SetShown(value);
         end,
         default = true,
     },
@@ -2534,14 +2534,14 @@ local Settings = SettingsCreate({
 
 -- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
 local target = {};
-_G['BtWSetsTarget'] = target; -- @TODO REMOVE
+_G['BtWRespecTarget'] = target; -- @TODO REMOVE
 local function CancelActivateProfile()
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 end
 
-local tomeButton = CreateFrame("BUTTON", "BtWSetsTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
+local tomeButton = CreateFrame("BUTTON", "BtWRespecTomeButton", UIParent, "SecureActionButtonTemplate,SecureHandlerAttributeTemplate");
 tomeButton:SetFrameStrata("DIALOG");
 tomeButton:SetAttribute("*type1", "item");
 tomeButton:SetAttribute("unit", "player");
@@ -2564,7 +2564,7 @@ end);
 local setsFiltered = {};
 local activeConditionSelection;
 local activeConditions = {}; -- List of the currently active conditions profiles
-local conditionProfilesDropDown = CreateFrame("FRAME", "BtWSetsConditionProfilesDropDown", UIParent, "UIDropDownMenuTemplate");
+local conditionProfilesDropDown = CreateFrame("FRAME", "BtWRespecConditionProfilesDropDown", UIParent, "UIDropDownMenuTemplate");
 local function ConditionProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	activeConditionSelection = arg1;
 	UIDropDownMenu_SetText(conditionProfilesDropDown, arg1.name);
@@ -2594,7 +2594,7 @@ UIDropDownMenu_SetWidth(conditionProfilesDropDown, 170);
 UIDropDownMenu_Initialize(conditionProfilesDropDown, ConditionProfilesDropDownInit);
 UIDropDownMenu_JustifyText(conditionProfilesDropDown, "LEFT");
 
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATE"] = {
+StaticPopupDialogs["BTWRESPEC_REQUESTACTIVATE"] = {
 	text = L["Activate profile %s?"],
 	button1 = YES,
 	button2 = NO,
@@ -2604,7 +2604,7 @@ StaticPopupDialogs["BTWSETS_REQUESTACTIVATE"] = {
 	timeout = 0,
 	hideOnEscape = 1
 };
-StaticPopupDialogs["BTWSETS_REQUESTMULTIACTIVATE"] = {
+StaticPopupDialogs["BTWRESPEC_REQUESTMULTIACTIVATE"] = {
 	text = L["Activate the following profile?\n"],
 	button1 = YES,
 	button2 = NO,
@@ -2614,7 +2614,7 @@ StaticPopupDialogs["BTWSETS_REQUESTMULTIACTIVATE"] = {
 	timeout = 0,
 	hideOnEscape = 1
 };
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATERESTED"] = {
+StaticPopupDialogs["BTWRESPEC_REQUESTACTIVATERESTED"] = {
 	text = "Activate spec %s?\nThis set will require a tome or rested to activate",
 	button1 = YES,
 	button2 = NO,
@@ -2627,7 +2627,7 @@ StaticPopupDialogs["BTWSETS_REQUESTACTIVATERESTED"] = {
 	timeout = 0,
 	hideOnEscape = 1
 };
-StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
+StaticPopupDialogs["BTWRESPEC_REQUESTACTIVATETOME"] = {
 	text = "Activate spec %s?\nThis will use a Tome",
 	button1 = YES,
 	button2 = NO,
@@ -2654,7 +2654,7 @@ StaticPopupDialogs["BTWSETS_REQUESTACTIVATETOME"] = {
 	timeout = 0,
 	hideOnEscape = 1
 };
-StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
+StaticPopupDialogs["BTWRESPEC_NEEDTOME"] = {
 	text = L["A tome is needed to continue equiping your set."],
 	button1 = YES,
 	button2 = NO,
@@ -2685,7 +2685,7 @@ StaticPopupDialogs["BTWSETS_NEEDTOME"] = {
 	timeout = 0,
 	hideOnEscape = 1
 };
-StaticPopupDialogs["BTWSETS_DELETESET"] = {
+StaticPopupDialogs["BTWRESPEC_DELETESET"] = {
 	text = L["Are you sure you wish to delete the set \"%s\". This cannot be reversed."],
 	button1 = YES,
 	button2 = NO,
@@ -2696,7 +2696,7 @@ StaticPopupDialogs["BTWSETS_DELETESET"] = {
 	whileDead = 1,
 	showAlert = 1
 };
-StaticPopupDialogs["BTWSETS_DELETEINUSESET"] = {
+StaticPopupDialogs["BTWRESPEC_DELETEINUSESET"] = {
 	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."],
 	button1 = YES,
 	button2 = NO,
@@ -2915,7 +2915,7 @@ local function DeleteSet(sets, id)
 		if id.setID then
 			DeleteSet(sets, id.setID);
 		else
-			for k,v in pairs(BtWSetsSets.profiles) do
+			for k,v in pairs(BtWRespecSets.profiles) do
 				if v == id then
 					sets[k] = nil;
 					break;
@@ -2964,20 +2964,20 @@ local function AddTalentSet()
     end
 
     local set = {
-		setID = GetNextSetID(BtWSetsSets.talents),
+		setID = GetNextSetID(BtWRespecSets.talents),
         specID = specID,
         name = name,
         talents = talents,
 		useCount = 0,
     };
-    BtWSetsSets.talents[set.setID] = set;
+    BtWRespecSets.talents[set.setID] = set;
     return set;
 end
 local function GetTalentSet(id)
     if type(id) == "table" then
 		return id;
 	else
-		return BtWSetsSets.talents[id];
+		return BtWRespecSets.talents[id];
 	end;
 end
 local function GetTalentSets(id, ...)
@@ -3021,22 +3021,22 @@ local function CombineTalentSets(result, ...)
 	return result;
 end
 local function DeleteTalentSet(id)
-	DeleteSet(BtWSetsSets.talents, id);
+	DeleteSet(BtWRespecSets.talents, id);
 
 	if type(id) == "table" then
 		id = id.setID;
 	end
-	for _,set in pairs(BtWSetsSets.profiles) do
+	for _,set in pairs(BtWRespecSets.profiles) do
 		if type(set) == "table" and set.talentSet == id then
 			set.talentSet = nil;
 		end
 	end
 
-	local frame = BtWSetsFrame.Talents;
+	local frame = BtWRespecFrame.Talents;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = nil;-- = select(2,next(BtWSetsSets.talents)) or {};
-		BtWSetsFrame:Update();
+		frame.set = nil;-- = select(2,next(BtWRespecSets.talents)) or {};
+		BtWRespecFrame:Update();
 	end
 end
 
@@ -3096,21 +3096,21 @@ local function AddPvPTalentSet()
     end
 
     local set = {
-		setID = GetNextSetID(BtWSetsSets.pvptalents),
+		setID = GetNextSetID(BtWRespecSets.pvptalents),
         specID = specID,
         name = name,
         talents = talents,
 		useCount = 0,
     };
-    BtWSetsSets.pvptalents[set.setID] = set;
+    BtWRespecSets.pvptalents[set.setID] = set;
     return set;
 end
 local function GetPvPTalentSet(id)
-    return BtWSetsSets.pvptalents[id];
+    return BtWRespecSets.pvptalents[id];
 end
 local function GetPvPTalentSets(id, ...)
 	if id ~= nil then
-		return BtWSetsSets.pvptalents[id], GetPvPTalentSets(...);
+		return BtWRespecSets.pvptalents[id], GetPvPTalentSets(...);
 	end
 end
 local function GetPvPTalentSetIfNeeded(id)
@@ -3142,22 +3142,22 @@ local function CombinePvPTalentSets(result, ...)
 	return result;
 end
 local function DeletePvPTalentSet(id)
-	DeleteSet(BtWSetsSets.pvptalents, id);
+	DeleteSet(BtWRespecSets.pvptalents, id);
 
 	if type(id) == "table" then
 		id = id.setID;
 	end
-	for _,set in pairs(BtWSetsSets.profiles) do
+	for _,set in pairs(BtWRespecSets.profiles) do
 		if type(set) == "table" and set.pvpTalentSet == id then
 			set.pvpTalentSet = nil;
 		end
 	end
 
-	local frame = BtWSetsFrame.PvPTalents;
+	local frame = BtWRespecFrame.PvPTalents;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = nil;-- = select(2,next(BtWSetsSets.pvptalents)) or {};
-		BtWSetsFrame:Update();
+		frame.set = nil;-- = select(2,next(BtWRespecSets.pvptalents)) or {};
+		BtWRespecFrame:Update();
 	end
 end
 
@@ -3194,21 +3194,21 @@ local function AddEssenceSet()
     selected[117] = C_AzeriteEssence.GetMilestoneEssence(117);
 
     local set = {
-		setID = GetNextSetID(BtWSetsSets.essences),
+		setID = GetNextSetID(BtWRespecSets.essences),
         role = role,
         name = name,
         essences = selected,
 		useCount = 0,
     };
-    BtWSetsSets.essences[set.setID] = set;
+    BtWRespecSets.essences[set.setID] = set;
     return set;
 end
 local function GetEssenceSet(id)
-    return BtWSetsSets.essences[id];
+    return BtWRespecSets.essences[id];
 end
 local function GetEssenceSets(id, ...)
 	if id ~= nil then
-		return BtWSetsSets.essences[id], GetEssenceSets(...);
+		return BtWRespecSets.essences[id], GetEssenceSets(...);
 	end
 end
 local function GetEssenceSetIfNeeded(id)
@@ -3237,22 +3237,22 @@ local function CombineEssenceSets(result, ...)
 	return result;
 end
 local function DeleteEssenceSet(id)
-	DeleteSet(BtWSetsSets.essences, id);
+	DeleteSet(BtWRespecSets.essences, id);
 
 	if type(id) == "table" then
 		id = id.setID;
 	end
-	for _,set in pairs(BtWSetsSets.profiles) do
+	for _,set in pairs(BtWRespecSets.profiles) do
 		if type(set) == "table" and set.essencesSet == id then
 			set.essencesSet = nil;
 		end
 	end
 
-	local frame = BtWSetsFrame.Essences;
+	local frame = BtWRespecFrame.Essences;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = nil;-- = select(2,next(BtWSetsSets.essences)) or {};
-		BtWSetsFrame:Update();
+		frame.set = nil;-- = select(2,next(BtWRespecSets.essences)) or {};
+		BtWRespecFrame:Update();
 	end
 end
 
@@ -3422,36 +3422,36 @@ local function AddEquipmentSet()
 	end
 
     local set = {
-		setID = GetNextSetID(BtWSetsSets.equipment),
+		setID = GetNextSetID(BtWRespecSets.equipment),
         character = characterRealm .. "-" .. characterName,
         name = name,
 		equipment = equipment,
 		ignored = ignored,
 		useCount = 0,
     };
-    BtWSetsSets.equipment[set.setID] = set;
+    BtWRespecSets.equipment[set.setID] = set;
     return set;
 end
 -- Adds a blank equipment set for the current character
 local function AddBlankEquipmentSet()
     local characterName, characterRealm = UnitName("player"), GetRealmName();
     local set = {
-		setID = GetNextSetID(BtWSetsSets.equipment),
+		setID = GetNextSetID(BtWRespecSets.equipment),
         character = characterRealm .. "-" .. characterName,
         name = name,
 		equipment = {},
 		ignored = {},
 		useCount = 0,
     };
-    BtWSetsSets.equipment[set.setID] = set;
+    BtWRespecSets.equipment[set.setID] = set;
     return set;
 end
 local function GetEquipmentSet(id)
-    return BtWSetsSets.equipment[id];
+    return BtWRespecSets.equipment[id];
 end
 local function GetEquipmentSets(id, ...)
 	if id ~= nil then
-		return BtWSetsSets.equipment[id], GetEquipmentSets(...);
+		return BtWRespecSets.equipment[id], GetEquipmentSets(...);
 	end
 end
 local function GetEquipmentSetIfNeeded(id)
@@ -3487,23 +3487,23 @@ local function CombineEquipmentSets(result, ...)
 	return result;
 end
 local function DeleteEquipmentSet(id)
-	DeleteSet(BtWSetsSets.equipment, id);
+	DeleteSet(BtWRespecSets.equipment, id);
 
 	if type(id) == "table" then
 		id = id.setID;
 	end
-	for _,set in pairs(BtWSetsSets.profiles) do
+	for _,set in pairs(BtWRespecSets.profiles) do
 		if type(set) == "table" and set.equipmentSet == id then
 			set.equipmentSet = nil;
 			set.character = nil;
 		end
 	end
 
-	local frame = BtWSetsFrame.Equipment;
+	local frame = BtWRespecFrame.Equipment;
 	local set = frame.set;
 	if set.setID == id then
-		frame.set = nil;-- = select(2,next(BtWSetsSets.equipment)) or {};
-		BtWSetsFrame:Update();
+		frame.set = nil;-- = select(2,next(BtWRespecSets.equipment)) or {};
+		BtWRespecFrame:Update();
 	end
 end
 
@@ -3579,16 +3579,16 @@ local function AddProfile()
     local name = L["New Profile"];
 
     local set = {
-		setID = GetNextSetID(BtWSetsSets.profiles),
+		setID = GetNextSetID(BtWRespecSets.profiles),
         specID = specID,
 		name = name,
 		useCount = 0,
     };
-    BtWSetsSets.profiles[set.setID] = set;
+    BtWRespecSets.profiles[set.setID] = set;
     return set;
 end
 local function GetProfile(id)
-    return BtWSetsSets.profiles[id];
+    return BtWRespecSets.profiles[id];
 end
 local function DeleteProfile(id)
 	do
@@ -3610,13 +3610,13 @@ local function DeleteProfile(id)
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
 	end
-	DeleteSet(BtWSetsSets.profiles, id);
+	DeleteSet(BtWRespecSets.profiles, id);
 
-	local frame = BtWSetsFrame.Profiles;
+	local frame = BtWRespecFrame.Profiles;
 	local set = frame.set;
 	if set == id or set.setID == id then
-		frame.set = nil;--select(2,next(BtWSetsSets.profiles)) or {};
-		BtWSetsFrame:Update();
+		frame.set = nil;--select(2,next(BtWRespecSets.profiles)) or {};
+		BtWRespecFrame:Update();
 	end
 end
 local function ActivateProfile(profile)
@@ -3769,8 +3769,8 @@ local function ContinueActivateProfile()
 		return;
 	end
 
-	StaticPopup_Hide("BTWSETS_NEEDTOME");
-	-- StaticPopup_Hide("BTWSETS_NEEDRESTED");
+	StaticPopup_Hide("BTWRESPEC_NEEDTOME");
+	-- StaticPopup_Hide("BTWRESPEC_NEEDRESTED");
 
     if talentSet then
         ActivateTalentSet(talentSet);
@@ -3807,7 +3807,7 @@ local conditionMap = {
 	instanceID = {},
 	subzone = {},
 };
-_G['BtWSetsConditionMap'] = conditionMap; --@TODO Remove
+_G['BtWRespecConditionMap'] = conditionMap; --@TODO Remove
 local function ActivateConditionMap(map, key)
 	if key ~= nil and map[key] ~= nil then
 		local tbl = map[key];
@@ -3855,16 +3855,16 @@ local function AddConditionSet()
 	local name = L["New Condition Set"];
 	
     local set = {
-		setID = GetNextSetID(BtWSetsSets.conditions),
+		setID = GetNextSetID(BtWRespecSets.conditions),
 		name = name,
 		type = CONDITION_TYPE_WORLD,
 		map = {},
     };
-    BtWSetsSets.conditions[set.setID] = set;
+    BtWRespecSets.conditions[set.setID] = set;
     return set;
 end
 local function GetConditionSet(id)
-    return BtWSetsSets.conditions[id];
+    return BtWRespecSets.conditions[id];
 end
 local function DeleteConditionSet(id)
 	local set = type(id) == "table" and id or GetProfile(id);
@@ -3874,21 +3874,21 @@ local function DeleteConditionSet(id)
 	end
 	RemoveConditionFromMap(set);
 
-	DeleteSet(BtWSetsSets.conditions, id);
+	DeleteSet(BtWRespecSets.conditions, id);
 
 	if type(id) == "table" then
 		id = id.setID;
 	end
 
-	local frame = BtWSetsFrame.Conditions;
+	local frame = BtWRespecFrame.Conditions;
 	local set = frame.set;
 	if set.setID == id then
 		frame.set = nil;
-		BtWSetsFrame:Update();
+		BtWRespecFrame:Update();
 	end
 end
 local previousInstanceInfo = {};
-_G['BtWSetsPreviousInstanceInfo'] = conditionMap; --@TODO Remove
+_G['BtWRespecPreviousInstanceInfo'] = conditionMap; --@TODO Remove
 local function UpdateConditionsForInstance()
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	if previousInstanceInfo.instanceType ~= instanceType then
@@ -3919,12 +3919,12 @@ end
 -- Loops through conditions and checks if they are active
 local function TriggerConditions()
 	-- Generally speaking people wont want a popup asking to switch stuff if they are editing things
-	if BtWSetsFrame:IsShown() or target.active then
+	if BtWRespecFrame:IsShown() or target.active then
 		return;
 	end
 
 	wipe(activeConditions);
-	for setID,set in pairs(BtWSetsSets.conditions) do
+	for setID,set in pairs(BtWRespecSets.conditions) do
 		if type(set) == "table" and set.profileSet ~= nil then
 			local profile = GetProfile(set.profileSet);
 			local valid = select(5, IsProfileValid(profile));
@@ -3939,8 +3939,8 @@ local function TriggerConditions()
 		local second = next(activeConditions, firstSet);
 		if second == nil then
 			if not IsProfileActive(firstProfile) then
-				StaticPopup_Hide("BTWSETS_REQUESTMULTIACTIVATE");
-				StaticPopup_Show("BTWSETS_REQUESTACTIVATE", firstSet.name, nil, {
+				StaticPopup_Hide("BTWRESPEC_REQUESTMULTIACTIVATE");
+				StaticPopup_Show("BTWRESPEC_REQUESTACTIVATE", firstSet.name, nil, {
 					set = firstProfile,
 					func = ActivateProfile,
 				});
@@ -3948,8 +3948,8 @@ local function TriggerConditions()
 		else
 			activeConditionSelection = firstSet;
 			UIDropDownMenu_SetText(conditionProfilesDropDown, firstSet.name);
-			StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
-			StaticPopup_Show("BTWSETS_REQUESTMULTIACTIVATE", nil, nil, {
+			StaticPopup_Hide("BTWRESPEC_REQUESTACTIVATE");
+			StaticPopup_Show("BTWRESPEC_REQUESTMULTIACTIVATE", nil, nil, {
 				func = ActivateProfile,
 			}, conditionProfilesDropDown);
 		end
@@ -3968,8 +3968,8 @@ local function GetTabFrame(self, tabID)
 end
 
 local function RoleDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
@@ -4001,7 +4001,7 @@ local function RoleDropDown_OnClick(self, arg1, arg2, checked)
             end
         end
     end
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function RoleDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
@@ -4021,8 +4021,8 @@ local function RoleDropDownInit(self, level, menuList)
 end
 
 local function SpecDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
@@ -4056,7 +4056,7 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
             end
         end
     end
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function SpecDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
@@ -4096,8 +4096,8 @@ local function SpecDropDownInit(self, level, menuList)
 end
 
 local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
 	local set = tab.set;
@@ -4114,11 +4114,11 @@ local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
 	local set = tab.set;
@@ -4136,14 +4136,14 @@ local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-	BtWSetsFrame.Talents.set = talentSet;
-	PanelTemplates_SetTab(BtWSetsFrame, TAB_TALENTS);
+	BtWRespecFrame.Talents.set = talentSet;
+	PanelTemplates_SetTab(BtWRespecFrame, TAB_TALENTS);
 
 	helpTipIgnored["TUTORIAL_CREATE_TALENT_SET"] = true;
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function TalentsDropDownInit(self, level, menuList)
-    if not BtWSetsSets or not BtWSetsSets.talents then
+    if not BtWRespecSets or not BtWRespecSets.talents then
         return;
     end
     local info = UIDropDownMenu_CreateInfo();
@@ -4162,7 +4162,7 @@ local function TalentsDropDownInit(self, level, menuList)
 		UIDropDownMenu_AddButton(info, level);
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.talents;
+        local sets = BtWRespecSets.talents;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" then
 				setsFiltered[subset.specID] = true;
@@ -4215,7 +4215,7 @@ local function TalentsDropDownInit(self, level, menuList)
 		local specID = menuList;
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.talents;
+        local sets = BtWRespecSets.talents;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" and subset.specID == specID then
 				setsFiltered[#setsFiltered+1] = setID;
@@ -4240,7 +4240,7 @@ local function TalentsDropDownInit(self, level, menuList)
         -- local set = tab.set;
     
         -- wipe(setsFiltered);
-        -- local sets = BtWSetsSets.talents;
+        -- local sets = BtWRespecSets.talents;
         -- for setID,talentSet in pairs(sets) do
         --     -- if talentSet.specID == set.specID then
 		-- 	setsFiltered[#setsFiltered+1] = setID;
@@ -4267,8 +4267,8 @@ local function TalentsDropDownInit(self, level, menuList)
 end
 
 local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
 	local set = tab.set;
@@ -4285,11 +4285,11 @@ local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
 	local set = tab.set;
@@ -4307,13 +4307,13 @@ local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-	BtWSetsFrame.PvPTalents.set = newSet;
-	PanelTemplates_SetTab(BtWSetsFrame, TAB_PVP_TALENTS);
+	BtWRespecFrame.PvPTalents.set = newSet;
+	PanelTemplates_SetTab(BtWRespecFrame, TAB_PVP_TALENTS);
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function PvPTalentsDropDownInit(self, level, menuList)
-    if not BtWSetsSets or not BtWSetsSets.pvptalents then
+    if not BtWRespecSets or not BtWRespecSets.pvptalents then
         return;
 	end
 	
@@ -4333,7 +4333,7 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 		UIDropDownMenu_AddButton(info, level);
     
         wipe(setsFiltered);
-        local sets = BtWSetsSets.pvptalents;
+        local sets = BtWRespecSets.pvptalents;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" then
 				setsFiltered[subset.specID] = true;
@@ -4386,7 +4386,7 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 		local specID = menuList;
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.pvptalents;
+        local sets = BtWRespecSets.pvptalents;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" and subset.specID == specID then
 				setsFiltered[#setsFiltered+1] = setID;
@@ -4412,7 +4412,7 @@ local function PvPTalentsDropDownInit(self, level, menuList)
         -- local set = tab.set;
     
         -- wipe(setsFiltered);
-        -- local sets = BtWSetsSets.pvptalents;
+        -- local sets = BtWRespecSets.pvptalents;
         -- for setID,talentSet in pairs(sets) do
         --     -- if talentSet.specID == set.specID then
 		-- 	setsFiltered[#setsFiltered+1] = setID;
@@ -4439,8 +4439,8 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 end
 
 local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
@@ -4457,11 +4457,11 @@ local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
 	local set = tab.set;
@@ -4480,13 +4480,13 @@ local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
 	end
 
 
-	BtWSetsFrame.Essences.set = newSet;
-	PanelTemplates_SetTab(BtWSetsFrame, TAB_ESSENCES);
+	BtWRespecFrame.Essences.set = newSet;
+	PanelTemplates_SetTab(BtWRespecFrame, TAB_ESSENCES);
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function EssencesDropDownInit(self, level, menuList)
-    if not BtWSetsSets or not BtWSetsSets.essences then
+    if not BtWRespecSets or not BtWRespecSets.essences then
         return;
     end
 
@@ -4506,7 +4506,7 @@ local function EssencesDropDownInit(self, level, menuList)
 		UIDropDownMenu_AddButton(info, level);
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.essences;
+        local sets = BtWRespecSets.essences;
         for setID,subset in pairs(sets) do
 			if type(subset) == "table" then
 				setsFiltered[subset.role] = true;
@@ -4546,7 +4546,7 @@ local function EssencesDropDownInit(self, level, menuList)
 		local role = menuList;
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.essences;
+        local sets = BtWRespecSets.essences;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" and subset.role == role then
 				setsFiltered[#setsFiltered+1] = setID;
@@ -4573,7 +4573,7 @@ local function EssencesDropDownInit(self, level, menuList)
         -- -- local role = select(5, GetSpecializationInfoByID(set.specID));
     
         -- wipe(setsFiltered);
-        -- local sets = BtWSetsSets.essences;
+        -- local sets = BtWRespecSets.essences;
         -- for setID,talentSet in pairs(sets) do
         --     -- if talentSet.role == role then
 		-- 	setsFiltered[#setsFiltered+1] = setID;
@@ -4600,8 +4600,8 @@ local function EssencesDropDownInit(self, level, menuList)
 end
 
 local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
@@ -4619,11 +4619,11 @@ local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
 	local set = tab.set;
@@ -4642,13 +4642,13 @@ local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-	BtWSetsFrame.Equipment.set = newSet;
-	PanelTemplates_SetTab(BtWSetsFrame, TAB_EQUIPMENT);
+	BtWRespecFrame.Equipment.set = newSet;
+	PanelTemplates_SetTab(BtWRespecFrame, TAB_EQUIPMENT);
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function EquipmentDropDownInit(self, level, menuList)
-    if not BtWSetsSets or not BtWSetsSets.equipment then
+    if not BtWRespecSets or not BtWRespecSets.equipment then
         return;
     end
 
@@ -4668,7 +4668,7 @@ local function EquipmentDropDownInit(self, level, menuList)
 		UIDropDownMenu_AddButton(info, level);
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.equipment;
+        local sets = BtWRespecSets.equipment;
         for setID,subset in pairs(sets) do
 			if type(subset) == "table" then
 				setsFiltered[subset.character] = true;
@@ -4725,7 +4725,7 @@ local function EquipmentDropDownInit(self, level, menuList)
 		local character = menuList;
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.equipment;
+        local sets = BtWRespecSets.equipment;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" and subset.character == character then
 				setsFiltered[#setsFiltered+1] = setID;
@@ -4751,7 +4751,7 @@ local function EquipmentDropDownInit(self, level, menuList)
 		-- -- local class = select(6, GetSpecializationInfoByID(set.specID));
     
         -- wipe(setsFiltered);
-        -- local sets = BtWSetsSets.equipment;
+        -- local sets = BtWRespecSets.equipment;
 		-- for setID,equipmentSet in pairs(sets) do
 		-- 	-- local characterInfo = GetCharacterInfo(equipmentSet.character)
         --     -- if characterInfo.class == class then
@@ -4780,8 +4780,8 @@ local function EquipmentDropDownInit(self, level, menuList)
 end
 
 local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
@@ -4798,11 +4798,11 @@ local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function ProfilesDropDown_NewOnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
 	local set = tab.set;
@@ -4820,13 +4820,13 @@ local function ProfilesDropDown_NewOnClick(self, arg1, arg2, checked)
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
-	BtWSetsFrame.Profiles.set = newSet;
-	PanelTemplates_SetTab(BtWSetsFrame, TAB_PROFILES);
+	BtWRespecFrame.Profiles.set = newSet;
+	PanelTemplates_SetTab(BtWRespecFrame, TAB_PROFILES);
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function ProfilesDropDownInit(self, level, menuList)
-    if not BtWSetsSets or not BtWSetsSets.profiles then
+    if not BtWRespecSets or not BtWRespecSets.profiles then
         return;
     end
 
@@ -4846,7 +4846,7 @@ local function ProfilesDropDownInit(self, level, menuList)
 		UIDropDownMenu_AddButton(info, level);
     
         wipe(setsFiltered);
-        local sets = BtWSetsSets.profiles;
+        local sets = BtWRespecSets.profiles;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" then
 				setsFiltered[subset.specID] = true;
@@ -4899,7 +4899,7 @@ local function ProfilesDropDownInit(self, level, menuList)
 		local specID = menuList;
 		
         wipe(setsFiltered);
-        local sets = BtWSetsSets.profiles;
+        local sets = BtWRespecSets.profiles;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" and subset.specID == specID then
 				setsFiltered[#setsFiltered+1] = setID;
@@ -4920,8 +4920,8 @@ local function ProfilesDropDownInit(self, level, menuList)
 end
 
 local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
@@ -4930,7 +4930,7 @@ local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
 	set.instanceID = nil;
 	set.difficultyID = nil;
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function ConditionTypeDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
@@ -4951,8 +4951,8 @@ end
 
 
 local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
@@ -4974,7 +4974,7 @@ local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
 		end
 	end
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function InstanceDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
@@ -5036,15 +5036,15 @@ end
 
 
 local function DifficultyDropDown_OnClick(self, arg1, arg2, checked)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-    local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+    local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 
     CloseDropDownMenus();
     local set = tab.set;
 
 	set.difficultyID = arg1;
 
-    BtWSetsFrame:Update();
+    BtWRespecFrame:Update();
 end
 local function DifficultyDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
@@ -5109,12 +5109,12 @@ local talentSetsCollapsedBySpecID = {};
 local pvpTalentSetsCollapsedBySpecID = {};
 local essenceSetsCollapsedByRole = {};
 local equipmentSetsCollapsedByCharacter = {};
-function BtWSetsSetsScrollFrame_Update()
-    local offset = FauxScrollFrame_GetOffset(BtWSetsFrame.Scroll);
+function BtWRespecSetsScrollFrame_Update()
+    local offset = FauxScrollFrame_GetOffset(BtWRespecFrame.Scroll);
     
 	local hasScrollBar = #setScrollItems > NUM_SCROLL_ITEMS_TO_DISPLAY;
     for index=1,NUM_SCROLL_ITEMS_TO_DISPLAY do
-        local button = BtWSetsFrame.ScrollButtons[index];
+        local button = BtWRespecFrame.ScrollButtons[index];
         button:SetWidth(hasScrollBar and 153 or 175);
         
         local item = setScrollItems[index + offset];
@@ -5168,7 +5168,7 @@ function BtWSetsSetsScrollFrame_Update()
             button:Hide();
         end
 	end
-    FauxScrollFrame_Update(BtWSetsFrame.Scroll, #setScrollItems, NUM_SCROLL_ITEMS_TO_DISPLAY, SCROLL_ROW_HEIGHT, nil, nil, nil, nil, nil, nil, false);
+    FauxScrollFrame_Update(BtWRespecFrame.Scroll, #setScrollItems, NUM_SCROLL_ITEMS_TO_DISPLAY, SCROLL_ROW_HEIGHT, nil, nil, nil, nil, nil, nil, false);
 end
 local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
     wipe(setScrollItems);
@@ -5272,7 +5272,7 @@ local function SetsScrollFrame_SpecFilter(selected, sets, collapsed)
 		end
 	end
 	
-	BtWSetsSetsScrollFrame_Update();
+	BtWRespecSetsScrollFrame_Update();
 	
 	return selected;
 end
@@ -5338,7 +5338,7 @@ local function SetsScrollFrame_RoleFilter(selected, sets, collapsed)
 		end
 	end
 
-	BtWSetsSetsScrollFrame_Update();
+	BtWRespecSetsScrollFrame_Update();
 	
 	return selected;
 end
@@ -5421,7 +5421,7 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 		end
 	end
 
-	BtWSetsSetsScrollFrame_Update();
+	BtWRespecSetsScrollFrame_Update();
 	
 	return selected;
 end
@@ -5445,7 +5445,7 @@ local function SetsScrollFrame_NoFilter(selected, sets)
 		};
 	end
 
-	BtWSetsSetsScrollFrame_Update();
+	BtWRespecSetsScrollFrame_Update();
 	
 	return selected;
 end
@@ -5458,7 +5458,7 @@ local tutorialHelpTipFlags = {
 };
 local function ProfilesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Profiles"]);
-	self.set = SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.profiles, profilesCollapsedBySpecID);
+	self.set = SetsScrollFrame_SpecFilter(self.set, BtWRespecSets.profiles, profilesCollapsedBySpecID);
 
 	self.Name:SetEnabled(self.set ~= nil);
 	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
@@ -5585,7 +5585,7 @@ local function ProfilesTabUpdate(self)
 end
 local function TalentsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Talents"]);
-	self.set = SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.talents, talentSetsCollapsedBySpecID);
+	self.set = SetsScrollFrame_SpecFilter(self.set, BtWRespecSets.talents, talentSetsCollapsedBySpecID);
 
 	if self.set ~= nil then
 		self.Name:SetEnabled(true);
@@ -5677,7 +5677,7 @@ local function TalentsTabUpdate(self)
 end
 local function PvPTalentsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["PvP Talents"]);
-	self.set = SetsScrollFrame_SpecFilter(self.set, BtWSetsSets.pvptalents, pvpTalentSetsCollapsedBySpecID);
+	self.set = SetsScrollFrame_SpecFilter(self.set, BtWRespecSets.pvptalents, pvpTalentSetsCollapsedBySpecID);
 
 	if self.set ~= nil then
 		self.Name:SetEnabled(true);
@@ -5841,7 +5841,7 @@ local function EssenceScrollFrameUpdate(self)
 end
 local function EssencesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Essences"]);
-	self.set = SetsScrollFrame_RoleFilter(self.set, BtWSetsSets.essences, essenceSetsCollapsedByRole);
+	self.set = SetsScrollFrame_RoleFilter(self.set, BtWRespecSets.essences, essenceSetsCollapsedByRole);
 
 	if self.set ~= nil then
 		self.Name:SetEnabled(true);
@@ -5934,7 +5934,7 @@ local equipmentHelpTipFlags = {
 };
 local function EquipmentTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Equipment"]);
-	self.set = SetsScrollFrame_CharacterFilter(self.set, BtWSetsSets.equipment, equipmentSetsCollapsedByCharacter);
+	self.set = SetsScrollFrame_CharacterFilter(self.set, BtWRespecSets.equipment, equipmentSetsCollapsedByCharacter);
 
 	if self.set ~= nil then
 		local set = self.set;
@@ -6056,7 +6056,7 @@ local function EquipmentTabUpdate(self)
 end
 local function ConditionsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Conditions"]);
-    self.set = SetsScrollFrame_NoFilter(self.set, BtWSetsSets.conditions);
+    self.set = SetsScrollFrame_NoFilter(self.set, BtWRespecSets.conditions);
 
 	if self.set ~= nil then
 		local set = self.set;
@@ -6138,8 +6138,8 @@ local function ConditionsTabUpdate(self)
 	end
 end
 
-BtWSetsFrameMixin = {};
-function BtWSetsFrameMixin:OnLoad()
+BtWRespecFrameMixin = {};
+function BtWRespecFrameMixin:OnLoad()
     tinsert(UISpecialFrames, self:GetName());
     self:RegisterForDrag("LeftButton");
     
@@ -6204,7 +6204,7 @@ function BtWSetsFrameMixin:OnLoad()
 		[117] = self.Essences.MinorSlot2,
 	};
 	
-	HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWSetsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+	HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWRespecAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 	self.Essences.EssenceList.update = EssenceScrollFrameUpdate;
 
 	self.Equipment.flyoutSettings = {
@@ -6235,55 +6235,55 @@ function BtWSetsFrameMixin:OnLoad()
     UIDropDownMenu_Initialize(self.Conditions.DifficultyDropDown, DifficultyDropDownInit);
 	UIDropDownMenu_JustifyText(self.Conditions.DifficultyDropDown, "LEFT");
 end
-function BtWSetsFrameMixin:OnDragStart()
+function BtWRespecFrameMixin:OnDragStart()
     self:StartMoving();
 end
-function BtWSetsFrameMixin:OnDragStop()
+function BtWRespecFrameMixin:OnDragStop()
 	self:StopMovingOrSizing();
 end
-function BtWSetsFrameMixin:OnMouseUp()
+function BtWRespecFrameMixin:OnMouseUp()
 	if self.Essences.pending ~= nil then
 		self.Essences.pending = nil
 		SetCursor(nil);
 		self:Update();
 	end
 end
-function BtWSetsFrameMixin:OnEnter()
+function BtWRespecFrameMixin:OnEnter()
 	if self.Essences.pending ~= nil then
 		SetCursor("interface/cursor/cast.blp");
 	end
 end
-function BtWSetsFrameMixin:OnLeave()
+function BtWRespecFrameMixin:OnLeave()
 	SetCursor(nil);
 end
-function BtWSetsFrameMixin:SetProfile(set)
+function BtWRespecFrameMixin:SetProfile(set)
     self.Profiles.set = set;
     self:Update();
 end
-function BtWSetsFrameMixin:SetTalentSet(set)
+function BtWRespecFrameMixin:SetTalentSet(set)
     self.Talents.set = set;
     wipe(self.Talents.temp);
     self:Update();
 end
-function BtWSetsFrameMixin:SetPvPTalentSet(set)
+function BtWRespecFrameMixin:SetPvPTalentSet(set)
     self.PvPTalents.set = set;
     wipe(self.PvPTalents.temp);
     self:Update();
 end
-function BtWSetsFrameMixin:SetEssenceSet(set)
+function BtWRespecFrameMixin:SetEssenceSet(set)
     self.Essences.set = set;
     wipe(self.Essences.temp);
     self:Update();
 end
-function BtWSetsFrameMixin:SetEquipmentSet(set)
+function BtWRespecFrameMixin:SetEquipmentSet(set)
     self.Equipment.set = set;
     self:Update();
 end
-function BtWSetsFrameMixin:SetConditionSet(set)
+function BtWRespecFrameMixin:SetConditionSet(set)
     self.Conditions.set = set;
     self:Update();
 end
-function BtWSetsFrameMixin:Update()
+function BtWRespecFrameMixin:Update()
     local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
     for id,frame in ipairs(self.TabFrames) do
         frame:SetShown(id == selectedTab);
@@ -6303,7 +6303,7 @@ function BtWSetsFrameMixin:Update()
 		ConditionsTabUpdate(self.Conditions);
     end
 end
-function BtWSetsFrameMixin:ScrollItemClick(button)
+function BtWRespecFrameMixin:ScrollItemClick(button)
     CloseDropDownMenus();
     local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
     if selectedTab == TAB_PROFILES then
@@ -6319,12 +6319,12 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
 		elseif button.isDelete then
 			local set = frame.set;
 			if set.useCount > 0 then
-				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETEINUSESET", set.name, nil, {
 					set = set,
 					func = DeleteProfile,
 				});
 			else
-				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETESET", set.name, nil, {
 					set = set,
 					func = DeleteProfile,
 				});
@@ -6358,12 +6358,12 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
 		elseif button.isDelete then
 			local set = frame.set;
 			if set.useCount > 0 then
-				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETEINUSESET", set.name, nil, {
 					set = set,
 					func = DeleteTalentSet,
 				});
 			else
-				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETESET", set.name, nil, {
 					set = set,
 					func = DeleteTalentSet,
 				});
@@ -6402,12 +6402,12 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
 		elseif button.isDelete then
 			local set = frame.set;
 			if set.useCount > 0 then
-				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETEINUSESET", set.name, nil, {
 					set = set,
 					func = DeletePvPTalentSet,
 				});
 			else
-				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETESET", set.name, nil, {
 					set = set,
 					func = DeletePvPTalentSet,
 				});
@@ -6446,12 +6446,12 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
 		elseif button.isDelete then
 			local set = frame.set;
 			if set.useCount > 0 then
-				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETEINUSESET", set.name, nil, {
 					set = set,
 					func = DeleteEssenceSet,
 				});
 			else
-				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETESET", set.name, nil, {
 					set = set,
 					func = DeleteEssenceSet,
 				});
@@ -6484,12 +6484,12 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
 		elseif button.isDelete then
 			local set = frame.set;
 			if set.useCount > 0 then
-				StaticPopup_Show("BTWSETS_DELETEINUSESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETEINUSESET", set.name, nil, {
 					set = set,
 					func = DeleteEquipmentSet,
 				});
 			else
-				StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+				StaticPopup_Show("BTWRESPEC_DELETESET", set.name, nil, {
 					set = set,
 					func = DeleteEquipmentSet,
 				});
@@ -6521,7 +6521,7 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
             end);
 		elseif button.isDelete then
 			local set = frame.set;
-			StaticPopup_Show("BTWSETS_DELETESET", set.name, nil, {
+			StaticPopup_Show("BTWRESPEC_DELETESET", set.name, nil, {
 				set = set,
 				func = DeleteConditionSet,
 			});
@@ -6531,20 +6531,20 @@ function BtWSetsFrameMixin:ScrollItemClick(button)
         end
     end
 end
-function BtWSetsFrameMixin:OnHelpTipManuallyClosed(closeFlag)
+function BtWRespecFrameMixin:OnHelpTipManuallyClosed(closeFlag)
 	helpTipIgnored[closeFlag] = true;
 	self:Update();
 end
-function BtWSetsFrameMixin:OnNameChanged(text)
-    local selectedTab = PanelTemplates_GetSelectedTab(BtWSetsFrame) or 1;
-	local tab = GetTabFrame(BtWSetsFrame, selectedTab);
+function BtWRespecFrameMixin:OnNameChanged(text)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWRespecFrame) or 1;
+	local tab = GetTabFrame(BtWRespecFrame, selectedTab);
 	if tab.set and tab.set.name ~= text then
 		tab.set.name = text;
 		helpTipIgnored["TUTORIAL_RENAME_SET"] = true;
 		self:Update();
 	end
 end
-function BtWSetsFrameMixin:OnHide()
+function BtWRespecFrameMixin:OnHide()
 	-- When hiding the main window we are going to assume that something has dramatically changed and completely redo everything
 	wipe(previousInstanceInfo);
 	previousSubZone = nil
@@ -6552,11 +6552,11 @@ function BtWSetsFrameMixin:OnHide()
     TriggerConditions();
 end
 
-BtWSetsTalentButtonMixin = {};
-function BtWSetsTalentButtonMixin:OnLoad()
+BtWRespecTalentButtonMixin = {};
+function BtWRespecTalentButtonMixin:OnLoad()
     self:RegisterForClicks("LeftButtonUp");
 end
-function BtWSetsTalentButtonMixin:OnClick()
+function BtWRespecTalentButtonMixin:OnClick()
     local row = self:GetParent();
     local talents = row:GetParent();
     local talentID = self.id;
@@ -6582,7 +6582,7 @@ function BtWSetsTalentButtonMixin:OnClick()
         end
     end
 end
-function BtWSetsTalentButtonMixin:OnEnter()
+function BtWRespecTalentButtonMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 	if self.isPvP then
 		GameTooltip:SetPvpTalent(self.id, true);
@@ -6590,12 +6590,12 @@ function BtWSetsTalentButtonMixin:OnEnter()
 		GameTooltip:SetTalent(self.id, true);
 	end
 end
-function BtWSetsTalentButtonMixin:OnLeave()
+function BtWRespecTalentButtonMixin:OnLeave()
 	GameTooltip_Hide();
 end
 
-BtWSetsTalentGridButtonMixin = CreateFromMixins(BtWSetsTalentButtonMixin);
-function BtWSetsTalentGridButtonMixin:OnClick()
+BtWRespecTalentGridButtonMixin = CreateFromMixins(BtWRespecTalentButtonMixin);
+function BtWRespecTalentGridButtonMixin:OnClick()
     local grid = self:GetParent();
     local talents = grid:GetParent();
     local talentID = self.id;
@@ -6615,11 +6615,11 @@ function BtWSetsTalentGridButtonMixin:OnClick()
 	talents:GetParent():Update();
 end
 
-BtWSetsAzeriteMilestoneSlotMixin = {};
-function BtWSetsAzeriteMilestoneSlotMixin:OnLoad()
+BtWRespecAzeriteMilestoneSlotMixin = {};
+function BtWRespecAzeriteMilestoneSlotMixin:OnLoad()
 	self.EmptyGlow.Anim:Play();
 end
-function BtWSetsAzeriteMilestoneSlotMixin:OnEnter()
+function BtWRespecAzeriteMilestoneSlotMixin:OnEnter()
 	if self.id then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		GameTooltip:SetAzeriteEssence(self.id, 4);
@@ -6630,10 +6630,10 @@ function BtWSetsAzeriteMilestoneSlotMixin:OnEnter()
 		SetCursor("interface/cursor/cast.blp");
 	end
 end
-function BtWSetsAzeriteMilestoneSlotMixin:OnLeave()
+function BtWRespecAzeriteMilestoneSlotMixin:OnLeave()
 	GameTooltip_Hide();
 end
-function BtWSetsAzeriteMilestoneSlotMixin:OnClick()
+function BtWRespecAzeriteMilestoneSlotMixin:OnClick()
 	local essences = self:GetParent();
 	local selected = essences.set.essences;
 	local pendingEssenceID = essences.pending;
@@ -6652,28 +6652,28 @@ function BtWSetsAzeriteMilestoneSlotMixin:OnClick()
 		selected[self.milestoneID] = nil;
 	end
 
-	BtWSetsFrame:Update();
+	BtWRespecFrame:Update();
 end
 
-BtWSetsAzeriteEssenceButtonMixin = {};
-function BtWSetsAzeriteEssenceButtonMixin:OnClick()
+BtWRespecAzeriteEssenceButtonMixin = {};
+function BtWRespecAzeriteEssenceButtonMixin:OnClick()
 	SetCursor("interface/cursor/cast.blp");
-	BtWSetsFrame.Essences.pending = self.id;
-	BtWSetsFrame:Update();
+	BtWRespecFrame.Essences.pending = self.id;
+	BtWRespecFrame:Update();
 end
-function BtWSetsAzeriteEssenceButtonMixin:OnEnter()
+function BtWRespecAzeriteEssenceButtonMixin:OnEnter()
 	if self.id then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		GameTooltip:SetAzeriteEssence(self.id, 4);
 	end
 
-	if BtWSetsFrame.Essences.pending then
+	if BtWRespecFrame.Essences.pending then
 		SetCursor("interface/cursor/cast.blp");
 	end
 end
 
-BtWSetsItemSlotButtonMixin = {};
-function BtWSetsItemSlotButtonMixin:OnLoad()
+BtWRespecItemSlotButtonMixin = {};
+function BtWRespecItemSlotButtonMixin:OnLoad()
 	self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
 	-- self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 
@@ -6706,7 +6706,7 @@ function BtWSetsItemSlotButtonMixin:OnLoad()
 		-- popoutButton:Show();
 	end
 end
-function BtWSetsItemSlotButtonMixin:OnClick()
+function BtWRespecItemSlotButtonMixin:OnClick()
 	local cursorType, _, itemLink = GetCursorInfo();
 	if cursorType == "item" then
 		if self:SetItem(itemLink) then
@@ -6719,7 +6719,7 @@ function BtWSetsItemSlotButtonMixin:OnClick()
 		self:SetItem(nil);
 	end
 end
-function BtWSetsItemSlotButtonMixin:OnReceiveDrag()
+function BtWRespecItemSlotButtonMixin:OnReceiveDrag()
 	local cursorType, _, itemLink = GetCursorInfo();
 	if cursorType == "item" then
 		if self:SetItem(itemLink) then
@@ -6727,7 +6727,7 @@ function BtWSetsItemSlotButtonMixin:OnReceiveDrag()
 		end
 	end
 end
-function BtWSetsItemSlotButtonMixin:OnEvent(event, itemID, success)
+function BtWRespecItemSlotButtonMixin:OnEvent(event, itemID, success)
 	if success then
 		local set = self:GetParent().set;
 		local slot = self:GetID();
@@ -6739,7 +6739,7 @@ function BtWSetsItemSlotButtonMixin:OnEvent(event, itemID, success)
 		end
 	end
 end
-function BtWSetsItemSlotButtonMixin:OnEnter()
+function BtWRespecItemSlotButtonMixin:OnEnter()
 	local set = self:GetParent().set;
 	local slot = self:GetID();
 	local itemLink = set.equipment[slot];
@@ -6749,18 +6749,18 @@ function BtWSetsItemSlotButtonMixin:OnEnter()
 		GameTooltip:SetHyperlink(itemLink);
 	end
 end
-function BtWSetsItemSlotButtonMixin:OnLeave()
+function BtWRespecItemSlotButtonMixin:OnLeave()
 	GameTooltip:Hide();
 end
-function BtWSetsItemSlotButtonMixin:OnUpdate()
+function BtWRespecItemSlotButtonMixin:OnUpdate()
 	if GameTooltip:IsOwned(self) then
 		self:OnEnter();
 	end
 end
-function BtWSetsItemSlotButtonMixin:GetSlot()
+function BtWRespecItemSlotButtonMixin:GetSlot()
 	return self.slot;
 end
-function BtWSetsItemSlotButtonMixin:SetItem(itemLink)
+function BtWRespecItemSlotButtonMixin:SetItem(itemLink)
 	local set = self:GetParent().set;
 	if itemLink == nil then -- Clearing slot
 		set.equipment[self:GetID()] = nil;
@@ -6778,12 +6778,12 @@ function BtWSetsItemSlotButtonMixin:SetItem(itemLink)
 	end
 	return false;
 end
-function BtWSetsItemSlotButtonMixin:SetIgnored(ignored)
+function BtWRespecItemSlotButtonMixin:SetIgnored(ignored)
 	local set = self:GetParent().set;
 	set.ignored[self:GetID()] = ignored and true or nil;
 	self:Update();
 end
-function BtWSetsItemSlotButtonMixin:Update()
+function BtWRespecItemSlotButtonMixin:Update()
 	local set = self:GetParent().set;
 	local slot = self:GetID();
 	local ignored = set.ignored[slot];
@@ -6829,27 +6829,27 @@ local minimapShapes = {
 	["TRICORNER-BOTTOMRIGHT"] 	= {true,  true,  true,  false},
 };
 
-BtWSetsMinimapMixin = {};
-function BtWSetsMinimapMixin:OnLoad()
+BtWRespecMinimapMixin = {};
+function BtWRespecMinimapMixin:OnLoad()
     self:RegisterForClicks("anyUp");
     self:RegisterForDrag("LeftButton");
     self:RegisterEvent("ADDON_LOADED");
 end
-function BtWSetsMinimapMixin:OnEvent(event, ...)
-    if ... == "BtWSets" then
+function BtWRespecMinimapMixin:OnEvent(event, ...)
+    if ... == "BtWRespec" then
         self:SetShown(Settings.minimapShown);
         self:Reposition(Settings.minimapAngle or 185);
     end
 end
-function BtWSetsMinimapMixin:OnDragStart()
+function BtWRespecMinimapMixin:OnDragStart()
     self:LockHighlight();
     self:SetScript("OnUpdate", self.OnUpdate);
 end
-function BtWSetsMinimapMixin:OnDragStop()
+function BtWRespecMinimapMixin:OnDragStop()
     self:UnlockHighlight();
     self:SetScript("OnUpdate", nil);
 end
-function BtWSetsMinimapMixin:Reposition(degrees)
+function BtWRespecMinimapMixin:Reposition(degrees)
     local radius = 80;
 	local rounding = 10;
     local angle = rad(degrees or 200);
@@ -6877,7 +6877,7 @@ function BtWSetsMinimapMixin:Reposition(degrees)
     
     self:SetPoint("CENTER", "$parent", "CENTER", x, y);
 end
-function BtWSetsMinimapMixin:OnUpdate()
+function BtWRespecMinimapMixin:OnUpdate()
 	local px,py = GetCursorPosition();
     local mx,my = Minimap:GetCenter();
     
@@ -6889,19 +6889,19 @@ function BtWSetsMinimapMixin:OnUpdate()
     Settings.minimapAngle = angle;
     self:Reposition(angle);
 end
-function BtWSetsMinimapMixin:OnClick(button)
+function BtWRespecMinimapMixin:OnClick(button)
     if button == "LeftButton" then
-        BtWSetsFrame:SetShown(not BtWSetsFrame:IsShown());
+        BtWRespecFrame:SetShown(not BtWRespecFrame:IsShown());
     elseif button == "RightButton" then
         if not self.Menu then
 		    self.Menu = CreateFrame("Frame", self:GetName().."Menu", self, "UIDropDownMenuTemplate");
-            UIDropDownMenu_Initialize(self.Menu, BtWSetsMinimapMenu_Init, "MENU");
+            UIDropDownMenu_Initialize(self.Menu, BtWRespecMinimapMenu_Init, "MENU");
         end
         
 	    ToggleDropDownMenu(1, nil, self.Menu, self, 0, 0);
     end
 end
-function BtWSetsMinimapMenu_Init(self, level)
+function BtWRespecMinimapMenu_Init(self, level)
 	local info = UIDropDownMenu_CreateInfo();
     info.func = function (self, key)
         Settings[key] = not Settings[key];
@@ -6927,15 +6927,15 @@ local function PlayerNeedsTomeNowForSet(set)
 end
 
 -- [[ Slash Command ]]
-SLASH_BTWSETS1 = "/btwsets"
-SlashCmdList["BTWSETS"] = function(msg)
+SLASH_BTWRESPEC1 = "/btwrespec"
+SlashCmdList["BTWRESPEC"] = function(msg)
 	if msg == "minimap" then
 		Settings.minimapShown = not Settings.minimapShown;
     else
-        if BtWSetsFrame:IsShown() then
-            BtWSetsFrame:Hide()
+        if BtWRespecFrame:IsShown() then
+            BtWRespecFrame:Hide()
         else
-            BtWSetsFrame:Show()
+            BtWRespecFrame:Show()
         end
     end
 end 
@@ -6946,10 +6946,10 @@ frame:SetScript("OnEvent", function (self, event, ...)
 end);
 function frame:ADDON_LOADED(...)
     if ... == ADDON_NAME then
-        BtWSetsSettings = BtWSetsSettings or {};
-		Settings(BtWSetsSettings);
+        BtWRespecSettings = BtWRespecSettings or {};
+		Settings(BtWRespecSettings);
 		
-        BtWSetsSets = BtWSetsSets or {
+        BtWRespecSets = BtWRespecSets or {
             profiles = {},
             talents = {},
             pvptalents = {},
@@ -6958,7 +6958,7 @@ function frame:ADDON_LOADED(...)
             conditions = {},
 		};
 		
-		for _,sets in pairs(BtWSetsSets) do
+		for _,sets in pairs(BtWRespecSets) do
 			for setID,set in pairs(sets) do
 				if type(set) == "table" then
 					set.setID = setID;
@@ -6966,30 +6966,30 @@ function frame:ADDON_LOADED(...)
 				end
 			end
 		end
-		for setID,set in pairs(BtWSetsSets.profiles) do
+		for setID,set in pairs(BtWRespecSets.profiles) do
 			if type(set) == "table" then
 				if set.talentSet then
-					BtWSetsSets.talents[set.talentSet].useCount = BtWSetsSets.talents[set.talentSet].useCount + 1;
+					BtWRespecSets.talents[set.talentSet].useCount = BtWRespecSets.talents[set.talentSet].useCount + 1;
 				end
 
 				if set.pvpTalentSet then
-					BtWSetsSets.pvptalents[set.pvpTalentSet].useCount = BtWSetsSets.pvptalents[set.pvpTalentSet].useCount + 1;
+					BtWRespecSets.pvptalents[set.pvpTalentSet].useCount = BtWRespecSets.pvptalents[set.pvpTalentSet].useCount + 1;
 				end
 
 				if set.essencesSet then
-					BtWSetsSets.essences[set.essencesSet].useCount = BtWSetsSets.essences[set.essencesSet].useCount + 1;
+					BtWRespecSets.essences[set.essencesSet].useCount = BtWRespecSets.essences[set.essencesSet].useCount + 1;
 				end
 
 				if set.equipmentSet then
-					BtWSetsSets.equipment[set.equipmentSet].useCount = BtWSetsSets.equipment[set.equipmentSet].useCount + 1;
+					BtWRespecSets.equipment[set.equipmentSet].useCount = BtWRespecSets.equipment[set.equipmentSet].useCount + 1;
 				end
 			end
 		end
 
-        BtWSetsSpecInfo = BtWSetsSpecInfo or {};
-        BtWSetsRoleInfo = BtWSetsRoleInfo or {};
-		BtWSetsEssenceInfo = BtWSetsEssenceInfo or {};
-		BtWSetsCharacterInfo = BtWSetsCharacterInfo or {};
+        BtWRespecSpecInfo = BtWRespecSpecInfo or {};
+        BtWRespecRoleInfo = BtWRespecRoleInfo or {};
+		BtWRespecEssenceInfo = BtWRespecEssenceInfo or {};
+		BtWRespecCharacterInfo = BtWRespecCharacterInfo or {};
 
 		for classIndex=1,GetNumClasses() do
 			local className, classFile, classID = GetClassInfo(classIndex);
@@ -7003,20 +7003,20 @@ function frame:ADDON_LOADED(...)
 		do
 			local name, realm = UnitName("player"), GetRealmName();
 			local character = format("%s-%s", realm, name);
-			for setID,set in pairs(BtWSetsSets.equipment) do
+			for setID,set in pairs(BtWRespecSets.equipment) do
 				if type(set) == "table" and set.character == character and set.managerID ~= nil then
 					equipmentSetMap[set.managerID] = set;
 				end
 			end
 		end
 
-		BtWSetsHelpTipFlags = BtWSetsHelpTipFlags or {};
+		BtWRespecHelpTipFlags = BtWRespecHelpTipFlags or {};
 		for k in pairs(helpTipIgnored) do
-			BtWSetsHelpTipFlags[k] = true;
+			BtWRespecHelpTipFlags[k] = true;
 		end
-		helpTipIgnored = BtWSetsHelpTipFlags;
+		helpTipIgnored = BtWRespecHelpTipFlags;
 
-		for _,set in pairs(BtWSetsSets.conditions) do
+		for _,set in pairs(BtWRespecSets.conditions) do
 			if type(set) == "table" then
 				AddConditionToMap(set);
 			end
@@ -7029,7 +7029,7 @@ end
 function frame:PLAYER_ENTERING_WORLD()
 	for specIndex=1,GetNumSpecializations() do
         local specID = GetSpecializationInfo(specIndex);
-        local spec = BtWSetsSpecInfo[specID] or {talents = {}};
+        local spec = BtWRespecSpecInfo[specID] or {talents = {}};
 		spec.talents = spec.talents or {};
 		local talents = spec.talents;
         for tier=1,MAX_TALENT_TIERS do
@@ -7043,12 +7043,12 @@ function frame:PLAYER_ENTERING_WORLD()
             talents[tier] = tierItems;
 		end
 
-        BtWSetsSpecInfo[specID] = spec;
+        BtWRespecSpecInfo[specID] = spec;
 	end
 	
 	do
 		local specID = GetSpecializationInfo(GetSpecialization());
-		local spec = BtWSetsSpecInfo[specID] or {};
+		local spec = BtWRespecSpecInfo[specID] or {};
 		spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
 		wipe(spec.pvptalenttrinkets);
 		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
@@ -7069,12 +7069,12 @@ function frame:PLAYER_ENTERING_WORLD()
 			end
 		end
 
-		BtWSetsSpecInfo[specID] = spec;
+		BtWRespecSpecInfo[specID] = spec;
 	end
 
 	do
 		local roleID = select(5, GetSpecializationInfo(GetSpecialization()));
-		local role = BtWSetsRoleInfo[roleID] or {};
+		local role = BtWRespecRoleInfo[roleID] or {};
 		
 		role.essences = role.essences or {};
 		wipe(role.essences);
@@ -7087,16 +7087,16 @@ function frame:PLAYER_ENTERING_WORLD()
 				role.essences[#role.essences+1] = essence.ID;
 			end
 
-			local essenceInfo = BtWSetsEssenceInfo[essence.ID] or {};
+			local essenceInfo = BtWRespecEssenceInfo[essence.ID] or {};
 			wipe(essenceInfo);
 			essenceInfo.ID = essence.ID;
 			essenceInfo.name = essence.name;
 			essenceInfo.icon = essence.icon;
 
-			BtWSetsEssenceInfo[essence.ID] = essenceInfo;
+			BtWRespecEssenceInfo[essence.ID] = essenceInfo;
 		end
 
-		BtWSetsRoleInfo[roleID] = role;
+		BtWRespecRoleInfo[roleID] = role;
 	end
 
 	do
@@ -7105,7 +7105,7 @@ function frame:PLAYER_ENTERING_WORLD()
 		local race = select(3, UnitRace("player"));
 		local sex = UnitSex("player") - 2;
 
-		BtWSetsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
+		BtWRespecCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
 	end
 
 	-- Run conditions for instance info
@@ -7150,12 +7150,12 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
 		end
 	end
 
-	BtWSetsFrame:Update();
+	BtWRespecFrame:Update();
 end
 function frame:PLAYER_SPECIALIZATION_CHANGED(...)
 	do
 		local specID = GetSpecializationInfo(GetSpecialization());
-		local spec = BtWSetsSpecInfo[specID] or {};
+		local spec = BtWRespecSpecInfo[specID] or {};
 
 		spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
 		wipe(spec.pvptalenttrinkets);
@@ -7177,7 +7177,7 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
 			end
 		end
 
-		BtWSetsSpecInfo[specID] = spec;
+		BtWRespecSpecInfo[specID] = spec;
 	end
 end
 frame:RegisterEvent("ADDON_LOADED");
@@ -7193,7 +7193,7 @@ function eventHandler:GET_ITEM_INFO_RECEIVED()
     target.dirty = true;
 end
 function eventHandler:PLAYER_REGEN_DISABLED()
-    StaticPopup_Hide("BTWSETS_NEEDTOME");
+    StaticPopup_Hide("BTWRESPEC_NEEDTOME");
 end
 function eventHandler:PLAYER_REGEN_ENABLED()
     target.dirty = true;
@@ -7201,32 +7201,32 @@ end
 function eventHandler:PLAYER_UPDATE_RESTING()
 	target.dirty = true;
     -- if AreTalentsLocked() then
-    --     StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
-    --     StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
+    --     StaticPopup_Hide("BTWRESPEC_REQUESTACTIVATETOME");
+    --     StaticPopup_Hide("BTWRESPEC_REQUESTACTIVATE");
     --     return;
     -- end
 
-    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATETOME");
+    -- local _, eventHandler = StaticPopup_Visible("BTWRESPEC_REQUESTACTIVATETOME");
     -- if eventHandler then
     --     if not PlayerNeedsTomeNowForSet(eventHandler.data) then
-    --         StaticPopup_Hide("BTWSETS_REQUESTACTIVATETOME");
-    --         StaticPopup_Show("BTWSETS_REQUESTACTIVATE");
+    --         StaticPopup_Hide("BTWRESPEC_REQUESTACTIVATETOME");
+    --         StaticPopup_Show("BTWRESPEC_REQUESTACTIVATE");
     --     end
 
     --     return;
     -- end
 
-    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_REQUESTACTIVATE");
+    -- local _, eventHandler = StaticPopup_Visible("BTWRESPEC_REQUESTACTIVATE");
     -- if eventHandler then
     --     if PlayerNeedsTomeNowForSet(eventHandler.data) then
-    --         StaticPopup_Hide("BTWSETS_REQUESTACTIVATE");
-    --         StaticPopup_Show("BTWSETS_REQUESTACTIVATETOME");
+    --         StaticPopup_Hide("BTWRESPEC_REQUESTACTIVATE");
+    --         StaticPopup_Show("BTWRESPEC_REQUESTACTIVATETOME");
     --     end
 
     --     return;
     -- end
 
-    -- local _, eventHandler = StaticPopup_Visible("BTWSETS_NEEDTOME");
+    -- local _, eventHandler = StaticPopup_Visible("BTWRESPEC_NEEDTOME");
     -- if eventHandler then
     --     if not PlayerNeedsTomeNowForSet(eventHandler.data) then
     --         target.dirty = true;
