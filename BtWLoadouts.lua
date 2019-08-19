@@ -1,14 +1,15 @@
 --[[@TODO
-	Clean up ui, fix positioning and such
 	Minimap icon should show progress texture and help box
-	Conditions
 	Profiles need to support multiple sets of the same type
 	Equipment popout
 	Equipment sets should store location
-	Ability to redisplay the minimap icon
+	Equipment sets should store transmog?
 	OPIE intergration
 	Profile keybindings
 	Talent, equipment, etc. lock checking
+	Conditions need to supoort boss, affixes and arena comp
+	Localization
+	Update new set text button based on tab?
 ]]
 
 local ADDON_NAME = ...;
@@ -2202,6 +2203,124 @@ local roleInfo = {
 		},
 	},
 };
+local essenceInfo = {
+	nil, -- [1]
+	{
+		["ID"] = 2,
+		["name"] = "Azeroth's Undying Gift",
+		["icon"] = 2967107,
+	}, -- [2]
+	{
+		["ID"] = 3,
+		["name"] = "Sphere of Suppression",
+		["icon"] = 2065602,
+	}, -- [3]
+	{
+		["ID"] = 4,
+		["name"] = "Worldvein Resonance",
+		["icon"] = 1830317,
+	}, -- [4]
+	{
+		["ID"] = 5,
+		["name"] = "Essence of the Focusing Iris",
+		["icon"] = 2967111,
+	}, -- [5]
+	{
+		["ID"] = 6,
+		["name"] = "Purification Protocol",
+		["icon"] = 2967103,
+	}, -- [6]
+	{
+		["ID"] = 7,
+		["name"] = "Anima of Life and Death",
+		["icon"] = 2967105,
+	}, -- [7]
+	nil, -- [8]
+	nil, -- [9]
+	nil, -- [10]
+	nil, -- [11]
+	{
+		["ID"] = 12,
+		["name"] = "The Crucible of Flame",
+		["icon"] = 3015740,
+	}, -- [12]
+	{
+		["ID"] = 13,
+		["name"] = "Nullification Dynamo",
+		["icon"] = 3015741,
+	}, -- [13]
+	{
+		["ID"] = 14,
+		["name"] = "Condensed Life-Force",
+		["icon"] = 2967113,
+	}, -- [14]
+	{
+		["ID"] = 15,
+		["name"] = "Ripple in Space",
+		["icon"] = 2967109,
+	}, -- [15]
+	nil, -- [16]
+	{
+		["ID"] = 17,
+		["name"] = "The Ever-Rising Tide",
+		["icon"] = 2967108,
+	}, -- [17]
+	{
+		["ID"] = 18,
+		["name"] = "Artifice of Time",
+		["icon"] = 2967112,
+	}, -- [18]
+	{
+		["ID"] = 19,
+		["name"] = "The Well of Existence",
+		["icon"] = 516796,
+	}, -- [19]
+	{
+		["ID"] = 20,
+		["name"] = "Life-Binder's Invocation",
+		["icon"] = 2967106,
+	}, -- [20]
+	{
+		["ID"] = 21,
+		["name"] = "Vitality Conduit",
+		["icon"] = 2967100,
+	}, -- [21]
+	{
+		["ID"] = 22,
+		["name"] = "Vision of Perfection",
+		["icon"] = 3015743,
+	}, -- [22]
+	{
+		["ID"] = 23,
+		["name"] = "Blood of the Enemy",
+		["icon"] = 2032580,
+	}, -- [23]
+	nil, -- [24]
+	{
+		["ID"] = 25,
+		["name"] = "Aegis of the Deep",
+		["icon"] = 2967110,
+	}, -- [25]
+	nil, -- [26]
+	{
+		["ID"] = 27,
+		["name"] = "Memory of Lucid Dreams",
+		["icon"] = 2967104,
+	}, -- [27]
+	{
+		["ID"] = 28,
+		["name"] = "The Unbound Force",
+		["icon"] = 2967102,
+	}, -- [28]
+	nil, -- [29]
+	nil, -- [30]
+	nil, -- [31]
+	{
+		["ID"] = 32,
+		["name"] = "Conflict and Strife",
+		["icon"] = 3015742,
+	}, -- [32]
+}
 local classInfo = {};
 local dungeonDifficultiesAll = {1,2,23,8};
 local raidDifficultiesAll = {17,14,15,16};
@@ -2323,6 +2442,66 @@ local raidInfo = {
 		},
 	}
 };
+-- List of bosses within an instance
+local instanceBosses = {
+	[2164] = {
+		2352,
+		2347,
+		2353,
+		2354,
+		2351,
+		2359,
+		2349,
+		2361,
+	}
+};
+-- List of indentifiying info for a boss, uiMapID or areaID
+local bossData = {
+	[2352] = {
+		uiMapID = 1512,
+	},
+	[2347] = {
+		uiMapID = 1513,
+	},
+	[2347] = {
+		uiMapID = 1514,
+	},
+	[2353] = {
+		uiMapID = 1513,
+	},
+	[2351] = {
+		uiMapID = 1517,
+	},
+	[2359] = {
+		uiMapID = 1518,
+	},
+	[2349] = {
+		uiMapID = 1519,
+	},
+	[2361] = {
+		uiMapID = 1520,
+	},
+};
+local areaNameToIDMap = {};
+_G['BtWLoadoutsAreaMap'] = areaNameToIDMap; -- @TODO Remove
+local InstanceAreaIDToJournalEncounterID = {
+	[1822] = {
+		[9984] = 2132,
+	},
+	[2097] = {
+		[11389] = 2358, -- Gunker
+		[11388] = 2357, -- King Gobbamak
+		[11387] = 2360, -- Trixie & Naeno
+		[11390] = 2355, -- HK-8 Aerial Oppression Unit
+		[10497] = 2336, -- Tussle Tonks
+		-- [] = 2339, -- K.U.-J.0.
+		-- [] = 2348, -- Machinist's Garden
+		-- [] = 2331, -- King Mechagon
+	},
+};
+local uiMapIDToJournalEncounterID = {
+	[1520] = 2361,
+};
 
 local CONDITION_TYPE_WORLD = "none";
 local CONDITION_TYPE_DUNGEONS = "party";
@@ -2397,7 +2576,11 @@ local function GetPvPTalentInfoForSpecID(specID, index)
 end
 local MAX_ESSENCES = 11;
 local function GetEssenceInfoByID(essenceID)
-	return BtWLoadoutsEssenceInfo and BtWLoadoutsEssenceInfo[essenceID] or C_AzeriteEssence.GetEssenceInfo(essenceID);
+	local essence = C_AzeriteEssence.GetEssenceInfo(essenceID);
+	if not essence then
+		essence = BtWLoadoutsEssenceInfo and BtWLoadoutsEssenceInfo[essenceID] or essenceInfo[essenceID];
+	end
+	return essence;
 end
 local function GetEssenceInfoForRole(role, index)
 	if BtWLoadoutsRoleInfo[role] and BtWLoadoutsRoleInfo[role].essences and BtWLoadoutsRoleInfo[role].essences[index] then
@@ -2459,7 +2642,8 @@ local function PlayerNeedsTome()
     return true;
 end
 local tomes = {
-    141446
+	141446,
+	153647
 };
 local function GetBestTome()
 	for _,itemId in ipairs(tomes) do
@@ -2484,6 +2668,19 @@ end
 local function IsChangingSpec()
     local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
     return spellId == 200749;
+end
+local function UpdateAreaMap()
+	local instanceID = select(8, GetInstanceInfo());
+	if instanceID and areaBosses[instanceID] then
+		areaNameToIDMap[instanceID] = areaNameToIDMap[instanceID] or {};
+		local map = areaNameToIDMap[instanceID];
+		for areaID in pairs(areaBosses[instanceID]) do
+			local areaName = C_Map.GetAreaInfo(areaID);
+			if areaName then
+				map[areaName] = areaID;
+			end
+		end
+	end
 end
 
 local eventHandler = CreateFrame("Frame");
@@ -2835,18 +3032,22 @@ local function EmptyInventorySlot(inventorySlotId)
         end
     end
 
+	local complete = false;
     if foundSlot then
         ClearCursor()
 
         PickupInventoryItem(inventorySlotId)
-        PickupContainerItem(containerId, slotId)
+		PickupContainerItem(containerId, slotId)
+		
+		-- If the swap succeeded then the cursor should be empty
+		if not CursorHasItem() then
+			complete = true;
+		end
         
-        ClearCursor()
-
-        return true
+        ClearCursor();
     end
 
-    return false
+    return complete
 end
 local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
     local itemString = string.match(itemLink, "item[%-?%d:]+")
@@ -2866,6 +3067,7 @@ local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
         end
     end
 
+	local complete = false;
     if match then
         local a, b
         ClearCursor()
@@ -2877,10 +3079,15 @@ local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
 
         PickupInventoryItem(inventorySlotId)
 
-        return true
+		-- If the swap succeeded then the cursor should be empty
+		if not CursorHasItem() then
+			complete = true;
+		end
+        
+        ClearCursor();
     end
 
-    return false
+    return complete
 end
 -- Modified version of EquipmentManager_GetItemInfoByLocation but gets the item link instead
 local function GetItemLinkByLocation(location)
@@ -3287,11 +3494,6 @@ local function IsEquipmentSetActive(set)
     return true;
 end
 local function ActivateEquipmentSet(set)
-	if set.managerID then
-		C_EquipmentSet.UseEquipmentSet(set.managerID);
-		return;
-	end
-
 	local ignored = {};
 	local expected = {};
 	local possibles = {};
@@ -3311,6 +3513,8 @@ local function ActivateEquipmentSet(set)
         firstEquipped = INVSLOT_MAINHAND
         lastEquipped = INVSLOT_RANGED 
 	end
+
+	target.pass = (target.pass or 0) + 1;
 	
 	for inventorySlotId = firstEquipped, lastEquipped do
 		if not ignored[inventorySlotId] then
@@ -3343,6 +3547,7 @@ local function ActivateEquipmentSet(set)
 				end
 			else -- Unequip
 				if GetInventoryItemLink("player", inventorySlotId) ~= nil then
+					print(inventorySlotId, "Unequip");
 					if not IsInventoryItemLocked(inventorySlotId) and EmptyInventorySlot(inventorySlotId) then
 						ignored[inventorySlotId] = true;
 					end
@@ -3368,7 +3573,7 @@ local function ActivateEquipmentSet(set)
             end
 
             if (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil then
-                if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], possibles[inventorySlotId]) then
+				if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], possibles[inventorySlotId]) then
                     ignored[inventorySlotId] = true;
                 end
             end
@@ -3378,7 +3583,7 @@ local function ActivateEquipmentSet(set)
     -- Swap out items
     for inventorySlotId = firstEquipped, lastEquipped do
         if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
-            if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], possibles[inventorySlotId]) then
+			if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], possibles[inventorySlotId]) then
 				ignored[inventorySlotId] = true;
             end
         end
@@ -3389,22 +3594,26 @@ local function ActivateEquipmentSet(set)
     for inventorySlotId = firstEquipped, lastEquipped do
 		if not ignored[inventorySlotId] then
 			if expected[inventorySlotId] then
-				if not IsInventoryItemLocked(inventorySlotId) then
+				if not IsInventoryItemLocked(inventorySlotId) and target.pass == 5 then
 					print('Cannot equip ' .. expected[inventorySlotId]);
 				end
 				complete = false
 			else -- Unequip
 				if not EmptyInventorySlot(inventorySlotId) then
-					if not IsInventoryItemLocked(inventorySlotId) then
+					if not IsInventoryItemLocked(inventorySlotId) and target.pass == 5 then
 						print('Cannot unequip ' .. GetInventoryItemLink("player", inventorySlotId))
 					end
 					complete = false
 				end
 			end
         end
-    end
+	end
     
 	ClearCursor()
+	-- If its taken us 5 attempts to equip a set its probably not going to happen
+	if target.pass == 5 then
+		return true;
+	end
 	
 	return complete;
 end
@@ -7123,6 +7332,8 @@ function frame:PLAYER_ENTERING_WORLD()
 
 		BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
 	end
+
+	UpdateAreaMap();
 
 	-- Run conditions for instance info
 	do
