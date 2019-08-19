@@ -4849,7 +4849,7 @@ local function ProfilesDropDownInit(self, level, menuList)
         local sets = BtWLoadoutsSets.profiles;
 		for setID,subset in pairs(sets) do
 			if type(subset) == "table" then
-				setsFiltered[subset.specID] = true;
+				setsFiltered[subset.specID or 0] = true;
 			end
         end
 
@@ -4886,6 +4886,15 @@ local function ProfilesDropDownInit(self, level, menuList)
 					end
 				end
 			end
+		end
+
+		local specID = 0;
+		if setsFiltered[specID] then
+			info.text = L["Other"];
+			info.hasArrow, info.menuList = true, nil;
+			info.keepShownOnClick = true;
+			info.notCheckable = true;
+			UIDropDownMenu_AddButton(info, level);
 		end
 
         info.text = L["New Set"];
