@@ -2202,60 +2202,139 @@ local roleInfo = {
 	},
 };
 local classInfo = {};
+local dungeonDifficultiesAll = {1,2,23,8};
+local raidDifficultiesAll = {17,14,15,16};
+-- local raidDifficultiesAll = {3,4,5,6,79,14,15,16,17,33};
 local instanceDifficulties = {
-	[1754] = {1,2,23,8},
+	[1763] = dungeonDifficultiesAll,
+	[1841] = dungeonDifficultiesAll,
+	[1877] = dungeonDifficultiesAll,
+	[1594] = dungeonDifficultiesAll,
+	[1762] = dungeonDifficultiesAll,
+	[1754] = dungeonDifficultiesAll,
+	[1864] = dungeonDifficultiesAll,
+	[1771] = dungeonDifficultiesAll,
+	[1862] = dungeonDifficultiesAll,
+	[1822] = dungeonDifficultiesAll,
 	[2097] = {23},
+	
+	[1861] = {17,14,15,16},
+	[2070] = {17,14,15,16},
+	[2096] = {17,14,15,16},
+	[2164] = {17,14,15,16},
 };
 local dungeonInfo = {
 	{
 		name = L["Classic"],
-		dungeons = {
+		instances = {
 		},
 	},
 	{
 		name = L["TBC"],
-		dungeons = {
+		instances = {
 		},
 	},
 	{
 		name = L["Wrath"],
-		dungeons = {
+		instances = {
 		},
 	},
 	{
 		name = L["Cata"],
-		dungeons = {
+		instances = {
 		},
 	},
 	{
 		name = L["Panda"],
-		dungeons = {
+		instances = {
 		},
 	},
 	{
 		name = L["WoD"],
-		dungeons = {
+		instances = {
 		},
 	},
 	{
 		name = L["Legion"],
-		dungeons = {
+		instances = {
 		},
 	},
 	{
 		name = L["Battle For Azeroth"],
-		dungeons = {
+		instances = {
+			1763,
+			1841,
+			1877,
+			1594,
+			1762,
 			1754,
+			1864,
+			1771,
+			1862,
+			1822,
 			2097,
 		},
 	}
 };
+local raidInfo = {
+	{
+		name = L["Classic"],
+		instances = {
+		},
+	},
+	{
+		name = L["TBC"],
+		instances = {
+		},
+	},
+	{
+		name = L["Wrath"],
+		instances = {
+		},
+	},
+	{
+		name = L["Cata"],
+		instances = {
+		},
+	},
+	{
+		name = L["Panda"],
+		instances = {
+		},
+	},
+	{
+		name = L["WoD"],
+		instances = {
+		},
+	},
+	{
+		name = L["Legion"],
+		instances = {
+		},
+	},
+	{
+		name = L["Battle For Azeroth"],
+		instances = {
+			1861,
+			2070,
+			2096,
+			2164,
+		},
+	}
+};
 
-local CONDITION_TYPE_WORLD = 1;
-local CONDITION_TYPE_DUNGEONS = 2;
-local CONDITION_TYPE_RAIDS = 3;
-local CONDITION_TYPE_ARENA = 4;
-local CONDITION_TYPE_BATTLEGROUND = 5;
+local CONDITION_TYPE_WORLD = "none";
+local CONDITION_TYPE_DUNGEONS = "party";
+local CONDITION_TYPE_RAIDS = "raid";
+local CONDITION_TYPE_ARENA = "arena";
+local CONDITION_TYPE_BATTLEGROUND = "pvp";
+local CONDITION_TYPES = {
+	CONDITION_TYPE_WORLD,
+	CONDITION_TYPE_DUNGEONS,
+	CONDITION_TYPE_RAIDS,
+	CONDITION_TYPE_ARENA,
+	CONDITION_TYPE_BATTLEGROUND
+}
 local CONDITION_TYPE_NAMES = {
 	[CONDITION_TYPE_WORLD] = L["World"],
 	[CONDITION_TYPE_DUNGEONS] = L["Dungeons"],
@@ -3444,6 +3523,13 @@ local function GetConditionSet(id)
     return BtWSetsSets.conditions[id];
 end
 local function DeleteConditionSet(id)
+	local set = type(id) == "table" and id or GetProfile(id);
+	if set.profileSet then
+		local subSet = GetProfile(set.profileSet);
+		subSet.useCount = (subSet.useCount or 1) - 1;
+	end
+	RemoveConditionFromMap(set);
+
 	DeleteSet(BtWSetsSets.conditions, id);
 
 	if type(id) == "table" then
@@ -4842,6 +4928,8 @@ local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
     local set = tab.set;
 
 	set.type = arg1;
+	set.instanceID = nil;
+	set.difficultyID = nil;
 
     BtWSetsFrame:Update();
 end
@@ -4852,7 +4940,7 @@ local function ConditionTypeDropDownInit(self, level, menuList)
 	local selected = set and set.type;
 
 	if (level or 1) == 1 then
-		for conditionType=CONDITION_TYPE_WORLD,CONDITION_TYPE_BATTLEGROUND do
+		for _,conditionType in ipairs(CONDITION_TYPES) do
 			info.text = CONDITION_TYPE_NAMES[conditionType];
 			info.arg1 = conditionType;
 			info.func = ConditionTypeDropDown_OnClick;
@@ -4903,16 +4991,16 @@ local function InstanceDropDownInit(self, level, menuList)
 			info.checked = selected == nil;
 			UIDropDownMenu_AddButton(info, level);
 
-			for expansion,expansionData in ipairs(dungeonInfo) do
-				info.text = expansionData.name;
-				info.hasArrow, info.menuList = true, expansion;
-				info.keepShownOnClick = true;
-				info.notCheckable = true;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		else
-			local expansion = menuList;
-			for _,instanceID in ipairs(dungeonInfo[expansion].dungeons) do
+		-- 	for expansion,expansionData in ipairs(dungeonInfo) do
+		-- 		info.text = expansionData.name;
+		-- 		info.hasArrow, info.menuList = true, expansion;
+		-- 		info.keepShownOnClick = true;
+		-- 		info.notCheckable = true;
+		-- 		UIDropDownMenu_AddButton(info, level);
+		-- 	end
+		-- else
+			local expansion = 8;
+			for _,instanceID in ipairs(dungeonInfo[expansion].instances) do
 				info.text = GetRealZoneText(instanceID);
 				info.arg1 = instanceID;
 				info.func = InstanceDropDown_OnClick;
@@ -4921,6 +5009,29 @@ local function InstanceDropDownInit(self, level, menuList)
 			end
 		end
 	elseif dungeonType == CONDITION_TYPE_RAIDS then
+		if (level or 1) == 1 then
+			info.text = L["Any"];
+			info.func = InstanceDropDown_OnClick;
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+
+		-- 	for expansion,expansionData in ipairs(dungeonInfo) do
+		-- 		info.text = expansionData.name;
+		-- 		info.hasArrow, info.menuList = true, expansion;
+		-- 		info.keepShownOnClick = true;
+		-- 		info.notCheckable = true;
+		-- 		UIDropDownMenu_AddButton(info, level);
+		-- 	end
+		-- else
+			local expansion = 8;
+			for _,instanceID in ipairs(raidInfo[expansion].instances) do
+				info.text = GetRealZoneText(instanceID);
+				info.arg1 = instanceID;
+				info.func = InstanceDropDown_OnClick;
+				info.checked = selected == instanceID;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
 	end
 end
 
@@ -4940,10 +5051,39 @@ local function DifficultyDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
 	
 	local set = self:GetParent().set;
+	local conditionType = set and set.type;
 	local instanceID = set and set.instanceID;
 	local selected = set and set.difficultyID;
 
-	if instanceID ~= nil then
+	if instanceID == nil then
+		if conditionType == CONDITION_TYPE_DUNGEONS then
+			info.text = L["Any"];
+			info.func = DifficultyDropDown_OnClick;
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+
+			for _,difficultyID in ipairs(dungeonDifficultiesAll) do
+				info.text = GetDifficultyInfo(difficultyID);
+				info.arg1 = difficultyID;
+				info.func = DifficultyDropDown_OnClick;
+				info.checked = selected == difficultyID;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		elseif conditionType == CONDITION_TYPE_RAIDS then
+			info.text = L["Any"];
+			info.func = DifficultyDropDown_OnClick;
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+
+			for _,difficultyID in ipairs(raidDifficultiesAll) do
+				info.text = GetDifficultyInfo(difficultyID);
+				info.arg1 = difficultyID;
+				info.func = DifficultyDropDown_OnClick;
+				info.checked = selected == difficultyID;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+	else
 		if (level or 1) == 1 then
 			info.text = L["Any"];
 			info.func = DifficultyDropDown_OnClick;
@@ -5930,10 +6070,11 @@ local function ConditionsTabUpdate(self)
 			set.mapDifficultyID = set.difficultyID;
 		end
 
-		if set.map.instanceID ~= set.instanceID or set.map.difficultyID ~= set.mapDifficultyID or set.mapProfileSet ~= set.profileSet then
+		if set.map.instanceType ~= set.type or set.map.instanceID ~= set.instanceID or set.map.difficultyID ~= set.mapDifficultyID or set.mapProfileSet ~= set.profileSet then
 			RemoveConditionFromMap(set);
 
 			set.mapProfileSet = set.profileSet; -- Used to check if we should handle the condition
+			set.map.instanceType = set.type;
 			set.map.instanceID = set.instanceID;
 			set.map.difficultyID = set.mapDifficultyID;
 
@@ -5950,11 +6091,13 @@ local function ConditionsTabUpdate(self)
 		end
 		
 		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[self.set.type]);
+		self.InstanceDropDown:SetShown(set.type == CONDITION_TYPE_DUNGEONS or set.type == CONDITION_TYPE_RAIDS);
 		if set.instanceID == nil then
 			UIDropDownMenu_SetText(self.InstanceDropDown, L["Any"]);
 		else
 			UIDropDownMenu_SetText(self.InstanceDropDown, GetRealZoneText(set.instanceID));
 		end
+		self.DifficultyDropDown:SetShown(set.type == CONDITION_TYPE_DUNGEONS or set.type == CONDITION_TYPE_RAIDS);
 		if set.difficultyID == nil then
 			UIDropDownMenu_SetText(self.DifficultyDropDown, L["Any"]);
 		else
