@@ -2526,7 +2526,7 @@ local Settings = SettingsCreate({
         name = L["Show minimap icon"],
         key = "minimapShown",
         onChange = function (id, value)
-            BtWSetsMinimapButton:SetShown(value)
+            BtWSetsMinimapButton:SetShown(value);
         end,
         default = true,
     },
@@ -6925,6 +6925,20 @@ local function PlayerNeedsTomeNowForSet(set)
 
     -- return PlayerNeedsTome();
 end
+
+-- [[ Slash Command ]]
+SLASH_BTWSETS1 = "/btwsets"
+SlashCmdList["BTWSETS"] = function(msg)
+	if msg == "minimap" then
+		Settings.minimapShown = not Settings.minimapShown;
+    else
+        if BtWSetsFrame:IsShown() then
+            BtWSetsFrame:Hide()
+        else
+            BtWSetsFrame:Show()
+        end
+    end
+end 
 
 local frame = CreateFrame("Frame");
 frame:SetScript("OnEvent", function (self, event, ...)
