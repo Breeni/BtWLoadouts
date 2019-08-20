@@ -3724,7 +3724,10 @@ local function IsProfileValid(set)
 
 	if set.equipmentSet then
 		local subSet = GetEquipmentSet(set.equipmentSet);
-		local characterInfo = GetCharacterInfo(subSet.character)
+		local characterInfo = GetCharacterInfo(subSet.character);
+		if not characterInfo then
+			return false, true, false, false, false;
+		end
 		class = characterInfo.class;
 		
 		local name, realm = UnitName("player"), GetRealmName();
@@ -3743,7 +3746,7 @@ local function IsProfileValid(set)
 		local subSet = GetTalentSet(set.talentSet);
 
 		if specID ~= nil and specID ~= subSet.specID then
-			return false, false, true, false;
+			return false, false, true, false, false;
 		end
 
 		specID = subSet.specID;
@@ -3753,7 +3756,7 @@ local function IsProfileValid(set)
 		local subSet = GetPvPTalentSet(set.pvpTalentSet);
 		
 		if specID ~= nil and specID ~= subSet.specID then
-			return false, false, true, false;
+			return false, false, true, false, false;
 		end
 
 		specID = subSet.specID;
@@ -3768,17 +3771,17 @@ local function IsProfileValid(set)
 		local specRole, specClass = select(5, GetSpecializationInfoByID(specID));
 
 		if class ~= nil and class ~= specClass then
-			return false, true, true, false;
+			return false, true, true, false, false;
 		end
 
 		if role ~= nil and role ~= specRole then
-			return false, false, true, true;
+			return false, false, true, true, false;
 		end
 	end
 
 	if class and role then
 		if not IsClassRoleValid(class, role) then
-			return false, true, false, true;
+			return false, true, false, true, false;
 		end
 	end
 
@@ -4895,9 +4898,13 @@ local function EquipmentDropDownInit(self, level, menuList)
 		local name, realm = UnitFullName("player");
 		local character = realm .. "-" .. name;
 		if setsFiltered[character] then
+			local name = character;
 			local characterInfo = GetCharacterInfo(character);
-			local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-			local name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+			if characterInfo then
+				local characterInfo = GetCharacterInfo(character);
+				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+			end
 
 			info.text = name;
 			info.hasArrow, info.menuList = true, character;
@@ -4910,9 +4917,12 @@ local function EquipmentDropDownInit(self, level, menuList)
 		for _,character in ipairs(characters) do
 			if character ~= playerCharacter then
 				if setsFiltered[character] then
+					local name = character;
 					local characterInfo = GetCharacterInfo(character);
-					local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-					local name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+					end
 		
 					info.text = name;
 					info.hasArrow, info.menuList = true, character;
@@ -5375,7 +5385,11 @@ function BtWLoadoutsSetsScrollFrame_Update()
 				-- local classColor = C_ClassColor.GetClassColor(characterInfo.class);
 				-- name = format("%s |cFFD5D5D5(%s|cFFD5D5D5 - %s)|r", item.name, classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
 				
-				name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
+				if characterInfo then
+					name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
+				else
+					name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, item.character);
+				end
 				-- button.name:SetText(format("%s |cFFD5D5D5(%s)|r", item.name, item.character));
 			else
 				name = item.name;
@@ -5582,9 +5596,12 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 	local character = realm .. "-" .. name;
 	if setsFiltered[character] then
 		local isCollapsed = collapsed[character] and true or false;
+		local name = character;
 		local characterInfo = GetCharacterInfo(character);
-		local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-		local name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+		if characterInfo then
+			local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+			name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+		end
 		setScrollItems[#setScrollItems+1] = {
 			id = character,
 			isHeader = true,
@@ -5612,9 +5629,12 @@ local function SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
 		if character ~= playerCharacter then
 			if setsFiltered[character] then
 				local isCollapsed = collapsed[character] and true or false;
+				local name = character;
 				local characterInfo = GetCharacterInfo(character);
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				local name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+					name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+				end
 				setScrollItems[#setScrollItems+1] = {
 					id = character,
 					isHeader = true,
