@@ -2920,7 +2920,7 @@ local sortedActiveConditions = {};
 local conditionProfilesDropDown = CreateFrame("FRAME", "BtWLoadoutsConditionProfilesDropDown", UIParent, "UIDropDownMenuTemplate");
 local function ConditionProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	activeConditionSelection = arg1;
-	UIDropDownMenu_SetText(conditionProfilesDropDown, arg1.name);
+	UIDropDownMenu_SetText(conditionProfilesDropDown, arg1.condition.name);
 end
 local function ConditionProfilesDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
