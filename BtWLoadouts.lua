@@ -5282,7 +5282,7 @@ local function ProfilesDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 	
 	local set = tab.set;
-	local selected = set and set.profileID;
+	local selected = set and set.profileSet;
 
     if (level or 1) == 1 then
         info.text = NONE;
