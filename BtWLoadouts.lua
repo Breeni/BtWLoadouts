@@ -2444,18 +2444,116 @@ local raidInfo = {
 };
 -- List of bosses within an instance
 local instanceBosses = {
-	[2164] = {
-		2352,
-		2347,
-		2353,
-		2354,
-		2351,
-		2359,
-		2349,
-		2361,
-	}
+	[1763] = { -- Atal'Dazar
+		2082, -- Priestess Alun'za
+		2036, -- Vol'kaal
+		2083, -- Rezan
+		2030, -- Yazma
+	},
+	[1754] = { -- Freehold
+		2102, -- Skycap'n Kragg
+		2093, -- Council o' Captains
+		2094, -- Ring of Booty
+		2095, -- Harlan Sweete
+	},
+	[1762] = { -- Kings' Rest
+		2165, -- The Golden Serpent
+		2171, -- Mchimba the Embalmer
+		2170, -- The Council of Tribes
+		2172, -- Dazar, The First King
+	},
+	[1864] = { -- Shrine of the Storm
+		2153, -- Aqu'sirr
+		2154, -- Tidesage Council
+		2155, -- Lord Stormsong
+		2156, -- Vol'zith the Whisperer
+	},
+	[1822] = { -- Siege of Boralus
+		2132, -- Chopper Redhook
+		2133, -- Sergeant Bainbridge
+		2173, -- Dread Captain Lockwood
+		2134, -- Hadal Darkfathom
+		2140, -- Viq'Goth
+	},
+	[1877] = { -- Temple of Sethraliss
+		2142, -- Adderis and Aspix
+		2143, -- Merektha
+		2144, -- Galvazzt
+		2145, -- Avatar of Sethraliss
+	},
+	[1594] = { -- The MOTHERLODE!!
+		2109, -- Coin-Operated Crowd Pummeler
+		2114, -- Azerokk
+		2115, -- Rixxa Fluxflame
+		2116, -- Mogul Razdunk
+	},
+	[1841] = { -- The Underrot
+		2157, -- Elder Leaxa
+		2131, -- Cragmaw the Infested
+		2130, -- Sporecaller Zancha
+		2158, -- Unbound Abomination
+	},
+	[1771] = { -- Tol Dagor
+		2097, -- The Sand Queen
+		2098, -- Jes Howlis
+		2099, -- Knight Captain Valyri
+		2096, -- Overseer Korgus
+	},
+	[1862] = { -- Waycrest Manor
+		2125, -- Heartsbane Triad
+		2126, -- Soulbound Goliath
+		2127, -- Raal the Gluttonous
+		2128, -- Lord and Lady Waycrest
+		2129, -- Gorak Tul
+	},
+	[2097] = { -- Operation: Mechagon
+		2357, -- King Gobbamak
+		2358, -- Gunker
+		2360, -- Trixie & Naeno
+		2355, -- HK-8 Aerial Oppression Unit
+		2336, -- Tussle Tonks
+		2339, -- K.U.-J.0.
+		2348, -- Machinist's Garden
+		2331, -- King Mechagon
+	},
+
+	[1861] = { -- Uldir
+		2168, -- Taloc
+		2167, -- MOTHER
+		2146, -- Fetid Devourer
+		2169, -- Zek'voz, Herald of N'zoth
+		2166, -- Vectis
+		2195, -- Zul, Reborn
+		2194, -- Mythrax the Unraveler
+		2147, -- G'huun
+	},
+	[2070] = { -- Battle of Dazar'alor
+		2333, -- Champion of the Light
+		2323, -- Jadefire Masters
+		2325, -- Grong, the Jungle Lord
+		2342, -- Opulence
+		2330, -- Conclave of the Chosen
+		2335, -- King Rastakhan
+		2334, -- High Tinker Mekkatorque
+		2337, -- Stormwall Blockade
+		2343, -- Lady Jaina Proudmoore
+	},
+	[2096] = { -- Crucible of Storms
+		2328, -- The Restless Cabal
+		2332, -- Uu'nat, Harbinger of the Void
+	},
+	[2164] = { -- The Eternal Palace
+		2352, -- Abyssal Commander Sivara
+		2347, -- Blackwater Behemoth
+		2353, -- Radiance of Azshara
+		2354, -- Lady Ashvane
+		2351, -- Orgozoa
+		2359, -- The Queen's Court
+		2349, -- Za'qul, Harbinger of Ny'alotha
+		2361, -- Queen Azshara
+	},
 };
--- List of indentifiying info for a boss, uiMapID or areaID
+-- List of indentifiying info for a boss, usually uiMapID or areaID
 local bossData = {
 	[2352] = {
 		uiMapID = 1512,
@@ -2481,14 +2579,50 @@ local bossData = {
 	[2361] = {
 		uiMapID = 1520,
 	},
+	-- Freehold
+	[2102] = { -- Skycap'n Kragg
+		areaID = 9640,
+	},
+	[2093] = { -- Council o' Captains
+		areaID = 10039,
+	},
+	[2094] = { -- Ring of Booty
+		areaID = 9639,
+	},
+	[2095] = { -- Harlan Sweete
+		areaID = 10040,
+	},
+
+	--Shrine of the Storm
+	[2153] = { -- Aqu'sirr
+		areaID = 9964,
+	},
+	[2154] = { -- Tidesage Council
+		areaID = 9963,
+	},
+	[2155] = { -- Lord Stormsong
+		areaID = 9964,
+	},
+	[2156] = { -- Vol'zith the Whisperer
+		areaID = 9964,
+	},
+};
+-- A map of npc ids to boss ids
+local npcIDToBossID = {
+	-- Shrine of the Storm
+	[134056] = 2153,
+	[134063] = 2154,
+	[134058] = 2154,
+	[134060] = 2155,
+	[134069] = 2156,
 };
 local areaNameToIDMap = {};
 _G['BtWLoadoutsAreaMap'] = areaNameToIDMap; -- @TODO Remove
-local InstanceAreaIDToJournalEncounterID = {
+local InstanceAreaIDToBossID = {
 	[1822] = {
 		[9984] = 2132,
 	},
-	[2097] = {
+	[2097] = { -- Operation: Mechagon
 		[11389] = 2358, -- Gunker
 		[11388] = 2357, -- King Gobbamak
 		[11387] = 2360, -- Trixie & Naeno
@@ -2498,10 +2632,82 @@ local InstanceAreaIDToJournalEncounterID = {
 		-- [] = 2348, -- Machinist's Garden
 		-- [] = 2331, -- King Mechagon
 	},
+	[1754] = { -- Freehold
+		[9640] = 2102, -- Skycap'n Kragg
+		[10039] = 2093, -- Council o' Captains
+		[9639] = 2094, -- Ring of Booty
+		[10040] = 2095, -- Harlan Sweete
+	},
 };
-local uiMapIDToJournalEncounterID = {
-	[1520] = 2361,
+local uiMapIDToBossID = {
+	-- Operation: Mechagon
+	[1491] = 2336, -- Tussle Tonks
+	[1494] = 2339, -- K.U.-J.0.
+
+	-- The Eternal Palace
+	[1512] = 2352, -- Abyssal Commander Sivara
+	[1514] = 2347, -- Blackwater Behemoth
+	[1517] = 2351, -- Orgozoa
+	[1518] = 2359, -- The Queen's Court
+	[1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
+	[1520] = 2361, -- Queen Azshara
 };
+
+local function GetAffixesName(affixesID)
+	local names = {};
+	local icons = {};
+	while affixesID > 0 do
+		local affixID = bit.band(affixesID, 0xFF);
+		affixesID = bit.rshift(affixesID, 8);
+		
+		local name, _, icon = C_ChallengeMode.GetAffixInfo(affixID);
+		names[#names+1] = name;
+		icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
+	end
+
+	return affixesID, table.concat(names, " "), table.concat(icons, ", ");
+end
+local function GetAffixesInfo(...)
+	local id = 0;
+	local names = {};
+	local icons = {};
+	for i=1,select('#', ...) do
+		local affixID = select(i, ...);
+		local name, _, icon = C_ChallengeMode.GetAffixInfo(affixID);
+
+		id = bit.bor(bit.rshift(id, 8), bit.lshift(affixID, 24));
+		names[#names+1] = name;
+		icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
+	end
+	return {
+		id = id,
+		name = table.concat(names, ", "),
+		fullName = table.concat(icons, ", "),
+	};
+end
+local affixRotation = {
+	GetAffixesInfo(9, 5, 3, 119),
+	GetAffixesInfo(10, 7, 2, 119),
+	GetAffixesInfo(9, 11, 4, 119),
+
+	-- GetAffixesInfo(10, 11, 4, 119),
+	-- GetAffixesInfo(9, 11, 4, 119),
+	-- GetAffixesInfo(10, 11, 4, 119),
+	-- GetAffixesInfo(9, 11, 4, 119),
+	-- GetAffixesInfo(10, 11, 4, 119),
+	-- GetAffixesInfo(9, 11, 4, 119),
+	-- GetAffixesInfo(10, 11, 4, 119),
+	-- GetAffixesInfo(9, 11, 4, 119),
+	-- GetAffixesInfo(10, 11, 4, 119),
+	-- GetAffixesInfo(9, 11, 4, 119),
+	-- GetAffixesInfo(10, 11, 4, 119),
+	-- GetAffixesInfo(9, 11, 4, 119),
+	-- GetAffixesInfo(10, 11, 4, 119),
+	-- GetAffixesInfo(9, 11, 4, 119),
+	-- GetAffixesInfo(10, 11, 4, 119),
+};
+_G['BtWLoadoutsAffixRotation'] = affixRotation; -- @TODO Remove
+
 
 local CONDITION_TYPE_WORLD = "none";
 local CONDITION_TYPE_DUNGEONS = "party";
@@ -2671,10 +2877,10 @@ local function IsChangingSpec()
 end
 local function UpdateAreaMap()
 	local instanceID = select(8, GetInstanceInfo());
-	if instanceID and areaBosses[instanceID] then
+	if instanceID and InstanceAreaIDToBossID[instanceID] then
 		areaNameToIDMap[instanceID] = areaNameToIDMap[instanceID] or {};
 		local map = areaNameToIDMap[instanceID];
-		for areaID in pairs(areaBosses[instanceID]) do
+		for areaID in pairs(InstanceAreaIDToBossID[instanceID]) do
 			local areaName = C_Map.GetAreaInfo(areaID);
 			if areaName then
 				map[areaName] = areaID;
@@ -2760,7 +2966,9 @@ end);
 
 local setsFiltered = {};
 local activeConditionSelection;
+local previousActiveConditions = {}; -- List of the previously active conditions
 local activeConditions = {}; -- List of the currently active conditions profiles
+local sortedActiveConditions = {};
 local conditionProfilesDropDown = CreateFrame("FRAME", "BtWLoadoutsConditionProfilesDropDown", UIParent, "UIDropDownMenuTemplate");
 local function ConditionProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	activeConditionSelection = arg1;
@@ -2770,16 +2978,8 @@ local function ConditionProfilesDropDownInit(self, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
 
     if (level or 1) == 1 then
-        wipe(setsFiltered);
-		for subset in pairs(activeConditions) do
-			setsFiltered[#setsFiltered+1] = subset;
-		end
-        sort(setsFiltered, function (a,b)
-            return a.name < b.name;
-		end)
-		
-		for _,set in ipairs(setsFiltered) do
-            info.text = set.name;
+		for _,set in ipairs(sortedActiveConditions) do
+            info.text = set.condition.name;
             info.arg1 = set;
             info.func = ConditionProfilesDropDown_OnClick;
             info.checked = activeConditionSelection == set;
@@ -2806,7 +3006,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTMULTIACTIVATE"] = {
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self, data)
-		data.func(activeConditions[activeConditionSelection]);
+		data.func(activeConditionSelection.profile);
 	end,
 	timeout = 0,
 	hideOnEscape = 1
@@ -4017,7 +4217,8 @@ local conditionMap = {
 	instanceType = {},
 	difficultyID = {},
 	instanceID = {},
-	subzone = {},
+	bossID = {},
+	affixesID = {},
 };
 _G['BtWLoadoutsConditionMap'] = conditionMap; --@TODO Remove
 local function ActivateConditionMap(map, key)
@@ -4055,13 +4256,15 @@ local function RemoveConditionFromMap(set)
 	end
 end
 local function IsConditionActive(condition)
+	local matchCount = 0;
 	for k,v in pairs(condition.map) do
 		if not conditionMap[k][v][condition] then
 			return false;
 		end
+		matchCount = matchCount + 1;
 	end
 
-	return true;
+	return matchCount;
 end
 local function AddConditionSet()
 	local name = L["New Condition Set"];
@@ -4099,72 +4302,147 @@ local function DeleteConditionSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
-local previousInstanceInfo = {};
-_G['BtWLoadoutsPreviousInstanceInfo'] = conditionMap; --@TODO Remove
+local previousConditionInfo = {};
+_G['BtWLoadoutsPreviousConditionInfo'] = previousConditionInfo; --@TODO Remove
 local function UpdateConditionsForInstance()
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
-	if previousInstanceInfo.instanceType ~= instanceType then
-		DeactivateConditionMap(conditionMap.instanceType, previousInstanceInfo.instanceType);
+	if previousConditionInfo.instanceType ~= instanceType then
+		DeactivateConditionMap(conditionMap.instanceType, previousConditionInfo.instanceType);
 		ActivateConditionMap(conditionMap.instanceType, instanceType);
-		previousInstanceInfo.instanceType = instanceType;
+		previousConditionInfo.instanceType = instanceType;
 	end
-	if previousInstanceInfo.difficultyID ~= difficultyID then
-		DeactivateConditionMap(conditionMap.difficultyID, previousInstanceInfo.difficultyID);
+	if previousConditionInfo.difficultyID ~= difficultyID then
+		DeactivateConditionMap(conditionMap.difficultyID, previousConditionInfo.difficultyID);
 		ActivateConditionMap(conditionMap.difficultyID, difficultyID);
-		previousInstanceInfo.difficultyID = difficultyID;
+		previousConditionInfo.difficultyID = difficultyID;
 	end
-	if previousInstanceInfo.instanceID ~= instanceID then
-		DeactivateConditionMap(conditionMap.instanceID, previousInstanceInfo.instanceID);
+	if previousConditionInfo.instanceID ~= instanceID then
+		DeactivateConditionMap(conditionMap.instanceID, previousConditionInfo.instanceID);
 		ActivateConditionMap(conditionMap.instanceID, instanceID);
-		previousInstanceInfo.instanceID = instanceID;
+		previousConditionInfo.instanceID = instanceID;
 	end
 end
-local previousSubZone;
-local function UpdateConditionsForSubZone()
-	local subzone = GetSubZoneText();
-	if previousSubZone ~= subzone then
-		DeactivateConditionMap(conditionMap.subzone, previousSubZone);
-		ActivateConditionMap(conditionMap.subzone, subzone);
-		previousSubZone = subzone;
+local function UpdateConditionsForBoss(unitId)
+	local bossID = previousConditionInfo.bossID;
+	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
+	if instanceType == "party" or instanceType == "raid" then
+		local uiMapID = C_Map.GetBestMapForUnit("player");
+		if uiMapID then
+			bossID = uiMapIDToBossID[uiMapID] or bossID;
+		end
+		local areaID = instanceID and areaNameToIDMap[instanceID] and areaNameToIDMap[instanceID][GetSubZoneText()] or nil;
+		if areaID then
+			bossID = InstanceAreaIDToBossID[instanceID][areaID] or bossID;
+		end
+		if unitId then
+			local unitGUID = UnitGUID(unitId);
+			if unitGUID and not UnitIsDead(unitId) then
+				local type, zero, serverId, instanceId, zone_uid, npcId, spawn_uid = strsplit("-", unitGUID);
+				if type == "Creature" and tonumber(npcId) then
+					bossID = npcIDToBossID[tonumber(npcId)] or bossID;
+				end
+			end
+		end
 	end
+
+	if previousConditionInfo.bossID ~= bossID then
+		DeactivateConditionMap(conditionMap.bossID, previousConditionInfo.bossID);
+		ActivateConditionMap(conditionMap.bossID, bossID);
+		previousConditionInfo.bossID = bossID;
+	end
+end
+local function UpdateConditionsForAffixes()
+	local affixesID;
+	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
+	if difficultyID == 23 then -- In a mythic dungeon (not M+)
+		local affixes = C_MythicPlus.GetCurrentAffixes();
+		if affixes then
+			affixesID = GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id, affixes[4].id).id;
+		end
+	end
+
+	if previousConditionInfo.affixesID ~= affixesID then
+		DeactivateConditionMap(conditionMap.affixesID, previousConditionInfo.affixesID);
+		ActivateConditionMap(conditionMap.affixesID, affixesID);
+		previousConditionInfo.affixesID = affixesID;
+	end
+end
+local function CompareConditions(a,b)
+	for k,v in pairs(a) do
+		if b[k] ~= v then
+			return false;
+		end
+	end
+	for k,v in pairs(b) do
+		if a[k] ~= v then
+			return false;
+		end
+	end
+	return true;
 end
 -- Loops through conditions and checks if they are active
+local conditionMatchCount = {};
 local function TriggerConditions()
+	-- In a Mythic Plus cant cant change anything anyway
+	if select(8,GetInstanceInfo()) == 8 then
+		return;
+	end
+	
 	-- Generally speaking people wont want a popup asking to switch stuff if they are editing things
 	if BtWLoadoutsFrame:IsShown() or target.active then
 		return;
 	end
 
+	previousActiveConditions,activeConditions = activeConditions,previousActiveConditions;
 	wipe(activeConditions);
+	wipe(conditionMatchCount);
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
 		if type(set) == "table" and set.profileSet ~= nil then
 			local profile = GetProfile(set.profileSet);
-			local valid = select(5, IsProfileValid(profile));
-			if valid and IsConditionActive(set) then
-				activeConditions[set] = profile;
+			if select(5, IsProfileValid(profile)) then
+				local match = IsConditionActive(set);
+				if match then
+					activeConditions[profile] = set;
+					conditionMatchCount[profile] = (conditionMatchCount[profile] or 0) + match;
+				end
 			end
 		end
 	end
 
-	local firstSet,firstProfile = next(activeConditions);
-	if firstSet ~= nil then
-		local second = next(activeConditions, firstSet);
-		if second == nil then
-			if not IsProfileActive(firstProfile) then
-				StaticPopup_Hide("BTWLOADOUTS_REQUESTMULTIACTIVATE");
-				StaticPopup_Show("BTWLOADOUTS_REQUESTACTIVATE", firstSet.name, nil, {
-					set = firstProfile,
-					func = ActivateProfile,
-				});
-			end
-		else
-			activeConditionSelection = firstSet;
-			UIDropDownMenu_SetText(conditionProfilesDropDown, firstSet.name);
-			StaticPopup_Hide("BTWLOADOUTS_REQUESTACTIVATE");
-			StaticPopup_Show("BTWLOADOUTS_REQUESTMULTIACTIVATE", nil, nil, {
+	if CompareConditions(previousActiveConditions, activeConditions) then
+		return
+	end
+
+	wipe(sortedActiveConditions);
+	for profile,condition in pairs(activeConditions) do
+		sortedActiveConditions[#sortedActiveConditions+1] = {
+			profile = profile,
+			condition = condition,
+			match = conditionMatchCount[profile],
+		};
+	end
+
+	if #sortedActiveConditions == 0 then
+		return;
+	elseif #sortedActiveConditions == 1 then
+		if not IsProfileActive(sortedActiveConditions[1].profile) then
+			StaticPopup_Hide("BTWLOADOUTS_REQUESTMULTIACTIVATE");
+			StaticPopup_Show("BTWLOADOUTS_REQUESTACTIVATE", sortedActiveConditions[1].condition.name, nil, {
+				set = sortedActiveConditions[1].profile,
 				func = ActivateProfile,
-			}, conditionProfilesDropDown);
+			});
 		end
+	else
+		sort(sortedActiveConditions, function(a,b)
+			return a.match > b.match;
+		end);
+
+		activeConditionSelection = sortedActiveConditions[1];
+		UIDropDownMenu_SetText(conditionProfilesDropDown, activeConditionSelection.condition.name);
+		StaticPopup_Hide("BTWLOADOUTS_REQUESTACTIVATE");
+		StaticPopup_Show("BTWLOADOUTS_REQUESTMULTIACTIVATE", nil, nil, {
+			func = ActivateProfile,
+		}, conditionProfilesDropDown);
 	end
 end
 
@@ -5186,6 +5464,7 @@ local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
     local set = tab.set;
 
 	set.instanceID = arg1;
+	set.bossID = nil;
 	if set.difficultyID ~= nil then
 		local supportsDifficulty = (set.instanceID == nil);
 		if not supportsDifficulty then
@@ -5271,6 +5550,11 @@ local function DifficultyDropDown_OnClick(self, arg1, arg2, checked)
     local set = tab.set;
 
 	set.difficultyID = arg1;
+	if arg1 == 8 then
+		set.bossID = nil;
+	else
+		set.affixesID = nil;
+	end
 
     BtWLoadoutsFrame:Update();
 end
@@ -5324,6 +5608,76 @@ local function DifficultyDropDownInit(self, level, menuList)
 				info.checked = selected == difficultyID;
 				UIDropDownMenu_AddButton(info, level);
 			end
+		end
+	end
+end
+
+
+local function BossDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
+    local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+	set.bossID = arg1;
+
+    BtWLoadoutsFrame:Update();
+end
+local function BossDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+	
+	local set = self:GetParent().set;
+	local instanceID = set and set.instanceID;
+	local selected = set and set.bossID;
+
+	if (level or 1) == 1 then
+		info.text = L["Any"];
+		info.func = BossDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		if instanceBosses[instanceID] then
+			for _,bossID in ipairs(instanceBosses[instanceID]) do
+				info.text = EJ_GetEncounterInfo(bossID);
+				info.arg1 = bossID;
+				info.func = BossDropDown_OnClick;
+				info.checked = selected == bossID;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+	end
+end
+
+local function AffixesDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
+    local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+	set.affixesID = arg1;
+
+    BtWLoadoutsFrame:Update();
+end
+local function AffixesDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+	
+	local set = self:GetParent().set;
+	local selected = set and set.affixesID;
+
+	if (level or 1) == 1 then
+		info.text = L["Any"];
+		info.func = AffixesDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		for _,affixes in ipairs(affixRotation) do
+			info.text = affixes.fullName;
+			info.arg1 = affixes.id;
+			info.func = AffixesDropDown_OnClick;
+			info.checked = selected == affixes.id;
+			UIDropDownMenu_AddButton(info, level);
 		end
 	end
 end
@@ -6307,13 +6661,17 @@ local function ConditionsTabUpdate(self)
 			set.mapDifficultyID = set.difficultyID;
 		end
 
-		if set.map.instanceType ~= set.type or set.map.instanceID ~= set.instanceID or set.map.difficultyID ~= set.mapDifficultyID or set.mapProfileSet ~= set.profileSet then
+		if set.map.instanceType ~= set.type or set.map.instanceID ~= set.instanceID or set.map.difficultyID ~= set.mapDifficultyID or set.map.bossID ~= set.bossID or set.map.affixesID ~= set.affixesID or set.mapProfileSet ~= set.profileSet then
 			RemoveConditionFromMap(set);
 
 			set.mapProfileSet = set.profileSet; -- Used to check if we should handle the condition
+
+			wipe(set.map);
 			set.map.instanceType = set.type;
 			set.map.instanceID = set.instanceID;
 			set.map.difficultyID = set.mapDifficultyID;
+			set.map.bossID = set.bossID;
+			set.map.affixesID = set.affixesID;
 
 			AddConditionToMap(set);
 		end
@@ -6325,7 +6683,7 @@ local function ConditionsTabUpdate(self)
 		self.ConditionTypeDropDown.Button:SetEnabled(true);
 		self.InstanceDropDown.Button:SetEnabled(true);
 		self.DifficultyDropDown.Button:SetEnabled(true);
-
+		
 		if set.profileSet == nil then
 			UIDropDownMenu_SetText(self.ProfileDropDown, NONE);
 		else
@@ -6345,6 +6703,32 @@ local function ConditionsTabUpdate(self)
 			UIDropDownMenu_SetText(self.DifficultyDropDown, L["Any"]);
 		else
 			UIDropDownMenu_SetText(self.DifficultyDropDown, GetDifficultyInfo(set.difficultyID));
+		end
+
+		-- With no instance selected, no bosses for that instance, or when M+ is selected, hide the boss drop down
+		if set.instanceID == nil or instanceBosses[set.instanceID] == nil or set.difficultyID == 8 then
+			self.BossDropDown:SetShown(false);
+		else
+			self.BossDropDown:SetShown(true);
+			self.BossDropDown.Button:SetEnabled(true);
+
+			if set.bossID == nil then
+				UIDropDownMenu_SetText(self.BossDropDown, L["Any"]);
+			else
+				UIDropDownMenu_SetText(self.BossDropDown, EJ_GetEncounterInfo(set.bossID));
+			end
+		end
+		if set.difficultyID ~= 8 then
+			self.AffixesDropDown:SetShown(false);
+		else
+			self.AffixesDropDown:SetShown(true);
+			self.AffixesDropDown.Button:SetEnabled(true);
+
+			if set.affixesID == nil then
+				UIDropDownMenu_SetText(self.AffixesDropDown, L["Any"]);
+			else
+				UIDropDownMenu_SetText(self.AffixesDropDown, select(3, GetAffixesName(set.affixesID)));
+			end
 		end
 
 		local activateButton = self:GetParent().ActivateButton;
@@ -6367,6 +6751,8 @@ local function ConditionsTabUpdate(self)
 		self.ConditionTypeDropDown.Button:SetEnabled(false);
 		self.InstanceDropDown.Button:SetEnabled(false);
 		self.DifficultyDropDown.Button:SetEnabled(false);
+		self.BossDropDown.Button:SetEnabled(false);
+		self.AffixesDropDown:Hide();
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);
@@ -6464,21 +6850,29 @@ function BtWLoadoutsFrameMixin:OnLoad()
 		verticalAnchorY = 0,
 	};
 	
-    UIDropDownMenu_SetWidth(self.Conditions.ProfileDropDown, 300);
+    UIDropDownMenu_SetWidth(self.Conditions.ProfileDropDown, 400);
     UIDropDownMenu_Initialize(self.Conditions.ProfileDropDown, ProfilesDropDownInit);
     UIDropDownMenu_JustifyText(self.Conditions.ProfileDropDown, "LEFT");
 	
-    UIDropDownMenu_SetWidth(self.Conditions.ConditionTypeDropDown, 300);
+    UIDropDownMenu_SetWidth(self.Conditions.ConditionTypeDropDown, 400);
     UIDropDownMenu_Initialize(self.Conditions.ConditionTypeDropDown, ConditionTypeDropDownInit);
     UIDropDownMenu_JustifyText(self.Conditions.ConditionTypeDropDown, "LEFT");
 	
-    UIDropDownMenu_SetWidth(self.Conditions.InstanceDropDown, 200);
+    UIDropDownMenu_SetWidth(self.Conditions.InstanceDropDown, 175);
     UIDropDownMenu_Initialize(self.Conditions.InstanceDropDown, InstanceDropDownInit);
 	UIDropDownMenu_JustifyText(self.Conditions.InstanceDropDown, "LEFT");
 	
-    UIDropDownMenu_SetWidth(self.Conditions.DifficultyDropDown, 200);
+    UIDropDownMenu_SetWidth(self.Conditions.DifficultyDropDown, 175);
     UIDropDownMenu_Initialize(self.Conditions.DifficultyDropDown, DifficultyDropDownInit);
 	UIDropDownMenu_JustifyText(self.Conditions.DifficultyDropDown, "LEFT");
+	
+    UIDropDownMenu_SetWidth(self.Conditions.BossDropDown, 400);
+    UIDropDownMenu_Initialize(self.Conditions.BossDropDown, BossDropDownInit);
+	UIDropDownMenu_JustifyText(self.Conditions.BossDropDown, "LEFT");
+	
+    UIDropDownMenu_SetWidth(self.Conditions.AffixesDropDown, 400);
+    UIDropDownMenu_Initialize(self.Conditions.AffixesDropDown, AffixesDropDownInit);
+	UIDropDownMenu_JustifyText(self.Conditions.AffixesDropDown, "LEFT");
 end
 function BtWLoadoutsFrameMixin:OnDragStart()
     self:StartMoving();
@@ -6789,11 +7183,17 @@ function BtWLoadoutsFrameMixin:OnNameChanged(text)
 		self:Update();
 	end
 end
+function BtWLoadoutsFrameMixin:OnShow()
+	StaticPopup_Hide("BTWLOADOUTS_REQUESTACTIVATE");
+	StaticPopup_Hide("BTWLOADOUTS_REQUESTMULTIACTIVATE");
+end
 function BtWLoadoutsFrameMixin:OnHide()
 	-- When hiding the main window we are going to assume that something has dramatically changed and completely redo everything
-	wipe(previousInstanceInfo);
-	previousSubZone = nil
+	wipe(previousConditionInfo);
+	wipe(activeConditions);
 	UpdateConditionsForInstance();
+	UpdateConditionsForBoss();
+	UpdateConditionsForAffixes();
     TriggerConditions();
 end
 
@@ -7183,7 +7583,7 @@ SlashCmdList["BTWLOADOUTS"] = function(msg)
             BtWLoadoutsFrame:Show()
         end
     end
-end 
+end
 
 local frame = CreateFrame("Frame");
 frame:SetScript("OnEvent", function (self, event, ...)
@@ -7358,6 +7758,8 @@ function frame:PLAYER_ENTERING_WORLD()
 	-- Run conditions for instance info
 	do
 		UpdateConditionsForInstance();
+		UpdateConditionsForBoss();
+		UpdateConditionsForAffixes();
 		TriggerConditions();
 	end
 end
@@ -7427,11 +7829,31 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
 		BtWLoadoutsSpecInfo[specID] = spec;
 	end
 end
+function frame:ZONE_CHANGED(...)
+	UpdateConditionsForBoss();
+	TriggerConditions();
+end
+function frame:UPDATE_MOUSEOVER_UNIT(...)
+	UpdateConditionsForBoss("mouseover");
+	TriggerConditions();
+end
+function frame:NAME_PLATE_UNIT_ADDED(...)
+	UpdateConditionsForBoss(...);
+	TriggerConditions();
+end
+function frame:PLAYER_TARGET_CHANGED(...)
+	UpdateConditionsForBoss("player");
+	TriggerConditions();
+end
 frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");
 frame:RegisterEvent("PLAYER_ENTERING_WORLD");
 frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
 frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+frame:RegisterEvent("ZONE_CHANGED");
+frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
+frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
+frame:RegisterEvent("PLAYER_TARGET_CHANGED");
 
 eventHandler:SetScript("OnEvent", function (self, event, ...)
     self[event](self, ...);

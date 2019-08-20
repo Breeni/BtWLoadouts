@@ -1524,47 +1524,18 @@
 							<Anchor point="LEFT" relativeKey="$parent.InstanceDropDown" relativePoint="RIGHT" x="0" y="0"/>
 						</Anchors>
 					</Frame>
-					<!-- <EditBox parentKey="SubZoneEditBox" letters="50" autoFocus="false" inherits="InputBoxTemplate">
-						<Size x="0" y="22"/>
+					<Frame parentKey="BossDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.NameTitle" relativePoint="BOTTOMLEFT" x="20" y="-10"/>
-							<Anchor point="RIGHT" x="-10" y="0"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-							<OnTextChanged>
-								BtWLoadoutsFrame:Update();
-							</OnTextChanged>
-							<OnEnterPressed function="EditBox_ClearFocus"/>
-						</Scripts>
-					</EditBox>
-					<Frame parentKey="Affix1DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					</Frame>
+					<Frame parentKey="AffixesDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
 						<Scripts>
 						</Scripts>
 					</Frame>
-					<Frame parentKey="Affix2DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
-						</Anchors>
-						<Scripts>
-						</Scripts>
-					</Frame>
-					<Frame parentKey="Affix3DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
-						</Anchors>
-						<Scripts>
-						</Scripts>
-					</Frame>
-					<Frame parentKey="Affix4DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
-						</Anchors>
-						<Scripts>
-						</Scripts>
-					</Frame> -->
 				</Frames>
 			</Frame>
 			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_NEW_SET">
@@ -1686,6 +1657,7 @@
 			<OnMouseUp method="OnMouseUp"/>
 			<OnEnter method="OnEnter"/>
 			<OnLeave method="OnLeave"/>
+			<OnShow method="OnShow"/>
 			<OnHide method="OnHide"/>
 		</Scripts>
 	</Frame>
