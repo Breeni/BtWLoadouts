@@ -2640,25 +2640,19 @@ local function GetAffixesInfo(...)
 	};
 end
 local affixRotation = {
-	GetAffixesInfo(9, 5, 3, 119),
-	GetAffixesInfo(10, 7, 2, 119),
-	GetAffixesInfo(9, 11, 4, 119),
-
-	-- GetAffixesInfo(10, 11, 4, 119),
-	-- GetAffixesInfo(9, 11, 4, 119),
-	-- GetAffixesInfo(10, 11, 4, 119),
-	-- GetAffixesInfo(9, 11, 4, 119),
-	-- GetAffixesInfo(10, 11, 4, 119),
-	-- GetAffixesInfo(9, 11, 4, 119),
-	-- GetAffixesInfo(10, 11, 4, 119),
-	-- GetAffixesInfo(9, 11, 4, 119),
-	-- GetAffixesInfo(10, 11, 4, 119),
-	-- GetAffixesInfo(9, 11, 4, 119),
-	-- GetAffixesInfo(10, 11, 4, 119),
-	-- GetAffixesInfo(9, 11, 4, 119),
-	-- GetAffixesInfo(10, 11, 4, 119),
-	-- GetAffixesInfo(9, 11, 4, 119),
-	-- GetAffixesInfo(10, 11, 4, 119),
+	GetAffixesInfo(10, 7, 12, 119), -- Fortified, 	Bolstering, Grievous, 	Beguiling
+	GetAffixesInfo(9, 6, 13, 119), 	-- Tyrannical, 	Raging, 	Explosive, 	Beguiling
+	GetAffixesInfo(10, 8, 12, 119), -- Fortified, 	Sanguine, 	Grievous, 	Beguiling
+	GetAffixesInfo(9, 5, 3, 119), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Beguiling
+	GetAffixesInfo(10, 7, 2, 119), 	-- Fortified, 	Bolstering, Skittish, 	Beguiling
+	GetAffixesInfo(9, 11, 4, 119), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Beguiling
+	GetAffixesInfo(10, 8, 14, 119),	-- Fortified, 	Sanguine, 	Quaking, 	Beguiling
+	
+	-- GetAffixesInfo(9, 11, 2, 119),
+	-- GetAffixesInfo(10, 8, 4, 119),
+	-- GetAffixesInfo(9, 11, 3, 119),
+	-- GetAffixesInfo(10, 5, 13, 119),
+	-- GetAffixesInfo(9, 6, 14, 119),
 };
 _G['BtWLoadoutsAffixRotation'] = affixRotation; -- @TODO Remove
 
