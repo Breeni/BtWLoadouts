@@ -3527,6 +3527,7 @@ local function IsEssenceSetActive(set)
     return true;
 end
 local function ActivateEssenceSet(set)
+	local complete = true;
     for milestoneID,essenceID in pairs(set.essences) do
         local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
         if info.canUnlock then
@@ -3534,10 +3535,19 @@ local function ActivateEssenceSet(set)
             info.unlocked = true;
         end
 
-        if info.unlocked then
+		if info.unlocked then
+			if C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+				complete = false;
+			end
             C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
         end
-    end
+	end
+	-- If its taken us 5 attempts to equip a set its probably not going to happen
+	if target.pass == 5 then
+		return true;
+	end
+
+	return complete;
 end
 local function AddEssenceSet()
     local role = select(5,GetSpecializationInfo(GetSpecialization()));
@@ -3661,8 +3671,6 @@ local function ActivateEquipmentSet(set)
         firstEquipped = INVSLOT_MAINHAND
         lastEquipped = INVSLOT_RANGED 
 	end
-
-	target.pass = (target.pass or 0) + 1;
 	
 	for inventorySlotId = firstEquipped, lastEquipped do
 		if not ignored[inventorySlotId] then
@@ -4070,14 +4078,13 @@ local function IsProfileActive(set)
 end
 local function ContinueActivateProfile()
     local set = target;
+	set.dirty = false;
 
 	if InCombatLockdown() then
-		set.dirty = false;
         return;
     end
 
 	if IsChangingSpec() then
-		set.dirty = false;
         return;
     end
 	
@@ -4111,27 +4118,27 @@ local function ContinueActivateProfile()
 	if talentSet and not IsTalentSetActive(talentSet) and PlayerNeedsTome() then
 		print("1");
 		RequestTome();
-		target.dirty = false;
 		return;
 	end
 
 	if pvpTalentSet and not IsPvPTalentSetActive(pvpTalentSet) and PlayerNeedsTome() then
 		print("2");
 		RequestTome();
-		target.dirty = false;
 		return;
 	end
 
 	if essencesSet and not IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
 		print("3");
 		RequestTome();
-		target.dirty = false;
 		return;
 	end
 
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME");
 	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
 
+	set.pass = (set.pass or 0) + 1;
+
+	local complete = true;
     if talentSet then
         ActivateTalentSet(talentSet);
     end
@@ -4141,7 +4148,10 @@ local function ContinueActivateProfile()
     end
 
     if essencesSet then
-        ActivateEssenceSet(essencesSet);
+		if not ActivateEssenceSet(essencesSet) then
+			complete = false;
+			set.dirty = true; -- Just run next frame
+		end
     end
 
 	local equipmentSet;
@@ -4151,13 +4161,14 @@ local function ContinueActivateProfile()
 
     if equipmentSet then
 		if not ActivateEquipmentSet(equipmentSet) then
-			target.dirty = false;
-			return;
+			complete = false;
 		end
     end
 
 	-- Done
-	CancelActivateProfile();
+	if complete then
+		CancelActivateProfile();
+	end
 end
 
 -- Maps condition flags to condition groups
