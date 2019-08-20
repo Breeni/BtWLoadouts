@@ -2553,68 +2553,22 @@ local instanceBosses = {
 		2361, -- Queen Azshara
 	},
 };
--- List of indentifiying info for a boss, usually uiMapID or areaID
-local bossData = {
-	[2352] = {
-		uiMapID = 1512,
-	},
-	[2347] = {
-		uiMapID = 1513,
-	},
-	[2347] = {
-		uiMapID = 1514,
-	},
-	[2353] = {
-		uiMapID = 1513,
-	},
-	[2351] = {
-		uiMapID = 1517,
-	},
-	[2359] = {
-		uiMapID = 1518,
-	},
-	[2349] = {
-		uiMapID = 1519,
-	},
-	[2361] = {
-		uiMapID = 1520,
-	},
-	-- Freehold
-	[2102] = { -- Skycap'n Kragg
-		areaID = 9640,
-	},
-	[2093] = { -- Council o' Captains
-		areaID = 10039,
-	},
-	[2094] = { -- Ring of Booty
-		areaID = 9639,
-	},
-	[2095] = { -- Harlan Sweete
-		areaID = 10040,
-	},
-
-	--Shrine of the Storm
-	[2153] = { -- Aqu'sirr
-		areaID = 9964,
-	},
-	[2154] = { -- Tidesage Council
-		areaID = 9963,
-	},
-	[2155] = { -- Lord Stormsong
-		areaID = 9964,
-	},
-	[2156] = { -- Vol'zith the Whisperer
-		areaID = 9964,
-	},
-};
--- A map of npc ids to boss ids
+-- A map of npc ids to boss ids, this might not be the bosses npc id, just something that signifies the boss
 local npcIDToBossID = {
 	-- Shrine of the Storm
-	[134056] = 2153,
-	[134063] = 2154,
-	[134058] = 2154,
-	[134060] = 2155,
-	[134069] = 2156,
+	[134056] = 2153, -- Aqu'sirr
+	[134063] = 2154, -- Tidesage Council
+	[134058] = 2154, -- Tidesage Council
+	[134060] = 2155, -- Lord Stormsong
+	[134069] = 2156, -- Vol'zith the Whisperer
+
+	-- The Eternal Palace
+	[155899] = 2353, -- Radiance of Azshara
+	[155900] = 2353, -- Radiance of Azshara
+	[155859] = 2353, -- Radiance of Azshara
+	[152364] = 2353, -- Radiance of Azshara
+
+	[152236] = 2354, -- Lady Ashvane
 };
 local areaNameToIDMap = {};
 _G['BtWLoadoutsAreaMap'] = areaNameToIDMap; -- @TODO Remove
