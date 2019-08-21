@@ -1,6 +1,6 @@
 ## Interface: 80200
 ## Title: BtWLoadouts
-## Version: 4
+## Version: 5
 ## Notes: Change your characters spec, talents, equipment and essences all at once
 ## Author: Breen
 ## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings
