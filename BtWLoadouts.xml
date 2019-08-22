@@ -746,6 +746,9 @@
 			<OnClick>
 				BtWLoadoutsFrame:ScrollItemClick(self);
 			</OnClick>
+			<OnDoubleClick>
+				BtWLoadoutsFrame:ScrollItemDoubleClick(self);
+			</OnDoubleClick>
 			<OnDragStart>
 				BtWLoadoutsFrame:ScrollItemOnDragStart(self);
 			</OnDragStart>

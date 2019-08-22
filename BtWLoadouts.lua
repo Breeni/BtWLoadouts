@@ -7442,6 +7442,35 @@ function BtWLoadoutsFrameMixin:ScrollItemClick(button)
         end
     end
 end
+function BtWLoadoutsFrameMixin:ScrollItemDoubleClick(button)
+    CloseDropDownMenus();
+    local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
+    if selectedTab == TAB_PROFILES then
+		ActivateProfile(GetProfile(button.id));
+    elseif selectedTab == TAB_TALENTS then
+		local set = GetTalentSet(button.id);
+		if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+			ActivateProfile({
+				talentSet = button.id;
+			});
+		end
+    elseif selectedTab == TAB_PVP_TALENTS then
+		local set = GetPvPTalentSet(button.id);
+		if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+			ActivateProfile({
+				pvpTalentSet = button.id;
+			});
+		end
+    elseif selectedTab == TAB_ESSENCES then
+		ActivateProfile({
+			essencesSet = button.id;
+		});
+    elseif selectedTab == TAB_EQUIPMENT then
+		ActivateProfile({
+			equipmentSet = button.id;
+		});
+    end
+end
 function BtWLoadoutsFrameMixin:ScrollItemOnDragStart(button)
 	CloseDropDownMenus();
 	local command, set;
