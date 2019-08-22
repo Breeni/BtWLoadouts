@@ -740,9 +740,15 @@
 		</Layers>
 		<HighlightTexture file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar-Blue" alphaMode="ADD"/>
 		<Scripts>
+			<OnLoad>
+				self:RegisterForDrag("LeftButton");
+			</OnLoad>
 			<OnClick>
 				BtWLoadoutsFrame:ScrollItemClick(self);
 			</OnClick>
+			<OnDragStart>
+				BtWLoadoutsFrame:ScrollItemOnDragStart(self);
+			</OnDragStart>
 		</Scripts>
 	</Button>
 

@@ -3314,7 +3314,7 @@ end
 -- Check if the talents in the table talentIDs are selected
 local function IsTalentSetActive(set)
     for talentID in pairs(set.talents) do
-        local _, _, _, selected, available = GetTalentInfoByID(talentID, 1);
+		local _, _, _, selected, available = GetTalentInfoByID(talentID, 1);
 
         if not selected then
             return false;
@@ -3360,6 +3360,13 @@ local function GetTalentSet(id)
 	else
 		return BtWLoadoutsSets.talents[id];
 	end;
+end
+local function GetTalentSetByName(name)
+	for _,set in pairs(BtWLoadoutsSets.talents) do
+		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
+			return set;
+		end
+	end
 end
 local function GetTalentSets(id, ...)
 	if id ~= nil then
@@ -3489,6 +3496,13 @@ end
 local function GetPvPTalentSet(id)
     return BtWLoadoutsSets.pvptalents[id];
 end
+local function GetPvPTalentSetByName(name)
+	for _,set in pairs(BtWLoadoutsSets.pvptalents) do
+		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
+			return set;
+		end
+	end
+end
 local function GetPvPTalentSets(id, ...)
 	if id ~= nil then
 		return BtWLoadoutsSets.pvptalents[id], GetPvPTalentSets(...);
@@ -3603,6 +3617,13 @@ local function AddEssenceSet()
 end
 local function GetEssenceSet(id)
     return BtWLoadoutsSets.essences[id];
+end
+local function GetEssenceSetByName(name)
+	for _,set in pairs(BtWLoadoutsSets.essences) do
+		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
+			return set;
+		end
+	end
 end
 local function GetEssenceSets(id, ...)
 	if id ~= nil then
@@ -4080,6 +4101,13 @@ end
 local function GetEquipmentSet(id)
     return BtWLoadoutsSets.equipment[id];
 end
+local function GetEquipmentSetByName(name)
+	for _,set in pairs(BtWLoadoutsSets.equipment) do
+		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
+			return set;
+		end
+	end
+end
 local function GetEquipmentSets(id, ...)
 	if id ~= nil then
 		return BtWLoadoutsSets.equipment[id], GetEquipmentSets(...);
@@ -4241,6 +4269,13 @@ end
 local function GetProfile(id)
     return BtWLoadoutsSets.profiles[id];
 end
+local function GetProfileByName(name)
+	for _,set in pairs(BtWLoadoutsSets.profiles) do
+		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
+			return set;
+		end
+	end
+end
 local function DeleteProfile(id)
 	do
 		local set = type(id) == "table" and id or GetProfile(id);
@@ -4325,7 +4360,7 @@ local function IsProfileActive(set)
 		end
 	end
 
-	if set.talentSets then
+	if set.talentSet then
 		-- local talentSet = CombineTalentSets({}, GetTalentSets(unpack(set.talentSets)));
 		local talentSet = GetTalentSet(set.talentSet);
 		if not IsTalentSetActive(talentSet) then
@@ -4333,7 +4368,7 @@ local function IsProfileActive(set)
 		end
 	end
 
-	if set.pvpTalentSets then
+	if set.pvpTalentSet then
 		-- local pvpTalentSet = CombinePvPTalentSets({}, GetPvPTalentSets(unpack(set.pvpTalentSets)));
 		local pvpTalentSet = GetPvPTalentSet(set.pvpTalentSet);
 		if not IsPvPTalentSetActive(pvpTalentSet) then
@@ -4349,7 +4384,7 @@ local function IsProfileActive(set)
 		end
 	end
 
-	if set.equipmentSets then
+	if set.equipmentSet then
 		-- local equipmentSet = CombineEquipmentSets({}, GetEquipmentSets(unpack(set.equipmentSets)));
 		local equipmentSet = GetEquipmentSet(set.equipmentSet);
 		if not IsEquipmentSetActive(equipmentSet) then
@@ -4399,19 +4434,16 @@ local function ContinueActivateProfile()
 	end
 
 	if talentSet and not IsTalentSetActive(talentSet) and PlayerNeedsTome() then
-		print("1");
 		RequestTome();
 		return;
 	end
 
 	if pvpTalentSet and not IsPvPTalentSetActive(pvpTalentSet) and PlayerNeedsTome() then
-		print("2");
 		RequestTome();
 		return;
 	end
 
 	if essencesSet and not IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
-		print("3");
 		RequestTome();
 		return;
 	end
@@ -7410,6 +7442,79 @@ function BtWLoadoutsFrameMixin:ScrollItemClick(button)
         end
     end
 end
+function BtWLoadoutsFrameMixin:ScrollItemOnDragStart(button)
+	CloseDropDownMenus();
+	local command, set;
+	local icon = "INV_Misc_QuestionMark";
+    local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
+	if selectedTab == TAB_PROFILES then
+		if not button.isHeader then
+			set = GetProfile(button.id);
+			command = format("/btwloadouts activate profile %d", button.id);
+			if set.specID then
+				icon = select(4, GetSpecializationInfoByID(set.specID));
+			end
+        end
+    elseif selectedTab == TAB_TALENTS then
+		if not button.isHeader then
+			set = GetTalentSet(button.id);
+			command = format("/btwloadouts activate talents %d", button.id);
+			if set.specID then
+				icon = select(4, GetSpecializationInfoByID(set.specID));
+			end
+        end
+    elseif selectedTab == TAB_PVP_TALENTS then
+		if not button.isHeader then
+			set = GetPvPTalentSet(button.id);
+			command = format("/btwloadouts activate pvptalents %d", button.id);
+			if set.specID then
+				icon = select(4, GetSpecializationInfoByID(set.specID));
+			end
+        end
+    elseif selectedTab == TAB_ESSENCES then
+		if not button.isHeader then
+			set = GetEssenceSet(button.id);
+			command = format("/btwloadouts activate essences %d", button.id);
+        end
+    elseif selectedTab == TAB_EQUIPMENT then
+		if not button.isHeader then
+			set = GetEquipmentSet(button.id);
+			if set.managerID then
+				C_EquipmentSet.PickupEquipmentSet(set.managerID);
+				return;
+			end
+			command = format("/btwloadouts activate equipment %d", button.id);
+        end
+	end
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
 function BtWLoadoutsFrameMixin:OnHelpTipManuallyClosed(closeFlag)
 	helpTipIgnored[closeFlag] = true;
 	self:Update();
@@ -7812,16 +7917,94 @@ local function PlayerNeedsTomeNowForSet(set)
 end
 
 -- [[ Slash Command ]]
+-- /btwloadouts activate profile Raid
+-- /btwloadouts activate talents Outlaw: Mythic Plus
 SLASH_BTWLOADOUTS1 = "/btwloadouts"
 SlashCmdList["BTWLOADOUTS"] = function(msg)
-	if msg == "minimap" then
+	local command, rest = msg:match("^[%s]*([^%s]+)(.*)");
+	if command == "activate" then
+		local aType, rest = rest:match("^[%s]*([^%s]+)(.*)");
+		local set;
+		if aType == "profile" then
+			if tonumber(rest) then
+				set = GetProfile(tonumber(rest));
+			else
+				set = GetProfileByName(rest);
+			end
+		elseif aType == "talents" then
+			local subset;
+			if tonumber(rest) then
+				subset = GetTalentSet(tonumber(rest));
+			else
+				subset = GetTalentSetByName(rest);
+			end
+			if subset then
+				set = {
+					talentSet = subset.setID;
+				}
+			end
+		elseif aType == "pvptalents" then
+			local subset;
+			if tonumber(rest) then
+				subset = GetPvPTalentSet(tonumber(rest));
+			else
+				subset = GetPvPTalentSetByName(rest);
+			end
+			if subset then
+				set = {
+					pvpTalentSet = subset.setID;
+				}
+			end
+		elseif aType == "essences" then
+			local subset;
+			if tonumber(rest) then
+				subset = GetEssenceSet(tonumber(rest));
+			else
+				subset = GetEssenceSetByName(rest);
+			end
+			if subset then
+				set = {
+					essencesSet = subset.setID;
+				}
+			end
+		elseif aType == "equipment" then
+			local subset;
+			if tonumber(rest) then
+				subset = GetEquipmentSet(tonumber(rest));
+			else
+				subset = GetEquipmentSetByName(rest);
+			end
+			if subset then
+				set = {
+					equipmentSet = subset.setID;
+				}
+			end
+		else
+			-- Assume profile
+			rest = aType .. rest;
+			if tonumber(rest) then
+				set = GetProfile(tonumber(rest));
+			else
+				set = GetProfileByName(rest);
+			end
+		end
+		if set and select(5,IsProfileValid(set)) then
+			if not IsProfileActive(set) then
+				ActivateProfile(set);
+			end
+		else
+			print(L["Could not find a valid set"]);
+		end
+	elseif command == "minimap" then
 		Settings.minimapShown = not Settings.minimapShown;
-    else
+	elseif command == nil then
         if BtWLoadoutsFrame:IsShown() then
             BtWLoadoutsFrame:Hide()
         else
             BtWLoadoutsFrame:Show()
-        end
+		end
+	else
+		-- Usage
     end
 end
 
