@@ -14,6 +14,8 @@
 
 local ADDON_NAME = ...;
 
+local GetCursorItemSource;
+
 local L = {};
 setmetatable(L, {
     __index = function (self, key)
@@ -3732,56 +3734,70 @@ local function GetCompareItemInfo(itemLink)
 
 	return itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, nil, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs;
 end
-local function GetMatchValue(itemLink, extras, location)
-	if not player and not bank and not bags and not voidStorage then -- Invalid location
-		return 0;
-	end
-	
-	local locationItemLink;
-	if voidStorage then
-		locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
-	elseif not bags then -- and (player or bank) 
-		locationItemLink = GetInventoryItemLink("player", slot);
-	else -- bags
-		locationItemLink = GetContainerItemLink(bag, slot);
-	end
-
-	local match = 0;
-	local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
-	local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
-
-	if enchantID == locationEnchantID then
-		match = match + 1;
-	end
-	if suffixID == suffixID then
-		match = match + 1;
-	end
-	if uniqueID == locationUniqueID then
-		match = match + 1;
-	end
-	if upgradeTypeID == locationUpgradeTypeID then
-		match = match + 1;
-	end
-	for i=1,math.max(#gemIDs,#locationGemIDs) do
-		match = match + 1;
-	end
-	for i=1,math.max(#bonusIDs,#locationBonusIDs) do
-		match = match + 1;
-	end
-	for i=1,math.max(#relic1BonusIDs,#locationRelic1BonusIDs) do
-		match = match + 1;
-	end
-	for i=1,math.max(#relic2BonusIDs,#locationRelic2BonusIDs) do
-		match = match + 1;
-	end
-	for i=1,math.max(#relic3BonusIDs,#locationRelic3BonusIDs) do
-		match = match + 1;
-	end
-
-	return match;
-end
 local GetBestMatch;
 do
+	local itemLocation = ItemLocation:CreateEmpty();
+	local function GetMatchValue(itemLink, extras, location)
+		local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location);
+		if not player and not bank and not bags and not voidStorage then -- Invalid location
+			return 0;
+		end
+		
+		local locationItemLink;
+		if voidStorage then
+			locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
+			itemLocation:Clear();
+		elseif not bags then -- and (player or bank) 
+			locationItemLink = GetInventoryItemLink("player", slot);
+			itemLocation:SetEquipmentSlot(slot);
+		else -- bags
+			locationItemLink = GetContainerItemLink(bag, slot);
+			itemLocation:SetBagAndSlot(bag, slot);
+		end
+	
+		local match = 0;
+		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
+		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
+	
+		if enchantID == locationEnchantID then
+			match = match + 1;
+		end
+		if suffixID == suffixID then
+			match = match + 1;
+		end
+		if uniqueID == locationUniqueID then
+			match = match + 1;
+		end
+		if upgradeTypeID == locationUpgradeTypeID then
+			match = match + 1;
+		end
+		for i=1,math.max(#gemIDs,#locationGemIDs) do
+			match = match + 1;
+		end
+		for i=1,math.max(#bonusIDs,#locationBonusIDs) do
+			match = match + 1;
+		end
+		for i=1,math.max(#relic1BonusIDs,#locationRelic1BonusIDs) do
+			match = match + 1;
+		end
+		for i=1,math.max(#relic2BonusIDs,#locationRelic2BonusIDs) do
+			match = match + 1;
+		end
+		for i=1,math.max(#relic3BonusIDs,#locationRelic3BonusIDs) do
+			match = match + 1;
+		end
+	
+		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+			for _,powerID in ipairs(extras.azerite) do
+				if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
+					match = match + 1;
+				end
+			end
+		end
+
+		return match;
+	end
+
 	local locationMatchValue, locationFiltered = {}, {};
 	function GetBestMatch(itemLink, extras, locations)
 		local itemID = GetItemInfoInstant(itemLink);
@@ -3800,75 +3816,90 @@ do
 		return locationFiltered[1];
 	end
 end
-local function IsItemInLocation(itemLink, extras, player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
-	if type(player) == "number" then
-		player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(player);
-	end
+local IsItemInLocation;
+do
+	local itemLocation = ItemLocation:CreateEmpty();
+	function IsItemInLocation(itemLink, extras, player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
+		if type(player) == "number" then
+			player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(player);
+		end
 
-	if not player and not bank and not bags and not voidStorage then -- Invalid location
-		return false;
-	end
-	
-	local locationItemLink;
-	if voidStorage then
-		locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
-	elseif not bags then -- and (player or bank) 
-		locationItemLink = GetInventoryItemLink("player", slot);
-	else -- bags
-		locationItemLink = GetContainerItemLink(bag, slot);
-	end
+		if not player and not bank and not bags and not voidStorage then -- Invalid location
+			return false;
+		end
+		
+		local locationItemLink;
+		if voidStorage then
+			locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
+			itemLocation:Clear();
+		elseif not bags then -- and (player or bank) 
+			locationItemLink = GetInventoryItemLink("player", slot);
+			itemLocation:SetEquipmentSlot(slot);
+		else -- bags
+			locationItemLink = GetContainerItemLink(bag, slot);
+			itemLocation:SetBagAndSlot(slot);
+		end
 
-	local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
-	local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
-	-- if itemID == 158075 then
-	-- 	print(itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs);
-	-- 	print(locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs);
-	-- 	for i=1,math.max(#gemIDs,#locationGemIDs) do
-	-- 		print("gemIDs", gemIDs[i], locationGemIDs[i]);
-	-- 	end
-	-- 	for i=1,math.max(#bonusIDs,#locationBonusIDs) do
-	-- 		print("gemIDs", bonusIDs[i], locationBonusIDs[i]);
-	-- 	end
-	-- 	for i=1,math.max(#relic1BonusIDs,#locationRelic1BonusIDs) do
-	-- 		print(relic1BonusIDs[i], locationRelic1BonusIDs[i]);
-	-- 	end
-	-- 	for i=1,math.max(#relic2BonusIDs,#locationRelic2BonusIDs) do
-	-- 		print(relic2BonusIDs[i], locationRelic2BonusIDs[i]);
-	-- 	end
-	-- 	for i=1,math.max(#relic3BonusIDs,#locationRelic3BonusIDs) do
-	-- 		print(relic3BonusIDs[i], locationRelic3BonusIDs[i]);
-	-- 	end
-	-- end
-	if itemID ~= locationItemID or enchantID ~= locationEnchantID or #gemIDs ~= #locationGemIDs or suffixID ~= locationSuffixID or uniqueID ~= locationUniqueID or upgradeTypeID ~= locationUpgradeTypeID or #bonusIDs ~= #bonusIDs or #relic1BonusIDs ~= #locationRelic1BonusIDs or #relic2BonusIDs ~= #locationRelic2BonusIDs or #relic3BonusIDs ~= #locationRelic3BonusIDs then
-		return false;
-	end
-	for i=1,#gemIDs do
-		if gemIDs[i] ~= locationGemIDs[i] then
+		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
+		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
+		-- if itemID == 158075 then
+		-- 	print(itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs);
+		-- 	print(locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs);
+		-- 	for i=1,math.max(#gemIDs,#locationGemIDs) do
+		-- 		print("gemIDs", gemIDs[i], locationGemIDs[i]);
+		-- 	end
+		-- 	for i=1,math.max(#bonusIDs,#locationBonusIDs) do
+		-- 		print("gemIDs", bonusIDs[i], locationBonusIDs[i]);
+		-- 	end
+		-- 	for i=1,math.max(#relic1BonusIDs,#locationRelic1BonusIDs) do
+		-- 		print(relic1BonusIDs[i], locationRelic1BonusIDs[i]);
+		-- 	end
+		-- 	for i=1,math.max(#relic2BonusIDs,#locationRelic2BonusIDs) do
+		-- 		print(relic2BonusIDs[i], locationRelic2BonusIDs[i]);
+		-- 	end
+		-- 	for i=1,math.max(#relic3BonusIDs,#locationRelic3BonusIDs) do
+		-- 		print(relic3BonusIDs[i], locationRelic3BonusIDs[i]);
+		-- 	end
+		-- end
+		if itemID ~= locationItemID or enchantID ~= locationEnchantID or #gemIDs ~= #locationGemIDs or suffixID ~= locationSuffixID or uniqueID ~= locationUniqueID or upgradeTypeID ~= locationUpgradeTypeID or #bonusIDs ~= #bonusIDs or #relic1BonusIDs ~= #locationRelic1BonusIDs or #relic2BonusIDs ~= #locationRelic2BonusIDs or #relic3BonusIDs ~= #locationRelic3BonusIDs then
 			return false;
 		end
-	end
-	for i=1,#bonusIDs do
-		if bonusIDs[i] ~= locationBonusIDs[i] then
-			return false;
+		for i=1,#gemIDs do
+			if gemIDs[i] ~= locationGemIDs[i] then
+				return false;
+			end
 		end
-	end
-	for i=1,#relic1BonusIDs do
-		if relic1BonusIDs[i] ~= locationRelic1BonusIDs[i] then
-			return false;
+		for i=1,#bonusIDs do
+			if bonusIDs[i] ~= locationBonusIDs[i] then
+				return false;
+			end
 		end
-	end
-	for i=1,#relic2BonusIDs do
-		if relic2BonusIDs[i] ~= locationRelic2BonusIDs[i] then
-			return false;
+		for i=1,#relic1BonusIDs do
+			if relic1BonusIDs[i] ~= locationRelic1BonusIDs[i] then
+				return false;
+			end
 		end
-	end
-	for i=1,#relic3BonusIDs do
-		if relic3BonusIDs[i] ~= locationRelic3BonusIDs[i] then
-			return false;
+		for i=1,#relic2BonusIDs do
+			if relic2BonusIDs[i] ~= locationRelic2BonusIDs[i] then
+				return false;
+			end
 		end
+		for i=1,#relic3BonusIDs do
+			if relic3BonusIDs[i] ~= locationRelic3BonusIDs[i] then
+				return false;
+			end
+		end
+		
+		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+			for _,powerID in ipairs(extras.azerite) do
+				if not C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
+					return false;
+				end
+			end
+		end
+		
+		return true;
 	end
-	
-	return true;
 end
 local function IsEquipmentSetActive(set)
 	local expected = set.equipment;
@@ -7728,7 +7759,7 @@ end
 function BtWLoadoutsItemSlotButtonMixin:OnClick()
 	local cursorType, _, itemLink = GetCursorInfo();
 	if cursorType == "item" then
-		if self:SetItem(itemLink) then
+		if self:SetItem(itemLink, GetCursorItemSource()) then
 			ClearCursor();
 		end
 	elseif IsModifiedClick("SHIFT") then
@@ -7741,7 +7772,7 @@ end
 function BtWLoadoutsItemSlotButtonMixin:OnReceiveDrag()
 	local cursorType, _, itemLink = GetCursorInfo();
 	if cursorType == "item" then
-		if self:SetItem(itemLink) then
+		if self:SetItem(itemLink, GetCursorItemSource()) then
 			ClearCursor();
 		end
 	end
@@ -7779,7 +7810,7 @@ end
 function BtWLoadoutsItemSlotButtonMixin:GetSlot()
 	return self.slot;
 end
-function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink)
+function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 	local set = self:GetParent().set;
 	if itemLink == nil then -- Clearing slot
 		set.equipment[self:GetID()] = nil;
@@ -7790,6 +7821,32 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink)
 		local _, _, quality, _, _, _, _, _, itemEquipLoc, texture, _, itemClassID, itemSubClassID = GetItemInfo(itemLink);
 		if self.invType == itemEquipLoc then
 			set.equipment[self:GetID()] = itemLink;
+
+			local itemLocation;
+			if bag and slot then
+				itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot);
+			elseif slot then
+				itemLocation = ItemLocation:CreateFromEquipmentSlot(slot);
+			end
+
+			if itemLocation and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+				set.extras[self:GetID()] = set.extras[self:GetID()] or {};
+				local extras = set.extras[self:GetID()];
+				extras.azerite = extras.azerite or {};
+				wipe(extras.azerite);
+
+				local tiers = C_AzeriteEmpoweredItem.GetAllTierInfo(itemLocation);
+				for index,tier in ipairs(tiers) do
+					for _,powerID in ipairs(tier.azeritePowerIDs) do
+						if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
+							extras.azerite[index] = powerID;
+							break;
+						end
+					end
+				end
+			else
+				set.extras[self:GetID()] = nil;
+			end
 
 			self:Update();
 			return true;
@@ -7824,114 +7881,115 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 	self.ignoreTexture:SetShown(ignored);
 end
 
-
-local GetMinimapShape = GetMinimapShape;
-local GetCursorPosition = GetCursorPosition;
-
-local minimapShapes = {
-	-- quadrant booleans (same order as SetTexCoord)
-	-- {bottom-right, bottom-left, top-right, top-left}
-	-- true = rounded, false = squared
-	["ROUND"] 			= {true,  true,  true,  true },
-	["SQUARE"] 			= {false, false, false, false},
-	["CORNER-TOPLEFT"] 		= {false, false, false, true },
-	["CORNER-TOPRIGHT"] 		= {false, false, true,  false},
-	["CORNER-BOTTOMLEFT"] 		= {false, true,  false, false},
-	["CORNER-BOTTOMRIGHT"]	 	= {true,  false, false, false},
-	["SIDE-LEFT"] 			= {false, true,  false, true },
-	["SIDE-RIGHT"] 			= {true,  false, true,  false},
-	["SIDE-TOP"] 			= {false, false, true,  true },
-	["SIDE-BOTTOM"] 		= {true,  true,  false, false},
-	["TRICORNER-TOPLEFT"] 		= {false, true,  true,  true },
-	["TRICORNER-TOPRIGHT"] 		= {true,  false, true,  true },
-	["TRICORNER-BOTTOMLEFT"] 	= {true,  true,  false, true },
-	["TRICORNER-BOTTOMRIGHT"] 	= {true,  true,  true,  false},
-};
-
 BtWLoadoutsMinimapMixin = {};
-function BtWLoadoutsMinimapMixin:OnLoad()
-    self:RegisterForClicks("anyUp");
-    self:RegisterForDrag("LeftButton");
-    self:RegisterEvent("ADDON_LOADED");
-end
-function BtWLoadoutsMinimapMixin:OnEvent(event, ...)
-    if ... == "BtWLoadouts" then
-        self:SetShown(Settings.minimapShown);
-        self:Reposition(Settings.minimapAngle or 185);
-    end
-end
-function BtWLoadoutsMinimapMixin:OnDragStart()
-    self:LockHighlight();
-    self:SetScript("OnUpdate", self.OnUpdate);
-end
-function BtWLoadoutsMinimapMixin:OnDragStop()
-    self:UnlockHighlight();
-    self:SetScript("OnUpdate", nil);
-end
-function BtWLoadoutsMinimapMixin:Reposition(degrees)
-    local radius = 80;
-	local rounding = 10;
-    local angle = rad(degrees or 200);
-    local x, y;
-	local cos = cos(angle);
-	local sin = sin(angle);
-	local q = 1;
-	if cos < 0 then
-		q = q + 1;	-- lower
+do
+	local GetMinimapShape = GetMinimapShape;
+	local GetCursorPosition = GetCursorPosition;
+
+	local minimapShapes = {
+		-- quadrant booleans (same order as SetTexCoord)
+		-- {bottom-right, bottom-left, top-right, top-left}
+		-- true = rounded, false = squared
+		["ROUND"] 			= {true,  true,  true,  true },
+		["SQUARE"] 			= {false, false, false, false},
+		["CORNER-TOPLEFT"] 		= {false, false, false, true },
+		["CORNER-TOPRIGHT"] 		= {false, false, true,  false},
+		["CORNER-BOTTOMLEFT"] 		= {false, true,  false, false},
+		["CORNER-BOTTOMRIGHT"]	 	= {true,  false, false, false},
+		["SIDE-LEFT"] 			= {false, true,  false, true },
+		["SIDE-RIGHT"] 			= {true,  false, true,  false},
+		["SIDE-TOP"] 			= {false, false, true,  true },
+		["SIDE-BOTTOM"] 		= {true,  true,  false, false},
+		["TRICORNER-TOPLEFT"] 		= {false, true,  true,  true },
+		["TRICORNER-TOPRIGHT"] 		= {true,  false, true,  true },
+		["TRICORNER-BOTTOMLEFT"] 	= {true,  true,  false, true },
+		["TRICORNER-BOTTOMRIGHT"] 	= {true,  true,  true,  false},
+	};
+
+	function BtWLoadoutsMinimapMixin:OnLoad()
+		self:RegisterForClicks("anyUp");
+		self:RegisterForDrag("LeftButton");
+		self:RegisterEvent("ADDON_LOADED");
 	end
-	if sin > 0 then
-		q = q + 2;	-- right
-    end
-    
-    local minimapShape = GetMinimapShape and GetMinimapShape() or "ROUND";
-	local quadTable = minimapShapes[minimapShape];
-	if quadTable[q] then
-		x = cos*radius;
-		y = sin*radius;
-	else
-		local diagRadius = sqrt(2*(radius)^2)-rounding;
-		x = max(-radius, min(cos*diagRadius, radius));
-		y = max(-radius, min(sin*diagRadius, radius));
-    end
-    
-    self:SetPoint("CENTER", "$parent", "CENTER", x, y);
-end
-function BtWLoadoutsMinimapMixin:OnUpdate()
-	local px,py = GetCursorPosition();
-    local mx,my = Minimap:GetCenter();
-    
-    local scale = Minimap:GetEffectiveScale();
-    px, py = px / scale, py / scale;
-    
-    local angle = deg(atan2(py - my, px - mx));
+	function BtWLoadoutsMinimapMixin:OnEvent(event, ...)
+		if ... == "BtWLoadouts" then
+			self:SetShown(Settings.minimapShown);
+			self:Reposition(Settings.minimapAngle or 185);
+		end
+	end
+	function BtWLoadoutsMinimapMixin:OnDragStart()
+		self:LockHighlight();
+		self:SetScript("OnUpdate", self.OnUpdate);
+	end
+	function BtWLoadoutsMinimapMixin:OnDragStop()
+		self:UnlockHighlight();
+		self:SetScript("OnUpdate", nil);
+	end
+	function BtWLoadoutsMinimapMixin:Reposition(degrees)
+		local radius = 80;
+		local rounding = 10;
+		local angle = rad(degrees or 200);
+		local x, y;
+		local cos = cos(angle);
+		local sin = sin(angle);
+		local q = 1;
+		if cos < 0 then
+			q = q + 1;	-- lower
+		end
+		if sin > 0 then
+			q = q + 2;	-- right
+		end
+		
+		local minimapShape = GetMinimapShape and GetMinimapShape() or "ROUND";
+		local quadTable = minimapShapes[minimapShape];
+		if quadTable[q] then
+			x = cos*radius;
+			y = sin*radius;
+		else
+			local diagRadius = sqrt(2*(radius)^2)-rounding;
+			x = max(-radius, min(cos*diagRadius, radius));
+			y = max(-radius, min(sin*diagRadius, radius));
+		end
+		
+		self:SetPoint("CENTER", "$parent", "CENTER", x, y);
+	end
+	function BtWLoadoutsMinimapMixin:OnUpdate()
+		local px,py = GetCursorPosition();
+		local mx,my = Minimap:GetCenter();
+		
+		local scale = Minimap:GetEffectiveScale();
+		px, py = px / scale, py / scale;
+		
+		local angle = deg(atan2(py - my, px - mx));
 
-    Settings.minimapAngle = angle;
-    self:Reposition(angle);
-end
-function BtWLoadoutsMinimapMixin:OnClick(button)
-    if button == "LeftButton" then
-        BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
-    elseif button == "RightButton" then
-        if not self.Menu then
-		    self.Menu = CreateFrame("Frame", self:GetName().."Menu", self, "UIDropDownMenuTemplate");
-            UIDropDownMenu_Initialize(self.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
-        end
-        
-	    ToggleDropDownMenu(1, nil, self.Menu, self, 0, 0);
-    end
-end
-function BtWLoadoutsMinimapMenu_Init(self, level)
-	local info = UIDropDownMenu_CreateInfo();
-    info.func = function (self, key)
-        Settings[key] = not Settings[key];
-    end
-    for i, entry in ipairs(Settings) do
-        info.text = entry.name;
-        info.arg1 = entry.key;
-        info.checked = Settings[entry.key];
+		Settings.minimapAngle = angle;
+		self:Reposition(angle);
+	end
+	function BtWLoadoutsMinimapMixin:OnClick(button)
+		if button == "LeftButton" then
+			BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
+		elseif button == "RightButton" then
+			if not self.Menu then
+				self.Menu = CreateFrame("Frame", self:GetName().."Menu", self, "UIDropDownMenuTemplate");
+				UIDropDownMenu_Initialize(self.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
+			end
+			
+			ToggleDropDownMenu(1, nil, self.Menu, self, 0, 0);
+		end
+	end
+	function BtWLoadoutsMinimapMenu_Init(self, level)
+		local info = UIDropDownMenu_CreateInfo();
+		info.func = function (self, key)
+			Settings[key] = not Settings[key];
+		end
+		for i, entry in ipairs(Settings) do
+			info.text = entry.name;
+			info.arg1 = entry.key;
+			info.checked = Settings[entry.key];
 
-        UIDropDownMenu_AddButton(info, level);
-    end
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
 end
 
 local function PlayerNeedsTomeNowForSet(set)
@@ -7943,6 +8001,30 @@ local function PlayerNeedsTomeNowForSet(set)
     -- end
 
     -- return PlayerNeedsTome();
+end
+
+do
+	local currentCursorSource = {};
+	local function Hook_PickupContainerItem(bag, slot)
+		if CursorHasItem() then
+			currentCursorSource.bag = bag;
+			currentCursorSource.slot = slot;
+		else
+			wipe(currentCursorSource);
+		end
+	end
+	hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
+	local function Hook_PickupInventoryItem(slot)
+		if CursorHasItem() then
+			currentCursorSource.slot = slot;
+		else
+			wipe(currentCursorSource);
+		end
+	end
+	hooksecurefunc("PickupInventoryItem", Hook_PickupInventoryItem);
+	function GetCursorItemSource()
+		return currentCursorSource.bag or false, currentCursorSource.slot or false;
+	end
 end
 
 -- [[ Slash Command ]]
