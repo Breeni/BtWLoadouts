@@ -5738,6 +5738,8 @@ local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
 	set.type = arg1;
 	set.instanceID = nil;
 	set.difficultyID = nil;
+	set.bossID = nil;
+	set.affixesID = nil;
 
     BtWLoadoutsFrame:Update();
 end
@@ -5782,6 +5784,12 @@ local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
 		if not supportsDifficulty then
 			set.difficultyID = nil;
 		end
+
+		if set.difficultyID ~= 8 then
+			set.affixesID = nil;
+		end
+	else
+		set.affixesID = nil;
 	end
 
     BtWLoadoutsFrame:Update();
