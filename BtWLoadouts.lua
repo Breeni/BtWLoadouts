@@ -8211,6 +8211,10 @@ function frame:ADDON_LOADED(...)
 
 		for _,set in pairs(BtWLoadoutsSets.conditions) do
 			if type(set) == "table" then
+				if set.map.difficultyID ~= 8 then
+					set.map.affixesID = nil;
+				end
+				
 				AddConditionToMap(set);
 			end
 		end
