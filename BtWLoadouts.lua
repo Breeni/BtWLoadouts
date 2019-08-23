@@ -7983,8 +7983,6 @@ do
 		
 		local scale = Minimap:GetEffectiveScale();
 		px, py = px / scale, py / scale;
-
-		print(px, py, mx, my);
 		
 		local angle = deg(atan2(py - my, px - mx));
 
