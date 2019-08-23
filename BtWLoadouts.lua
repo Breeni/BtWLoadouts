@@ -2659,25 +2659,28 @@ local affixRotation = {
 _G['BtWLoadoutsAffixRotation'] = affixRotation; -- @TODO Remove
 
 
+local CONDITION_TYPES, CONDITION_TYPE_NAMES;
 local CONDITION_TYPE_WORLD = "none";
-local CONDITION_TYPE_DUNGEONS = "party";
-local CONDITION_TYPE_RAIDS = "raid";
-local CONDITION_TYPE_ARENA = "arena";
-local CONDITION_TYPE_BATTLEGROUND = "pvp";
-local CONDITION_TYPES = {
-	CONDITION_TYPE_WORLD,
-	CONDITION_TYPE_DUNGEONS,
-	CONDITION_TYPE_RAIDS,
-	CONDITION_TYPE_ARENA,
-	CONDITION_TYPE_BATTLEGROUND
-}
-local CONDITION_TYPE_NAMES = {
-	[CONDITION_TYPE_WORLD] = L["World"],
-	[CONDITION_TYPE_DUNGEONS] = L["Dungeons"],
-	[CONDITION_TYPE_RAIDS] = L["Raids"],
-	[CONDITION_TYPE_ARENA] = L["Arena"],
-	[CONDITION_TYPE_BATTLEGROUND] = L["Battlegrounds"],
-}
+do
+	local CONDITION_TYPE_DUNGEONS = "party";
+	local CONDITION_TYPE_RAIDS = "raid";
+	local CONDITION_TYPE_ARENA = "arena";
+	local CONDITION_TYPE_BATTLEGROUND = "pvp";
+	CONDITION_TYPES = {
+		CONDITION_TYPE_WORLD,
+		CONDITION_TYPE_DUNGEONS,
+		CONDITION_TYPE_RAIDS,
+		CONDITION_TYPE_ARENA,
+		CONDITION_TYPE_BATTLEGROUND
+	}
+	CONDITION_TYPE_NAMES = {
+		[CONDITION_TYPE_WORLD] = L["World"],
+		[CONDITION_TYPE_DUNGEONS] = L["Dungeons"],
+		[CONDITION_TYPE_RAIDS] = L["Raids"],
+		[CONDITION_TYPE_ARENA] = L["Arena"],
+		[CONDITION_TYPE_BATTLEGROUND] = L["Battlegrounds"],
+	}
+end
 
 local MAX_PVP_TALENTS = 15;
 local function GetTalentInfoForSpecID(specID, tier, column)
@@ -2753,71 +2756,77 @@ end
 local function IsClassRoleValid(classFile, role)
 	return classInfo[classFile][role] and true or false;
 end
-local talentChangeBuffs = {
-    [227041] = true,
-    [227563] = true,
-    [256231] = true,
-    [228128] = true,
-    [32727] = true,
-    [44521] = true,
-};
-local function PlayerCanChangeTalents()
-    if IsResting() then
-        return true;
-    end
+local PlayerNeedsTome;
+do
+	local talentChangeBuffs = {
+		[227041] = true,
+		[227563] = true,
+		[256231] = true,
+		[228128] = true,
+		[32727] = true,
+		[44521] = true,
+	};
+	local function PlayerCanChangeTalents()
+		if IsResting() then
+			return true;
+		end
 
-    local index = 1;
-    local name = UnitAura("player", index, "HELPFUL");
-    while name do
-        if talentChangeBuffs[spellId] then
-            return true;
-        end
+		local index = 1;
+		local name = UnitAura("player", index, "HELPFUL");
+		while name do
+			if talentChangeBuffs[spellId] then
+				return true;
+			end
 
-        index = index + 1;
-        name = UnitAura("player", index, "HELPFUL");
-    end
-    
-    return false;
+			index = index + 1;
+			name = UnitAura("player", index, "HELPFUL");
+		end
+		
+		return false;
+	end
+	function PlayerNeedsTome()
+		if IsResting() then
+			return false;
+		end
+
+		local index = 1;
+		local name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
+		while name do
+			if talentChangeBuffs[spellId] then
+				return false;
+			end
+
+			index = index + 1;
+			name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
+		end
+
+		return true;
+	end
 end
-local function PlayerNeedsTome()
-    if IsResting() then
-        return false;
-    end
-
-    local index = 1;
-    local name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
-    while name do
-        if talentChangeBuffs[spellId] then
-            return false;
-        end
-
-        index = index + 1;
-        name, _, _, _, _, _, _, _, _, spellId = UnitAura("player", index, "HELPFUL");
-    end
-
-    return true;
-end
-local tomes = {
-	141446,
-	153647
-};
-local function GetBestTome()
-	for _,itemId in ipairs(tomes) do
-        local count = GetItemCount(itemId);
-        if count >= 1 then
-			local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
-            return itemId, name, link, quality, icon;
-        end
-    end
-end
-local function RequestTome()
-	if not StaticPopup_Visible("BTWLOADOUTS_NEEDTOME") then --  and not StaticPopup_Visible("BTWLOADOUTS_NEEDRESTED")
-		local itemId, name, link, quality, icon = GetBestTome();
-		if name ~= nil then
-			local r, g, b = GetItemQualityColor(quality or 2); 
-			StaticPopup_Show("BTWLOADOUTS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
-		elseif itemId == nil then
-			-- StaticPopup_Show("BTWLOADOUTS_NEEDRESTED", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+local RequestTome;
+do
+	local tomes = {
+		141446,
+		153647
+	};
+	local function GetBestTome()
+		for _,itemId in ipairs(tomes) do
+			local count = GetItemCount(itemId);
+			if count >= 1 then
+				local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
+				return itemId, name, link, quality, icon;
+			end
+		end
+	end
+	function RequestTome()
+		if not StaticPopup_Visible("BTWLOADOUTS_NEEDTOME") then --  and not StaticPopup_Visible("BTWLOADOUTS_NEEDRESTED")
+			local itemId, name, link, quality, icon = GetBestTome();
+			if name ~= nil then
+				local r, g, b = GetItemQualityColor(quality or 2); 
+				StaticPopup_Show("BTWLOADOUTS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+			elseif itemId == nil then
+				-- StaticPopup_Show("BTWLOADOUTS_NEEDRESTED", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+			end
 		end
 	end
 end
@@ -7597,6 +7606,7 @@ function BtWLoadoutsFrameMixin:OnNameChanged(text)
 	end
 end
 function BtWLoadoutsFrameMixin:OnShow()
+	helpTipIgnored["MINIMAP_ICON"] = true;
 	StaticPopup_Hide("BTWLOADOUTS_REQUESTACTIVATE");
 	StaticPopup_Hide("BTWLOADOUTS_REQUESTMULTIACTIVATE");
 end
@@ -7889,10 +7899,15 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 	self.ignoreTexture:SetShown(ignored);
 end
 
-BtWLoadoutsMinimapMixin = {};
 do
 	local GetMinimapShape = GetMinimapShape;
 	local GetCursorPosition = GetCursorPosition;
+	-- This is very important, the global functions gives different responses than the math functions
+	local cos, sin = math.cos, math.sin;
+	local min, max = math.min, math.max;
+	local deg, rad = math.deg, math.rad;
+	local sqrt = math.sqrt;
+	local atan2 = math.atan2;
 
 	local minimapShapes = {
 		-- quadrant booleans (same order as SetTexCoord)
@@ -7914,6 +7929,7 @@ do
 		["TRICORNER-BOTTOMRIGHT"] 	= {true,  true,  true,  false},
 	};
 
+	BtWLoadoutsMinimapMixin = {};
 	function BtWLoadoutsMinimapMixin:OnLoad()
 		self:RegisterForClicks("anyUp");
 		self:RegisterForDrag("LeftButton");
@@ -7922,7 +7938,7 @@ do
 	function BtWLoadoutsMinimapMixin:OnEvent(event, ...)
 		if ... == "BtWLoadouts" then
 			self:SetShown(Settings.minimapShown);
-			self:Reposition(Settings.minimapAngle or 185);
+			self:Reposition(Settings.minimapAngle or 195);
 		end
 	end
 	function BtWLoadoutsMinimapMixin:OnDragStart()
@@ -7936,7 +7952,7 @@ do
 	function BtWLoadoutsMinimapMixin:Reposition(degrees)
 		local radius = 80;
 		local rounding = 10;
-		local angle = rad(degrees or 200);
+		local angle = rad(degrees or 195);
 		local x, y;
 		local cos = cos(angle);
 		local sin = sin(angle);
@@ -7947,7 +7963,7 @@ do
 		if sin > 0 then
 			q = q + 2;	-- right
 		end
-		
+
 		local minimapShape = GetMinimapShape and GetMinimapShape() or "ROUND";
 		local quadTable = minimapShapes[minimapShape];
 		if quadTable[q] then
@@ -7967,6 +7983,8 @@ do
 		
 		local scale = Minimap:GetEffectiveScale();
 		px, py = px / scale, py / scale;
+
+		print(px, py, mx, my);
 		
 		local angle = deg(atan2(py - my, px - mx));
 
@@ -7984,6 +8002,18 @@ do
 			
 			ToggleDropDownMenu(1, nil, self.Menu, self, 0, 0);
 		end
+	end
+	function BtWLoadoutsMinimapMixin:OnEnter()
+		helpTipIgnored["MINIMAP_ICON"] = true;
+		self.PulseAlpha:Stop();
+
+		GameTooltip:SetOwner(self, "ANCHOR_LEFT");
+		GameTooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
+		GameTooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
+		GameTooltip:Show();
+	end
+	function BtWLoadoutsMinimapMixin:OnLeave()
+		GameTooltip:Hide();
 	end
 	function BtWLoadoutsMinimapMenu_Init(self, level)
 		local info = UIDropDownMenu_CreateInfo();
@@ -8127,285 +8157,291 @@ SlashCmdList["BTWLOADOUTS"] = function(msg)
     end
 end
 
-local frame = CreateFrame("Frame");
-frame:SetScript("OnEvent", function (self, event, ...)
-    self[event](self, ...);
-end);
-function frame:ADDON_LOADED(...)
-    if ... == ADDON_NAME then
-        BtWLoadoutsSettings = BtWLoadoutsSettings or {};
-		Settings(BtWLoadoutsSettings);
-		
-        BtWLoadoutsSets = BtWLoadoutsSets or {
-            profiles = {},
-            talents = {},
-            pvptalents = {},
-            essences = {},
-            equipment = {},
-            conditions = {},
-		};
-		
-		for _,sets in pairs(BtWLoadoutsSets) do
-			for setID,set in pairs(sets) do
+do
+	local frame = CreateFrame("Frame");
+	frame:SetScript("OnEvent", function (self, event, ...)
+		self[event](self, ...);
+	end);
+	function frame:ADDON_LOADED(...)
+		if ... == ADDON_NAME then
+			BtWLoadoutsSettings = BtWLoadoutsSettings or {};
+			Settings(BtWLoadoutsSettings);
+			
+			BtWLoadoutsSets = BtWLoadoutsSets or {
+				profiles = {},
+				talents = {},
+				pvptalents = {},
+				essences = {},
+				equipment = {},
+				conditions = {},
+			};
+			
+			for _,sets in pairs(BtWLoadoutsSets) do
+				for setID,set in pairs(sets) do
+					if type(set) == "table" then
+						set.setID = setID;
+						set.useCount = 0;
+					end
+				end
+			end
+			for setID,set in pairs(BtWLoadoutsSets.equipment) do
 				if type(set) == "table" then
-					set.setID = setID;
-					set.useCount = 0;
+					set.extras = set.extras or {};
+					set.locations = set.locations or {};
 				end
+			end
+			for setID,set in pairs(BtWLoadoutsSets.profiles) do
+				if type(set) == "table" then
+					if set.talentSet then
+						BtWLoadoutsSets.talents[set.talentSet].useCount = BtWLoadoutsSets.talents[set.talentSet].useCount + 1;
+					end
+
+					if set.pvpTalentSet then
+						BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount = BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount + 1;
+					end
+
+					if set.essencesSet then
+						BtWLoadoutsSets.essences[set.essencesSet].useCount = BtWLoadoutsSets.essences[set.essencesSet].useCount + 1;
+					end
+
+					if set.equipmentSet then
+						BtWLoadoutsSets.equipment[set.equipmentSet].useCount = BtWLoadoutsSets.equipment[set.equipmentSet].useCount + 1;
+					end
+				end
+			end
+
+			BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {};
+			BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {};
+			BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {};
+			BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {};
+
+			for classIndex=1,GetNumClasses() do
+				local className, classFile, classID = GetClassInfo(classIndex);
+				classInfo[classFile] = {};
+				for specIndex=1,GetNumSpecializationsForClassID(classID) do
+					local role = select(5, GetSpecializationInfoForClassID(classID, specIndex));
+					classInfo[classFile][role] = true;
+				end
+			end
+
+			do
+				local name, realm = UnitName("player"), GetRealmName();
+				local character = format("%s-%s", realm, name);
+				for setID,set in pairs(BtWLoadoutsSets.equipment) do
+					if type(set) == "table" and set.character == character and set.managerID ~= nil then
+						equipmentSetMap[set.managerID] = set;
+					end
+				end
+			end
+
+			BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
+			for k in pairs(helpTipIgnored) do
+				BtWLoadoutsHelpTipFlags[k] = true;
+			end
+			helpTipIgnored = BtWLoadoutsHelpTipFlags;
+
+			for _,set in pairs(BtWLoadoutsSets.conditions) do
+				if type(set) == "table" then
+					if set.map.difficultyID ~= 8 then
+						set.map.affixesID = nil;
+					end
+
+					AddConditionToMap(set);
+				end
+			end
+
+			if not helpTipIgnored["MINIMAP_ICON"] then
+				BtWLoadoutsMinimapButton.PulseAlpha:Play();
 			end
 		end
-		for setID,set in pairs(BtWLoadoutsSets.equipment) do
-			if type(set) == "table" then
-				set.extras = set.extras or {};
-				set.locations = set.locations or {};
+	end
+	function frame:PLAYER_LOGIN(...)
+		self:EQUIPMENT_SETS_CHANGED();
+	end
+	function frame:PLAYER_ENTERING_WORLD()
+		for specIndex=1,GetNumSpecializations() do
+			local specID = GetSpecializationInfo(specIndex);
+			local spec = BtWLoadoutsSpecInfo[specID] or {talents = {}};
+			spec.talents = spec.talents or {};
+			local talents = spec.talents;
+			for tier=1,MAX_TALENT_TIERS do
+				local tierItems = talents[tier] or {};
+
+				for column=1,3 do
+					local talentID = GetTalentInfoBySpecialization(specIndex, tier, column);
+					tierItems[column] = talentID;
+				end
+
+				talents[tier] = tierItems;
 			end
+
+			BtWLoadoutsSpecInfo[specID] = spec;
 		end
-		for setID,set in pairs(BtWLoadoutsSets.profiles) do
-			if type(set) == "table" then
-				if set.talentSet then
-					BtWLoadoutsSets.talents[set.talentSet].useCount = BtWLoadoutsSets.talents[set.talentSet].useCount + 1;
-				end
-
-				if set.pvpTalentSet then
-					BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount = BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount + 1;
-				end
-
-				if set.essencesSet then
-					BtWLoadoutsSets.essences[set.essencesSet].useCount = BtWLoadoutsSets.essences[set.essencesSet].useCount + 1;
-				end
-
-				if set.equipmentSet then
-					BtWLoadoutsSets.equipment[set.equipmentSet].useCount = BtWLoadoutsSets.equipment[set.equipmentSet].useCount + 1;
+		
+		do
+			local specID = GetSpecializationInfo(GetSpecialization());
+			local spec = BtWLoadoutsSpecInfo[specID] or {};
+			spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
+			wipe(spec.pvptalenttrinkets);
+			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
+			if slotInfo then
+				local availableTalentIDs = slotInfo.availableTalentIDs;
+				for index,talentID in ipairs(availableTalentIDs) do
+					spec.pvptalenttrinkets[index] = talentID;
 				end
 			end
-		end
-
-        BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {};
-        BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {};
-		BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {};
-		BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {};
-
-		for classIndex=1,GetNumClasses() do
-			local className, classFile, classID = GetClassInfo(classIndex);
-			classInfo[classFile] = {};
-			for specIndex=1,GetNumSpecializationsForClassID(classID) do
-				local role = select(5, GetSpecializationInfoForClassID(classID, specIndex));
-				classInfo[classFile][role] = true;
+				
+			spec.pvptalents = spec.pvptalents or {};
+			wipe(spec.pvptalents);
+			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
+			if slotInfo then
+				local availableTalentIDs = slotInfo.availableTalentIDs;
+				for index,talentID in ipairs(availableTalentIDs) do
+					spec.pvptalents[index] = talentID;
+				end
 			end
+
+			BtWLoadoutsSpecInfo[specID] = spec;
 		end
 
 		do
-			local name, realm = UnitName("player"), GetRealmName();
-			local character = format("%s-%s", realm, name);
-			for setID,set in pairs(BtWLoadoutsSets.equipment) do
-				if type(set) == "table" and set.character == character and set.managerID ~= nil then
-					equipmentSetMap[set.managerID] = set;
-				end
-			end
-		end
-
-		BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
-		for k in pairs(helpTipIgnored) do
-			BtWLoadoutsHelpTipFlags[k] = true;
-		end
-		helpTipIgnored = BtWLoadoutsHelpTipFlags;
-
-		for _,set in pairs(BtWLoadoutsSets.conditions) do
-			if type(set) == "table" then
-				if set.map.difficultyID ~= 8 then
-					set.map.affixesID = nil;
-				end
-				
-				AddConditionToMap(set);
-			end
-		end
-    end
-end
-function frame:PLAYER_LOGIN(...)
-	self:EQUIPMENT_SETS_CHANGED();
-end
-function frame:PLAYER_ENTERING_WORLD()
-	for specIndex=1,GetNumSpecializations() do
-        local specID = GetSpecializationInfo(specIndex);
-        local spec = BtWLoadoutsSpecInfo[specID] or {talents = {}};
-		spec.talents = spec.talents or {};
-		local talents = spec.talents;
-        for tier=1,MAX_TALENT_TIERS do
-            local tierItems = talents[tier] or {};
-
-            for column=1,3 do
-                local talentID = GetTalentInfoBySpecialization(specIndex, tier, column);
-                tierItems[column] = talentID;
-            end
-
-            talents[tier] = tierItems;
-		end
-
-        BtWLoadoutsSpecInfo[specID] = spec;
-	end
-	
-	do
-		local specID = GetSpecializationInfo(GetSpecialization());
-		local spec = BtWLoadoutsSpecInfo[specID] or {};
-		spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-		wipe(spec.pvptalenttrinkets);
-		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-		if slotInfo then
-			local availableTalentIDs = slotInfo.availableTalentIDs;
-			for index,talentID in ipairs(availableTalentIDs) do
-				spec.pvptalenttrinkets[index] = talentID;
-			end
-		end
+			local roleID = select(5, GetSpecializationInfo(GetSpecialization()));
+			local role = BtWLoadoutsRoleInfo[roleID] or {};
 			
-		spec.pvptalents = spec.pvptalents or {};
-		wipe(spec.pvptalents);
-		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-		if slotInfo then
-			local availableTalentIDs = slotInfo.availableTalentIDs;
-			for index,talentID in ipairs(availableTalentIDs) do
-				spec.pvptalents[index] = talentID;
+			role.essences = role.essences or {};
+			wipe(role.essences);
+			local essences = C_AzeriteEssence.GetEssences();
+			sort(essences, function (a,b)
+				return a.name < b.name;
+			end);
+			for _,essence in ipairs(essences) do
+				if essence.valid then
+					role.essences[#role.essences+1] = essence.ID;
+				end
+
+				local essenceInfo = BtWLoadoutsEssenceInfo[essence.ID] or {};
+				wipe(essenceInfo);
+				essenceInfo.ID = essence.ID;
+				essenceInfo.name = essence.name;
+				essenceInfo.icon = essence.icon;
+
+				BtWLoadoutsEssenceInfo[essence.ID] = essenceInfo;
+			end
+
+			BtWLoadoutsRoleInfo[roleID] = role;
+		end
+
+		do
+			local name, realm = UnitFullName("player");
+			local class = select(2, UnitClass("player"));
+			local race = select(3, UnitRace("player"));
+			local sex = UnitSex("player") - 2;
+
+			BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
+		end
+
+		UpdateAreaMap();
+
+		-- Run conditions for instance info
+		do
+			UpdateConditionsForInstance();
+			UpdateConditionsForBoss();
+			UpdateConditionsForAffixes();
+			TriggerConditions();
+		end
+	end
+	function frame:EQUIPMENT_SETS_CHANGED(...)
+		-- Update our saved equipment sets to match the built in equipment sets
+		local oldEquipmentSetMap = equipmentSetMap;
+		equipmentSetMap = {};
+
+		local managerIDs = C_EquipmentSet.GetEquipmentSetIDs();
+		for _,managerID in ipairs(managerIDs) do
+			local set = oldEquipmentSetMap[managerID];
+			if set == nil then
+				set = AddBlankEquipmentSet();
+			end
+
+			set.managerID = managerID;
+			set.name = C_EquipmentSet.GetEquipmentSetInfo(managerID);
+
+			local ignored = C_EquipmentSet.GetIgnoredSlots(managerID);
+			local locations = C_EquipmentSet.GetItemLocations(managerID);
+			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+				set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
+
+				local location = locations[inventorySlotId] or 0;
+				if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
+					set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
+				end
+			end
+
+			equipmentSetMap[managerID] = set;
+			oldEquipmentSetMap[managerID] = nil;
+		end
+
+		for managerID,set in pairs(oldEquipmentSetMap) do
+			if set.managerID == managerID then
+				set.managerID = nil;
 			end
 		end
 
-		BtWLoadoutsSpecInfo[specID] = spec;
+		BtWLoadoutsFrame:Update();
 	end
+	function frame:PLAYER_SPECIALIZATION_CHANGED(...)
+		do
+			local specID = GetSpecializationInfo(GetSpecialization());
+			local spec = BtWLoadoutsSpecInfo[specID] or {};
 
-	do
-		local roleID = select(5, GetSpecializationInfo(GetSpecialization()));
-		local role = BtWLoadoutsRoleInfo[roleID] or {};
-		
-		role.essences = role.essences or {};
-		wipe(role.essences);
-		local essences = C_AzeriteEssence.GetEssences();
-		sort(essences, function (a,b)
-			return a.name < b.name;
-		end);
-		for _,essence in ipairs(essences) do
-			if essence.valid then
-				role.essences[#role.essences+1] = essence.ID;
+			spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
+			wipe(spec.pvptalenttrinkets);
+			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
+			if slotInfo then
+				local availableTalentIDs = slotInfo.availableTalentIDs;
+				for index,talentID in ipairs(availableTalentIDs) do
+					spec.pvptalenttrinkets[index] = talentID;
+				end
+			end
+				
+			spec.pvptalents = spec.pvptalents or {};
+			wipe(spec.pvptalents);
+			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
+			if slotInfo then
+				local availableTalentIDs = slotInfo.availableTalentIDs;
+				for index,talentID in ipairs(availableTalentIDs) do
+					spec.pvptalents[index] = talentID;
+				end
 			end
 
-			local essenceInfo = BtWLoadoutsEssenceInfo[essence.ID] or {};
-			wipe(essenceInfo);
-			essenceInfo.ID = essence.ID;
-			essenceInfo.name = essence.name;
-			essenceInfo.icon = essence.icon;
-
-			BtWLoadoutsEssenceInfo[essence.ID] = essenceInfo;
+			BtWLoadoutsSpecInfo[specID] = spec;
 		end
-
-		BtWLoadoutsRoleInfo[roleID] = role;
 	end
-
-	do
-		local name, realm = UnitFullName("player");
-		local class = select(2, UnitClass("player"));
-		local race = select(3, UnitRace("player"));
-		local sex = UnitSex("player") - 2;
-
-		BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
-	end
-
-	UpdateAreaMap();
-
-	-- Run conditions for instance info
-	do
-		UpdateConditionsForInstance();
+	function frame:ZONE_CHANGED(...)
 		UpdateConditionsForBoss();
-		UpdateConditionsForAffixes();
 		TriggerConditions();
 	end
-end
-function frame:EQUIPMENT_SETS_CHANGED(...)
-	-- Update our saved equipment sets to match the built in equipment sets
-	local oldEquipmentSetMap = equipmentSetMap;
-	equipmentSetMap = {};
-
-	local managerIDs = C_EquipmentSet.GetEquipmentSetIDs();
-	for _,managerID in ipairs(managerIDs) do
-		local set = oldEquipmentSetMap[managerID];
-		if set == nil then
-			set = AddBlankEquipmentSet();
-		end
-
-		set.managerID = managerID;
-		set.name = C_EquipmentSet.GetEquipmentSetInfo(managerID);
-
-		local ignored = C_EquipmentSet.GetIgnoredSlots(managerID);
-		local locations = C_EquipmentSet.GetItemLocations(managerID);
-		for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-			set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
-
-			local location = locations[inventorySlotId] or 0;
-			if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-				set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
-			end
-		end
-
-		equipmentSetMap[managerID] = set;
-		oldEquipmentSetMap[managerID] = nil;
+	function frame:UPDATE_MOUSEOVER_UNIT(...)
+		UpdateConditionsForBoss("mouseover");
+		TriggerConditions();
 	end
-
-	for managerID,set in pairs(oldEquipmentSetMap) do
-		if set.managerID == managerID then
-			set.managerID = nil;
-		end
+	function frame:NAME_PLATE_UNIT_ADDED(...)
+		UpdateConditionsForBoss(...);
+		TriggerConditions();
 	end
-
-	BtWLoadoutsFrame:Update();
-end
-function frame:PLAYER_SPECIALIZATION_CHANGED(...)
-	do
-		local specID = GetSpecializationInfo(GetSpecialization());
-		local spec = BtWLoadoutsSpecInfo[specID] or {};
-
-		spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-		wipe(spec.pvptalenttrinkets);
-		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-		if slotInfo then
-			local availableTalentIDs = slotInfo.availableTalentIDs;
-			for index,talentID in ipairs(availableTalentIDs) do
-				spec.pvptalenttrinkets[index] = talentID;
-			end
-		end
-			
-		spec.pvptalents = spec.pvptalents or {};
-		wipe(spec.pvptalents);
-		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-		if slotInfo then
-			local availableTalentIDs = slotInfo.availableTalentIDs;
-			for index,talentID in ipairs(availableTalentIDs) do
-				spec.pvptalents[index] = talentID;
-			end
-		end
-
-		BtWLoadoutsSpecInfo[specID] = spec;
+	function frame:PLAYER_TARGET_CHANGED(...)
+		UpdateConditionsForBoss("player");
+		TriggerConditions();
 	end
+	frame:RegisterEvent("ADDON_LOADED");
+	frame:RegisterEvent("PLAYER_LOGIN");
+	frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+	frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
+	frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+	frame:RegisterEvent("ZONE_CHANGED");
+	frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
+	frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
+	frame:RegisterEvent("PLAYER_TARGET_CHANGED");
 end
-function frame:ZONE_CHANGED(...)
-	UpdateConditionsForBoss();
-	TriggerConditions();
-end
-function frame:UPDATE_MOUSEOVER_UNIT(...)
-	UpdateConditionsForBoss("mouseover");
-	TriggerConditions();
-end
-function frame:NAME_PLATE_UNIT_ADDED(...)
-	UpdateConditionsForBoss(...);
-	TriggerConditions();
-end
-function frame:PLAYER_TARGET_CHANGED(...)
-	UpdateConditionsForBoss("player");
-	TriggerConditions();
-end
-frame:RegisterEvent("ADDON_LOADED");
-frame:RegisterEvent("PLAYER_LOGIN");
-frame:RegisterEvent("PLAYER_ENTERING_WORLD");
-frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
-frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
-frame:RegisterEvent("ZONE_CHANGED");
-frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
-frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
-frame:RegisterEvent("PLAYER_TARGET_CHANGED");
 
 eventHandler:SetScript("OnEvent", function (self, event, ...)
     self[event](self, ...);
