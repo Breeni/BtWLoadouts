@@ -6799,6 +6799,9 @@ local function EssencesTabUpdate(self)
 	if self.set ~= nil then
 		self.Name:SetEnabled(true);
 		self.RoleDropDown.Button:SetEnabled(true);
+		self.MajorSlot:SetEnabled(true);
+		self.MinorSlot1:SetEnabled(true);
+		self.MinorSlot2:SetEnabled(true);
 
 		local role = self.set.role;
 		local selected = self.set.essences;
@@ -6850,6 +6853,19 @@ local function EssencesTabUpdate(self)
 	else
 		self.Name:SetEnabled(false);
 		self.RoleDropDown.Button:SetEnabled(false);
+		self.MajorSlot:SetEnabled(false);
+		self.MinorSlot1:SetEnabled(false);
+		self.MinorSlot2:SetEnabled(false);
+
+		self.MajorSlot.EmptyGlow:Hide();
+		self.MinorSlot1.EmptyGlow:Hide();
+		self.MinorSlot2.EmptyGlow:Hide();
+		self.MajorSlot.EmptyIcon:Hide();
+		self.MinorSlot1.EmptyIcon:Hide();
+		self.MinorSlot2.EmptyIcon:Hide();
+		self.MajorSlot.Icon:Hide();
+		self.MinorSlot1.Icon:Hide();
+		self.MinorSlot2.Icon:Hide();
 
 		self.Name:SetText("");
 
