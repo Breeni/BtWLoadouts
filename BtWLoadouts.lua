@@ -54,14 +54,15 @@ if GetLocale() == "zhTW" then
 	L["Cannot create macros while in combat"] = "在戰鬥中無法建立巨集"
 	L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."] = "點擊來開啟BtWLoadouts。\n右鍵點擊來啟用與停用設定。"
 	L["Could not find a valid set"] = "無法找到有效設定"
+	L["New Profile"] = "新設定檔"
+	L["Change the name of your new profile."] = "改變您新設定檔的名稱。"
+	L["Create a talent set for your new profile."] = "為您的新設定檔建立一套天賦設定。"
+	L["Activate your profile."] = "啟動您的設定檔。"
+	L["New %s Set"] = "新%s設定"
+	L["New %s Equipment Set"] = "新%s裝備設定"
+	L["Other"] = "其他"
 
-	-- L["New Profile"]
-	-- L["Change the name of your new profile."]
-	-- L["Create a talent set for your new profile."]
-	-- L["Activate your profile."]
-	-- L["New %s Set"]
-	-- L["New %s Equipment Set"]
-	-- L["Other"]
+	-- L["New Condition Set"]
 end
 
 L["Talents"] = TALENTS;
