@@ -6465,7 +6465,9 @@ local function ProfilesTabUpdate(self)
 			UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
 		end
 
-		self.Name:SetText(self.set.name or "");
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(validForPlayer);
@@ -6546,7 +6548,9 @@ local function TalentsTabUpdate(self)
 		local specID = self.set.specID;
 		local selected = self.set.talents;
 
-		self.Name:SetText(self.set.name or "");
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
 
 		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
 		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
@@ -6638,7 +6642,9 @@ local function PvPTalentsTabUpdate(self)
 		local specID = self.set.specID;
 		local selected = self.set.talents;
 
-		self.Name:SetText(self.set.name or "");
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
 
 		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
 		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
@@ -6815,7 +6821,9 @@ local function EssencesTabUpdate(self)
 			UIDropDownMenu_EnableDropDown(self.RoleDropDown);
 		end
 
-		self.Name:SetText(self.set.name or "");
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
 
 		for milestoneID,item in pairs(self.Slots) do
 			local essenceID = self.set.essences[milestoneID];
@@ -6918,7 +6926,9 @@ local function EquipmentTabUpdate(self)
 			end
 		end
 		
-		self.Name:SetText(set.name or "");
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
 		self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
 
 		local model = self.Model;
@@ -7050,7 +7060,9 @@ local function ConditionsTabUpdate(self)
 		end
 
 		self.Name:SetEnabled(true);
-		self.Name:SetText(set.name or "");
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
 
 		self.ProfileDropDown.Button:SetEnabled(true);
 		self.ConditionTypeDropDown.Button:SetEnabled(true);
