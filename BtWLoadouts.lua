@@ -61,8 +61,7 @@ if GetLocale() == "zhTW" then
 	L["New %s Set"] = "新%s設定"
 	L["New %s Equipment Set"] = "新%s裝備設定"
 	L["Other"] = "其他"
-
-	-- L["New Condition Set"]
+	L["New Condition Set"] = "新環境設定"
 end
 
 L["Talents"] = TALENTS;
