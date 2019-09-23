@@ -8374,30 +8374,33 @@ do
 		end
 
 		do
-			local roleID = select(5, GetSpecializationInfo(GetSpecialization()));
-			local role = BtWLoadoutsRoleInfo[roleID] or {};
-			
-			role.essences = role.essences or {};
-			wipe(role.essences);
 			local essences = C_AzeriteEssence.GetEssences();
-			sort(essences, function (a,b)
-				return a.name < b.name;
-			end);
-			for _,essence in ipairs(essences) do
-				if essence.valid then
-					role.essences[#role.essences+1] = essence.ID;
+			if essences ~= nil then
+				local roleID = select(5, GetSpecializationInfo(GetSpecialization()));
+				local role = BtWLoadoutsRoleInfo[roleID] or {};
+				
+				role.essences = role.essences or {};
+				wipe(role.essences);
+
+				sort(essences, function (a,b)
+					return a.name < b.name;
+				end);
+				for _,essence in ipairs(essences) do
+					if essence.valid then
+						role.essences[#role.essences+1] = essence.ID;
+					end
+
+					local essenceInfo = BtWLoadoutsEssenceInfo[essence.ID] or {};
+					wipe(essenceInfo);
+					essenceInfo.ID = essence.ID;
+					essenceInfo.name = essence.name;
+					essenceInfo.icon = essence.icon;
+
+					BtWLoadoutsEssenceInfo[essence.ID] = essenceInfo;
 				end
 
-				local essenceInfo = BtWLoadoutsEssenceInfo[essence.ID] or {};
-				wipe(essenceInfo);
-				essenceInfo.ID = essence.ID;
-				essenceInfo.name = essence.name;
-				essenceInfo.icon = essence.icon;
-
-				BtWLoadoutsEssenceInfo[essence.ID] = essenceInfo;
+				BtWLoadoutsRoleInfo[roleID] = role;
 			end
-
-			BtWLoadoutsRoleInfo[roleID] = role;
 		end
 
 		do
