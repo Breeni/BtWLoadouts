@@ -426,6 +426,7 @@ local affixRotation = {
 	GetAffixesInfo(10, 11, 3, 119),	-- Fortified, 	Bursting, 	Volcanic, 	Beguiling
 	GetAffixesInfo(9, 6, 4, 119),	-- Tyrannical, 	Raging, 	Necrotic, 	Beguiling
 	GetAffixesInfo(10, 5, 14, 119),	-- Fortified, 	Teeming, 	Quaking, 	Beguiling
+	GetAffixesInfo(9, 11, 2, 119),	-- Tyrannical, 	Bursting, 	Skittish, 	Beguiling
 };
 _G['BtWLoadoutsAffixRotation'] = affixRotation; -- @TODO Remove
 
