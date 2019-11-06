@@ -23,7 +23,39 @@ setmetatable(L, {
     end,
 });
 
-if GetLocale() == "zhTW" then
+if GetLocale() == "ruRU" then
+	-- Thanks to Void_OW on Curse
+	L["A tome is needed to continue equiping your set."] = "Для применения этого набора необходим фолиант."
+	L["Activate profile %s?"] = "Применить профиль %s?"
+	L["Activate spec %s?\nThis set will require a tome or rested to activate"] = "Применить специализацию %s? Этот набор потребует фолианта или зоны отдыха для применения"
+	L["Activate spec %s?\nThis will use a Tome"] = "Применить специализацию %s? Это задействует Фолиант"
+	L["Activate the following profile?\n"] = "Применить этот профиль?"
+	L["Activate your profile."] = "Задействуйте ваш профиль."
+	L["Any"] = "Любой"
+	L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."] = "Вы уверены что хотите удалить набор \"%s\"? Этот набор используется в одном или нескольких профилях. Это действие невозможно отменить."
+	L["Are you sure you wish to delete the set \"%s\". This cannot be reversed."] = "Вы уверены что хотите удалить набор \"%s\"? Это действие нельзя отменить."
+	L["Battle For Azeroth"] = "Battle For Azeroth"
+	L["Can not edit equipment manager sets."] = "Изменять наборы экипировки нельзя."
+	L["Can not equip sets for other characters."] = "Применить наборы для других персонажей нельзя."
+	L["Cannot create any more macros"] = "Невозможно создать больше макросов."
+	L["Cannot create macros while in combat"] = "Невозможно создать макрос в бою"
+	L["Change the name of your new profile."] = "Измените имя вашего нового профиля."
+	L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."] = "Нажмите для запуска BtWLoadouts. Правая кнопка мыши открывает настройки."
+	L["Conditions"] = "Условия"
+	L["Could not find a valid set"] = "Нет подходящего набора"
+	L["Create a talent set for your new profile."] = "Создайте набор талантов для вашего нового профиля."
+	L["Essences"] = "Сущности"
+	L["New %s Equipment Set"] = "Новый набор экипировки %s"
+	L["New %s Set"] = "Новый набор %s"
+	L["New Condition Set"] = "Новый набор условий"
+	L["New Profile"] = "Новый профиль"
+	L["Other"] = "Другое"
+	L["Profile"] = "Профиль"
+	L["Profiles"] = "Профили"
+	L["Shift+Left Mouse Button to ignore a slot."] = "Shift+Левая кнопка мыши игнорирует слот."
+	L["Show minimap icon"] = "Показывать кнопку на мини-карте"
+	L["To begin, create a new set."] = "Для начала, создайте новый набор."
+elseif GetLocale() == "zhTW" then
 	-- Thanks to BNS333 on Curse
 	L["Profile"] = "設定檔"
 	L["Profiles"] = "設定檔"
@@ -3741,6 +3773,9 @@ end
 local function CompareItems(itemLinkA, itemLinkB)
 	return CompareItemLinks(itemLinkA, itemLinkB);
 end
+-- item:127454::::::::120::::1:0:
+-- item:127454::::::::120::512::1:5473:120
+-- item:127454::::::::120:268:512:22:2:6314:6313:120:::
 local function GetCompareItemInfo(itemLink)
 	local itemString = string.match(itemLink, "item[%-?%d:]+");
 	local linkData = {strsplit(":", itemString)};
@@ -3754,38 +3789,44 @@ local function GetCompareItemInfo(itemLink)
 
 	local index = 14;
 	local numBonusIDs = tonumber(linkData[index]) or 0;
+
 	local bonusIDs = {};
 	for i=1,numBonusIDs do
 		bonusIDs[i] = tonumber(linkData[index + i]);
 	end
 	index = index + numBonusIDs + 1;
 
+	local upgradeTypeIDs = {};
 	if upgradeTypeID and upgradeTypeID ~= 0 then
-		error("Unsupported item link");
+		upgradeTypeIDs[1] = tonumber(linkData[index + 1]);
+		if bit.band(upgradeTypeID, 0x1000000) ~= 0 then
+			upgradeTypeIDs[2] = tonumber(linkData[index + 2]);
+		end
 	end
+	index = index + 2;
 
 	local relic1NumBonusIDs = tonumber(linkData[index]) or 0;
 	local relic1BonusIDs = {};
 	for i=1,relic1NumBonusIDs do
 		relic1BonusIDs[i] = tonumber(linkData[index + i]);
 	end
-	index = index + numBonusIDs + 1;
+	index = index + relic1NumBonusIDs + 1;
 
 	local relic2NumBonusIDs = tonumber(linkData[index]) or 0;
 	local relic2BonusIDs = {};
 	for i=1,relic2NumBonusIDs do
 		relic2BonusIDs[i] = tonumber(linkData[index + i]);
 	end
-	index = index + numBonusIDs + 1;
+	index = index + relic2NumBonusIDs + 1;
 
 	local relic3NumBonusIDs = tonumber(linkData[index]) or 0;
 	local relic3BonusIDs = {};
 	for i=1,relic3NumBonusIDs do
 		relic3BonusIDs[i] = tonumber(linkData[index + i]);
 	end
-	index = index + numBonusIDs + 1;
+	index = index + relic3NumBonusIDs + 1;
 
-	return itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, nil, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs;
+	return itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs;
 end
 local GetBestMatch;
 do
@@ -3828,6 +3869,9 @@ do
 			match = match + 1;
 		end
 		for i=1,math.max(#bonusIDs,#locationBonusIDs) do
+			match = match + 1;
+		end
+		for i=1,math.max(#upgradeTypeIDs,#locationUpgradeTypeIDs) do
 			match = match + 1;
 		end
 		for i=1,math.max(#relic1BonusIDs,#locationRelic1BonusIDs) do
@@ -3924,6 +3968,11 @@ do
 		end
 		for i=1,#bonusIDs do
 			if bonusIDs[i] ~= locationBonusIDs[i] then
+				return false;
+			end
+		end
+		for i=1,#upgradeTypeIDs do
+			if upgradeTypeIDs[i] ~= locationUpgradeTypeIDs[i] then
 				return false;
 			end
 		end
