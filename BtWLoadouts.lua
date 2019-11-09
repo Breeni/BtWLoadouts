@@ -3022,9 +3022,6 @@ local function ConditionProfilesDropDownInit(self, level, menuList)
         end
     end
 end
-UIDropDownMenu_SetWidth(conditionProfilesDropDown, 170);
-UIDropDownMenu_Initialize(conditionProfilesDropDown, ConditionProfilesDropDownInit);
-UIDropDownMenu_JustifyText(conditionProfilesDropDown, "LEFT");
 
 StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATE"] = {
 	text = L["Activate profile %s?"],
@@ -4841,6 +4838,13 @@ local function TriggerConditions()
 		sort(sortedActiveConditions, function(a,b)
 			return a.match > b.match;
 		end);
+
+		if not conditionProfilesDropDown.initialized then
+			UIDropDownMenu_SetWidth(conditionProfilesDropDown, 170);
+			UIDropDownMenu_Initialize(conditionProfilesDropDown, ConditionProfilesDropDownInit);
+			UIDropDownMenu_JustifyText(conditionProfilesDropDown, "LEFT");
+			conditionProfilesDropDown.initialized = true;
+		end
 
 		activeConditionSelection = sortedActiveConditions[1];
 		UIDropDownMenu_SetText(conditionProfilesDropDown, activeConditionSelection.condition.name);
@@ -7225,86 +7229,6 @@ do
 
 		self.TitleText:SetText(PROFILES);
 		self.TitleText:SetHeight(24);
-
-		self.Profiles.SpecDropDown.includeNone = true;
-		UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
-		UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
-		UIDropDownMenu_JustifyText(self.Profiles.SpecDropDown, "LEFT");
-
-		UIDropDownMenu_SetWidth(self.Profiles.TalentsDropDown, 300);
-		UIDropDownMenu_Initialize(self.Profiles.TalentsDropDown, TalentsDropDownInit);
-		UIDropDownMenu_JustifyText(self.Profiles.TalentsDropDown, "LEFT");
-
-		UIDropDownMenu_SetWidth(self.Profiles.PvPTalentsDropDown, 300);
-		UIDropDownMenu_Initialize(self.Profiles.PvPTalentsDropDown, PvPTalentsDropDownInit);
-		UIDropDownMenu_JustifyText(self.Profiles.PvPTalentsDropDown, "LEFT");
-
-		UIDropDownMenu_SetWidth(self.Profiles.EssencesDropDown, 300);
-		UIDropDownMenu_Initialize(self.Profiles.EssencesDropDown, EssencesDropDownInit);
-		UIDropDownMenu_JustifyText(self.Profiles.EssencesDropDown, "LEFT");
-
-		UIDropDownMenu_SetWidth(self.Profiles.EquipmentDropDown, 300);
-		UIDropDownMenu_Initialize(self.Profiles.EquipmentDropDown, EquipmentDropDownInit);
-		UIDropDownMenu_JustifyText(self.Profiles.EquipmentDropDown, "LEFT");
-		
-
-		UIDropDownMenu_SetWidth(self.Talents.SpecDropDown, 170);
-		UIDropDownMenu_Initialize(self.Talents.SpecDropDown, SpecDropDownInit);
-		UIDropDownMenu_JustifyText(self.Talents.SpecDropDown, "LEFT");
-
-
-		UIDropDownMenu_SetWidth(self.PvPTalents.SpecDropDown, 170);
-		UIDropDownMenu_Initialize(self.PvPTalents.SpecDropDown, SpecDropDownInit);
-		UIDropDownMenu_JustifyText(self.PvPTalents.SpecDropDown, "LEFT");
-
-
-		UIDropDownMenu_SetWidth(self.Essences.RoleDropDown, 170);
-		UIDropDownMenu_Initialize(self.Essences.RoleDropDown, RoleDropDownInit);
-		UIDropDownMenu_JustifyText(self.Essences.RoleDropDown, "LEFT");
-		self.Essences.Slots = {
-			[115] = self.Essences.MajorSlot,
-			[116] = self.Essences.MinorSlot1,
-			[117] = self.Essences.MinorSlot2,
-		};
-		
-		HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWLoadoutsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
-		self.Essences.EssenceList.update = EssenceScrollFrameUpdate;
-
-		self.Equipment.flyoutSettings = {
-			onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,
-			getItemsFunc = PaperDollFrameItemFlyout_GetItems,
-			-- postGetItemsFunc = PaperDollFrameItemFlyout_PostGetItems,
-			hasPopouts = true,
-			parent = self.Equipment,
-			anchorX = 0,
-			anchorY = -3,
-			verticalAnchorX = 0,
-			verticalAnchorY = 0,
-		};
-		
-		UIDropDownMenu_SetWidth(self.Conditions.ProfileDropDown, 400);
-		UIDropDownMenu_Initialize(self.Conditions.ProfileDropDown, ProfilesDropDownInit);
-		UIDropDownMenu_JustifyText(self.Conditions.ProfileDropDown, "LEFT");
-		
-		UIDropDownMenu_SetWidth(self.Conditions.ConditionTypeDropDown, 400);
-		UIDropDownMenu_Initialize(self.Conditions.ConditionTypeDropDown, ConditionTypeDropDownInit);
-		UIDropDownMenu_JustifyText(self.Conditions.ConditionTypeDropDown, "LEFT");
-		
-		UIDropDownMenu_SetWidth(self.Conditions.InstanceDropDown, 175);
-		UIDropDownMenu_Initialize(self.Conditions.InstanceDropDown, InstanceDropDownInit);
-		UIDropDownMenu_JustifyText(self.Conditions.InstanceDropDown, "LEFT");
-		
-		UIDropDownMenu_SetWidth(self.Conditions.DifficultyDropDown, 175);
-		UIDropDownMenu_Initialize(self.Conditions.DifficultyDropDown, DifficultyDropDownInit);
-		UIDropDownMenu_JustifyText(self.Conditions.DifficultyDropDown, "LEFT");
-		
-		UIDropDownMenu_SetWidth(self.Conditions.BossDropDown, 400);
-		UIDropDownMenu_Initialize(self.Conditions.BossDropDown, BossDropDownInit);
-		UIDropDownMenu_JustifyText(self.Conditions.BossDropDown, "LEFT");
-		
-		UIDropDownMenu_SetWidth(self.Conditions.AffixesDropDown, 400);
-		UIDropDownMenu_Initialize(self.Conditions.AffixesDropDown, AffixesDropDownInit);
-		UIDropDownMenu_JustifyText(self.Conditions.AffixesDropDown, "LEFT");
 	end
 	function BtWLoadoutsFrameMixin:OnDragStart()
 		self:StartMoving();
@@ -7718,6 +7642,89 @@ do
 		end
 	end
 	function BtWLoadoutsFrameMixin:OnShow()
+		if not self.initialized then
+			self.Profiles.SpecDropDown.includeNone = true;
+			UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
+			UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
+			UIDropDownMenu_JustifyText(self.Profiles.SpecDropDown, "LEFT");
+	
+			UIDropDownMenu_SetWidth(self.Profiles.TalentsDropDown, 300);
+			UIDropDownMenu_Initialize(self.Profiles.TalentsDropDown, TalentsDropDownInit);
+			UIDropDownMenu_JustifyText(self.Profiles.TalentsDropDown, "LEFT");
+	
+			UIDropDownMenu_SetWidth(self.Profiles.PvPTalentsDropDown, 300);
+			UIDropDownMenu_Initialize(self.Profiles.PvPTalentsDropDown, PvPTalentsDropDownInit);
+			UIDropDownMenu_JustifyText(self.Profiles.PvPTalentsDropDown, "LEFT");
+	
+			UIDropDownMenu_SetWidth(self.Profiles.EssencesDropDown, 300);
+			UIDropDownMenu_Initialize(self.Profiles.EssencesDropDown, EssencesDropDownInit);
+			UIDropDownMenu_JustifyText(self.Profiles.EssencesDropDown, "LEFT");
+	
+			UIDropDownMenu_SetWidth(self.Profiles.EquipmentDropDown, 300);
+			UIDropDownMenu_Initialize(self.Profiles.EquipmentDropDown, EquipmentDropDownInit);
+			UIDropDownMenu_JustifyText(self.Profiles.EquipmentDropDown, "LEFT");
+			
+	
+			UIDropDownMenu_SetWidth(self.Talents.SpecDropDown, 170);
+			UIDropDownMenu_Initialize(self.Talents.SpecDropDown, SpecDropDownInit);
+			UIDropDownMenu_JustifyText(self.Talents.SpecDropDown, "LEFT");
+	
+	
+			UIDropDownMenu_SetWidth(self.PvPTalents.SpecDropDown, 170);
+			UIDropDownMenu_Initialize(self.PvPTalents.SpecDropDown, SpecDropDownInit);
+			UIDropDownMenu_JustifyText(self.PvPTalents.SpecDropDown, "LEFT");
+	
+	
+			UIDropDownMenu_SetWidth(self.Essences.RoleDropDown, 170);
+			UIDropDownMenu_Initialize(self.Essences.RoleDropDown, RoleDropDownInit);
+			UIDropDownMenu_JustifyText(self.Essences.RoleDropDown, "LEFT");
+			self.Essences.Slots = {
+				[115] = self.Essences.MajorSlot,
+				[116] = self.Essences.MinorSlot1,
+				[117] = self.Essences.MinorSlot2,
+			};
+			
+			HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWLoadoutsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+			self.Essences.EssenceList.update = EssenceScrollFrameUpdate;
+	
+			self.Equipment.flyoutSettings = {
+				onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,
+				getItemsFunc = PaperDollFrameItemFlyout_GetItems,
+				-- postGetItemsFunc = PaperDollFrameItemFlyout_PostGetItems,
+				hasPopouts = true,
+				parent = self.Equipment,
+				anchorX = 0,
+				anchorY = -3,
+				verticalAnchorX = 0,
+				verticalAnchorY = 0,
+			};
+			
+			UIDropDownMenu_SetWidth(self.Conditions.ProfileDropDown, 400);
+			UIDropDownMenu_Initialize(self.Conditions.ProfileDropDown, ProfilesDropDownInit);
+			UIDropDownMenu_JustifyText(self.Conditions.ProfileDropDown, "LEFT");
+			
+			UIDropDownMenu_SetWidth(self.Conditions.ConditionTypeDropDown, 400);
+			UIDropDownMenu_Initialize(self.Conditions.ConditionTypeDropDown, ConditionTypeDropDownInit);
+			UIDropDownMenu_JustifyText(self.Conditions.ConditionTypeDropDown, "LEFT");
+			
+			UIDropDownMenu_SetWidth(self.Conditions.InstanceDropDown, 175);
+			UIDropDownMenu_Initialize(self.Conditions.InstanceDropDown, InstanceDropDownInit);
+			UIDropDownMenu_JustifyText(self.Conditions.InstanceDropDown, "LEFT");
+			
+			UIDropDownMenu_SetWidth(self.Conditions.DifficultyDropDown, 175);
+			UIDropDownMenu_Initialize(self.Conditions.DifficultyDropDown, DifficultyDropDownInit);
+			UIDropDownMenu_JustifyText(self.Conditions.DifficultyDropDown, "LEFT");
+			
+			UIDropDownMenu_SetWidth(self.Conditions.BossDropDown, 400);
+			UIDropDownMenu_Initialize(self.Conditions.BossDropDown, BossDropDownInit);
+			UIDropDownMenu_JustifyText(self.Conditions.BossDropDown, "LEFT");
+			
+			UIDropDownMenu_SetWidth(self.Conditions.AffixesDropDown, 400);
+			UIDropDownMenu_Initialize(self.Conditions.AffixesDropDown, AffixesDropDownInit);
+			UIDropDownMenu_JustifyText(self.Conditions.AffixesDropDown, "LEFT");
+			self.initialized = true;
+		end
+
 		helpTipIgnored["MINIMAP_ICON"] = true;
 		StaticPopup_Hide("BTWLOADOUTS_REQUESTACTIVATE");
 		StaticPopup_Hide("BTWLOADOUTS_REQUESTMULTIACTIVATE");
