@@ -8020,7 +8020,6 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 end
 
 do
-	local GetMinimapShape = GetMinimapShape;
 	local GetCursorPosition = GetCursorPosition;
 	-- This is very important, the global functions gives different responses than the math functions
 	local cos, sin = math.cos, math.sin;
@@ -8053,13 +8052,16 @@ do
 	function BtWLoadoutsMinimapMixin:OnLoad()
 		self:RegisterForClicks("anyUp");
 		self:RegisterForDrag("LeftButton");
-		self:RegisterEvent("ADDON_LOADED");
+		self:RegisterEvent("PLAYER_LOGIN");
 	end
 	function BtWLoadoutsMinimapMixin:OnEvent(event, ...)
-		if ... == "BtWLoadouts" then
-			self:SetShown(Settings.minimapShown);
-			self:Reposition(Settings.minimapAngle or 195);
-		end
+		self:SetShown(Settings.minimapShown);
+		self:Reposition(Settings.minimapAngle or 195);
+
+		local button = self;
+		Minimap:HookScript("OnSizeChanged", function ()
+			button:Reposition(Settings.minimapAngle or 195);
+		end)
 	end
 	function BtWLoadoutsMinimapMixin:OnDragStart()
 		self:LockHighlight();
@@ -8070,7 +8072,6 @@ do
 		self:SetScript("OnUpdate", nil);
 	end
 	function BtWLoadoutsMinimapMixin:Reposition(degrees)
-		local radius = 80;
 		local rounding = 10;
 		local angle = rad(degrees or 195);
 		local x, y;
@@ -8084,15 +8085,20 @@ do
 			q = q + 2;	-- right
 		end
 
+		local hRadius = Minimap:GetWidth() / 2 + 5
+		local vRadius = Minimap:GetHeight() / 2 + 5
+
 		local minimapShape = GetMinimapShape and GetMinimapShape() or "ROUND";
 		local quadTable = minimapShapes[minimapShape];
 		if quadTable[q] then
-			x = cos*radius;
-			y = sin*radius;
+			x = cos * hRadius;
+			y = sin * vRadius;
 		else
-			local diagRadius = sqrt(2*(radius)^2)-rounding;
-			x = max(-radius, min(cos*diagRadius, radius));
-			y = max(-radius, min(sin*diagRadius, radius));
+			local hDiagRadius = sqrt(2*(hRadius)^2) - rounding
+			local vDiagRadius = sqrt(2*(vRadius)^2) - rounding
+
+			x = max(-hRadius, min(cos * hDiagRadius, hRadius));
+			y = max(-vRadius, min(sin * vDiagRadius, vRadius));
 		end
 		
 		self:SetPoint("CENTER", "$parent", "CENTER", x, y);
@@ -8107,6 +8113,7 @@ do
 		local angle = deg(atan2(py - my, px - mx));
 
 		Settings.minimapAngle = angle;
+
 		self:Reposition(angle);
 	end
 	function BtWLoadoutsMinimapMixin:OnClick(button)
