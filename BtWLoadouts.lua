@@ -3578,7 +3578,11 @@ local function AddPvPTalentSet()
     return set;
 end
 local function GetPvPTalentSet(id)
-    return BtWLoadoutsSets.pvptalents[id];
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWLoadoutsSets.pvptalents[id];
+	end
 end
 local function GetPvPTalentSetByName(name)
 	for _,set in pairs(BtWLoadoutsSets.pvptalents) do
@@ -3700,7 +3704,11 @@ local function AddEssenceSet()
     return set;
 end
 local function GetEssenceSet(id)
-    return BtWLoadoutsSets.essences[id];
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWLoadoutsSets.essences[id];
+	end
 end
 local function GetEssenceSetByName(name)
 	for _,set in pairs(BtWLoadoutsSets.essences) do
@@ -4229,7 +4237,11 @@ local function AddBlankEquipmentSet()
     return set;
 end
 local function GetEquipmentSet(id)
-    return BtWLoadoutsSets.equipment[id];
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWLoadoutsSets.equipment[id];
+	end
 end
 local function GetEquipmentSetByName(name)
 	for _,set in pairs(BtWLoadoutsSets.equipment) do
@@ -8140,17 +8152,66 @@ do
 	function BtWLoadoutsMinimapMixin:OnLeave()
 		GameTooltip:Hide();
 	end
-	function BtWLoadoutsMinimapMenu_Init(self, level)
-		local info = UIDropDownMenu_CreateInfo();
-		info.func = function (self, key)
-			Settings[key] = not Settings[key];
-		end
-		for i, entry in ipairs(Settings) do
-			info.text = entry.name;
-			info.arg1 = entry.key;
-			info.checked = Settings[entry.key];
+	local items = {}
+	function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
+		if level == 1 then
+			wipe(items)
+			for id, set in pairs(BtWLoadoutsSets.profiles) do
+				if type(set) == "table" then
+					if select(5, IsProfileValid(set)) then
+						items[#items+1] = set
+					end
+				end
+			end
+			table.sort(items, function (a, b)
+				if a.specID ~= b.specID then
+					return a.specID < b.specID
+				end
 
-			UIDropDownMenu_AddButton(info, level);
+				return a.name < b.name
+			end)
+
+			local info = UIDropDownMenu_CreateInfo();
+
+			if #items > 0 then
+				info.isTitle, info.disabled, info.notCheckable = true, true, true;
+				info.text = L["Profiles"];
+
+				UIDropDownMenu_AddButton(info, level);
+				
+				info.isTitle, info.disabled, info.notCheckable = false, false, false;
+				info.func = function (self, id)
+					local set = BtWLoadoutsSets.profiles[id]
+					if set then
+						ActivateProfile(set)
+					end
+				end
+				for _,set in ipairs(items) do
+					info.text = set.name;
+					info.arg1 = set.setID;
+					info.checked = IsProfileActive(set)
+		
+					UIDropDownMenu_AddButton(info, level);
+				end
+				
+				info.isTitle, info.disabled, info.notCheckable = true, true, true;
+				info.func, info.arg1 = nil, nil;
+				info.text = L["Settings"];
+
+				UIDropDownMenu_AddButton(info, level);
+			end
+			
+			info.isTitle, info.disabled, info.notCheckable = false, false, false;
+			info.func = function (self, key)
+				Settings[key] = not Settings[key];
+			end
+			for i, entry in ipairs(Settings) do
+				info.text = entry.name;
+				info.arg1 = entry.key;
+				info.checked = Settings[entry.key];
+	
+				UIDropDownMenu_AddButton(info, level);
+			end
 		end
 	end
 end
@@ -8389,6 +8450,34 @@ do
 		end
 	end
 	function frame:PLAYER_LOGIN(...)
+		do
+			-- LDB launcher
+			local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
+			if LDB then
+				LDB:NewDataObject("BtWLoadOuts", {
+					type = "launcher",
+					label = L["BtWLoadouts"],
+					icon = [[Interface\ICONS\Ability_marksmanship]],
+					OnClick = function(clickedframe, button)
+						if button == "LeftButton" then
+							BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
+						elseif button == "RightButton" then
+							if not BtWLoadoutsMinimapButton.Menu then
+								BtWLoadoutsMinimapButton.Menu = CreateFrame("Frame", BtWLoadoutsMinimapButton:GetName().."Menu", BtWLoadoutsMinimapButton, "UIDropDownMenuTemplate");
+								UIDropDownMenu_Initialize(BtWLoadoutsMinimapButton.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
+							end
+							
+							ToggleDropDownMenu(1, nil, BtWLoadoutsMinimapButton.Menu, clickedframe, 0, -5);
+						end
+					end,
+					OnTooltipShow = function(tooltip)
+						tooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
+						tooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
+					end,
+				})
+			end
+		end
+
 		self:EQUIPMENT_SETS_CHANGED();
 	end
 	function frame:PLAYER_ENTERING_WORLD()
@@ -8675,30 +8764,294 @@ eventHandler:SetScript("OnUpdate", function (self)
     end
 end)
 
-do
-	-- LDB launcher
-	local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
-	if LDB then
-		LDB:NewDataObject("BtWLoadOuts", {
-			type = "launcher",
-            label = L["BtWLoadouts"],
-			icon = [[Interface\ICONS\Ability_marksmanship]],
-			OnClick = function(clickedframe, button)
-				if button == "LeftButton" then
-					BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
-				elseif button == "RightButton" then
-					if not BtWLoadoutsMinimapButton.Menu then
-						BtWLoadoutsMinimapButton.Menu = CreateFrame("Frame", BtWLoadoutsMinimapButton:GetName().."Menu", BtWLoadoutsMinimapButton, "UIDropDownMenuTemplate");
-						UIDropDownMenu_Initialize(BtWLoadoutsMinimapButton.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
+if OneRingLib then
+    local AB = assert(OneRingLib.ext.ActionBook:compatible(2, 14), "A compatible version of ActionBook is required")
+    
+	AB:AugmentCategory("BtWLoadouts", function (category, add)
+		local items = {}
+		do
+			for id, set in pairs(BtWLoadoutsSets.profiles) do
+				if type(set) == "table" then
+					if select(5, IsProfileValid(set)) then
+						items[#items+1] = set
 					end
-					
-					ToggleDropDownMenu(1, nil, BtWLoadoutsMinimapButton.Menu, clickedframe, 0, -5);
 				end
-			end,
-			OnTooltipShow = function(tooltip)
-				tooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
-				tooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
-			end,
-		})
+			end
+			table.sort(items, function (a, b)
+				if a.specID ~= b.specID then
+					return a.specID < b.specID
+				end
+
+				return a.name < b.name
+			end)
+			for _,set in ipairs(items) do
+				add("btwloadoutprofile", set.setID)
+			end
+		end
+		
+		do
+			wipe(items)
+			for id, set in pairs(BtWLoadoutsSets.talents) do
+				if type(set) == "table" then
+					if select(5, IsProfileValid({
+						talentSet = set
+					})) then
+						items[#items+1] = set
+					end
+				end
+			end
+			table.sort(items, function (a, b)
+				if a.specID ~= b.specID then
+					return a.specID < b.specID
+				end
+
+				return a.name < b.name
+			end)
+			for _,set in ipairs(items) do
+				add("btwloadouttalent", set.setID)
+			end
+		end
+		
+		do
+			wipe(items)
+			for id, set in pairs(BtWLoadoutsSets.pvptalents) do
+				if type(set) == "table" then
+					if select(5, IsProfileValid({
+						pvpTalentSet = set
+					})) then
+						items[#items+1] = set
+					end
+				end
+			end
+			table.sort(items, function (a, b)
+				if a.specID ~= b.specID then
+					return a.specID < b.specID
+				end
+
+				return a.name < b.name
+			end)
+			for _,set in ipairs(items) do
+				add("btwloadoutpvptalent", set.setID)
+			end
+		end
+		
+		do
+			wipe(items)
+			for id, set in pairs(BtWLoadoutsSets.essences) do
+				if type(set) == "table" then
+					if select(5, IsProfileValid({
+						essencesSet = set
+					})) then
+						items[#items+1] = set
+					end
+				end
+			end
+			table.sort(items, function (a, b)
+				if a.role ~= b.role then
+					return a.role < b.role
+				end
+
+				return a.name < b.name
+			end)
+			for _,set in ipairs(items) do
+				add("btwloadoutessences", set.setID)
+			end
+		end
+		
+		do
+			wipe(items)
+			for id, set in pairs(BtWLoadoutsSets.equipment) do
+				if type(set) == "table" then
+					if select(5, IsProfileValid({
+						equipmentSet = set
+					})) then
+						items[#items+1] = set
+					end
+				end
+			end
+			table.sort(items, function (a, b)
+				return a.name < b.name
+			end)
+			for _,set in ipairs(items) do
+				add("btwloadoutequipment", set.setID)
+			end
+		end
+	end)
+	
+	do
+		local function hint(id)
+			local set = BtWLoadoutsSets.profiles[id]
+			local usable = select(5, IsProfileValid(set))
+			return usable, false, nil, set.name
+		end
+		local function activate(id)
+			local set = BtWLoadoutsSets.profiles[id]
+			if set then
+				ActivateProfile(set)
+			end
+		end
+		local map = {}
+		AB:RegisterActionType("btwloadoutprofile", function(id)
+			if not map[id] then
+				map[id] = AB:CreateActionSlot(hint, id, "func", activate, id)
+			end
+			return map[id]
+		end, function(id)
+			local set = BtWLoadoutsSets.profiles[id]
+
+			local category
+			if set.specID then
+				local _, specName, _, _, _, classFile = GetSpecializationInfoByID(set.specID)
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				category = format("%s - %s", L["Profile"], classColor:WrapTextInColorCode(specName))
+			else
+				category = L["Profile"]
+			end
+
+			return category, set.name, nil
+		end)
+	end
+
+	do
+		local function hint(id)
+			local set = BtWLoadoutsSets.talents[id]
+			local usable = select(5, IsProfileValid({
+				talentSet = set.setID;
+			}))
+			return usable, false, nil, set.name
+		end
+		local function activate(id)
+			local set = BtWLoadoutsSets.talents[id]
+			if set then
+				ActivateProfile({
+					talentSet = set.setID;
+				});
+			end
+		end
+		local map = {}
+		AB:RegisterActionType("btwloadouttalent", function(id)
+			if not map[id] then
+				map[id] = AB:CreateActionSlot(hint, id, "func", activate, id)
+			end
+			return map[id]
+		end, function(id)
+			local set = BtWLoadoutsSets.talents[id]
+
+			local category
+			if set.specID then
+				local _, specName, _, _, _, classFile = GetSpecializationInfoByID(set.specID)
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				category = format("%s - %s", L["Talents"], classColor:WrapTextInColorCode(specName))
+			else
+				category = L["Talents"]
+			end
+
+			return category, set.name, nil
+		end)
+	end
+
+	do
+		local function hint(id)
+			local set = BtWLoadoutsSets.pvptalents[id]
+			local usable = select(5, IsProfileValid({
+				pvpTalentSet = set.setID;
+			}))
+			return usable, false, nil, set.name
+		end
+		local function activate(id)
+			local set = BtWLoadoutsSets.pvptalents[id]
+			if set then
+				ActivateProfile({
+					pvpTalentSet = set.setID;
+				});
+			end
+		end
+		local map = {}
+		AB:RegisterActionType("btwloadoutpvptalent", function(id)
+			if not map[id] then
+				map[id] = AB:CreateActionSlot(hint, id, "func", activate, id)
+			end
+			return map[id]
+		end, function(id)
+			local set = BtWLoadoutsSets.pvptalents[id]
+
+			local category
+			if set.specID then
+				local _, specName, _, _, _, classFile = GetSpecializationInfoByID(set.specID)
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				category = format("%s - %s", L["PvP Talents"], classColor:WrapTextInColorCode(specName))
+			else
+				category = L["PvP Talents"]
+			end
+
+			return category, set.name, nil
+		end)
+	end
+
+	do
+		local function hint(id)
+			local set = BtWLoadoutsSets.essences[id]
+			local usable = select(5, IsProfileValid({
+				essencesSet = set.setID;
+			}))
+			return usable, false, nil, set.name
+		end
+		local function activate(id)
+			local set = BtWLoadoutsSets.essences[id]
+			if set then
+				ActivateProfile({
+					essencesSet = set.setID;
+				});
+			end
+		end
+		local map = {}
+		AB:RegisterActionType("btwloadoutessences", function(id)
+			if not map[id] then
+				map[id] = AB:CreateActionSlot(hint, id, "func", activate, id)
+			end
+			return map[id]
+		end, function(id)
+			local set = BtWLoadoutsSets.essences[id]
+
+			local category
+			if set.role then
+				category = format("%s - %s", L["Essences"], _G[set.role])
+			else
+				category = L["Essences"]
+			end
+
+			return category, set.name, nil
+		end)
+	end
+
+	do
+		local function hint(id)
+			local set = BtWLoadoutsSets.equipment[id]
+			local usable = select(5, IsProfileValid({
+				equipmentSet = set.setID;
+			}))
+			return usable, false, nil, set.name
+		end
+		local function activate(id)
+			local set = BtWLoadoutsSets.equipment[id]
+			if set then
+				ActivateProfile({
+					equipmentSet = set.setID;
+				});
+			end
+		end
+		local map = {}
+		AB:RegisterActionType("btwloadoutequipment", function(id)
+			if not map[id] then
+				map[id] = AB:CreateActionSlot(hint, id, "func", activate, id)
+			end
+			return map[id]
+		end, function(id)
+			local set = BtWLoadoutsSets.equipment[id]
+
+			local category = L["Equipment"]
+
+			return category, set.name, nil
+		end)
 	end
 end

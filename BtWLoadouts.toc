@@ -5,5 +5,6 @@
 ## Author: Breen
 ## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings
 ## SavedVariablesPerCharacter: BtWLoadoutsCollapsed
+## OptionalDeps: OPie
 
 BtWLoadouts.xml
