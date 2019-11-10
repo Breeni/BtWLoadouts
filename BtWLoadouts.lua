@@ -146,10 +146,11 @@ local instanceDifficulties = {
 	[1822] = dungeonDifficultiesAll,
 	[2097] = {23},
 	
-	[1861] = {17,14,15,16},
-	[2070] = {17,14,15,16},
-	[2096] = {17,14,15,16},
-	[2164] = {17,14,15,16},
+	[1861] = raidDifficultiesAll,
+	[2070] = raidDifficultiesAll,
+	[2096] = raidDifficultiesAll,
+	[2164] = raidDifficultiesAll,
+	[2217] = raidDifficultiesAll,
 };
 local dungeonInfo = {
 	{
@@ -247,6 +248,7 @@ local raidInfo = {
 			2070,
 			2096,
 			2164,
+			2217,
 		},
 	}
 };
@@ -360,6 +362,17 @@ local instanceBosses = {
 		2349, -- Za'qul, Harbinger of Ny'alotha
 		2361, -- Queen Azshara
 	},
+	[2217] = { -- Ny'alotha
+		2368, -- Wrathion
+		2365, -- Maut
+		2369, -- The Prophet Skitra
+		2377, -- Dark Inquisitor Xanesh
+		2372, -- The Hivemind
+		2367, -- Shad'har the Insatiable
+		2373, -- Drest'agath
+		2370, -- Vexiona
+		2364, -- Ra-den the Despoiled
+	},
 };
 -- A map of npc ids to boss ids, this might not be the bosses npc id, just something that signifies the boss
 local npcIDToBossID = {
@@ -400,6 +413,11 @@ local InstanceAreaIDToBossID = {
 		[9639] = 2094, -- Ring of Booty
 		[10040] = 2095, -- Harlan Sweete
 	},
+
+	[2217] = { -- Ny'alotha
+		[12879] = 2365, -- Maut
+		[12880] = 2369, -- The Prophet Skitra
+	},
 };
 local uiMapIDToBossID = {
 	-- Operation: Mechagon
@@ -413,6 +431,15 @@ local uiMapIDToBossID = {
 	[1518] = 2359, -- The Queen's Court
 	[1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
 	[1520] = 2361, -- Queen Azshara
+
+	-- Ny'alotha
+	[1580] = 2368, -- Wrathion
+	[1592] = 2377, -- Dark Inquisitor Xanesh
+	[1590] = 2372, -- The Hivemind
+	[1594] = 2367, -- Shad'har the Insatiable
+	[1595] = 2373, -- Drest'agath
+	[1593] = 2370, -- Vexiona
+	[1591] = 2364, -- Ra-den the Despoiled
 };
 
 local function GetAffixesName(affixesID)
