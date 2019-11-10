@@ -3006,10 +3006,18 @@ tomeButton:SetAttribute("_onattributechanged", [[ -- (self, name, value)
 ]]);
 tomeButton:SetAttribute("active", false);
 tomeButton:HookScript("OnEnter", function (self, ...)
-    self.button:LockHighlight()
+	self.button:LockHighlight()
+	local handler = self.button:GetScript("OnEnter")
+	if handler then
+		handler(self.button, ...)
+	end
 end);
-tomeButton:HookScript("Onleave", function (self, ...)
+tomeButton:HookScript("OnLeave", function (self, ...)
     self.button:UnlockHighlight()
+	local handler = self.button:GetScript("OnLeave")
+	if handler then
+		handler(self.button, ...)
+	end
 end);
 tomeButton:HookScript("OnMouseDown", function (self, ...)
     self.button:SetButtonState("PUSHED")
