@@ -8,3 +8,4 @@
 ## OptionalDeps: OPie
 
 BtWLoadouts.xml
+Launcher.lua

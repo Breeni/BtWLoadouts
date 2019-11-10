@@ -13,7 +13,7 @@
 	What to do when the player has no tome
 ]]
 
-local ADDON_NAME = ...;
+local ADDON_NAME, Internal = ...;
 
 local GetCursorItemSource;
 
@@ -23,6 +23,7 @@ setmetatable(L, {
         return key;
     end,
 });
+Internal.L = L;
 
 if GetLocale() == "ruRU" then
 	-- Thanks to Void_OW on Curse
@@ -134,22 +135,22 @@ local dungeonDifficultiesAll = {1,2,23,8};
 local raidDifficultiesAll = {17,14,15,16};
 -- local raidDifficultiesAll = {3,4,5,6,79,14,15,16,17,33};
 local instanceDifficulties = {
-	[1763] = dungeonDifficultiesAll,
-	[1841] = dungeonDifficultiesAll,
-	[1877] = dungeonDifficultiesAll,
-	[1594] = dungeonDifficultiesAll,
-	[1762] = dungeonDifficultiesAll,
-	[1754] = dungeonDifficultiesAll,
-	[1864] = dungeonDifficultiesAll,
-	[1771] = dungeonDifficultiesAll,
-	[1862] = dungeonDifficultiesAll,
-	[1822] = dungeonDifficultiesAll,
-	[2097] = {23},
+	[1763] = dungeonDifficultiesAll, -- Atal'Dazar
+	[1841] = dungeonDifficultiesAll, -- The Underrot
+	[1877] = dungeonDifficultiesAll, -- Temple of Sethraliss
+	[1594] = dungeonDifficultiesAll, -- The MOTHERLODE!!
+	[1762] = dungeonDifficultiesAll, -- Kings' Rest
+	[1754] = dungeonDifficultiesAll, -- Freehold
+	[1864] = dungeonDifficultiesAll, -- Shrine of the Storm
+	[1771] = dungeonDifficultiesAll, -- Tol Dagor
+	[1862] = dungeonDifficultiesAll, -- Waycrest Manor
+	[1822] = dungeonDifficultiesAll, -- Siege of Boralus
+	[2097] = {23},					 -- Operation: Mechagon
 	
-	[1861] = {17,14,15,16},
-	[2070] = {17,14,15,16},
-	[2096] = {17,14,15,16},
-	[2164] = {17,14,15,16},
+	[1861] = raidDifficultiesAll,	 -- Uldir
+	[2070] = raidDifficultiesAll,	 -- Battle of Dazar'alor
+	[2096] = raidDifficultiesAll,	 -- Crucible of Storms
+	[2164] = raidDifficultiesAll,	 -- The Eternal Palace
 };
 local dungeonInfo = {
 	{
@@ -4486,6 +4487,7 @@ local function ActivateProfile(profile)
 		return;
 	end
 
+	target.name = profile.name
 	target.active = true;
 
 	if specID then
@@ -4568,9 +4570,33 @@ local function IsProfileActive(set)
 
 	return true;
 end
+local function GetActiveProfiles()
+	if target.active then
+		if target.name then
+			return format(L["Changing to %s..."], target.name)
+		else
+			return L["Changing..."]
+		end
+	end
+
+	local activeProfiles = {}
+	for _,profile in pairs(BtWLoadoutsSets.profiles) do
+		if type(profile) == "table" and IsProfileActive(profile) then
+			activeProfiles[#activeProfiles+1] = profile.name
+		end
+	end
+	if #activeProfiles == 0 then
+		return nil
+	end
+	
+	table.sort(activeProfiles)
+	return table.concat(activeProfiles, "/");
+end
 local function ContinueActivateProfile()
     local set = target;
 	set.dirty = false;
+	
+	Internal.UpdateLauncher(GetActiveProfiles());
 
 	if InCombatLockdown() then
         return;
@@ -4656,6 +4682,8 @@ local function ContinueActivateProfile()
 	if complete then
 		CancelActivateProfile();
 	end
+	
+	Internal.UpdateLauncher(GetActiveProfiles());
 end
 
 -- Maps condition flags to condition groups
@@ -8482,33 +8510,7 @@ do
 		end
 	end
 	function frame:PLAYER_LOGIN(...)
-		do
-			-- LDB launcher
-			local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
-			if LDB then
-				LDB:NewDataObject("BtWLoadOuts", {
-					type = "launcher",
-					label = L["BtWLoadouts"],
-					icon = [[Interface\ICONS\Ability_marksmanship]],
-					OnClick = function(clickedframe, button)
-						if button == "LeftButton" then
-							BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
-						elseif button == "RightButton" then
-							if not BtWLoadoutsMinimapButton.Menu then
-								BtWLoadoutsMinimapButton.Menu = CreateFrame("Frame", BtWLoadoutsMinimapButton:GetName().."Menu", BtWLoadoutsMinimapButton, "UIDropDownMenuTemplate");
-								UIDropDownMenu_Initialize(BtWLoadoutsMinimapButton.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
-							end
-							
-							ToggleDropDownMenu(1, nil, BtWLoadoutsMinimapButton.Menu, clickedframe, 0, -5);
-						end
-					end,
-					OnTooltipShow = function(tooltip)
-						tooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
-						tooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
-					end,
-				})
-			end
-		end
+		Internal.CreateLauncher();
 
 		self:EQUIPMENT_SETS_CHANGED();
 	end
@@ -8606,6 +8608,8 @@ do
 			UpdateConditionsForAffixes();
 			TriggerConditions();
 		end
+
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 	function frame:EQUIPMENT_SETS_CHANGED(...)
 		-- Update our saved equipment sets to match the built in equipment sets
@@ -8644,6 +8648,7 @@ do
 		end
 
 		BtWLoadoutsFrame:Update();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 	function frame:PLAYER_SPECIALIZATION_CHANGED(...)
 		do
@@ -8672,6 +8677,7 @@ do
 
 			BtWLoadoutsSpecInfo[specID] = spec;
 		end
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 	function frame:ZONE_CHANGED(...)
 		UpdateConditionsForBoss();
@@ -8689,6 +8695,9 @@ do
 		UpdateConditionsForBoss("player");
 		TriggerConditions();
 	end
+	function frame:PLAYER_TALENT_UPDATE(...)
+		Internal.UpdateLauncher(GetActiveProfiles());
+	end
 	frame:RegisterEvent("ADDON_LOADED");
 	frame:RegisterEvent("PLAYER_LOGIN");
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -8698,6 +8707,7 @@ do
 	frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
 	frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
 	frame:RegisterEvent("PLAYER_TARGET_CHANGED");
+	frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 end
 
 eventHandler:SetScript("OnEvent", function (self, event, ...)
@@ -8772,21 +8782,25 @@ end
 function eventHandler:UNIT_SPELLCAST_STOP(...)
 	if IsChangingSpec() then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
 function eventHandler:UNIT_SPELLCAST_FAILED(...)
 	if IsChangingSpec() then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
 function eventHandler:UNIT_SPELLCAST_FAILED_QUIET(...)
 	if IsChangingSpec() then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
 function eventHandler:UNIT_SPELLCAST_INTERRUPTED(...)
 	if IsChangingSpec() then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
 
