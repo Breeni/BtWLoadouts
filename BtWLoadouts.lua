@@ -2882,10 +2882,19 @@ end
 local RequestTome;
 do
 	local tomes = {
+		143780,
+		143785,
 		141446,
 		153647
 	};
 	local function GetBestTome()
+		if UnitLevel("player") <= 109 then -- Tome of the Clear Mind (WOD)
+			local count = GetItemCount(141640);
+			if count >= 1 then
+				local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
+				return itemId, name, link, quality, icon;
+			end
+		end
 		for _,itemId in ipairs(tomes) do
 			local count = GetItemCount(itemId);
 			if count >= 1 then
@@ -3063,7 +3072,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATETOME"] = {
 	OnAccept = function(self)
         
 	end,
-    OnShow = function(self)
+    OnShow = function(self, data)
         tomeButton:SetParent(self);
         tomeButton:ClearAllPoints();
         tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
@@ -3071,6 +3080,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATETOME"] = {
         tomeButton.button = self.button1;
 
         tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
+		tomeButton:SetAttribute("item", data.name);
         tomeButton:SetAttribute("active", true);
 	end,
     OnHide = function(self)
@@ -3094,7 +3104,7 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 			CancelActivateProfile();
 		end
 	end,
-    OnShow = function(self)
+	OnShow = function(self, data)
         tomeButton:SetParent(self);
         tomeButton:ClearAllPoints();
         tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
@@ -3102,6 +3112,7 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
         tomeButton.button = self.button1;
 
         tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
+		tomeButton:SetAttribute("item", data.name);
         tomeButton:SetAttribute("active", true);
 	end,
     OnHide = function(self)
