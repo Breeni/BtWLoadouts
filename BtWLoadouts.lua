@@ -4,12 +4,13 @@
 	Equipment popout
 	Equipment sets should store location
 	Equipment sets should store transmog?
-	OPIE intergration
 	Profile keybindings
 	Talent, equipment, etc. lock checking
 	Conditions need to supoort boss, affixes and arena comp
 	Localization
 	Update new set text button based on tab?
+	Codexes are still a thing
+	What to do when the player has no tome
 ]]
 
 local ADDON_NAME = ...;
@@ -3004,6 +3005,18 @@ tomeButton:SetAttribute("_onattributechanged", [[ -- (self, name, value)
     end
 ]]);
 tomeButton:SetAttribute("active", false);
+tomeButton:HookScript("OnEnter", function (self, ...)
+    self.button:LockHighlight()
+end);
+tomeButton:HookScript("Onleave", function (self, ...)
+    self.button:UnlockHighlight()
+end);
+tomeButton:HookScript("OnMouseDown", function (self, ...)
+    self.button:SetButtonState("PUSHED")
+end);
+tomeButton:HookScript("OnMouseUp", function (self, ...)
+    self.button:SetButtonState("NORMAL")
+end);
 tomeButton:HookScript("OnClick", function (self, ...)
     self.button:GetScript("OnClick")(self.button, ...);
 end);
