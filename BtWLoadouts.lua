@@ -2837,12 +2837,20 @@ end
 local PlayerNeedsTome;
 do
 	local talentChangeBuffs = {
-		[227041] = true,
-		[227563] = true,
-		[256231] = true,
-		[228128] = true,
 		[32727] = true,
 		[44521] = true,
+		[226234] = true,
+		[226241] = true,
+		[227041] = true,
+		[227563] = true,
+		[227564] = true,
+		[227565] = true,
+		[227569] = true,
+		[228128] = true,
+		[248473] = true,
+		[256229] = true,
+		[256230] = true,
+		[256231] = true,
 	};
 	local function PlayerCanChangeTalents()
 		if IsResting() then
