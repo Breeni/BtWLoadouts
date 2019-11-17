@@ -3566,7 +3566,7 @@ local function IsPvPTalentSetActive(set)
 
     return true;
 end
-local function ActivatePvPTalentSet(set)
+local function ActivatePvPTalentSet(set, checkExtraTalents)
 	local complete = true;
 	local talents = {};
 	local usedSlots = {};
@@ -3581,6 +3581,15 @@ local function ActivatePvPTalentSet(set)
 		if talentID and talents[talentID] then
 			usedSlots[slot] = true;
 			talents[talentID] = nil;
+		end
+	end
+
+	if checkExtraTalents then
+		local talentIDs = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
+		for _,talentID in pairs(talentIDs) do
+			if talents[talentID] then
+				talents[talentID] = nil;
+			end
 		end
 	end
 
@@ -4674,8 +4683,17 @@ local function ContinueActivateProfile()
 		end
 	end
 
+	-- When we will finish with Conflict as a major there is a chance we wont be able to put all the
+	-- pvp talents in the 4 slots so we need to check other set pvp talents too
+	local conflictAndStrife = false
+	if essencesSet then
+		conflictAndStrife = essencesSet.essences[115] == 32; -- We are trying to equip Conflict
+	else
+		conflictAndStrife = C_AzeriteEssence.GetMilestoneEssence(115) == 32; -- Conflict is equipped
+	end
+
     if pvpTalentSet then
-		if not ActivatePvPTalentSet(pvpTalentSet) then
+		if not ActivatePvPTalentSet(pvpTalentSet, conflictAndStrife) then
 			complete = false;
 			set.dirty = true; -- Just run next frame
 		end
