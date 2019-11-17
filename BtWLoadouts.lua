@@ -3449,12 +3449,14 @@ local function IsTalentSetActive(set)
     return true;
 end
 local function ActivateTalentSet(set)
+	local complete = true;
 	for talentID in pairs(set.talents) do
 		local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
 		if not selected and GetTalentTierInfo(tier, 1) then
-			LearnTalent(talentID);
+			complete = LearnTalent(talentID) and complete;
 		end
 	end
+	return complete;
 end
 local function AddTalentSet()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
@@ -3565,6 +3567,7 @@ local function IsPvPTalentSetActive(set)
     return true;
 end
 local function ActivatePvPTalentSet(set)
+	local complete = true;
 	local talents = {};
 	local usedSlots = {};
 
@@ -3572,22 +3575,21 @@ local function ActivatePvPTalentSet(set)
 		talents[talentID] = true;
 	end
 
-	local selectedTalents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs();
-	for slot,talentID in pairs(selectedTalents) do
-		if talents[talentID] then
+	for slot=1,4 do
+		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(slot);
+		local talentID = slotInfo.selectedTalentID;
+		if talentID and talents[talentID] then
 			usedSlots[slot] = true;
 			talents[talentID] = nil;
 		end
 	end
 
-	local playerLevel = UnitLevel("player");
 	for slot=1,4 do
-		if not usedSlots[slot] and C_SpecializationInfo.GetPvpTalentSlotUnlockLevel(slot) <= playerLevel then
-			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(slot);
-
+		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(slot);
+		if not usedSlots[slot] and slotInfo.enabled then
 			for _,talentID in ipairs(slotInfo.availableTalentIDs) do
 				if talents[talentID] then
-					LearnPvpTalent(talentID, slot);
+					complete = LearnPvpTalent(talentID, slot) and complete;
 
 					usedSlots[slot] = true;
 					talents[talentID] = nil;
@@ -3597,6 +3599,8 @@ local function ActivatePvPTalentSet(set)
 			end
 		end
 	end
+
+	return complete
 end
 local function AddPvPTalentSet()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
@@ -4659,13 +4663,22 @@ local function ContinueActivateProfile()
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME");
 	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
 
+	local errorsVisible = UIErrorsFrame:IsShown()
+	UIErrorsFrame:SetShown(false);
+
 	local complete = true;
     if talentSet then
-        ActivateTalentSet(talentSet);
-    end
+		if not ActivateTalentSet(talentSet) then
+			complete = false;
+			set.dirty = true; -- Just run next frame
+		end
+	end
 
     if pvpTalentSet then
-        ActivatePvPTalentSet(pvpTalentSet);
+		if not ActivatePvPTalentSet(pvpTalentSet) then
+			complete = false;
+			set.dirty = true; -- Just run next frame
+		end
     end
 
     if essencesSet then
@@ -4685,6 +4698,8 @@ local function ContinueActivateProfile()
 			end
 		end
 	end
+
+	UIErrorsFrame:SetShown(errorsVisible);
 
 	-- Done
 	if complete then
