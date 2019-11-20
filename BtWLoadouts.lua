@@ -5701,7 +5701,6 @@ local function EquipmentDropDownInit(self, level, menuList)
 			local name = character;
 			local characterInfo = GetCharacterInfo(character);
 			if characterInfo then
-				local characterInfo = GetCharacterInfo(character);
 				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
 				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
 			end
@@ -6269,7 +6268,7 @@ do
 					if characterInfo then
 						name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
 					else
-						name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, item.character);
+						name = format("%s |cFFD5D5D5(%s)|r", item.name, item.character);
 					end
 					-- button.name:SetText(format("%s |cFFD5D5D5(%s)|r", item.name, item.character));
 				else
