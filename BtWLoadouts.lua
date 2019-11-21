@@ -4276,7 +4276,7 @@ local function AddEquipmentSet()
 end
 -- Adds a blank equipment set for the current character
 local function AddBlankEquipmentSet()
-    local characterName, characterRealm = UnitName("player"), GetRealmName();
+    local characterName, characterRealm = UnitFullName("player");
     local set = {
 		setID = GetNextSetID(BtWLoadoutsSets.equipment),
         character = characterRealm .. "-" .. characterName,
@@ -4393,7 +4393,7 @@ local function IsProfileValid(set)
 		end
 		class = characterInfo.class;
 		
-		local name, realm = UnitName("player"), GetRealmName();
+		local name, realm = UnitFullName("player");
 		local playerCharacter = format("%s-%s", realm, name);
 		invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
 	end
@@ -6262,15 +6262,11 @@ do
 				local name;
 				if item.character then
 					local characterInfo = GetCharacterInfo(item.character);
-					-- local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-					-- name = format("%s |cFFD5D5D5(%s|cFFD5D5D5 - %s)|r", item.name, classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					
 					if characterInfo then
 						name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
 					else
 						name = format("%s |cFFD5D5D5(%s)|r", item.name, item.character);
 					end
-					-- button.name:SetText(format("%s |cFFD5D5D5(%s)|r", item.name, item.character));
 				else
 					name = item.name;
 				end
@@ -8519,7 +8515,7 @@ do
 			end
 
 			do
-				local name, realm = UnitName("player"), GetRealmName();
+				local name, realm = UnitFullName("player");
 				local character = format("%s-%s", realm, name);
 				for setID,set in pairs(BtWLoadoutsSets.equipment) do
 					if type(set) == "table" and set.character == character and set.managerID ~= nil then
@@ -8636,7 +8632,7 @@ do
 			local race = select(3, UnitRace("player"));
 			local sex = UnitSex("player") - 2;
 
-			BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
+			BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = GetRealmName(), class = class, race = race, sex = sex};
 		end
 
 		UpdateAreaMap();
