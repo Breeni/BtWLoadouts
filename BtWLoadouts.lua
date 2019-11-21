@@ -8514,31 +8514,11 @@ do
 				end
 			end
 
-			do
-				local name, realm = UnitFullName("player");
-				local character = format("%s-%s", realm, name);
-				for setID,set in pairs(BtWLoadoutsSets.equipment) do
-					if type(set) == "table" and set.character == character and set.managerID ~= nil then
-						equipmentSetMap[set.managerID] = set;
-					end
-				end
-			end
-
 			BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
 			for k in pairs(helpTipIgnored) do
 				BtWLoadoutsHelpTipFlags[k] = true;
 			end
 			helpTipIgnored = BtWLoadoutsHelpTipFlags;
-
-			for _,set in pairs(BtWLoadoutsSets.conditions) do
-				if type(set) == "table" then
-					if set.map.difficultyID ~= 8 then
-						set.map.affixesID = nil;
-					end
-
-					AddConditionToMap(set);
-				end
-			end
 
 			if not helpTipIgnored["MINIMAP_ICON"] then
 				BtWLoadoutsMinimapButton.PulseAlpha:Play();
@@ -8547,6 +8527,26 @@ do
 	end
 	function frame:PLAYER_LOGIN(...)
 		Internal.CreateLauncher();
+
+		do
+			local name, realm = UnitFullName("player");
+			local character = format("%s-%s", realm, name);
+			for setID,set in pairs(BtWLoadoutsSets.equipment) do
+				if type(set) == "table" and set.character == character and set.managerID ~= nil then
+					equipmentSetMap[set.managerID] = set;
+				end
+			end
+		end
+
+		for _,set in pairs(BtWLoadoutsSets.conditions) do
+			if type(set) == "table" then
+				if set.map.difficultyID ~= 8 then
+					set.map.affixesID = nil;
+				end
+
+				AddConditionToMap(set);
+			end
+		end
 
 		self:EQUIPMENT_SETS_CHANGED();
 	end
