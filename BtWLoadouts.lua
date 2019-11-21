@@ -8533,7 +8533,11 @@ do
 			local character = format("%s-%s", realm, name);
 			for setID,set in pairs(BtWLoadoutsSets.equipment) do
 				if type(set) == "table" and set.character == character and set.managerID ~= nil then
-					equipmentSetMap[set.managerID] = set;
+					if equipmentSetMap[set.managerID] then
+						set.managerID = nil;
+					else
+						equipmentSetMap[set.managerID] = set;
+					end
 				end
 			end
 		end
