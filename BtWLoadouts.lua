@@ -2992,7 +2992,16 @@ local Settings = SettingsCreate({
 -- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
 local target = {};
 _G['BtWLoadoutsTarget'] = target; -- @TODO REMOVE
+local uiErrorTracking
 local function CancelActivateProfile()
+	C_Timer.After(1, function ()
+		UIErrorsFrame:Clear()
+		if uiErrorTracking then
+			UIErrorsFrame:RegisterEvent("UI_ERROR_MESSAGE")
+		end
+		uiErrorTracking = nil
+	end)
+
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
@@ -4672,8 +4681,10 @@ local function ContinueActivateProfile()
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME");
 	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
 
-	local errorsVisible = UIErrorsFrame:IsShown()
-	UIErrorsFrame:SetShown(false);
+	if uiErrorTracking == nil then
+		uiErrorTracking = UIErrorsFrame:IsEventRegistered("UI_ERROR_MESSAGE")
+		UIErrorsFrame:UnregisterEvent("UI_ERROR_MESSAGE")
+	end
 
 	local complete = true;
     if talentSet then
@@ -4716,8 +4727,6 @@ local function ContinueActivateProfile()
 			end
 		end
 	end
-
-	UIErrorsFrame:SetShown(errorsVisible);
 
 	-- Done
 	if complete then
