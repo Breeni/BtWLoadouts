@@ -2925,9 +2925,16 @@ do
 		end
 	end
 end
-local function IsChangingSpec()
-    local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
-    return spellId == 200749;
+local function IsChangingSpec(verifyCastGUID, verifySpellId)
+	local _, _, _, _, _, _, castGUID, _, spellId = UnitCastingInfo("player");
+	if spellId == 200749 then
+		if verifyCastGUID ~= nil and verifyCastGUID ~= castGUID or verifySpellId ~= 200749 then
+			return false;
+		end
+		return true;
+	else
+		return false;
+	end
 end
 local function UpdateAreaMap()
 	local instanceID = select(8, GetInstanceInfo());
@@ -3719,31 +3726,21 @@ local function IsEssenceSetActive(set)
 end
 local function ActivateEssenceSet(set)
 	local complete = true;
-    for milestoneID,essenceID in pairs(set.essences) do
-        local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
-        if info.canUnlock then
-            C_AzeriteEssence.UnlockMilestone(milestoneID);
-            info.unlocked = true;
-        end
-
-		if info.unlocked then
-			if C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+	for milestoneID,essenceID in pairs(set.essences) do
+		local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
+		if info and info.valid and info.unlocked then
+			local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
+			if info.canUnlock then
+				C_AzeriteEssence.UnlockMilestone(milestoneID);
 				complete = false;
 			end
-            C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
-        end
+
+			if info.unlocked and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+				C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
+				complete = false;
+			end
+		end
 	end
-	-- If its taken us 5 attempts to equip a set its probably not going to happen
-	target.essencePass = (target.essencePass or 0) + 1;
-	if target.essencePass >= 5 then
-		-- if not complete then
-		-- 	print(format("Failed after %d passes to essence set", target.essencePass));
-		-- end
-		return true;
-	end
-	-- if complete then
-	-- 	print(format("Took %d passes to essence set", target.essencePass));
-	-- end
 
 	return complete;
 end
@@ -8828,26 +8825,26 @@ eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
 function eventHandler:ITEM_UNLOCKED(...)
 	target.dirty = true;
 end
-function eventHandler:UNIT_SPELLCAST_STOP(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_STOP(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
 		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
-function eventHandler:UNIT_SPELLCAST_FAILED(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_FAILED(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
 		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
-function eventHandler:UNIT_SPELLCAST_FAILED_QUIET(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_FAILED_QUIET(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
 		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
-function eventHandler:UNIT_SPELLCAST_INTERRUPTED(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_INTERRUPTED(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
 		Internal.UpdateLauncher(GetActiveProfiles());
 	end
