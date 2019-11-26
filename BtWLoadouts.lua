@@ -7452,8 +7452,8 @@ do
 				if IsModifiedClick("SHIFT") then
 					ActivateProfile(GetProfile(button.id));
 				else
-					self:SetProfile(GetProfile(button.id));
 					frame.Name:ClearFocus();
+					self:SetProfile(GetProfile(button.id));
 				end
 			end
 		elseif selectedTab == TAB_TALENTS then
@@ -7495,9 +7495,9 @@ do
 							talentSet = button.id;
 						});
 					end
-				else 
+				else
+					frame.Name:ClearFocus(); 
 					self:SetTalentSet(GetTalentSet(button.id));
-					frame.Name:ClearFocus();
 				end
 			end
 		elseif selectedTab == TAB_PVP_TALENTS then
@@ -7540,8 +7540,8 @@ do
 						});
 					end
 				else 
-					self:SetPvPTalentSet(GetPvPTalentSet(button.id));
 					frame.Name:ClearFocus();
+					self:SetPvPTalentSet(GetPvPTalentSet(button.id));
 				end
 			end
 		elseif selectedTab == TAB_ESSENCES then
@@ -7577,9 +7577,9 @@ do
 					ActivateProfile({
 						essencesSet = button.id;
 					});
-				else 
-					self:SetEssenceSet(GetEssenceSet(button.id));
+				else
 					frame.Name:ClearFocus();
+					self:SetEssenceSet(GetEssenceSet(button.id));
 				end
 			end
 		elseif selectedTab == TAB_EQUIPMENT then
@@ -7616,8 +7616,8 @@ do
 						equipmentSet = button.id;
 					});
 				else 
-					self:SetEquipmentSet(GetEquipmentSet(button.id));
 					frame.Name:ClearFocus();
+					self:SetEquipmentSet(GetEquipmentSet(button.id));
 				end
 			end
 		elseif selectedTab == TAB_CONDITIONS then
@@ -7635,8 +7635,8 @@ do
 					func = DeleteConditionSet,
 				});
 			else
-				self:SetConditionSet(GetConditionSet(button.id));
 				frame.Name:ClearFocus();
+				self:SetConditionSet(GetConditionSet(button.id));
 			end
 		end
 	end
