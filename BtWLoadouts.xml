@@ -820,7 +820,7 @@
 				</Layers>
 				<Scripts>
 					<OnVerticalScroll>
-						FauxScrollFrame_OnVerticalScroll(self, offset, 22, BtWLoadoutsSetsScrollFrame_Update);
+						FauxScrollFrame_OnVerticalScroll(self, offset, 21, BtWLoadoutsSetsScrollFrame_Update);
 					</OnVerticalScroll>
 				</Scripts>
 			</ScrollFrame>

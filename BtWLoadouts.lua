@@ -13,7 +13,7 @@
 	What to do when the player has no tome
 ]]
 
-local ADDON_NAME = ...;
+local ADDON_NAME, Internal = ...;
 
 local GetCursorItemSource;
 
@@ -23,6 +23,7 @@ setmetatable(L, {
         return key;
     end,
 });
+Internal.L = L;
 
 if GetLocale() == "ruRU" then
 	-- Thanks to Void_OW on Curse
@@ -2863,12 +2864,20 @@ end
 local PlayerNeedsTome;
 do
 	local talentChangeBuffs = {
-		[227041] = true,
-		[227563] = true,
-		[256231] = true,
-		[228128] = true,
 		[32727] = true,
 		[44521] = true,
+		[226234] = true,
+		[226241] = true,
+		[227041] = true,
+		[227563] = true,
+		[227564] = true,
+		[227565] = true,
+		[227569] = true,
+		[228128] = true,
+		[248473] = true,
+		[256229] = true,
+		[256230] = true,
+		[256231] = true,
 	};
 	local function PlayerCanChangeTalents()
 		if IsResting() then
@@ -2943,9 +2952,16 @@ do
 		end
 	end
 end
-local function IsChangingSpec()
-    local _, _, _, _, _, _, _, _, spellId = UnitCastingInfo("player");
-    return spellId == 200749;
+local function IsChangingSpec(verifyCastGUID, verifySpellId)
+	local _, _, _, _, _, _, castGUID, _, spellId = UnitCastingInfo("player");
+	if spellId == 200749 then
+		if verifyCastGUID ~= nil and verifyCastGUID ~= castGUID or verifySpellId ~= 200749 then
+			return false;
+		end
+		return true;
+	else
+		return false;
+	end
 end
 local function UpdateAreaMap()
 	local instanceID = select(8, GetInstanceInfo());
@@ -3010,7 +3026,16 @@ local Settings = SettingsCreate({
 -- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
 local target = {};
 _G['BtWLoadoutsTarget'] = target; -- @TODO REMOVE
+local uiErrorTracking
 local function CancelActivateProfile()
+	C_Timer.After(1, function ()
+		UIErrorsFrame:Clear()
+		if uiErrorTracking then
+			UIErrorsFrame:RegisterEvent("UI_ERROR_MESSAGE")
+		end
+		uiErrorTracking = nil
+	end)
+
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
@@ -3467,12 +3492,14 @@ local function IsTalentSetActive(set)
     return true;
 end
 local function ActivateTalentSet(set)
+	local complete = true;
 	for talentID in pairs(set.talents) do
 		local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
 		if not selected and GetTalentTierInfo(tier, 1) then
-			LearnTalent(talentID);
+			complete = LearnTalent(talentID) and complete;
 		end
 	end
+	return complete;
 end
 local function AddTalentSet()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
@@ -3582,7 +3609,8 @@ local function IsPvPTalentSetActive(set)
 
     return true;
 end
-local function ActivatePvPTalentSet(set)
+local function ActivatePvPTalentSet(set, checkExtraTalents)
+	local complete = true;
 	local talents = {};
 	local usedSlots = {};
 
@@ -3590,22 +3618,30 @@ local function ActivatePvPTalentSet(set)
 		talents[talentID] = true;
 	end
 
-	local selectedTalents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs();
-	for slot,talentID in pairs(selectedTalents) do
-		if talents[talentID] then
+	for slot=1,4 do
+		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(slot);
+		local talentID = slotInfo.selectedTalentID;
+		if talentID and talents[talentID] then
 			usedSlots[slot] = true;
 			talents[talentID] = nil;
 		end
 	end
 
-	local playerLevel = UnitLevel("player");
-	for slot=1,4 do
-		if not usedSlots[slot] and C_SpecializationInfo.GetPvpTalentSlotUnlockLevel(slot) <= playerLevel then
-			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(slot);
+	if checkExtraTalents then
+		local talentIDs = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
+		for _,talentID in pairs(talentIDs) do
+			if talents[talentID] then
+				talents[talentID] = nil;
+			end
+		end
+	end
 
+	for slot=1,4 do
+		local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(slot);
+		if not usedSlots[slot] and slotInfo.enabled then
 			for _,talentID in ipairs(slotInfo.availableTalentIDs) do
 				if talents[talentID] then
-					LearnPvpTalent(talentID, slot);
+					complete = LearnPvpTalent(talentID, slot) and complete;
 
 					usedSlots[slot] = true;
 					talents[talentID] = nil;
@@ -3615,6 +3651,8 @@ local function ActivatePvPTalentSet(set)
 			end
 		end
 	end
+
+	return complete
 end
 local function AddPvPTalentSet()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
@@ -3715,31 +3753,21 @@ local function IsEssenceSetActive(set)
 end
 local function ActivateEssenceSet(set)
 	local complete = true;
-    for milestoneID,essenceID in pairs(set.essences) do
-        local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
-        if info.canUnlock then
-            C_AzeriteEssence.UnlockMilestone(milestoneID);
-            info.unlocked = true;
-        end
-
-		if info.unlocked then
-			if C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+	for milestoneID,essenceID in pairs(set.essences) do
+		local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
+		if info and info.valid and info.unlocked then
+			local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
+			if info.canUnlock then
+				C_AzeriteEssence.UnlockMilestone(milestoneID);
 				complete = false;
 			end
-            C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
-        end
+
+			if info.unlocked and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+				C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
+				complete = false;
+			end
+		end
 	end
-	-- If its taken us 5 attempts to equip a set its probably not going to happen
-	target.essencePass = (target.essencePass or 0) + 1;
-	if target.essencePass >= 5 then
-		-- if not complete then
-		-- 	print(format("Failed after %d passes to essence set", target.essencePass));
-		-- end
-		return true;
-	end
-	-- if complete then
-	-- 	print(format("Took %d passes to essence set", target.essencePass));
-	-- end
 
 	return complete;
 end
@@ -4281,7 +4309,7 @@ local function AddEquipmentSet()
 end
 -- Adds a blank equipment set for the current character
 local function AddBlankEquipmentSet()
-    local characterName, characterRealm = UnitName("player"), GetRealmName();
+    local characterName, characterRealm = UnitFullName("player");
     local set = {
 		setID = GetNextSetID(BtWLoadoutsSets.equipment),
         character = characterRealm .. "-" .. characterName,
@@ -4398,7 +4426,7 @@ local function IsProfileValid(set)
 		end
 		class = characterInfo.class;
 		
-		local name, realm = UnitName("player"), GetRealmName();
+		local name, realm = UnitFullName("player");
 		local playerCharacter = format("%s-%s", realm, name);
 		invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
 	end
@@ -4513,6 +4541,7 @@ local function ActivateProfile(profile)
 		return;
 	end
 
+	target.name = profile.name
 	target.active = true;
 
 	if specID then
@@ -4595,9 +4624,33 @@ local function IsProfileActive(set)
 
 	return true;
 end
+local function GetActiveProfiles()
+	if target.active then
+		if target.name then
+			return format(L["Changing to %s..."], target.name)
+		else
+			return L["Changing..."]
+		end
+	end
+
+	local activeProfiles = {}
+	for _,profile in pairs(BtWLoadoutsSets.profiles) do
+		if type(profile) == "table" and IsProfileActive(profile) then
+			activeProfiles[#activeProfiles+1] = profile.name
+		end
+	end
+	if #activeProfiles == 0 then
+		return nil
+	end
+	
+	table.sort(activeProfiles)
+	return table.concat(activeProfiles, "/");
+end
 local function ContinueActivateProfile()
     local set = target;
 	set.dirty = false;
+	
+	Internal.UpdateLauncher(GetActiveProfiles());
 
 	if InCombatLockdown() then
         return;
@@ -4652,13 +4705,33 @@ local function ContinueActivateProfile()
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME");
 	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
 
+	if uiErrorTracking == nil then
+		uiErrorTracking = UIErrorsFrame:IsEventRegistered("UI_ERROR_MESSAGE")
+		UIErrorsFrame:UnregisterEvent("UI_ERROR_MESSAGE")
+	end
+
 	local complete = true;
     if talentSet then
-        ActivateTalentSet(talentSet);
-    end
+		if not ActivateTalentSet(talentSet) then
+			complete = false;
+			set.dirty = true; -- Just run next frame
+		end
+	end
+
+	-- When we will finish with Conflict as a major there is a chance we wont be able to put all the
+	-- pvp talents in the 4 slots so we need to check other set pvp talents too
+	local conflictAndStrife = false
+	if essencesSet then
+		conflictAndStrife = essencesSet.essences[115] == 32; -- We are trying to equip Conflict
+	else
+		conflictAndStrife = C_AzeriteEssence.GetMilestoneEssence(115) == 32; -- Conflict is equipped
+	end
 
     if pvpTalentSet then
-        ActivatePvPTalentSet(pvpTalentSet);
+		if not ActivatePvPTalentSet(pvpTalentSet, conflictAndStrife) then
+			complete = false;
+			set.dirty = true; -- Just run next frame
+		end
     end
 
     if essencesSet then
@@ -4683,6 +4756,8 @@ local function ContinueActivateProfile()
 	if complete then
 		CancelActivateProfile();
 	end
+	
+	Internal.UpdateLauncher(GetActiveProfiles());
 end
 
 -- Maps condition flags to condition groups
@@ -5659,7 +5734,6 @@ local function EquipmentDropDownInit(self, level, menuList)
 			local name = character;
 			local characterInfo = GetCharacterInfo(character);
 			if characterInfo then
-				local characterInfo = GetCharacterInfo(character);
 				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
 				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
 			end
@@ -6221,15 +6295,11 @@ do
 				local name;
 				if item.character then
 					local characterInfo = GetCharacterInfo(item.character);
-					-- local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-					-- name = format("%s |cFFD5D5D5(%s|cFFD5D5D5 - %s)|r", item.name, classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					
 					if characterInfo then
 						name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
 					else
-						name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, item.character);
+						name = format("%s |cFFD5D5D5(%s)|r", item.name, item.character);
 					end
-					-- button.name:SetText(format("%s |cFFD5D5D5(%s)|r", item.name, item.character));
 				else
 					name = item.name;
 				end
@@ -7377,6 +7447,7 @@ do
 			if button.isAdd then
 				helpTipIgnored["TUTORIAL_NEW_SET"] = true;
 
+				frame.Name:ClearFocus();
 				self:SetProfile(AddProfile());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7409,13 +7480,14 @@ do
 				if IsModifiedClick("SHIFT") then
 					ActivateProfile(GetProfile(button.id));
 				else
-					self:SetProfile(GetProfile(button.id));
 					frame.Name:ClearFocus();
+					self:SetProfile(GetProfile(button.id));
 				end
 			end
 		elseif selectedTab == TAB_TALENTS then
 			local frame = self.Talents;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetTalentSet(AddTalentSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7452,14 +7524,15 @@ do
 							talentSet = button.id;
 						});
 					end
-				else 
+				else
+					frame.Name:ClearFocus(); 
 					self:SetTalentSet(GetTalentSet(button.id));
-					frame.Name:ClearFocus();
 				end
 			end
 		elseif selectedTab == TAB_PVP_TALENTS then
 			local frame = self.PvPTalents;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetPvPTalentSet(AddPvPTalentSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7497,13 +7570,14 @@ do
 						});
 					end
 				else 
-					self:SetPvPTalentSet(GetPvPTalentSet(button.id));
 					frame.Name:ClearFocus();
+					self:SetPvPTalentSet(GetPvPTalentSet(button.id));
 				end
 			end
 		elseif selectedTab == TAB_ESSENCES then
 			local frame = self.Essences;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetEssenceSet(AddEssenceSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7534,14 +7608,15 @@ do
 					ActivateProfile({
 						essencesSet = button.id;
 					});
-				else 
-					self:SetEssenceSet(GetEssenceSet(button.id));
+				else
 					frame.Name:ClearFocus();
+					self:SetEssenceSet(GetEssenceSet(button.id));
 				end
 			end
 		elseif selectedTab == TAB_EQUIPMENT then
 			local frame = self.Equipment;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetEquipmentSet(AddEquipmentSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7573,13 +7648,14 @@ do
 						equipmentSet = button.id;
 					});
 				else 
-					self:SetEquipmentSet(GetEquipmentSet(button.id));
 					frame.Name:ClearFocus();
+					self:SetEquipmentSet(GetEquipmentSet(button.id));
 				end
 			end
 		elseif selectedTab == TAB_CONDITIONS then
 			local frame = self.Conditions;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetConditionSet(AddConditionSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7592,8 +7668,8 @@ do
 					func = DeleteConditionSet,
 				});
 			else
-				self:SetConditionSet(GetConditionSet(button.id));
 				frame.Name:ClearFocus();
+				self:SetConditionSet(GetConditionSet(button.id));
 			end
 		end
 	end
@@ -8477,31 +8553,11 @@ do
 				end
 			end
 
-			do
-				local name, realm = UnitName("player"), GetRealmName();
-				local character = format("%s-%s", realm, name);
-				for setID,set in pairs(BtWLoadoutsSets.equipment) do
-					if type(set) == "table" and set.character == character and set.managerID ~= nil then
-						equipmentSetMap[set.managerID] = set;
-					end
-				end
-			end
-
 			BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
 			for k in pairs(helpTipIgnored) do
 				BtWLoadoutsHelpTipFlags[k] = true;
 			end
 			helpTipIgnored = BtWLoadoutsHelpTipFlags;
-
-			for _,set in pairs(BtWLoadoutsSets.conditions) do
-				if type(set) == "table" then
-					if set.map.difficultyID ~= 8 then
-						set.map.affixesID = nil;
-					end
-
-					AddConditionToMap(set);
-				end
-			end
 
 			if not helpTipIgnored["MINIMAP_ICON"] then
 				BtWLoadoutsMinimapButton.PulseAlpha:Play();
@@ -8509,31 +8565,29 @@ do
 		end
 	end
 	function frame:PLAYER_LOGIN(...)
+		Internal.CreateLauncher();
+
 		do
-			-- LDB launcher
-			local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
-			if LDB then
-				LDB:NewDataObject("BtWLoadOuts", {
-					type = "launcher",
-					label = L["BtWLoadouts"],
-					icon = [[Interface\ICONS\Ability_marksmanship]],
-					OnClick = function(clickedframe, button)
-						if button == "LeftButton" then
-							BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
-						elseif button == "RightButton" then
-							if not BtWLoadoutsMinimapButton.Menu then
-								BtWLoadoutsMinimapButton.Menu = CreateFrame("Frame", BtWLoadoutsMinimapButton:GetName().."Menu", BtWLoadoutsMinimapButton, "UIDropDownMenuTemplate");
-								UIDropDownMenu_Initialize(BtWLoadoutsMinimapButton.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
-							end
-							
-							ToggleDropDownMenu(1, nil, BtWLoadoutsMinimapButton.Menu, clickedframe, 0, -5);
-						end
-					end,
-					OnTooltipShow = function(tooltip)
-						tooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
-						tooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
-					end,
-				})
+			local name, realm = UnitFullName("player");
+			local character = format("%s-%s", realm, name);
+			for setID,set in pairs(BtWLoadoutsSets.equipment) do
+				if type(set) == "table" and set.character == character and set.managerID ~= nil then
+					if equipmentSetMap[set.managerID] then
+						set.managerID = nil;
+					else
+						equipmentSetMap[set.managerID] = set;
+					end
+				end
+			end
+		end
+
+		for _,set in pairs(BtWLoadoutsSets.conditions) do
+			if type(set) == "table" then
+				if set.map.difficultyID ~= 8 then
+					set.map.affixesID = nil;
+				end
+
+				AddConditionToMap(set);
 			end
 		end
 
@@ -8621,7 +8675,7 @@ do
 			local race = select(3, UnitRace("player"));
 			local sex = UnitSex("player") - 2;
 
-			BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = realm, class = class, race = race, sex = sex};
+			BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = GetRealmName(), class = class, race = race, sex = sex};
 		end
 
 		UpdateAreaMap();
@@ -8633,6 +8687,8 @@ do
 			UpdateConditionsForAffixes();
 			TriggerConditions();
 		end
+
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 	function frame:EQUIPMENT_SETS_CHANGED(...)
 		-- Update our saved equipment sets to match the built in equipment sets
@@ -8671,6 +8727,7 @@ do
 		end
 
 		BtWLoadoutsFrame:Update();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 	function frame:PLAYER_SPECIALIZATION_CHANGED(...)
 		do
@@ -8699,6 +8756,7 @@ do
 
 			BtWLoadoutsSpecInfo[specID] = spec;
 		end
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 	function frame:ZONE_CHANGED(...)
 		UpdateConditionsForBoss();
@@ -8716,6 +8774,9 @@ do
 		UpdateConditionsForBoss("player");
 		TriggerConditions();
 	end
+	function frame:PLAYER_TALENT_UPDATE(...)
+		Internal.UpdateLauncher(GetActiveProfiles());
+	end
 	frame:RegisterEvent("ADDON_LOADED");
 	frame:RegisterEvent("PLAYER_LOGIN");
 	frame:RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -8725,6 +8786,7 @@ do
 	frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
 	frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
 	frame:RegisterEvent("PLAYER_TARGET_CHANGED");
+	frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 end
 
 eventHandler:SetScript("OnEvent", function (self, event, ...)
@@ -8796,24 +8858,28 @@ eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
 function eventHandler:ITEM_UNLOCKED(...)
 	target.dirty = true;
 end
-function eventHandler:UNIT_SPELLCAST_STOP(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_STOP(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
-function eventHandler:UNIT_SPELLCAST_FAILED(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_FAILED(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
-function eventHandler:UNIT_SPELLCAST_FAILED_QUIET(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_FAILED_QUIET(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
-function eventHandler:UNIT_SPELLCAST_INTERRUPTED(...)
-	if IsChangingSpec() then
+function eventHandler:UNIT_SPELLCAST_INTERRUPTED(_, castGUID, spellId)
+	if IsChangingSpec(castGUID, spellId) then
 		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
 
