@@ -7420,6 +7420,7 @@ do
 			if button.isAdd then
 				helpTipIgnored["TUTORIAL_NEW_SET"] = true;
 
+				frame.Name:ClearFocus();
 				self:SetProfile(AddProfile());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7459,6 +7460,7 @@ do
 		elseif selectedTab == TAB_TALENTS then
 			local frame = self.Talents;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetTalentSet(AddTalentSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7503,6 +7505,7 @@ do
 		elseif selectedTab == TAB_PVP_TALENTS then
 			local frame = self.PvPTalents;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetPvPTalentSet(AddPvPTalentSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7547,6 +7550,7 @@ do
 		elseif selectedTab == TAB_ESSENCES then
 			local frame = self.Essences;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetEssenceSet(AddEssenceSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7585,6 +7589,7 @@ do
 		elseif selectedTab == TAB_EQUIPMENT then
 			local frame = self.Equipment;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetEquipmentSet(AddEquipmentSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
@@ -7623,6 +7628,7 @@ do
 		elseif selectedTab == TAB_CONDITIONS then
 			local frame = self.Conditions;
 			if button.isAdd then
+				frame.Name:ClearFocus();
 				self:SetConditionSet(AddConditionSet());
 				C_Timer.After(0, function ()
 					frame.Name:HighlightText();
