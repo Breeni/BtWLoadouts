@@ -763,7 +763,7 @@
 			</OnClick>
 		</Scripts>
 	</Button>
-	<Frame name="BtWLoadoutsFrame" mixin="BtWLoadoutsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" frameStara="HIGH" movable="true" hidden="true">
+	<Frame name="BtWLoadoutsFrame" mixin="BtWLoadoutsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
 		<Size x="779" y="448"/>
 		<Anchors>
 			<Anchor point="CENTER"/>
@@ -1157,17 +1157,17 @@
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
 					</EditBox>
-					<Button inherits="BtWLoadoutsAzeriteMilestoneMajorSlotTemplate" parentKey="MajorSlot" virtual="true">
+					<Button inherits="BtWLoadoutsAzeriteMilestoneMajorSlotTemplate" parentKey="MajorSlot">
 						<Anchors>
 							<Anchor point="CENTER" relativePoint="CENTER" x="-100" y="-30"/>
 						</Anchors>
 					</Button>
-					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1" virtual="true">
+					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1">
 						<Anchors>
 							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="-120" y="-75"/>
 						</Anchors>
 					</Button>
-					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot2" virtual="true">
+					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot2">
 						<Anchors>
 							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="119" y="75"/>
 						</Anchors>

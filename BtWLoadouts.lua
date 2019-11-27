@@ -2852,24 +2852,6 @@ do
 		[256230] = true,
 		[256231] = true,
 	};
-	local function PlayerCanChangeTalents()
-		if IsResting() then
-			return true;
-		end
-
-		local index = 1;
-		local name = UnitAura("player", index, "HELPFUL");
-		while name do
-			if talentChangeBuffs[spellId] then
-				return true;
-			end
-
-			index = index + 1;
-			name = UnitAura("player", index, "HELPFUL");
-		end
-		
-		return false;
-	end
 	function PlayerNeedsTome()
 		if IsResting() then
 			return false;
@@ -2899,7 +2881,8 @@ do
 	};
 	local function GetBestTome()
 		if UnitLevel("player") <= 109 then -- Tome of the Clear Mind (WOD)
-			local count = GetItemCount(141640);
+			local itemId = 141640
+			local count = GetItemCount(itemId);
 			if count >= 1 then
 				local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
 				return itemId, name, link, quality, icon;
@@ -4077,10 +4060,10 @@ local function IsEquipmentSetActive(set)
     local firstEquipped = INVSLOT_FIRST_EQUIPPED;
     local lastEquipped = INVSLOT_LAST_EQUIPPED;
 
-    if combatSwap then
-        firstEquipped = INVSLOT_MAINHAND;
-        lastEquipped = INVSLOT_RANGED;
-	end
+    -- if combatSwap then
+    --     firstEquipped = INVSLOT_MAINHAND;
+    --     lastEquipped = INVSLOT_RANGED;
+	-- end
 	
 	for inventorySlotId=firstEquipped,lastEquipped do
 		if not ignored[inventorySlotId] then
@@ -4118,10 +4101,10 @@ do
 		local firstEquipped = INVSLOT_FIRST_EQUIPPED
 		local lastEquipped = INVSLOT_LAST_EQUIPPED
 
-		if combatSwap then
-			firstEquipped = INVSLOT_MAINHAND
-			lastEquipped = INVSLOT_RANGED 
-		end
+		-- if combatSwap then
+		-- 	firstEquipped = INVSLOT_MAINHAND
+		-- 	lastEquipped = INVSLOT_RANGED 
+		-- end
 		
 		for inventorySlotId = firstEquipped, lastEquipped do
 			if not ignored[inventorySlotId] then
@@ -4461,7 +4444,6 @@ local function AddProfile()
 
     local set = {
 		setID = GetNextSetID(BtWLoadoutsSets.profiles),
-        specID = specID,
 		name = name,
 		useCount = 0,
     };
