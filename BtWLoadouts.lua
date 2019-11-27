@@ -2729,7 +2729,11 @@ do
 			["name"] = "Ripple in Space",
 			["icon"] = 2967109,
 		}, -- [15]
-		nil, -- [16]
+		{
+			["ID"] = 16,
+			["name"] = "Unwavering Ward",
+			["icon"] = 3193842,
+		}, -- [16]
 		{
 			["ID"] = 17,
 			["name"] = "The Ever-Rising Tide",
@@ -2765,7 +2769,11 @@ do
 			["name"] = "Blood of the Enemy",
 			["icon"] = 2032580,
 		}, -- [23]
-		nil, -- [24]
+		{
+			["ID"] = 24,
+			["name"] = "Spirit of Preservation",
+			["icon"] = 2967101,
+		}, -- [24]
 		{
 			["ID"] = 25,
 			["name"] = "Aegis of the Deep",
@@ -2790,21 +2798,49 @@ do
 			["name"] = "Conflict and Strife",
 			["icon"] = 3015742,
 		}, -- [32]
+		{
+			["ID"] = 33,
+			["name"] = "Touch of the Everlasting",
+			["icon"] = 3193847,
+		}, -- [33]
+		{
+			["ID"] = 34,
+			["name"] = "Strength of the Warden",
+			["icon"] = 3193846,
+		}, -- [34]
+		{
+			["ID"] = 35,
+			["name"] = "Breath of the Dying",
+			["icon"] = 3193844,
+		}, -- [35]
+		{
+			["ID"] = 36,
+			["name"] = "Spark of Inspiration",
+			["icon"] = 3193843,
+		}, -- [36]
+		{
+			["ID"] = 37,
+			["name"] = "The Formless Void",
+			["icon"] = 3193845,
+		}, -- [37]
 	}
 	local roleInfo = {
 		["DAMAGER"] = {
 			["essences"] = {
 				23, -- [1]
-				14, -- [2]
-				32, -- [3]
-				5, -- [4]
-				27, -- [5]
-				6, -- [6]
-				15, -- [7]
-				12, -- [8]
-				28, -- [9]
-				22, -- [10]
-				4, -- [11]
+				35, -- [2]
+				14, -- [3]
+				32, -- [4]
+				5, -- [5]
+				27, -- [6]
+				6, -- [7]
+				15, -- [8]
+				36, -- [9]
+				12, -- [10]
+				37, -- [11]
+				28, -- [12]
+				22, -- [13]
+				4, -- [14]
 			},
 		},
 		["TANK"] = {
@@ -2817,9 +2853,12 @@ do
 				13, -- [6]
 				15, -- [7]
 				3, -- [8]
-				12, -- [9]
-				22, -- [10]
-				4, -- [11]
+				34, -- [9]
+				12, -- [10]
+				37, -- [11]
+				33, -- [12]
+				22, -- [13]
+				4, -- [14]
 			},
 		},
 		["HEALER"] = {
@@ -2829,12 +2868,15 @@ do
 				20, -- [3]
 				27, -- [4]
 				15, -- [5]
-				12, -- [6]
-				17, -- [7]
-				19, -- [8]
-				22, -- [9]
-				21, -- [10]
-				4, -- [11]
+				24, -- [6]
+				12, -- [7]
+				17, -- [8]
+				37, -- [9]
+				19, -- [10]
+				16, -- [11]
+				22, -- [12]
+				21, -- [13]
+				4, -- [14]
 			},
 		},
 	};
@@ -7001,6 +7043,7 @@ do
 			self.MajorSlot:SetEnabled(true);
 			self.MinorSlot1:SetEnabled(true);
 			self.MinorSlot2:SetEnabled(true);
+			self.MinorSlot3:SetEnabled(true);
 
 			local role = self.set.role;
 			local selected = self.set.essences;
@@ -7057,16 +7100,20 @@ do
 			self.MajorSlot:SetEnabled(false);
 			self.MinorSlot1:SetEnabled(false);
 			self.MinorSlot2:SetEnabled(false);
+			self.MinorSlot3:SetEnabled(false);
 
 			self.MajorSlot.EmptyGlow:Hide();
 			self.MinorSlot1.EmptyGlow:Hide();
 			self.MinorSlot2.EmptyGlow:Hide();
+			self.MinorSlot3.EmptyGlow:Hide();
 			self.MajorSlot.EmptyIcon:Hide();
 			self.MinorSlot1.EmptyIcon:Hide();
 			self.MinorSlot2.EmptyIcon:Hide();
+			self.MinorSlot3.EmptyIcon:Hide();
 			self.MajorSlot.Icon:Hide();
 			self.MinorSlot1.Icon:Hide();
 			self.MinorSlot2.Icon:Hide();
+			self.MinorSlot3.Icon:Hide();
 
 			self.Name:SetText("");
 
@@ -7829,6 +7876,7 @@ do
 				[115] = self.Essences.MajorSlot,
 				[116] = self.Essences.MinorSlot1,
 				[117] = self.Essences.MinorSlot2,
+				[119] = self.Essences.MinorSlot3,
 			};
 			
 			HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWLoadoutsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
