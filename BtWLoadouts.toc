@@ -7,5 +7,10 @@
 ## SavedVariablesPerCharacter: BtWLoadoutsCollapsed
 ## OptionalDeps: OPie
 
+Localizations.lua
+Localizations.esES.lua
+Localizations.ruRU.lua
+Localizations.zhTW.lua
+
 BtWLoadouts.xml
 Launcher.lua
