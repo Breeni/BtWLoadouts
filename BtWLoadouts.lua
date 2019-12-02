@@ -8318,6 +8318,63 @@ local function PlayerNeedsTomeNowForSet(set)
     -- return PlayerNeedsTome();
 end
 
+-- [[ External API ]]
+local External = {}
+_G[ADDON_NAME] = External
+-- Return: id, name, specID, character
+function External.GetLoadoutInfo(id)
+	local set = GetProfile(id)
+	if not set then
+		return
+	end
+
+	return set.setID, set.name, set.specID, set.character
+end
+function External.IsLoadoutActive(id)
+	local set = GetProfile(id)
+	if not set then
+		return
+	end
+
+	return IsProfileActive(set)
+end
+do
+	local loadouts = {}
+	-- Get a list of all loadouts
+	-- Return: id, ...
+	function External.GetLoadouts()
+		wipe(loadouts);
+		for id,set in pairs(BtWLoadoutsSets.profiles) do
+			if type(set) == "table" then
+				loadouts[#loadouts+1] = id
+			end
+		end
+		return unpack(loadouts);
+	end
+	-- Get a list of all currently active loadouts
+	-- Return: id, ...
+	function External.GetActiveLoadouts()
+		wipe(loadouts);
+		for id,set in pairs(BtWLoadoutsSets.profiles) do
+			if type(set) == "table" and IsProfileActive(set) then
+				loadouts[#loadouts+1] = id
+			end
+		end
+		return unpack(loadouts);
+	end
+	-- Get a list of all loadouts valid for the current character
+	-- Return: id, ...
+	function External.GetCharacterLoadouts()
+		wipe(loadouts);
+		for id,set in pairs(BtWLoadoutsSets.profiles) do
+			if type(set) == "table" and select(5, IsProfileValid(set)) then
+				loadouts[#loadouts+1] = id
+			end
+		end
+		return unpack(loadouts);
+	end
+end
+
 do
 	local currentCursorSource = {};
 	local function Hook_PickupContainerItem(bag, slot)
