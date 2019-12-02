@@ -9,3 +9,4 @@
 
 BtWLoadouts.xml
 Launcher.lua
+Minimap.xml

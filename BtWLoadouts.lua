@@ -9,8 +9,9 @@
 	Conditions need to supoort boss, affixes and arena comp
 	Localization
 	Update new set text button based on tab?
-	Codexes are still a thing
 	What to do when the player has no tome
+	Acton Bar Support
+	External API
 ]]
 
 local ADDON_NAME, Internal = ...;
@@ -2978,6 +2979,7 @@ local Settings = SettingsCreate({
         default = true,
     },
 });
+Internal.Settings = Settings
 
 -- Activating a set can take multiple passes, things maybe delayed by switching spec or waiting for the player to use a tome
 local target = {};
@@ -2992,6 +2994,7 @@ local function CancelActivateProfile()
 		uiErrorTracking = nil
 	end)
 
+	Internal.Call("LOADOUT_CHANGE_END")
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
@@ -3179,6 +3182,7 @@ StaticPopupDialogs["BTWLOADOUTS_DELETEINUSESET"] = {
 
 
 local helpTipIgnored = {};
+Internal.helpTipIgnored = helpTipIgnored
 local function HelpTipBox_Anchor(self, anchorPoint, frame, offset)
 	local offset = offset or 0;
 
@@ -4520,6 +4524,8 @@ local function ActivateProfile(profile)
 		target.equipmentSets[#target.equipmentSets+1] = profile.equipmentSet;
 	end
 
+	Internal.Call("LOADOUT_CHANGE_START")
+
     target.dirty = true;
 	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 	eventHandler:RegisterEvent("PLAYER_REGEN_DISABLED");
@@ -4714,6 +4720,9 @@ local function ContinueActivateProfile()
 	
 	Internal.UpdateLauncher(GetActiveProfiles());
 end
+Internal.IsProfileValid = IsProfileValid;
+Internal.ActivateProfile = ActivateProfile;
+Internal.IsProfileActive = IsProfileActive;
 
 -- Maps condition flags to condition groups
 local conditionMap = {
@@ -8121,191 +8130,6 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 	self.ignoreTexture:SetShown(ignored);
 end
 
-do
-	local GetCursorPosition = GetCursorPosition;
-	-- This is very important, the global functions gives different responses than the math functions
-	local cos, sin = math.cos, math.sin;
-	local min, max = math.min, math.max;
-	local deg, rad = math.deg, math.rad;
-	local sqrt = math.sqrt;
-	local atan2 = math.atan2;
-
-	local minimapShapes = {
-		-- quadrant booleans (same order as SetTexCoord)
-		-- {bottom-right, bottom-left, top-right, top-left}
-		-- true = rounded, false = squared
-		["ROUND"] 			= {true,  true,  true,  true },
-		["SQUARE"] 			= {false, false, false, false},
-		["CORNER-TOPLEFT"] 		= {false, false, false, true },
-		["CORNER-TOPRIGHT"] 		= {false, false, true,  false},
-		["CORNER-BOTTOMLEFT"] 		= {false, true,  false, false},
-		["CORNER-BOTTOMRIGHT"]	 	= {true,  false, false, false},
-		["SIDE-LEFT"] 			= {false, true,  false, true },
-		["SIDE-RIGHT"] 			= {true,  false, true,  false},
-		["SIDE-TOP"] 			= {false, false, true,  true },
-		["SIDE-BOTTOM"] 		= {true,  true,  false, false},
-		["TRICORNER-TOPLEFT"] 		= {false, true,  true,  true },
-		["TRICORNER-TOPRIGHT"] 		= {true,  false, true,  true },
-		["TRICORNER-BOTTOMLEFT"] 	= {true,  true,  false, true },
-		["TRICORNER-BOTTOMRIGHT"] 	= {true,  true,  true,  false},
-	};
-
-	BtWLoadoutsMinimapMixin = {};
-	function BtWLoadoutsMinimapMixin:OnLoad()
-		self:RegisterForClicks("anyUp");
-		self:RegisterForDrag("LeftButton");
-		self:RegisterEvent("PLAYER_LOGIN");
-	end
-	function BtWLoadoutsMinimapMixin:OnEvent(event, ...)
-		self:SetShown(Settings.minimapShown);
-		self:Reposition(Settings.minimapAngle or 195);
-
-		local button = self;
-		Minimap:HookScript("OnSizeChanged", function ()
-			button:Reposition(Settings.minimapAngle or 195);
-		end)
-	end
-	function BtWLoadoutsMinimapMixin:OnDragStart()
-		self:LockHighlight();
-		self:SetScript("OnUpdate", self.OnUpdate);
-	end
-	function BtWLoadoutsMinimapMixin:OnDragStop()
-		self:UnlockHighlight();
-		self:SetScript("OnUpdate", nil);
-	end
-	function BtWLoadoutsMinimapMixin:Reposition(degrees)
-		local rounding = 10;
-		local angle = rad(degrees or 195);
-		local x, y;
-		local cos = cos(angle);
-		local sin = sin(angle);
-		local q = 1;
-		if cos < 0 then
-			q = q + 1;	-- lower
-		end
-		if sin > 0 then
-			q = q + 2;	-- right
-		end
-
-		local hRadius = Minimap:GetWidth() / 2 + 5
-		local vRadius = Minimap:GetHeight() / 2 + 5
-
-		local minimapShape = GetMinimapShape and GetMinimapShape() or "ROUND";
-		local quadTable = minimapShapes[minimapShape];
-		if quadTable[q] then
-			x = cos * hRadius;
-			y = sin * vRadius;
-		else
-			local hDiagRadius = sqrt(2*(hRadius)^2) - rounding
-			local vDiagRadius = sqrt(2*(vRadius)^2) - rounding
-
-			x = max(-hRadius, min(cos * hDiagRadius, hRadius));
-			y = max(-vRadius, min(sin * vDiagRadius, vRadius));
-		end
-		
-		self:SetPoint("CENTER", "$parent", "CENTER", x, y);
-	end
-	function BtWLoadoutsMinimapMixin:OnUpdate()
-		local px,py = GetCursorPosition();
-		local mx,my = Minimap:GetCenter();
-		
-		local scale = Minimap:GetEffectiveScale();
-		px, py = px / scale, py / scale;
-		
-		local angle = deg(atan2(py - my, px - mx));
-
-		Settings.minimapAngle = angle;
-
-		self:Reposition(angle);
-	end
-	function BtWLoadoutsMinimapMixin:OnClick(button)
-		if button == "LeftButton" then
-			BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
-		elseif button == "RightButton" then
-			if not self.Menu then
-				self.Menu = CreateFrame("Frame", self:GetName().."Menu", self, "UIDropDownMenuTemplate");
-				UIDropDownMenu_Initialize(self.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
-			end
-			
-			ToggleDropDownMenu(1, nil, self.Menu, self, 0, 0);
-		end
-	end
-	function BtWLoadoutsMinimapMixin:OnEnter()
-		helpTipIgnored["MINIMAP_ICON"] = true;
-		self.PulseAlpha:Stop();
-
-		GameTooltip:SetOwner(self, "ANCHOR_LEFT");
-		GameTooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
-		GameTooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
-		GameTooltip:Show();
-	end
-	function BtWLoadoutsMinimapMixin:OnLeave()
-		GameTooltip:Hide();
-	end
-	local items = {}
-	function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
-		if level == 1 then
-			wipe(items)
-			for id, set in pairs(BtWLoadoutsSets.profiles) do
-				if type(set) == "table" then
-					if select(5, IsProfileValid(set)) then
-						items[#items+1] = set
-					end
-				end
-			end
-			table.sort(items, function (a, b)
-				if a.specID ~= b.specID then
-					return a.specID < b.specID
-				end
-
-				return a.name < b.name
-			end)
-
-			local info = UIDropDownMenu_CreateInfo();
-
-			if #items > 0 then
-				info.isTitle, info.disabled, info.notCheckable = true, true, true;
-				info.text = L["Profiles"];
-
-				UIDropDownMenu_AddButton(info, level);
-				
-				info.isTitle, info.disabled, info.notCheckable = false, false, false;
-				info.func = function (self, id)
-					local set = BtWLoadoutsSets.profiles[id]
-					if set then
-						ActivateProfile(set)
-					end
-				end
-				for _,set in ipairs(items) do
-					info.text = set.name;
-					info.arg1 = set.setID;
-					info.checked = IsProfileActive(set)
-		
-					UIDropDownMenu_AddButton(info, level);
-				end
-				
-				info.isTitle, info.disabled, info.notCheckable = true, true, true;
-				info.func, info.arg1 = nil, nil;
-				info.text = L["Settings"];
-
-				UIDropDownMenu_AddButton(info, level);
-			end
-			
-			info.isTitle, info.disabled, info.notCheckable = false, false, false;
-			info.func = function (self, key)
-				Settings[key] = not Settings[key];
-			end
-			for i, entry in ipairs(Settings) do
-				info.text = entry.name;
-				info.arg1 = entry.key;
-				info.checked = Settings[entry.key];
-	
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-	end
-end
-
 local function PlayerNeedsTomeNowForSet(set)
     return;
 
@@ -8338,6 +8162,23 @@ do
 	hooksecurefunc("PickupInventoryItem", Hook_PickupInventoryItem);
 	function GetCursorItemSource()
 		return currentCursorSource.bag or false, currentCursorSource.slot or false;
+	end
+end
+
+local eventHandlers = {}
+function Internal.OnEvent(event, callback)
+	if not eventHandlers[event] then
+		eventHandlers[event] = {}
+	end
+
+	eventHandlers[event][callback] = true
+end
+function Internal.Call(event, ...)
+	local callbacks = eventHandlers[event]
+	if callbacks then
+		for callback in pairs(callbacks) do
+			callback(event, ...)
+		end
 	end
 end
 
@@ -8513,6 +8354,7 @@ do
 				BtWLoadoutsHelpTipFlags[k] = true;
 			end
 			helpTipIgnored = BtWLoadoutsHelpTipFlags;
+			Internal.helpTipIgnored = helpTipIgnored;
 
 			if not helpTipIgnored["MINIMAP_ICON"] then
 				BtWLoadoutsMinimapButton.PulseAlpha:Play();
