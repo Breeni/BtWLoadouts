@@ -9,8 +9,9 @@
 	Conditions need to supoort boss, affixes and arena comp
 	Localization
 	Update new set text button based on tab?
-	Codexes are still a thing
 	What to do when the player has no tome
+	Acton Bar Support
+	External API
 ]]
 
 local ADDON_NAME, Internal = ...;
