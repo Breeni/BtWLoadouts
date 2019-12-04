@@ -7,5 +7,6 @@
 ## SavedVariablesPerCharacter: BtWLoadoutsCollapsed
 ## OptionalDeps: OPie
 
+Instances.lua
 BtWLoadouts.xml
 Launcher.lua
