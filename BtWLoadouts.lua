@@ -3986,6 +3986,13 @@ do
 			itemLocation:SetBagAndSlot(slot);
 		end
 
+		if itemLink ~= nil and locationItemLink == nil then
+			return false;
+		end
+		if itemLink == nil and locationItemLink ~= nil then
+			return false;
+		end
+
 		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
 		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
 		-- if itemID == 158075 then
