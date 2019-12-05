@@ -3287,26 +3287,27 @@ local itemUniquenessCache = {
     [132378] = {357, 2},
     [132369] = {357, 2},
 }
+local freeSlotsCache = {}
 local function EmptyInventorySlot(inventorySlotId)
     local itemBagType = GetItemFamily(GetInventoryItemLink("player", inventorySlotId))
 
     local foundSlot = false
     local containerId, slotId
-    for i = NUM_BAG_SLOTS, 0, -1 do
-        local numFreeSlot, bagType = GetContainerNumFreeSlots(i)
-        if numFreeSlot > 0 and (bit.band(bagType, itemBagType) > 0 or bagType == 0) then
-            local freeSlots = GetContainerFreeSlots(i)
-
+	for i = NUM_BAG_SLOTS, 0, -1 do
+        local _, bagType = GetContainerNumFreeSlots(i)
+		local freeSlots = freeSlotsCache[i]
+		if #freeSlots > 0 and (bit.band(bagType, itemBagType) > 0 or bagType == 0) then
             foundSlot = true
-            containerId = i
-            slotId = freeSlots[1]
+			containerId = i
+			slotId = freeSlots[#freeSlots]
+			freeSlots[#freeSlots] = nil
 
             break
         end
     end
 
 	local complete = false;
-    if foundSlot then
+	if foundSlot then
         ClearCursor()
 
         PickupInventoryItem(inventorySlotId)
@@ -4113,7 +4114,17 @@ do
 		-- 	firstEquipped = INVSLOT_MAINHAND
 		-- 	lastEquipped = INVSLOT_RANGED 
 		-- end
-		
+
+		for i=BACKPACK_CONTAINER,NUM_BAG_SLOTS do
+			if not freeSlotsCache[i] then
+				freeSlotsCache[i] = {}
+			else
+				wipe(freeSlotsCache[i])
+			end
+
+			GetContainerFreeSlots(i, freeSlotsCache[i])
+		end
+
 		for inventorySlotId = firstEquipped, lastEquipped do
 			if not ignored[inventorySlotId] then
 				if not anyLockedSlots and IsInventoryItemLocked(inventorySlotId) then
