@@ -5154,7 +5154,7 @@ local function TalentsDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 	
 	local set = tab.set;
-	local selected = set and set.TalentSet;
+	local selected = set and set.talentSet;
 
 	if (level or 1) == 1 then
         info.text = L["None"];
