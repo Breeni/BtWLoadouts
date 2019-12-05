@@ -1,7 +1,10 @@
 local ADDON_NAME, Internal = ...;
 local L = Internal.L;
 
-local helpTipIgnored = Internal.helpTipIgnored;
+local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
+local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+
+local sort = table.sort
 
 local frame = CreateFrame("Frame");
 frame:SetScript("OnEvent", function (self, event, ...)
@@ -66,17 +69,11 @@ function frame:ADDON_LOADED(...)
             essences = {},
             equipment = {},
         };
-        Internal.setScrollFrameCollapsed = BtWLoadoutsCollapsed;
         Internal.UpdateClassInfo();
 
         BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
-        for k in pairs(helpTipIgnored) do
-            BtWLoadoutsHelpTipFlags[k] = true;
-        end
-        helpTipIgnored = BtWLoadoutsHelpTipFlags;
-        Internal.helpTipIgnored = helpTipIgnored;
 
-        if not helpTipIgnored["MINIMAP_ICON"] then
+        if not BtWLoadoutsHelpTipFlags["MINIMAP_ICON"] then
             BtWLoadoutsMinimapButton.PulseAlpha:Play();
         end
     end
@@ -199,6 +196,8 @@ function frame:PLAYER_ENTERING_WORLD()
 
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
+-- A map from the equipment manager ids to our sets
+local equipmentSetMap = {};
 function frame:EQUIPMENT_SETS_CHANGED(...)
     -- Update our saved equipment sets to match the built in equipment sets
     local oldEquipmentSetMap = equipmentSetMap;

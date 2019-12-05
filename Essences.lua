@@ -1,6 +1,11 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
+local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
+local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+
+local format = string.format
+
 local function IsEssenceSetActive(set)
     for milestoneID,essenceID in pairs(set.essences) do
         local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
@@ -35,13 +40,13 @@ local function AddEssenceSet()
     local role = select(5,GetSpecializationInfo(GetSpecialization()));
     local name = format(L["New %s Set"], _G[role]);
 	local selected = {};
-	
+
     selected[115] = C_AzeriteEssence.GetMilestoneEssence(115);
     selected[116] = C_AzeriteEssence.GetMilestoneEssence(116);
     selected[117] = C_AzeriteEssence.GetMilestoneEssence(117);
 
     local set = {
-		setID = GetNextSetID(BtWLoadoutsSets.essences),
+		setID = Internal.GetNextSetID(BtWLoadoutsSets.essences),
         role = role,
         name = name,
         essences = selected,
@@ -50,31 +55,31 @@ local function AddEssenceSet()
     BtWLoadoutsSets.essences[set.setID] = set;
     return set;
 end
-local function GetEssenceSet(id)
+function Internal.GetEssenceSet(id)
     if type(id) == "table" then
 		return id;
 	else
 		return BtWLoadoutsSets.essences[id];
 	end
 end
-local function GetEssenceSetByName(name)
+function Internal.GetEssenceSetByName(name)
 	for _,set in pairs(BtWLoadoutsSets.essences) do
 		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
 			return set;
 		end
 	end
 end
-local function GetEssenceSets(id, ...)
+function Internal.GetEssenceSets(id, ...)
 	if id ~= nil then
-		return BtWLoadoutsSets.essences[id], GetEssenceSets(...);
+		return BtWLoadoutsSets.essences[id], Internal.GetEssenceSets(...);
 	end
 end
-local function GetEssenceSetIfNeeded(id)
+function Internal.GetEssenceSetIfNeeded(id)
 	if id == nil then
 		return;
 	end
 
-	local set = GetEssenceSet(id);
+	local set = Internal.GetEssenceSet(id);
 	if IsEssenceSetActive(set) then
 		return;
 	end
@@ -82,7 +87,7 @@ local function GetEssenceSetIfNeeded(id)
     return set;
 end
 local function CombineEssenceSets(result, ...)
-	local result = result or {};
+	result = result or {};
 
 	result.essences = {};
 	for i=1,select('#', ...) do
@@ -95,7 +100,7 @@ local function CombineEssenceSets(result, ...)
 	return result;
 end
 local function DeleteEssenceSet(id)
-	DeleteSet(BtWLoadoutsSets.essences, id);
+	Internal.DeleteSet(BtWLoadoutsSets.essences, id);
 
 	if type(id) == "table" then
 		id = id.setID;
@@ -114,15 +119,154 @@ local function DeleteEssenceSet(id)
 	end
 end
 
+Internal.AddEssenceSet = AddEssenceSet
+Internal.DeleteEssenceSet = DeleteEssenceSet
+Internal.ActivateEssenceSet = ActivateEssenceSet
+Internal.IsEssenceSetActive = IsEssenceSetActive
+Internal.CombineEssenceSets = CombineEssenceSets
+
+local EssenceScrollFrameUpdate;
 do
-    local frame = BtWLoadoutsFrame.Essences
-    Internal.AddTab({
-        type = "essences",
-        name = L["Essences"],
-        frame = frame,
-        onInit = function ()
-        end,
-        onUpdate = function (self)
-        end,
-    })
+	local MAX_ESSENCES = 11;
+	function EssenceScrollFrameUpdate(self)
+		local pending = self:GetParent().pending;
+		local set = self:GetParent().set;
+		local buttons = self.buttons;
+		if set then
+			local role = set.role;
+			local selected = set.essences;
+
+			local offset = HybridScrollFrame_GetOffset(self);
+			for i,item in ipairs(buttons) do
+				local index = offset + i;
+				local essence = Internal.GetEssenceInfoForRole(role, index);
+
+				if essence then
+					item.id = essence.ID;
+					item.Name:SetText(essence.name);
+					item.Icon:SetTexture(essence.icon);
+					item.ActivatedMarkerMain:SetShown(selected[115] == essence.ID);
+					item.ActivatedMarkerPassive:SetShown((selected[116] == essence.ID) or (selected[117] == essence.ID));
+					item.PendingGlow:SetShown(pending == essence.ID);
+
+					item:Show();
+				else
+					item:Hide();
+				end
+			end
+			local totalHeight = MAX_ESSENCES * (41 + 1) + 3 * 2;
+			HybridScrollFrame_Update(self, totalHeight, self:GetHeight());
+		else
+			for i,item in ipairs(buttons) do
+				item:Hide();
+			end
+			HybridScrollFrame_Update(self, 0, self:GetHeight());
+		end
+	end
+end
+function Internal.EssencesTabUpdate(self)
+	self:GetParent().TitleText:SetText(L["Essences"]);
+	self.set = Internal.SetsScrollFrame_RoleFilter(self.set, BtWLoadoutsSets.essences, BtWLoadoutsCollapsed.essences);
+
+	if self.set ~= nil then
+		self.Name:SetEnabled(true);
+		self.RoleDropDown.Button:SetEnabled(true);
+		self.MajorSlot:SetEnabled(true);
+		self.MinorSlot1:SetEnabled(true);
+		self.MinorSlot2:SetEnabled(true);
+
+		local role = self.set.role;
+		local selected = self.set.essences;
+
+		UIDropDownMenu_SetText(self.RoleDropDown, _G[self.set.role]);
+
+		if self.set.inUse then
+			UIDropDownMenu_DisableDropDown(self.RoleDropDown);
+		else
+			UIDropDownMenu_EnableDropDown(self.RoleDropDown);
+		end
+
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
+
+		for milestoneID,item in pairs(self.Slots) do
+			local essenceID = self.set.essences[milestoneID];
+			item.milestoneID = milestoneID;
+
+			if essenceID then
+				local info = Internal.GetEssenceInfoByID(essenceID);
+
+				item.id = essenceID;
+
+				item.Icon:Show();
+				item.Icon:SetTexture(info.icon);
+				item.EmptyGlow:Hide();
+				item.EmptyIcon:Hide();
+			else
+				item.id = nil;
+
+				item.Icon:Hide();
+				item.EmptyGlow:Show();
+				item.EmptyIcon:Show();
+			end
+		end
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(role == select(5, GetSpecializationInfo(GetSpecialization())));
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(true);
+
+		local helpTipBox = self:GetParent().HelpTipBox;
+		helpTipBox:Hide();
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+	else
+		self.Name:SetEnabled(false);
+		self.RoleDropDown.Button:SetEnabled(false);
+		self.MajorSlot:SetEnabled(false);
+		self.MinorSlot1:SetEnabled(false);
+		self.MinorSlot2:SetEnabled(false);
+
+		self.MajorSlot.EmptyGlow:Hide();
+		self.MinorSlot1.EmptyGlow:Hide();
+		self.MinorSlot2.EmptyGlow:Hide();
+		self.MajorSlot.EmptyIcon:Hide();
+		self.MinorSlot1.EmptyIcon:Hide();
+		self.MinorSlot2.EmptyIcon:Hide();
+		self.MajorSlot.Icon:Hide();
+		self.MinorSlot1.Icon:Hide();
+		self.MinorSlot2.Icon:Hide();
+
+		self.Name:SetText("");
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		else
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
+	end
+
+	EssenceScrollFrameUpdate(self.EssenceList);
 end

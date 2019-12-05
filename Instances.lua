@@ -45,6 +45,8 @@ local instanceDifficulties = {
 	[2096] = raidDifficultiesAll,	 -- Crucible of Storms
 	[2164] = raidDifficultiesAll,	 -- The Eternal Palace
 };
+Internal.dungeonDifficultiesAll = dungeonDifficultiesAll;
+Internal.raidDifficultiesAll = raidDifficultiesAll;
 local dungeonInfo = {
 	{
 		name = L["Classic"],

@@ -2,13 +2,32 @@ local ADDON_NAME,Internal = ...
 local L = Internal.L
 
 local UnitClass = UnitClass;
+local GetClassColor = C_ClassColor.GetClassColor;
+local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE;
+
+local MAX_TALENT_TIERS = MAX_TALENT_TIERS;
+local LearnTalent = LearnTalent;
+local GetTalentInfo = GetTalentInfo;
+local GetTalentTierInfo = GetTalentTierInfo;
 local GetTalentInfoByID = GetTalentInfoByID
 local GetTalentInfoForSpecID = Internal.GetTalentInfoForSpecID;
+
+local GetSpecialization = GetSpecialization;
+local GetSpecializationInfo = GetSpecializationInfo;
 local GetSpecializationInfoByID = GetSpecializationInfoByID;
+
+local UIDropDownMenu_SetText = UIDropDownMenu_SetText;
+local UIDropDownMenu_EnableDropDown = UIDropDownMenu_EnableDropDown;
+local UIDropDownMenu_DisableDropDown = UIDropDownMenu_DisableDropDown;
+local UIDropDownMenu_SetSelectedValue = UIDropDownMenu_SetSelectedValue;
+
 local format = string.format
 
 local AddSet = Internal.AddSet;
 local DeleteSet = Internal.DeleteSet;
+
+local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
+local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
 -- Check if the talents in the table talentIDs are selected
 local function IsTalentSetActive(set)
@@ -60,31 +79,31 @@ local function AddTalentSet()
     -- BtWLoadoutsSets.talents[set.setID] = set;
     -- return set;
 end
-local function GetTalentSet(id)
+function Internal.GetTalentSet(id)
     if type(id) == "table" then
 		return id;
 	else
 		return BtWLoadoutsSets.talents[id];
 	end;
 end
-local function GetTalentSetByName(name)
+function Internal.GetTalentSetByName(name)
 	for _,set in pairs(BtWLoadoutsSets.talents) do
 		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
 			return set;
 		end
 	end
 end
-local function GetTalentSets(id, ...)
+function Internal.GetTalentSets(id, ...)
 	if id ~= nil then
-		return GetTalentSet(id), GetTalentSets(...);
+		return Internal.GetTalentSet(id), Internal.GetTalentSets(...);
 	end
 end
-local function GetTalentSetIfNeeded(id)
+function Internal.GetTalentSetIfNeeded(id)
 	if id == nil then
 		return;
 	end
 
-	local set = GetTalentSet(id);
+	local set = Internal.GetTalentSet(id);
 	if IsTalentSetActive(set) then
 		return;
 	end
@@ -98,7 +117,7 @@ local function CombineTalentSets(result, ...)
 
 	wipe(talentSetsByTier);
 	for i=1,select('#', ...) do
-		local set = GetTalentSet(select(i, ...));
+		local set = Internal.GetTalentSet(select(i, ...));
 		for talentID in pairs(set.talents) do
 			if result.talents[talentID] == nil then
 				local tier = select(8, GetTalentInfoByID(talentID, 1));
@@ -134,19 +153,13 @@ local function DeleteTalentSet(id)
 	end
 end
 
-Internal.AddLoadoutSegment({
-    type = "spec",
-    id = "talent",
-    name = L["Talents"],
+Internal.AddTalentSet = AddTalentSet
+Internal.DeleteTalentSet = DeleteTalentSet
+Internal.ActivateTalentSet = ActivateTalentSet
+Internal.IsTalentSetActive = IsTalentSetActive
+Internal.CombineTalentSets = CombineTalentSets
 
-    get = GetTalentSet,
-    combine = CombineTalentSets,
-    isActive = IsTalentSetActive,
-    activate = ActivateTalentSet,
-})
-
-
-local function TalentsTabUpdate(self)
+function Internal.TalentsTabUpdate(self)
     self:GetParent().TitleText:SetText(L["Talents"]);
     self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.talents, BtWLoadoutsCollapsed.talents);
 
@@ -166,7 +179,7 @@ local function TalentsTabUpdate(self)
 
         local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
         local className = LOCALIZED_CLASS_NAMES_MALE[classID];
-        local classColor = C_ClassColor.GetClassColor(classID);
+        local classColor = GetClassColor(classID);
         UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
         UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 
@@ -228,7 +241,7 @@ local function TalentsTabUpdate(self)
 
         local helpTipBox = self:GetParent().HelpTipBox;
         -- Tutorial stuff
-        if not Internal.helpTipIgnored["TUTORIAL_NEW_SET"] then
+        if not Internal.BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
             helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 
             HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
@@ -240,77 +253,4 @@ local function TalentsTabUpdate(self)
             helpTipBox:Hide();
         end
     end
-end
-
-do
-    local frame = BtWLoadoutsFrame.Talents
-    Internal.AddTab({
-        type = "talents",
-        name = L["Talents"],
-        frame = frame,
-        onInit = function (self, frame)
-			UIDropDownMenu_SetWidth(frame.SpecDropDown, 170);
-			-- UIDropDownMenu_Initialize(frame.SpecDropDown, Internal.SpecDropDownInit);
-            UIDropDownMenu_JustifyText(frame.SpecDropDown, "LEFT");
-            Internal.DropDownSetOnChange(frame.SpecDropDown, function (...)
-                print("OnChange", ...)
-            end)
-
-            frame.temp = {}
-        end,
-        onUpdate = function (self)
-            TalentsTabUpdate(frame)
-        end,
-        onButtonClick = function (self, button)
-            if button.isAdd then
-                frame.Name:ClearFocus();
-                local set = AddTalentSet();
-                frame.set = set;
-                wipe(frame.temp);
-                TalentsTabUpdate(frame)
-                C_Timer.After(0, function ()
-                    frame.Name:HighlightText();
-                    frame.Name:SetFocus();
-                end)
-            elseif button.isDelete then
-                local set = frame.set;
-                if set.useCount > 0 then
-                    StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
-                        set = set,
-                        func = DeleteTalentSet,
-                    });
-                else
-                    StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-                        set = set,
-                        func = DeleteTalentSet,
-                    });
-                end
-            elseif button.isActivate then
-                local set = frame.set;
-                if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-                    Internal.ActivateProfile({
-                        talentSet = set.setID;
-                    });
-                end
-            elseif button.isHeader then
-                BtWLoadoutsCollapsed.talents[button.id] = not BtWLoadoutsCollapsed.talents[button.id] and true or nil;
-                TalentsTabUpdate(frame);
-            else
-                if IsModifiedClick("SHIFT") then
-                    local set = GetTalentSet(button.id);
-                    if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-                        Internal.ActivateProfile({
-                            talentSet = button.id;
-                        });
-                    end
-                else
-                    frame.Name:ClearFocus();
-                    local set = GetTalentSet(button.id);
-                    frame.set = set;
-                    wipe(frame.temp);
-                    TalentsTabUpdate(frame)
-                end
-            end
-        end,
-    })
 end

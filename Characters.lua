@@ -11,8 +11,16 @@ local UnitFullName = UnitFullName
 local GetRealmName = GetRealmName
 local GetClassInfo = GetClassInfo
 local GetNumClasses = GetNumClasses
+local GetTalentInfoByID = GetTalentInfoByID
+local GetSpecialization = GetSpecialization
+local GetPvpTalentInfoByID = GetPvpTalentInfoByID
+local GetPvpTalentSlotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo;
+local GetNumSpecializations = GetNumSpecializations
+local GetSpecializationInfo = GetSpecializationInfo
+local GetTalentInfoBySpecialization = GetTalentInfoBySpecialization
 local GetNumSpecializationsForClassID = GetNumSpecializationsForClassID
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
+local GetEssenceInfo = C_AzeriteEssence.GetEssenceInfo;
 
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};
@@ -2161,7 +2169,7 @@ do
 	function GetPvPTrinketTalentInfo(specID, index)
 		local playerSpecID = GetSpecializationInfo(GetSpecialization());
 		if playerSpecID == specID then
-			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
+			local slotInfo = GetPvpTalentSlotInfo(1);
 			if slotInfo and slotInfo.availableTalentIDs[index] then
 				return GetPvpTalentInfoByID(slotInfo.availableTalentIDs[index]);
 			end
@@ -2178,7 +2186,7 @@ do
 	function GetPvPTalentInfoForSpecID(specID, index)
 		local playerSpecID = GetSpecializationInfo(GetSpecialization());
 		if playerSpecID == specID then
-			local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
+			local slotInfo = GetPvpTalentSlotInfo(2);
 			if slotInfo and slotInfo.availableTalentIDs[index] then
 				return GetPvpTalentInfoByID(slotInfo.availableTalentIDs[index]);
 			end
@@ -2364,7 +2372,7 @@ do
 		},
 	};
 	function GetEssenceInfoByID(essenceID)
-		local essence = C_AzeriteEssence.GetEssenceInfo(essenceID);
+		local essence = GetEssenceInfo(essenceID);
 		if not essence then
 			essence = BtWLoadoutsEssenceInfo and BtWLoadoutsEssenceInfo[essenceID] or essenceInfo[essenceID];
 		end
@@ -2379,6 +2387,8 @@ do
 			return GetEssenceInfoByID(roleInfo[role].essences[index]);
 		end
 	end
+	Internal.GetEssenceInfoByID = GetEssenceInfoByID
+	Internal.GetEssenceInfoForRole = GetEssenceInfoForRole
 end
 function Internal.GetCharacterInfo(character)
 	return BtWLoadoutsCharacterInfo and BtWLoadoutsCharacterInfo[character];

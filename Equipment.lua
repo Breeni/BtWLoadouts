@@ -1,6 +1,22 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
+local ClearCursor = ClearCursor
+local PickupInventoryItem = PickupInventoryItem
+local PickupContainerItem = PickupContainerItem
+local GetContainerFreeSlots = GetContainerFreeSlots
+local EquipmentManager_UnpackLocation = EquipmentManager_UnpackLocation
+local GetInventoryItemLink = GetInventoryItemLink
+local GetContainerItemLink = GetContainerItemLink
+local GetVoidItemHyperlinkString = GetVoidItemHyperlinkString
+local GetItemUniqueness = GetItemUniqueness
+
+local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
+local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+
+local sort = table.sort
+local format = string.format
+
 --[[
     GetItemUniqueness will sometimes return Unique-Equipped info instead of Legion Legendary info,
     this is a cache of items with that or similar issues
@@ -78,12 +94,12 @@ local function EmptyInventorySlot(inventorySlotId)
 
         PickupInventoryItem(inventorySlotId)
 		PickupContainerItem(containerId, slotId)
-		
+
 		-- If the swap succeeded then the cursor should be empty
 		if not CursorHasItem() then
 			complete = true;
 		end
-        
+
         ClearCursor();
     end
 
@@ -98,7 +114,7 @@ local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
     for packedLocation, possibleItemID in pairs(possibles) do
         if possibleItemID == tonumber(itemID) then
             local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(packedLocation)
-            
+
             if not voidStorage and not (player and not bags and slot == inventorySlotId) then
                 match = {
                     ["slot"] = slot,
@@ -124,7 +140,7 @@ local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
 		if not CursorHasItem() then
 			complete = true;
 		end
-        
+
         ClearCursor();
     end
 
@@ -149,7 +165,7 @@ local function SwapInventorySlot(inventorySlotId, itemLink, location)
 		if not CursorHasItem() then
 			complete = true;
 		end
-        
+
         ClearCursor();
     end
 
@@ -165,20 +181,18 @@ local function GetItemLinkByLocation(location)
 	local itemLink;
 	if voidStorage then
 		itemLink = GetVoidItemHyperlinkString(tab, voidSlot);
-	elseif not bags then -- and (player or bank) 
+	elseif not bags then -- and (player or bank)
 		itemLink = GetInventoryItemLink("player", slot);
 	else -- bags
 		itemLink = GetContainerItemLink(bag, slot);
 	end
-	
+
 	return itemLink;
 end
--- A map from the equipment manager ids to our sets
-local equipmentSetMap = {};
 local function CompareItemLinks(a, b)
 	local itemIDA = GetItemInfoInstant(a);
 	local itemIDB = GetItemInfoInstant(b);
-	
+
 	return itemIDA == itemIDB;
 end
 local function CompareItems(itemLinkA, itemLinkB)
@@ -247,23 +261,23 @@ do
 		if not player and not bank and not bags and not voidStorage then -- Invalid location
 			return 0;
 		end
-		
+
 		local locationItemLink;
 		if voidStorage then
 			locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
 			itemLocation:Clear();
-		elseif not bags then -- and (player or bank) 
+		elseif not bags then -- and (player or bank)
 			locationItemLink = GetInventoryItemLink("player", slot);
 			itemLocation:SetEquipmentSlot(slot);
 		else -- bags
 			locationItemLink = GetContainerItemLink(bag, slot);
 			itemLocation:SetBagAndSlot(bag, slot);
 		end
-	
+
 		local match = 0;
 		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
 		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
-	
+
 		if enchantID == locationEnchantID then
 			match = match + 1;
 		end
@@ -294,7 +308,7 @@ do
 		for i=1,math.max(#relic3BonusIDs,#locationRelic3BonusIDs) do
 			match = match + 1;
 		end
-	
+
 		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
@@ -335,17 +349,21 @@ do
 		if not player and not bank and not bags and not voidStorage then -- Invalid location
 			return false;
 		end
-		
+
 		local locationItemLink;
 		if voidStorage then
 			locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
 			itemLocation:Clear();
-		elseif not bags then -- and (player or bank) 
+		elseif not bags then -- and (player or bank)
 			locationItemLink = GetInventoryItemLink("player", slot);
 			itemLocation:SetEquipmentSlot(slot);
 		else -- bags
 			locationItemLink = GetContainerItemLink(bag, slot);
 			itemLocation:SetBagAndSlot(slot);
+		end
+
+		if locationItemLink == nil then
+			return false
 		end
 
 		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
@@ -402,7 +420,7 @@ do
 				return false;
 			end
 		end
-		
+
 		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if not C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
@@ -410,7 +428,7 @@ do
 				end
 			end
 		end
-		
+
 		return true;
 	end
 end
@@ -427,7 +445,7 @@ local function IsEquipmentSetActive(set)
     --     firstEquipped = INVSLOT_MAINHAND;
     --     lastEquipped = INVSLOT_RANGED;
 	-- end
-	
+
 	for inventorySlotId=firstEquipped,lastEquipped do
 		if not ignored[inventorySlotId] then
 			if expected[inventorySlotId] then
@@ -466,9 +484,9 @@ do
 
 		-- if combatSwap then
 		-- 	firstEquipped = INVSLOT_MAINHAND
-		-- 	lastEquipped = INVSLOT_RANGED 
+		-- 	lastEquipped = INVSLOT_RANGED
 		-- end
-		
+
 		for inventorySlotId = firstEquipped, lastEquipped do
 			if not ignored[inventorySlotId] then
 				if not anyLockedSlots and IsInventoryItemLocked(inventorySlotId) then
@@ -510,7 +528,7 @@ do
 						else
 							uniqueFamily, maxEquipped = GetItemUniqueness(itemLink)
 						end
-						
+
 						if uniqueFamily == -1 then
 							uniqueFamilies[itemID] = maxEquipped
 						elseif uniqueFamily ~= nil then
@@ -550,7 +568,7 @@ do
 				end
 			end
 		end
-		
+
 		-- Swap out items
 		for inventorySlotId = firstEquipped, lastEquipped do
 			if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
@@ -559,12 +577,12 @@ do
 				end
 			end
 		end
-		
+
 		-- target.equipPass = target.equipPass or 0;
 		-- if not anyLockedSlots then
 		-- 	target.equipPass = target.equipPass + 1;
 		-- end
-		
+
 		-- Unequip items
 		local complete = true
 		for inventorySlotId = firstEquipped, lastEquipped do
@@ -584,7 +602,7 @@ do
 				end
 			end
 		end
-		
+
 		ClearCursor()
 		-- If its taken us 5 attempts to equip a set its probably not going to happen
 		-- if target.equipPass >= 5 then
@@ -596,7 +614,7 @@ do
 		-- if complete then
 		-- 	print(format("Took %d passes to equip set", target.equipPass));
 		-- end
-		
+
 		return complete;
 	end
 end
@@ -605,7 +623,7 @@ local function AddEquipmentSet()
     local name = format(L["New %s Equipment Set"], characterName);
 	local equipment = {};
 	local ignored = {};
-	
+
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
 		if equipment[inventorySlotId] == nil then
@@ -614,7 +632,7 @@ local function AddEquipmentSet()
 	end
 
     local set = {
-		setID = GetNextSetID(BtWLoadoutsSets.equipment),
+		setID = Internal.GetNextSetID(BtWLoadoutsSets.equipment),
         character = characterRealm .. "-" .. characterName,
         name = name,
 		equipment = equipment,
@@ -630,9 +648,9 @@ end
 local function AddBlankEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
     local set = {
-		setID = GetNextSetID(BtWLoadoutsSets.equipment),
+		setID = Internal.GetNextSetID(BtWLoadoutsSets.equipment),
         character = characterRealm .. "-" .. characterName,
-        name = name,
+        name = "",
 		equipment = {},
 		extras = {},
 		locations = {},
@@ -642,31 +660,31 @@ local function AddBlankEquipmentSet()
     BtWLoadoutsSets.equipment[set.setID] = set;
     return set;
 end
-local function GetEquipmentSet(id)
+function Internal.GetEquipmentSet(id)
     if type(id) == "table" then
 		return id;
 	else
 		return BtWLoadoutsSets.equipment[id];
 	end
 end
-local function GetEquipmentSetByName(name)
+function Internal.GetEquipmentSetByName(name)
 	for _,set in pairs(BtWLoadoutsSets.equipment) do
 		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
 			return set;
 		end
 	end
 end
-local function GetEquipmentSets(id, ...)
+function Internal.GetEquipmentSets(id, ...)
 	if id ~= nil then
-		return BtWLoadoutsSets.equipment[id], GetEquipmentSets(...);
+		return BtWLoadoutsSets.equipment[id], Internal.GetEquipmentSets(...);
 	end
 end
-local function GetEquipmentSetIfNeeded(id)
+function Internal.GetEquipmentSetIfNeeded(id)
 	if id == nil then
 		return;
 	end
 
-	local set = GetEquipmentSet(id);
+	local set = Internal.GetEquipmentSet(id);
 	if IsEquipmentSetActive(set) then
 		return;
 	end
@@ -674,7 +692,7 @@ local function GetEquipmentSetIfNeeded(id)
     return set;
 end
 local function CombineEquipmentSets(result, ...)
-	local result = result or {};
+	result = result or {};
 
 	result.equipment = {};
 	result.extras = {};
@@ -690,7 +708,7 @@ local function CombineEquipmentSets(result, ...)
 			local locations = C_EquipmentSet.GetItemLocations(set.managerID);
 			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 				set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
-	
+
 				local location = locations[inventorySlotId] or 0;
 				if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
 					set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
@@ -711,7 +729,7 @@ local function CombineEquipmentSets(result, ...)
 	return result;
 end
 local function DeleteEquipmentSet(id)
-	DeleteSet(BtWLoadoutsSets.equipment, id);
+	Internal.DeleteSet(BtWLoadoutsSets.equipment, id);
 
 	if type(id) == "table" then
 		id = id.setID;
@@ -731,15 +749,133 @@ local function DeleteEquipmentSet(id)
 	end
 end
 
-do
-    local frame = BtWLoadoutsFrame.Equipment
-    Internal.AddTab({
-        type = "equipment",
-        name = L["Equipment"],
-        frame = frame,
-        onInit = function ()
-        end,
-        onUpdate = function (self)
-        end,
-    })
+Internal.AddEquipmentSet = AddEquipmentSet
+Internal.DeleteEquipmentSet = DeleteEquipmentSet
+Internal.ActivateEquipmentSet = ActivateEquipmentSet
+Internal.IsEquipmentSetActive = IsEquipmentSetActive
+Internal.CombineEquipmentSets = CombineEquipmentSets
+
+function Internal.EquipmentTabUpdate(self)
+	self:GetParent().TitleText:SetText(L["Equipment"]);
+	self.set = Internal.SetsScrollFrame_CharacterFilter(self.set, BtWLoadoutsSets.equipment, BtWLoadoutsCollapsed.equipment);
+
+	if self.set ~= nil then
+		local set = self.set;
+		local character = set.character;
+		local characterInfo = Internal.GetCharacterInfo(character);
+		local equipment = set.equipment;
+
+		local characterName, characterRealm = UnitFullName("player");
+		local playerCharacter = characterRealm .. "-" .. characterName;
+
+		-- Update the name for the built in equipment set, but only for the current player
+		if set.character == playerCharacter and set.managerID then
+			local managerName = C_EquipmentSet.GetEquipmentSetInfo(set.managerID);
+			if managerName ~= set.name then
+				C_EquipmentSet.ModifyEquipmentSet(set.managerID, set.name);
+			end
+		end
+
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
+		self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
+
+		local model = self.Model;
+		if not characterInfo or character == playerCharacter then
+			model:SetUnit("player");
+		else
+			model:SetCustomRace(characterInfo.race, characterInfo.sex);
+		end
+		model:Undress();
+
+		for _,item in pairs(self.Slots) do
+			if equipment[item:GetID()] then
+				model:TryOn(equipment[item:GetID()]);
+			end
+
+			item:Update();
+			item:SetEnabled(character == playerCharacter and set.managerID == nil);
+		end
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(character == playerCharacter);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(set.managerID == nil);
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
+
+		local helpTipBox = self:GetParent().HelpTipBox;
+		if character ~= playerCharacter then
+			if not BtWLoadoutsHelpTipFlags["INVALID_PLAYER"] then
+				helpTipBox.closeFlag = "INVALID_PLAYER";
+
+				HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+
+				helpTipBox:Show();
+				HelpTipBox_SetText(helpTipBox, L["Can not equip sets for other characters."]);
+			else
+				helpTipBox.closeFlag = nil;
+				helpTipBox:Hide();
+			end
+		elseif set.managerID ~= nil then
+			if not BtWLoadoutsHelpTipFlags["EQUIPMENT_MANAGER_BLOCK"] then
+				helpTipBox.closeFlag = "EQUIPMENT_MANAGER_BLOCK";
+
+				HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
+
+				helpTipBox:Show();
+				HelpTipBox_SetText(helpTipBox, L["Can not edit equipment manager sets."]);
+			else
+				helpTipBox.closeFlag = nil;
+				helpTipBox:Hide();
+			end
+		else
+			if not BtWLoadoutsHelpTipFlags["EQUIPMENT_IGNORE"] then
+				helpTipBox.closeFlag = "EQUIPMENT_IGNORE";
+
+				HelpTipBox_Anchor(helpTipBox, "RIGHT", self.HeadSlot);
+
+				helpTipBox:Show();
+				HelpTipBox_SetText(helpTipBox, L["Shift+Left Mouse Button to ignore a slot."]);
+			else
+				helpTipBox.closeFlag = nil;
+				helpTipBox:Hide();
+			end
+		end
+	else
+		self.Name:SetEnabled(false);
+		self.Name:SetText("");
+
+		for _,item in pairs(self.Slots) do
+			item:SetEnabled(false);
+		end
+
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
+
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
+
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
+
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
+
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		else
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
+	end
 end

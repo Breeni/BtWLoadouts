@@ -761,7 +761,7 @@
 		</Scripts>
 	</Button>
 
-	<Button name="BtWLoadoutsFrameTabTemplate" inherits="CharacterFrameTabButtonTemplate" parentArray="Tabs" virtual="true" hidden="true">
+	<Button name="BtWLoadoutsFrameTabTemplate" inherits="CharacterFrameTabButtonTemplate" parentArray="Tabs" virtual="true">
 		<Scripts>
 			<OnClick>
 				PanelTemplates_Tab_OnClick(self, BtWLoadoutsFrame);
@@ -1632,6 +1632,36 @@
 					<Frame parentKey="Arrow" inherits="GlowBoxArrowTemplate" />
 				</Frames>
 			</Frame>
+            <Button name="$parentTab1" inherits="BtWLoadoutsFrameTabTemplate" id="1" text="BTWLOADOUTS_PROFILES">
+               	<Anchors>
+					<Anchor point="BOTTOMLEFT" x="7" y="-30"/>
+				</Anchors>
+            </Button>
+            <Button name="$parentTab2" inherits="BtWLoadoutsFrameTabTemplate" id="2" text="BTWLOADOUTS_TALENTS">
+               	<Anchors>
+                   <Anchor point="LEFT" relativeTo="$parentTab1" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+            </Button>
+            <Button name="$parentTab3" inherits="BtWLoadoutsFrameTabTemplate" id="3" text="BTWLOADOUTS_PVP_TALENTS">
+               	<Anchors>
+                   <Anchor point="LEFT" relativeTo="$parentTab2" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+            </Button>
+            <Button name="$parentTab4" inherits="BtWLoadoutsFrameTabTemplate" id="4" text="BTWLOADOUTS_ESSENCES">
+               	<Anchors>
+                   <Anchor point="LEFT" relativeTo="$parentTab3" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+            </Button>
+            <Button name="$parentTab5" inherits="BtWLoadoutsFrameTabTemplate" id="5" text="BTWLOADOUTS_EQUIPMENT">
+               	<Anchors>
+                   <Anchor point="LEFT" relativeTo="$parentTab4" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+            </Button>
+            <Button name="$parentTab6" inherits="BtWLoadoutsFrameTabTemplate" id="6" text="BTWLOADOUTS_CONDITIONS">
+               	<Anchors>
+                   <Anchor point="LEFT" relativeTo="$parentTab5" relativePoint="RIGHT" x="-16" y="0"/>
+				</Anchors>
+            </Button>
 		</Frames>
 		<Scripts>
 			<OnLoad method="OnLoad"/>

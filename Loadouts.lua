@@ -4,20 +4,37 @@ local L = Internal.L
 local External = {}
 _G[ADDON_NAME] = External
 
+local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
+local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+
 local IsResting = IsResting;
 local UnitAura = UnitAura;
 local UnitClass = UnitClass;
 local UnitLevel = UnitLevel;
 local UnitFullName = UnitFullName;
 local UnitCastingInfo = UnitCastingInfo;
+local GetClassColor = C_ClassColor.GetClassColor;
+local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE;
+
 local GetItemCount = GetItemCount;
 local GetItemInfo = GetItemInfo;
-local GetSpecializationInfoByID = GetSpecializationInfoByID;
-local GetSpecializationInfo = GetSpecializationInfo;
+
+local SetSpecialization = SetSpecialization;
 local GetSpecialization = GetSpecialization;
-local StaticPopup_Visible = StaticPopup_Visible;
+local GetNumSpecializations = GetNumSpecializations;
+local GetSpecializationInfo = GetSpecializationInfo;
+local GetSpecializationInfoByID = GetSpecializationInfoByID;
+
+local GetMilestoneEssence = C_AzeriteEssence.GetMilestoneEssence
+
 local StaticPopup_Show = StaticPopup_Show;
 local StaticPopup_Hide = StaticPopup_Hide;
+local StaticPopup_Visible = StaticPopup_Visible;
+
+local UIDropDownMenu_SetText = UIDropDownMenu_SetText;
+local UIDropDownMenu_EnableDropDown = UIDropDownMenu_EnableDropDown;
+local UIDropDownMenu_DisableDropDown = UIDropDownMenu_DisableDropDown;
+local UIDropDownMenu_SetSelectedValue = UIDropDownMenu_SetSelectedValue;
 
 local format = string.format;
 
@@ -140,93 +157,48 @@ end
 
 -- Check all the pieces of a profile and make sure they are valid together
 local function IsProfileValid(set)
-	local class, specID, role, invalidForPlayer;
+	local class, specID, role, invalidForPlayer = nil, nil, nil, nil;
 
 	local playerClass = select(2, UnitClass("player"));
+	if set.equipmentSet then
+		local subSet = Internal.GetEquipmentSet(set.equipmentSet);
+		local characterInfo = Internal.GetCharacterInfo(subSet.character);
+		if not characterInfo then
+			return false, true, false, false, false;
+		end
+		class = characterInfo.class;
 
-    for _,segment in ipairs(loadoutSegments) do
-        local ids = set[segment.id]
-        if ids then
-            if segment.type == "spec" then
-                for _,id in ipairs(ids) do
-                    local subSet = segment.get(id);
+		local name, realm = UnitFullName("player");
+		local playerCharacter = format("%s-%s", realm, name);
+		invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
+	end
 
-                    if specID ~= nil and specID ~= subSet.specID then
-                        return false, false, true, false, false;
-                    end
+	if set.essencesSet then
+		local subSet = Internal.GetEssenceSet(set.essencesSet);
+		role = subSet.role;
 
-                    specID = subSet.specID;
-                end
-            elseif segment.type == "role" then
-                for _,id in ipairs(ids) do
-                    local subSet = segment.get(id);
-                    role = subSet.role;
+		invalidForPlayer = invalidForPlayer or not Internal.IsClassRoleValid(playerClass, role);
+	end
 
-		            invalidForPlayer = invalidForPlayer or not Internal.IsClassRoleValid(playerClass, role);
+	if set.talentSet then
+		local subSet = Internal.GetTalentSet(set.talentSet);
 
-                    specID = subSet.specID;
-                end
-            elseif segment.type == "character" then
-                for _,id in ipairs(ids) do
-                    local subSet = segment.get(id);
-                    local characterInfo = Internal.GetCharacterInfo(subSet.character);
+		if specID ~= nil and specID ~= subSet.specID then
+			return false, false, true, false, false;
+		end
 
-                    if not characterInfo then
-                        return false, true, false, false, false;
-                    end
+		specID = subSet.specID;
+	end
 
-                    class = characterInfo.class;
+	if set.pvpTalentSet then
+		local subSet = Internal.GetPvPTalentSet(set.pvpTalentSet);
 
-                    local name, realm = UnitFullName("player");
-                    local playerCharacter = format("%s-%s", realm, name);
+		if specID ~= nil and specID ~= subSet.specID then
+			return false, false, true, false, false;
+		end
 
-                    invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
-                end
-            end
-        end
-    end
-
-    -- @TODO
-
-	-- if set.equipmentSet then
-	-- 	local subSet = GetEquipmentSet(set.equipmentSet);
-	-- 	local characterInfo = GetCharacterInfo(subSet.character);
-	-- 	if not characterInfo then
-	-- 		return false, true, false, false, false;
-	-- 	end
-	-- 	class = characterInfo.class;
-
-	-- 	local name, realm = UnitFullName("player");
-	-- 	local playerCharacter = format("%s-%s", realm, name);
-	-- 	invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
-	-- end
-
-	-- if set.essencesSet then
-	-- 	local subSet = GetEssenceSet(set.essencesSet);
-	-- 	role = subSet.role;
-
-	-- 	invalidForPlayer = invalidForPlayer or not Internal.IsClassRoleValid(playerClass, role);
-	-- end
-
-	-- if set.talentSet then
-	-- 	local subSet = GetTalentSet(set.talentSet);
-
-	-- 	if specID ~= nil and specID ~= subSet.specID then
-	-- 		return false, false, true, false, false;
-	-- 	end
-
-	-- 	specID = subSet.specID;
-	-- end
-
-	-- if set.pvpTalentSet then
-	-- 	local subSet = GetPvPTalentSet(set.pvpTalentSet);
-
-	-- 	if specID ~= nil and specID ~= subSet.specID then
-	-- 		return false, false, true, false, false;
-	-- 	end
-
-	-- 	specID = subSet.specID;
-	-- end
+		specID = subSet.specID;
+	end
 
 	if specID then
 		local specClass = select(6, GetSpecializationInfoByID(specID));
@@ -273,34 +245,32 @@ local function DeleteProfile(id)
 	do
         local set = type(id) == "table" and id or GetProfile(id);
 
-        for _,segment in ipairs(loadoutSegments) do
-            local ids = set[segment.id]
-            if ids then
-                for _,id in ipairs(ids) do
-                    local subSet = segment.get(id)
-                    subSet.useCount = (subSet.useCount or 1) - 1;
-                end
-            end
-        end
+        -- for _,segment in ipairs(loadoutSegments) do
+        --     local ids = set[segment.id]
+        --     if ids then
+        --         for _,id in ipairs(ids) do
+        --             local subSet = segment.get(id)
+        --             subSet.useCount = (subSet.useCount or 1) - 1;
+        --         end
+        --     end
+        -- end
 
-        -- @TODO
-
-		-- if set.talentSet then
-		-- 	local subSet = GetTalentSet(set.talentSet);
-		-- 	subSet.useCount = (subSet.useCount or 1) - 1;
-		-- end
-		-- if set.pvpTalentSet then
-		-- 	local subSet = GetPvPTalentSet(set.pvpTalentSet);
-		-- 	subSet.useCount = (subSet.useCount or 1) - 1;
-		-- end
-		-- if set.essences then
-		-- 	local subSet = GetEssencetSet(set.essences);
-		-- 	subSet.useCount = (subSet.useCount or 1) - 1;
-		-- end
-		-- if set.equipmentSet then
-		-- 	local subSet = GetEquipmentSet(set.equipmentSet);
-		-- 	subSet.useCount = (subSet.useCount or 1) - 1;
-		-- end
+		if set.talentSet then
+			local subSet = Internal.GetTalentSet(set.talentSet);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
+		if set.pvpTalentSet then
+			local subSet = Internal.GetPvPTalentSet(set.pvpTalentSet);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
+		if set.essences then
+			local subSet = Internal.GetEssencetSet(set.essences);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
+		if set.equipmentSet then
+			local subSet = Internal.GetEquipmentSet(set.equipmentSet);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
 	end
 	DeleteSet(BtWLoadoutsSets.profiles, id);
 
@@ -368,49 +338,48 @@ local function IsProfileActive(set)
 		end
     end
 
-    for _,segment in ipairs(loadoutSegments) do
-        local ids = set[segment.id]
-        if ids then
-            wipe(temp);
-            segment.combine(temp, unpack(ids));
-            if not set.isActive(temp) then
-                return false;
-            end
-        end
-    end
+    -- for _,segment in ipairs(loadoutSegments) do
+    --     local ids = set[segment.id]
+    --     if ids then
+    --         wipe(temp);
+    --         segment.combine(temp, unpack(ids));
+    --         if not set.isActive(temp) then
+    --             return false;
+    --         end
+    --     end
+    -- end
 
-    -- @TODO
-	-- if set.talentSet then
-	-- 	-- local talentSet = CombineTalentSets({}, GetTalentSets(unpack(set.talentSets)));
-	-- 	local talentSet = GetTalentSet(set.talentSet);
-	-- 	if not IsTalentSetActive(talentSet) then
-	-- 		return false;
-	-- 	end
-	-- end
+    if set.talentSet then
+		-- local talentSet = CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talentSets)));
+		local talentSet = Internal.GetTalentSet(set.talentSet);
+		if not Internal.IsTalentSetActive(talentSet) then
+			return false;
+		end
+	end
 
-	-- if set.pvpTalentSet then
-	-- 	-- local pvpTalentSet = CombinePvPTalentSets({}, GetPvPTalentSets(unpack(set.pvpTalentSets)));
-	-- 	local pvpTalentSet = GetPvPTalentSet(set.pvpTalentSet);
-	-- 	if not IsPvPTalentSetActive(pvpTalentSet) then
-	-- 		return false;
-	-- 	end
-	-- end
+	if set.pvpTalentSet then
+		-- local pvpTalentSet = CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvpTalentSets)));
+		local pvpTalentSet = Internal.GetPvPTalentSet(set.pvpTalentSet);
+		if not Internal.IsPvPTalentSetActive(pvpTalentSet) then
+			return false;
+		end
+	end
 
-	-- if set.essencesSet then
-	-- 	-- local essencesSet = CombineEssenceSets({}, GetEssenceSets(unpack(set.essencesSets)));
-	-- 	local essencesSet = GetEssenceSet(set.essencesSet);
-	-- 	if not IsEssenceSetActive(essencesSet) then
-	-- 		return false;
-	-- 	end
-	-- end
+	if set.essencesSet then
+		-- local essencesSet = CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essencesSets)));
+		local essencesSet = Internal.GetEssenceSet(set.essencesSet);
+		if not Internal.IsEssenceSetActive(essencesSet) then
+			return false;
+		end
+	end
 
-	-- if set.equipmentSet then
-	-- 	-- local equipmentSet = CombineEquipmentSets({}, GetEquipmentSets(unpack(set.equipmentSets)));
-	-- 	local equipmentSet = GetEquipmentSet(set.equipmentSet);
-	-- 	if not IsEquipmentSetActive(equipmentSet) then
-	-- 		return false;
-	-- 	end
-	-- end
+	if set.equipmentSet then
+		-- local equipmentSet = CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipmentSets)));
+		local equipmentSet = Internal.GetEquipmentSet(set.equipmentSet);
+		if not Internal.IsEquipmentSetActive(equipmentSet) then
+			return false;
+		end
+	end
 
 	return true;
 end
@@ -464,30 +433,30 @@ local function ContinueActivateProfile()
 
 	local talentSet;
 	if set.talentSets then
-		talentSet = CombineTalentSets({}, GetTalentSets(unpack(set.talentSets)));
+		talentSet = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talentSets)));
 	end
 
 	local pvpTalentSet;
 	if set.pvpTalentSets then
-		pvpTalentSet = CombinePvPTalentSets({}, GetPvPTalentSets(unpack(set.pvpTalentSets)));
+		pvpTalentSet = Internal.CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvpTalentSets)));
 	end
 
 	local essencesSet;
 	if set.essencesSets then
-		essencesSet = CombineEssenceSets({}, GetEssenceSets(unpack(set.essencesSets)));
+		essencesSet = Internal.CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essencesSets)));
 	end
 
-	if talentSet and not IsTalentSetActive(talentSet) and PlayerNeedsTome() then
+	if talentSet and not Internal.IsTalentSetActive(talentSet) and PlayerNeedsTome() then
 		RequestTome();
 		return;
 	end
 
-	if pvpTalentSet and not IsPvPTalentSetActive(pvpTalentSet) and PlayerNeedsTome() then
+	if pvpTalentSet and not Internal.IsPvPTalentSetActive(pvpTalentSet) and PlayerNeedsTome() then
 		RequestTome();
 		return;
 	end
 
-	if essencesSet and not IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
+	if essencesSet and not Internal.IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
 		RequestTome();
 		return;
 	end
@@ -502,7 +471,7 @@ local function ContinueActivateProfile()
 
 	local complete = true;
     if talentSet then
-		if not ActivateTalentSet(talentSet) then
+		if not Internal.ActivateTalentSet(talentSet) then
 			complete = false;
 			set.dirty = true; -- Just run next frame
 		end
@@ -514,18 +483,18 @@ local function ContinueActivateProfile()
 	if essencesSet then
 		conflictAndStrife = essencesSet.essences[115] == 32; -- We are trying to equip Conflict
 	else
-		conflictAndStrife = C_AzeriteEssence.GetMilestoneEssence(115) == 32; -- Conflict is equipped
+		conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped
 	end
 
     if pvpTalentSet then
-		if not ActivatePvPTalentSet(pvpTalentSet, conflictAndStrife) then
+		if not Internal.ActivatePvPTalentSet(pvpTalentSet, conflictAndStrife) then
 			complete = false;
 			set.dirty = true; -- Just run next frame
 		end
     end
 
     if essencesSet then
-		if not ActivateEssenceSet(essencesSet) then
+		if not Internal.ActivateEssenceSet(essencesSet) then
 			complete = false;
 			set.dirty = true; -- Just run next frame
 		end
@@ -533,10 +502,10 @@ local function ContinueActivateProfile()
 
 	local equipmentSet;
 	if set.equipmentSets then
-		equipmentSet = CombineEquipmentSets({}, GetEquipmentSets(unpack(set.equipmentSets)));
+		equipmentSet = Internal.CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipmentSets)));
 
 		if equipmentSet then
-			if not ActivateEquipmentSet(equipmentSet) then
+			if not Internal.ActivateEquipmentSet(equipmentSet) then
 				complete = false;
 			end
 		end
@@ -624,8 +593,13 @@ end
 function Internal.IsActivatingLoadout()
     return target.active
 end
+Internal.GetProfile = GetProfile
 Internal.GetActiveProfiles = GetActiveProfiles
 Internal.ActivateProfile = ActivateProfile
+Internal.IsProfileValid = IsProfileValid
+Internal.IsProfileActive = IsProfileActive
+Internal.AddProfile = AddProfile
+Internal.DeleteProfile = DeleteProfile
 
 -- [[ External API ]]
 -- Return: id, name, specID, character
@@ -682,165 +656,133 @@ do
 	end
 end
 
-BtWLoadoutsFrame.Profiles:Hide();
-if false then
-    local frame = BtWLoadoutsFrame.Profiles
-    Internal.AddTab({
-        type = "loadout",
-        name = L["Profiles"],
-        frame = frame,
-        onInit = function ()
-            frame.SpecDropDown.includeNone = true;
-            UIDropDownMenu_SetWidth(frame.SpecDropDown, 300);
-            UIDropDownMenu_Initialize(frame.SpecDropDown, Internal.SpecDropDownInit);
-            UIDropDownMenu_JustifyText(frame.SpecDropDown, "LEFT");
+function Internal.ProfilesTabUpdate(self)
+	self:GetParent().TitleText:SetText(L["Profiles"]);
+	self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
 
-            UIDropDownMenu_SetWidth(frame.TalentsDropDown, 300);
-            UIDropDownMenu_Initialize(frame.TalentsDropDown, Internal.TalentsDropDownInit);
-            UIDropDownMenu_JustifyText(frame.TalentsDropDown, "LEFT");
+	self.Name:SetEnabled(self.set ~= nil);
+	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
+	self.TalentsDropDown.Button:SetEnabled(self.set ~= nil);
+	self.PvPTalentsDropDown.Button:SetEnabled(self.set ~= nil);
+	self.EssencesDropDown.Button:SetEnabled(self.set ~= nil);
+	self.EquipmentDropDown.Button:SetEnabled(self.set ~= nil);
 
-            UIDropDownMenu_SetWidth(frame.PvPTalentsDropDown, 300);
-            UIDropDownMenu_Initialize(frame.PvPTalentsDropDown, Internal.PvPTalentsDropDownInit);
-            UIDropDownMenu_JustifyText(frame.PvPTalentsDropDown, "LEFT");
+	if self.set ~= nil then
+		local valid, class, specID, role, validForPlayer = Internal.IsProfileValid(self.set);
+		if type(specID) == "number" and self.set.specID ~= specID then
+			self.set.specID = specID;
+			Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
+		end
 
-            UIDropDownMenu_SetWidth(frame.EssencesDropDown, 300);
-            UIDropDownMenu_Initialize(frame.EssencesDropDown, Internal.EssencesDropDownInit);
-            UIDropDownMenu_JustifyText(frame.EssencesDropDown, "LEFT");
+		specID = self.set.specID;
 
-            UIDropDownMenu_SetWidth(frame.EquipmentDropDown, 300);
-            UIDropDownMenu_Initialize(frame.EquipmentDropDown, Internal.EquipmentDropDownInit);
-            UIDropDownMenu_JustifyText(frame.EquipmentDropDown, "LEFT");
-        end,
-        onUpdate = function (self)
-            self = frame;
+		if specID == nil or specID == 0 then
+			UIDropDownMenu_SetText(self.SpecDropDown, L["None"]);
+		else
+			local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
+			local className = LOCALIZED_CLASS_NAMES_MALE[classID];
+			local classColor = GetClassColor(classID);
+			UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
+		end
 
-            self:GetParent().TitleText:SetText(L["Profiles"]);
-            self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, Internal.setScrollFrameCollapsed.profiles);
+		local talentSetID = self.set.talentSet;
+		if talentSetID == nil then
+			UIDropDownMenu_SetText(self.TalentsDropDown, L["None"]);
+		else
+			local talentSet = Internal.GetTalentSet(talentSetID);
+			UIDropDownMenu_SetText(self.TalentsDropDown, talentSet.name);
+		end
 
-            self.Name:SetEnabled(self.set ~= nil);
-            self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
-            self.TalentsDropDown.Button:SetEnabled(self.set ~= nil);
-            self.PvPTalentsDropDown.Button:SetEnabled(self.set ~= nil);
-            self.EssencesDropDown.Button:SetEnabled(self.set ~= nil);
-            self.EquipmentDropDown.Button:SetEnabled(self.set ~= nil);
+		local pvpTalentSetID = self.set.pvpTalentSet;
+		if pvpTalentSetID == nil then
+			UIDropDownMenu_SetText(self.PvPTalentsDropDown, L["None"]);
+		else
+			local pvpTalentSet = Internal.GetPvPTalentSet(pvpTalentSetID);
+			UIDropDownMenu_SetText(self.PvPTalentsDropDown, pvpTalentSet.name);
+		end
 
-            if self.set ~= nil then
-                local valid, class, specID, role, validForPlayer = IsProfileValid(self.set);
-                if type(specID) == "number" then
-                    self.set.specID = specID;
-                end
+		local essencesSetID = self.set.essencesSet;
+		if essencesSetID == nil then
+			UIDropDownMenu_SetText(self.EssencesDropDown, L["None"]);
+		else
+			local essencesSet = Internal.GetEssenceSet(essencesSetID);
+			UIDropDownMenu_SetText(self.EssencesDropDown, essencesSet.name);
+		end
 
-                specID = self.set.specID;
+		local equipmentSetID = self.set.equipmentSet;
+		if equipmentSetID == nil then
+			UIDropDownMenu_SetText(self.EquipmentDropDown, L["None"]);
+		else
+			local equipmentSet = Internal.GetEquipmentSet(equipmentSetID);
+			UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
+		end
 
-                if specID == nil or specID == 0 then
-                    UIDropDownMenu_SetText(self.SpecDropDown, L["None"]);
-                else
-                    local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
-                    local className = LOCALIZED_CLASS_NAMES_MALE[classID];
-                    local classColor = C_ClassColor.GetClassColor(classID);
-                    UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
-                end
+		if not self.Name:HasFocus() then
+			self.Name:SetText(self.set.name or "");
+		end
 
-                local talentSetID = self.set.talentSet;
-                if talentSetID == nil then
-                    UIDropDownMenu_SetText(self.TalentsDropDown, L["None"]);
-                else
-                    local talentSet = GetTalentSet(talentSetID);
-                    UIDropDownMenu_SetText(self.TalentsDropDown, talentSet.name);
-                end
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(validForPlayer);
 
-                local pvpTalentSetID = self.set.pvpTalentSet;
-                if pvpTalentSetID == nil then
-                    UIDropDownMenu_SetText(self.PvPTalentsDropDown, L["None"]);
-                else
-                    local pvpTalentSet = GetPvPTalentSet(pvpTalentSetID);
-                    UIDropDownMenu_SetText(self.PvPTalentsDropDown, pvpTalentSet.name);
-                end
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(true);
 
-                local essencesSetID = self.set.essencesSet;
-                if essencesSetID == nil then
-                    UIDropDownMenu_SetText(self.EssencesDropDown, L["None"]);
-                else
-                    local essencesSet = GetEssenceSet(essencesSetID);
-                    UIDropDownMenu_SetText(self.EssencesDropDown, essencesSet.name);
-                end
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Hide();
+		addButton.FlashAnim:Stop();
 
-                local equipmentSetID = self.set.equipmentSet;
-                if equipmentSetID == nil then
-                    UIDropDownMenu_SetText(self.EquipmentDropDown, L["None"]);
-                else
-                    local equipmentSet = GetEquipmentSet(equipmentSetID);
-                    UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
-                end
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+		if not BtWLoadoutsHelpTipFlags["TUTORIAL_RENAME_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_RENAME_SET";
 
-                if not self.Name:HasFocus() then
-                    self.Name:SetText(self.set.name or "");
-                end
+			HelpTipBox_Anchor(helpTipBox, "TOP", self.Name);
 
-                local activateButton = self:GetParent().ActivateButton;
-                activateButton:SetEnabled(validForPlayer);
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Change the name of your new profile."]);
+		elseif not BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_CREATE_TALENT_SET";
 
-                local deleteButton =  self:GetParent().DeleteButton;
-                deleteButton:SetEnabled(true);
+			HelpTipBox_Anchor(helpTipBox, "TOP", self.TalentsDropDown);
 
-                local addButton = self:GetParent().AddButton;
-                addButton.Flash:Hide();
-                addButton.FlashAnim:Stop();
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Create a talent set for your new profile."]);
+		elseif not BtWLoadoutsHelpTipFlags["TUTORIAL_ACTIVATE_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_ACTIVATE_SET";
 
-                local helpTipBox = self:GetParent().HelpTipBox;
-                -- Tutorial stuff
-                if not helpTipIgnored["TUTORIAL_RENAME_SET"] then
-                    helpTipBox.closeFlag = "TUTORIAL_RENAME_SET";
+			HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
 
-                    HelpTipBox_Anchor(helpTipBox, "TOP", self.Name);
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["Activate your profile."]);
+		else
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
+		end
+	else
+		self.Name:SetText("");
 
-                    helpTipBox:Show();
-                    HelpTipBox_SetText(helpTipBox, L["Change the name of your new profile."]);
-                elseif not helpTipIgnored["TUTORIAL_CREATE_TALENT_SET"] then
-                    helpTipBox.closeFlag = "TUTORIAL_CREATE_TALENT_SET";
+		local activateButton = self:GetParent().ActivateButton;
+		activateButton:SetEnabled(false);
 
-                    HelpTipBox_Anchor(helpTipBox, "TOP", self.TalentsDropDown);
+		local deleteButton =  self:GetParent().DeleteButton;
+		deleteButton:SetEnabled(false);
 
-                    helpTipBox:Show();
-                    HelpTipBox_SetText(helpTipBox, L["Create a talent set for your new profile."]);
-                elseif not helpTipIgnored["TUTORIAL_ACTIVATE_SET"] then
-                    helpTipBox.closeFlag = "TUTORIAL_ACTIVATE_SET";
+		local addButton = self:GetParent().AddButton;
+		addButton.Flash:Show();
+		addButton.FlashAnim:Play();
 
-                    HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+		local helpTipBox = self:GetParent().HelpTipBox;
+		-- Tutorial stuff
+			if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
+				helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 
-                    helpTipBox:Show();
-                    HelpTipBox_SetText(helpTipBox, L["Activate your profile."]);
-                else
-                    helpTipBox.closeFlag = nil;
-                    helpTipBox:Hide();
-                end
-            else
-                self.Name:SetText("");
+				HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
 
-                local activateButton = self:GetParent().ActivateButton;
-                activateButton:SetEnabled(false);
-
-                local deleteButton =  self:GetParent().DeleteButton;
-                deleteButton:SetEnabled(false);
-
-                local addButton = self:GetParent().AddButton;
-                addButton.Flash:Show();
-                addButton.FlashAnim:Play();
-
-                local helpTipBox = self:GetParent().HelpTipBox;
-                -- Tutorial stuff
-                if not helpTipIgnored["TUTORIAL_NEW_SET"] then
-                    helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
-
-                    HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
-
-                    helpTipBox:Show();
-                    HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-                else
-                    helpTipBox.closeFlag = nil;
-                    helpTipBox:Hide();
-                end
-            end
-        end,
-    })
+				helpTipBox:Show();
+				HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+			else
+				helpTipBox.closeFlag = nil;
+				helpTipBox:Hide();
+			end
+		end
 end

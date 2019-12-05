@@ -12,18 +12,18 @@ Localizations.esES.lua
 Localizations.ruRU.lua
 Localizations.zhTW.lua
 
-BtWLoadouts.xml
-
 Characters.lua
 Instances.lua
+
+BtWLoadouts.xml
 
 Sets.lua
 Loadouts.lua
 Talents.lua
-# PvPTalents.lua
-# Essences.lua
-# Equipment.lua
-# Conditions.lua
+PvPTalents.lua
+Essences.lua
+Equipment.lua
+Conditions.lua
 
 Launcher.lua
 Events.lua
