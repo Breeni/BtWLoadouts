@@ -8784,7 +8784,7 @@ do
 		TriggerConditions();
 	end
 	function frame:PLAYER_TARGET_CHANGED(...)
-		UpdateConditionsForBoss("player");
+		UpdateConditionsForBoss("target");
 		TriggerConditions();
 	end
 	function frame:PLAYER_TALENT_UPDATE(...)
