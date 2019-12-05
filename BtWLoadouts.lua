@@ -6566,8 +6566,9 @@ do
 
 		if self.set ~= nil then
 			local valid, class, specID, role, validForPlayer = IsProfileValid(self.set);
-			if type(specID) == "number" then
+			if type(specID) == "number" and self.set.specID ~= specID then
 				self.set.specID = specID;
+				SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, setScrollFrameCollapsed.profiles);
 			end
 
 			specID = self.set.specID;
