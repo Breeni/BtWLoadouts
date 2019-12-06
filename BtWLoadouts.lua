@@ -3288,6 +3288,27 @@ local itemUniquenessCache = {
     [132369] = {357, 2},
 }
 local freeSlotsCache = {}
+local function GetContainerItemLocked(bag, slot)
+	local locked = select(3, GetContainerItemInfo(bag, slot))
+	return locked and true or false
+end
+local function IsLocationLocked(location)
+	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location);
+	if not player and not bank and not bags and not voidStorage then -- Invalid location
+		return;
+	end
+
+	local locked;
+	if voidStorage then
+		locked = select(3, GetVoidItemInfo(tab, voidSlot))
+	elseif not bags then -- and (player or bank) 
+		locked = IsInventoryItemLocked(slot)
+	else -- bags
+		locked = select(3, GetContainerItemInfo(bag, slot))
+	end
+	
+	return locked;
+end
 local function EmptyInventorySlot(inventorySlotId)
     local itemBagType = GetItemFamily(GetInventoryItemLink("player", inventorySlotId))
 
@@ -3311,80 +3332,41 @@ local function EmptyInventorySlot(inventorySlotId)
         ClearCursor()
 
         PickupInventoryItem(inventorySlotId)
-		PickupContainerItem(containerId, slotId)
-		
-		-- If the swap succeeded then the cursor should be empty
-		if not CursorHasItem() then
-			complete = true;
+		if CursorHasItem() then
+			PickupContainerItem(containerId, slotId)
+
+			-- If the swap succeeded then the cursor should be empty
+			if not CursorHasItem() then
+				complete = true;
+			end
 		end
         
         ClearCursor();
     end
 
-    return complete
+    return complete, foundSlot
 end
---[[
-local function SwapInventorySlot(inventorySlotId, itemLink, possibles)
-    local itemString = string.match(itemLink, "item[%-?%d:]+")
-    local _, itemID, enchantId, gemId1, gemId2, gemId3, gemId4, suffixId, uniqueId, _, numBonusIds, bonusId1, bonusId2, upgradeValue = strsplit(':', itemString)
-
-    local match = nil
-    for packedLocation, possibleItemID in pairs(possibles) do
-        if possibleItemID == tonumber(itemID) then
-            local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(packedLocation)
-            
-            if not voidStorage and not (player and not bags and slot == inventorySlotId) then
-                match = {
-                    ["slot"] = slot,
-                    ["bag"] = bag,
-                }
-            end
-        end
-    end
-
-	local complete = false;
-    if match then
-        local a, b
-        ClearCursor()
-        if match.bag == nil then
-            PickupInventoryItem(match.slot)
-        else
-            PickupContainerItem(match.bag, match.slot)
-        end
-
-        PickupInventoryItem(inventorySlotId)
-
-		-- If the swap succeeded then the cursor should be empty
-		if not CursorHasItem() then
-			complete = true;
-		end
-        
-        ClearCursor();
-    end
-
-    return complete
-end
-]]
 local function SwapInventorySlot(inventorySlotId, itemLink, location)
 	local complete = false;
 	local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-	if not voidStorage and not (player and not bags and slot == inventorySlotId) then
-        local a, b
+	if not voidStorage and not (player and not bags and slot == inventorySlotId) and not IsLocationLocked(location) then
         ClearCursor()
         if bag == nil then
             PickupInventoryItem(slot)
         else
-            PickupContainerItem(bag, slot)
-        end
+			PickupContainerItem(bag, slot)
+		end
+		
+		if CursorHasItem() then
+			PickupInventoryItem(inventorySlotId)
 
-        PickupInventoryItem(inventorySlotId)
-
-		-- If the swap succeeded then the cursor should be empty
-		if not CursorHasItem() then
-			complete = true;
+			-- If the swap succeeded then the cursor should be empty
+			if not CursorHasItem() then
+				complete = true;
+			end
 		end
         
-        ClearCursor();
+		ClearCursor();
     end
 
     return complete
@@ -4096,15 +4078,21 @@ local function IsEquipmentSetActive(set)
 end
 local ActivateEquipmentSet;
 do
+	local _IsInventoryItemLocked = IsInventoryItemLocked
+	local function IsInventoryItemLocked(...)
+		local result = _IsInventoryItemLocked(...)
+		return result
+	end
 	local possibleItems = {};
 	local bestMatchForSlot = {};
 	local uniqueFamilies = {};
+	-- This function is destructive to the set 
 	function ActivateEquipmentSet(set)
 		local ignored = set.ignored;
 		local expected = set.equipment;
 		local extras = set.extras;
 		local locations = set.locations;
-		local anyLockedSlots = false;
+		local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil;
 		wipe(uniqueFamilies);
 
 		local firstEquipped = INVSLOT_FIRST_EQUIPPED
@@ -4115,6 +4103,8 @@ do
 		-- 	lastEquipped = INVSLOT_RANGED 
 		-- end
 
+		-- Store a list of all available empty slots
+		local totalFreeSlots = 0
 		for i=BACKPACK_CONTAINER,NUM_BAG_SLOTS do
 			if not freeSlotsCache[i] then
 				freeSlotsCache[i] = {}
@@ -4122,35 +4112,37 @@ do
 				wipe(freeSlotsCache[i])
 			end
 
-			GetContainerFreeSlots(i, freeSlotsCache[i])
+			totalFreeSlots = totalFreeSlots + #GetContainerFreeSlots(i, freeSlotsCache[i])
 		end
 
+		-- Loop through and empty slots that should be empty, also store locations for other slots
 		for inventorySlotId = firstEquipped, lastEquipped do
 			if not ignored[inventorySlotId] then
-				if not anyLockedSlots and IsInventoryItemLocked(inventorySlotId) then
-					anyLockedSlots = true;
-				end
+				local slotLocked = IsInventoryItemLocked(inventorySlotId)
+				anyLockedSlots = anyLockedSlots or slotLocked
+
 				local itemLink = expected[inventorySlotId];
 				if itemLink then
 					local location = locations[inventorySlotId];
 					if location and location ~= -1 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
 						local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-						if player and not bags and slot == inventorySlotId then
+						if player and not bags and slot == inventorySlotId then -- The item is already in the desired location
 							ignored[inventorySlotId] = true;
 						else
 							bestMatchForSlot[inventorySlotId] = location;
 						end
 					else
+						-- The item is already in the desired location
 						if IsItemInLocation(itemLink, extras[inventorySlotId], true, false, false, false, inventorySlotId, false) then
 							ignored[inventorySlotId] = true;
 						else
 							location = GetBestMatch(itemLink, extras[inventorySlotId], GetInventoryItemsForSlot(inventorySlotId, possibleItems));
 							wipe(possibleItems);
-							if location == nil then
+							if location == nil then -- Could not find the requested item @TODO Error
 								ignored[inventorySlotId] = true;
 							else
 								local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-								if player and not bags and slot == inventorySlotId then
+								if player and not bags and slot == inventorySlotId then -- The item is already in the desired location, this shouldnt happen
 									ignored[inventorySlotId] = true;
 								end
 								bestMatchForSlot[inventorySlotId] = location;
@@ -4175,8 +4167,10 @@ do
 					end
 				else -- Unequip
 					if GetInventoryItemLink("player", inventorySlotId) ~= nil then
-						if not IsInventoryItemLocked(inventorySlotId) and EmptyInventorySlot(inventorySlotId) then
-							ignored[inventorySlotId] = true;
+						if not IsInventoryItemLocked(inventorySlotId) then
+							local complete, foundSlot = EmptyInventorySlot(inventorySlotId)
+							anyChangedSlots = anyChangedSlots or complete
+							anyFoundFreeSlots = anyFoundFreeSlots or foundSlot
 						end
 					else -- Already unequipped
 						ignored[inventorySlotId] = true;
@@ -4201,7 +4195,7 @@ do
 
 				if (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil then
 					if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
-						ignored[inventorySlotId] = true;
+						anyChangedSlots = true
 					end
 				end
 			end
@@ -4211,47 +4205,28 @@ do
 		for inventorySlotId = firstEquipped, lastEquipped do
 			if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
 				if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
-					ignored[inventorySlotId] = true;
+					anyChangedSlots = true
 				end
 			end
 		end
-		
-		target.equipPass = target.equipPass or 0;
-		if not anyLockedSlots then
-			target.equipPass = target.equipPass + 1;
-		end
-		
-		-- Unequip items
-		local complete = true
-		for inventorySlotId = firstEquipped, lastEquipped do
-			if not ignored[inventorySlotId] then
-				if expected[inventorySlotId] then
-					if not IsInventoryItemLocked(inventorySlotId) and target.equipPass >= 5 then
-						print('Cannot equip ' .. expected[inventorySlotId]);
-					end
-					complete = false
-				else -- Unequip
-					if not EmptyInventorySlot(inventorySlotId) then
-						if not IsInventoryItemLocked(inventorySlotId) and target.equipPass >= 5 then
-							print('Cannot unequip ' .. GetInventoryItemLink("player", inventorySlotId))
-						end
-						complete = false
-					end
-				end
-			end
-		end
-		
+
 		ClearCursor()
-		-- If its taken us 5 attempts to equip a set its probably not going to happen
-		if target.equipPass >= 5 then
-			-- if not complete then
-			-- 	print(format("Failed after %d passes to equip set", target.equipPass));
-			-- end
-			return true;
+
+		-- We assume that if we have any locked slots or any changes slots we are not complete yet
+		local complete = not anyLockedSlots and not anyChangedSlots
+		if complete then
+			-- If there are no locked slots and not changed slots and we never found a free slot
+			-- to remove an item, we will consider ourselves complete but with an error
+			if anyFoundFreeSlots == false then
+				return complete, L["Failed to change equipment set"]
+			end
+			for inventorySlotId = firstEquipped, lastEquipped do
+				-- We mark slots as ignored when they are finished
+				if not ignored[inventorySlotId] then
+					complete = false
+				end
+			end
 		end
-		-- if complete then
-		-- 	print(format("Took %d passes to equip set", target.equipPass));
-		-- end
 		
 		return complete;
 	end
