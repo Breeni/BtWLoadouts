@@ -25,8 +25,10 @@ function frame:ADDON_LOADED(...)
             pvptalents = {},
             essences = {},
             equipment = {},
+            actionbars = {},
             conditions = {},
         };
+        BtWLoadoutsSets.actionbars = BtWLoadoutsSets.actionbars or {}
 
         for _,sets in pairs(BtWLoadoutsSets) do
             for setID,set in pairs(sets) do
@@ -72,7 +74,9 @@ function frame:ADDON_LOADED(...)
             pvptalents = {},
             essences = {},
             equipment = {},
+            actionbars = {},
         };
+        BtWLoadoutsCollapsed.actionbars = BtWLoadoutsCollapsed.actionbars or {}
         Internal.UpdateClassInfo();
 
         BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};

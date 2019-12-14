@@ -272,6 +272,10 @@ local function DeleteProfile(id)
 			local subSet = Internal.GetEquipmentSet(set.equipmentSet);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
+		if set.actionBarSet then
+			local subSet = Internal.GetActionBarSet(set.actionBarSet);
+			subSet.useCount = (subSet.useCount or 1) - 1;
+		end
 	end
 	DeleteSet(BtWLoadoutsSets.profiles, id);
 
@@ -311,6 +315,10 @@ local function ActivateProfile(profile)
 	if profile.equipmentSet then
 		target.equipmentSets = target.equipmentSets or {};
 		target.equipmentSets[#target.equipmentSets+1] = profile.equipmentSet;
+	end
+	if profile.actionBarSet then
+		target.actionBarSets = target.actionBarSets or {};
+		target.actionBarSets[#target.actionBarSets+1] = profile.actionBarSet;
 	end
 
     target.dirty = true;
@@ -378,6 +386,14 @@ local function IsProfileActive(set)
 		-- local equipmentSet = CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipmentSets)));
 		local equipmentSet = Internal.GetEquipmentSet(set.equipmentSet);
 		if not Internal.IsEquipmentSetActive(equipmentSet) then
+			return false;
+		end
+	end
+
+	if set.actionBarSet then
+		-- local actionBarSet = CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionBarSets)));
+		local actionBarSet = Internal.GetActionBarSet(set.actionBarSet);
+		if not Internal.IsActionBarSetActive(actionBarSet) then
 			return false;
 		end
 	end
@@ -507,6 +523,17 @@ local function ContinueActivateProfile()
 
 		if equipmentSet then
 			if not Internal.ActivateEquipmentSet(equipmentSet) then
+				complete = false;
+			end
+		end
+	end
+
+	local actionBarSet;
+	if set.actionBarSets then
+		actionBarSet = Internal.CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionBarSets)));
+
+		if actionBarSet then
+			if not Internal.ActivateActionBarSet(actionBarSet) then
 				complete = false;
 			end
 		end

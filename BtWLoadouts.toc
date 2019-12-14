@@ -23,6 +23,7 @@ Talents.lua
 PvPTalents.lua
 Essences.lua
 Equipment.lua
+ActionBars.lua
 Conditions.lua
 
 Launcher.lua

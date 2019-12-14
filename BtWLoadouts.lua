@@ -327,13 +327,14 @@ function Internal.HelpTipBox_SetText(self, text)
 	self:SetHeight(self.Text:GetHeight() + 34);
 end
 
-local NUM_TABS = 6;
+local NUM_TABS = 7;
 local TAB_PROFILES = 1;
 local TAB_TALENTS = 2;
 local TAB_PVP_TALENTS = 3;
 local TAB_ESSENCES = 4;
 local TAB_EQUIPMENT = 5;
-local TAB_CONDITIONS = 6;
+local TAB_ACTION_BARS = 6;
+local TAB_CONDITIONS = 7;
 local function GetTabFrame(self, tabID)
 	return self.TabFrames[tabID]
 end
@@ -1865,6 +1866,10 @@ do
 		self.Equipment.set = set;
 		self:Update();
 	end
+	function BtWLoadoutsFrameMixin:SetActionBarSet(set)
+		self.ActionBars.set = set;
+		self:Update();
+	end
 	function BtWLoadoutsFrameMixin:SetConditionSet(set)
 		self.Conditions.set = set;
 		self:Update();
@@ -1885,6 +1890,8 @@ do
 			Internal.EssencesTabUpdate(self.Essences);
 		elseif selectedTab == TAB_EQUIPMENT then
 			Internal.EquipmentTabUpdate(self.Equipment);
+		elseif selectedTab == TAB_ACTION_BARS then
+			Internal.ActionBarsTabUpdate(self.ActionBars);
 		elseif selectedTab == TAB_CONDITIONS then
 			Internal.ConditionsTabUpdate(self.Conditions);
 		end
@@ -2100,6 +2107,45 @@ do
 				else
 					frame.Name:ClearFocus();
 					self:SetEquipmentSet(Internal.GetEquipmentSet(button.id));
+				end
+			end
+		elseif selectedTab == TAB_ACTION_BARS then
+			local frame = self.ActionBars;
+			if button.isAdd then
+				frame.Name:ClearFocus();
+				self:SetActionBarSet(Internal.AddActionBarSet());
+				C_Timer.After(0, function ()
+					frame.Name:HighlightText();
+					frame.Name:SetFocus();
+				end);
+			elseif button.isDelete then
+				local set = frame.set;
+				if set.useCount > 0 then
+					StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+						set = set,
+						func = Internal.DeleteActionBarSet,
+					});
+				else
+					StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+						set = set,
+						func = Internal.DeleteActionBarSet,
+					});
+				end
+			elseif button.isActivate then
+				Internal.ActivateProfile({
+					actionBarSet = frame.set.setID;
+				});
+			elseif button.isHeader then
+				BtWLoadoutsCollapsed.actionbars[button.id] = not BtWLoadoutsCollapsed.actionbars[button.id] and true or nil;
+				Internal.ActionBarTabUpdate(frame);
+			else
+				if IsModifiedClick("SHIFT") then
+					Internal.ActivateProfile({
+						actionBarSet = button.id;
+					});
+				else
+					frame.Name:ClearFocus();
+					self:SetActionBarSet(Internal.GetActionBarSet(button.id));
 				end
 			end
 		elseif selectedTab == TAB_CONDITIONS then
@@ -2612,6 +2658,127 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 	else
 		SetItemButtonTexture(self, self.backgroundTextureName);
 		SetItemButtonQuality(self, nil, nil);
+	end
+
+	self.ignoreTexture:SetShown(ignored);
+end
+
+BtWLoadoutsActionButtonMixin = {}
+function BtWLoadoutsActionButtonMixin:OnClick()
+	local cursorType = GetCursorInfo()
+	if cursorType then
+		self:SetActionToCursor(GetCursorInfo())
+	elseif IsModifiedClick("SHIFT") then
+		local set = self:GetParent().set;
+		self:SetIgnored(not set.ignored[self:GetID()]);
+	else
+		self:SetAction(nil);
+	end
+end
+function BtWLoadoutsActionButtonMixin:OnReceiveDrag()
+	local cursorType = GetCursorInfo()
+	if cursorType then
+		self:SetActionToCursor(GetCursorInfo())
+	end
+end
+function BtWLoadoutsActionButtonMixin:SetActionToCursor(...)
+	local cursorType = ...
+	if cursorType then
+		if cursorType == "battlepet" then
+			local id = select(2, ...)
+			self:SetAction("summonpet", id)
+		elseif cursorType == "mount" then
+			local id = select(2, ...)
+			self:SetAction("summonmount", id)
+		elseif cursorType == "spell" then
+			local subType, id = select(3, ...)
+			self:SetAction("spell", id, subType)
+		elseif cursorType == "equipmentset" then
+			local id = select(2, ...)
+			local icon, name
+			do
+				local id = C_EquipmentSet.GetEquipmentSetID(id)
+				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
+			end
+			self:SetAction("equipmentset", id, nil, icon, name)
+		elseif cursorType == "macro" then
+			local id = select(2, ...)
+			local macroText = GetMacroBody(id)
+			local name, icon = GetMacroInfo(id)
+			self:SetAction("macro", id, nil, icon, name, macroText)
+		elseif cursorType == "flyout" then
+			local id, icon = select(2, ...)
+			self:SetAction("flyout", id, nil, icon)
+		elseif cursorType == "item" then
+			self:SetAction(cursorType, (select(2, ...)))
+		-- else -- Anything else isnt supported
+		end
+		ClearCursor()
+	end
+end
+function BtWLoadoutsActionButtonMixin:SetAction(actionType, ...)
+	local set = self:GetParent().set;
+	if actionType == nil then -- Clearing slot
+		set.actions[self:GetID()] = nil;
+
+		self:Update();
+		return true;
+	else
+		local tbl = set.actions[self:GetID()] or {}
+
+		tbl.type, tbl.id, tbl.subType, tbl.icon, tbl.name, tbl.macroText = actionType, ...
+
+		set.actions[self:GetID()] = tbl;
+		self:Update()
+	end
+end
+function BtWLoadoutsActionButtonMixin:SetIgnored(ignored)
+	local set = self:GetParent().set;
+	set.ignored[self:GetID()] = ignored and true or nil;
+	self:Update();
+end
+function BtWLoadoutsActionButtonMixin:Update()
+	local set = self:GetParent().set;
+	local slot = self:GetID();
+	local ignored = set.ignored[slot];
+	local tbl = set.actions[slot];
+	if tbl and tbl.type ~= nil then
+		local icon, name = tbl.icon, tbl.name
+		if tbl.type == "item" then
+			icon = select(5, GetItemInfoInstant(tbl.id))
+		elseif tbl.type == "spell" then
+			icon = select(3, GetSpellInfo(tbl.id))
+		elseif tbl.type == "summonmount" then
+			if tbl.id == 0xFFFFFFF then
+				icon = 413588
+			else
+				icon = select(3, C_MountJournal.GetMountInfoByID(tbl.id))
+			end
+		elseif tbl.type == "summonpet" then
+			icon = select(9, C_PetJournal.GetPetInfoByPetID(tbl.id))
+		elseif tbl.type == "macro" then
+			local index = Internal.GetMacroByText(tbl.macroText)
+			if index then
+				name, icon = GetMacroInfo(index)
+			end
+		elseif tbl.type == "equipmentset" then
+			local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
+			if id then
+				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
+			end
+		else
+			print(tbl.type, tbl.id)
+		end
+
+		if not icon then
+			icon = 134400
+		end
+		
+		self.Name:SetText(name)
+		self.Icon:SetTexture(icon)
+	else
+		self.Name:SetText(nil)
+		self.Icon:SetTexture(nil)
 	end
 
 	self.ignoreTexture:SetShown(ignored);

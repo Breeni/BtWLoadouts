@@ -17,7 +17,10 @@ local function GetNextSetID(sets)
 	return nextID;
 end
 local function GetSet(sets, id)
-    if type(sets) == "string" then
+	if type(id) == "table" then
+		return id
+	end
+	if type(sets) == "string" then
         sets = BtWLoadoutsSets[sets]
     end
 
@@ -69,5 +72,7 @@ local function DeleteSet(sets, id)
 	end
 end
 Internal.GetNextSetID = GetNextSetID;
+Internal.GetSet = GetSet;
+Internal.GetSetByName = GetSetByName;
 Internal.AddSet = AddSet;
 Internal.DeleteSet = DeleteSet;
