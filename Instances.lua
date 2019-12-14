@@ -373,6 +373,7 @@ function Internal.AffixRotation()
 end
 
 local areaNameToIDMap = {};
+Internal.areaNameToIDMap = areaNameToIDMap;
 _G['BtWLoadoutsAreaMap'] = areaNameToIDMap; -- @TODO Remove
 
 -- Updates areaNameToIDMap with localized area name to area id

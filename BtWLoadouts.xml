@@ -7,7 +7,7 @@
 			<OnShow method="OnShow"/>
 		</Scripts>
 	</Frame>
-    
+
 	<Button name="BtWLoadoutsTalentButtonTemplate" mixin="BtWLoadoutsTalentButtonMixin" virtual="true">
 		<Size x="190" y="42"/>
 		<Layers>
@@ -219,7 +219,7 @@
 					</Anchors>
 				</Texture>
 
-				
+
 				<Texture parentKey="Row2LeftCap" atlas="Talent-Separator">
 					<Size x="34" y="50"/>
 					<Anchors>
@@ -245,7 +245,7 @@
 					</Anchors>
 				</Texture>
 
-				
+
 				<Texture parentKey="Row3LeftCap" atlas="Talent-Separator">
 					<Size x="34" y="50"/>
 					<Anchors>
@@ -271,7 +271,7 @@
 					</Anchors>
 				</Texture>
 
-				
+
 				<Texture parentKey="Row4LeftCap" atlas="Talent-Separator">
 					<Size x="34" y="50"/>
 					<Anchors>
@@ -297,7 +297,7 @@
 					</Anchors>
 				</Texture>
 
-				
+
 				<Texture parentKey="Row5LeftCap" atlas="Talent-Separator">
 					<Size x="34" y="50"/>
 					<Anchors>
@@ -621,7 +621,7 @@
 		</Scripts>
 		<NormalTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
 		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
-	</Button>	
+	</Button>
     <ItemButton name="BtWLoadoutsItemSlotButtonTemplate" parentArray="Slots" mixin="BtWLoadoutsItemSlotButtonMixin" virtual="true">
     	<Layers>
 			<Layer level="OVERLAY">
@@ -677,7 +677,7 @@
 	<ItemButton name="BtWLoadoutsItemSlotButtonLeftTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="-1">
-				<Texture name="$parentFrame" inherits="Char-LeftSlot">	
+				<Texture name="$parentFrame" inherits="Char-LeftSlot">
 					<Anchors>
 						<Anchor point="TOPLEFT" x="-4"/>
 					</Anchors>
@@ -688,7 +688,7 @@
 	<ItemButton name="BtWLoadoutsItemSlotButtonRightTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="-1">
-				<Texture name="$parentFrame" inherits="Char-RightSlot">	
+				<Texture name="$parentFrame" inherits="Char-RightSlot">
 					<Anchors>
 						<Anchor point="TOPRIGHT" x="4"/>
 					</Anchors>
@@ -702,7 +702,7 @@
 		</KeyValues>
 		<Layers>
 			<Layer level="BACKGROUND" textureSubLevel="-1">
-				<Texture name="$parentFrame" inherits="Char-BottomSlot">	
+				<Texture name="$parentFrame" inherits="Char-BottomSlot">
 					<Anchors>
 						<Anchor point="TOPLEFT" x="-4" y="8"/>
 					</Anchors>
@@ -1217,7 +1217,7 @@
 							</OnTextChanged>
 							<OnEnterPressed function="EditBox_ClearFocus"/>
 						</Scripts>
-					</EditBox>		
+					</EditBox>
 					<DressUpModel parentKey="Model" modelScale="1.0" inherits="ModelWithControlsTemplate">
 						<Size>
 							<AbsDimension x="172" y="400"/>
@@ -1229,7 +1229,7 @@
 						<Scripts>
 							<!-- <OnLoad method="OnLoad" /> -->
 						</Scripts>
-					</DressUpModel>	
+					</DressUpModel>
 					<ItemButton parentKey="HeadSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
 						<KeyValues>
 							<KeyValue type="string" key="slot" value="HeadSlot"/>
@@ -1674,7 +1674,7 @@
 			<OnHide method="OnHide"/>
 		</Scripts>
 	</Frame>
-	
+
 	<Button name="BtWLoadoutsMinimapButton" mixin="BtWLoadoutsMinimapMixin" parent="Minimap" frameStrata="MEDIUM" frameLevel="8" enableMouse="true" movable="true" hidden="false">
 		<Size x="33" y="33"/>
 		<Anchors>

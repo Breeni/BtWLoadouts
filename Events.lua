@@ -4,7 +4,11 @@ local L = Internal.L;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local format = string.format
 local sort = table.sort
+
+-- A map from the equipment manager ids to our sets
+local equipmentSetMap = {};
 
 local frame = CreateFrame("Frame");
 frame:SetScript("OnEvent", function (self, event, ...)
@@ -81,31 +85,31 @@ end
 function frame:PLAYER_LOGIN(...)
     Internal.CreateLauncher();
 
-    -- do
-    -- 	local name, realm = UnitFullName("player");
-    -- 	local character = format("%s-%s", realm, name);
-    -- 	for setID,set in pairs(BtWLoadoutsSets.equipment) do
-    -- 		if type(set) == "table" and set.character == character and set.managerID ~= nil then
-    -- 			if equipmentSetMap[set.managerID] then
-    -- 				set.managerID = nil;
-    -- 			else
-    -- 				equipmentSetMap[set.managerID] = set;
-    -- 			end
-    -- 		end
-    -- 	end
-    -- end
+    do
+        local name, realm = UnitFullName("player");
+        local character = format("%s-%s", realm, name);
+        for setID,set in pairs(BtWLoadoutsSets.equipment) do
+            if type(set) == "table" and set.character == character and set.managerID ~= nil then
+                if equipmentSetMap[set.managerID] then
+                    set.managerID = nil;
+                else
+                    equipmentSetMap[set.managerID] = set;
+                end
+            end
+        end
+    end
 
-    -- for _,set in pairs(BtWLoadoutsSets.conditions) do
-    -- 	if type(set) == "table" then
-    -- 		if set.map.difficultyID ~= 8 then
-    -- 			set.map.affixesID = nil;
-    -- 		end
+    for _,set in pairs(BtWLoadoutsSets.conditions) do
+        if type(set) == "table" then
+            if set.map.difficultyID ~= 8 then
+                set.map.affixesID = nil;
+            end
 
-    -- 		AddConditionToMap(set);
-    -- 	end
-    -- end
+            Internal.AddConditionToMap(set);
+        end
+    end
 
-    -- self:EQUIPMENT_SETS_CHANGED();
+    self:EQUIPMENT_SETS_CHANGED();
 end
 function frame:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
@@ -187,17 +191,15 @@ function frame:PLAYER_ENTERING_WORLD()
     Internal.UpdateAreaMap();
 
     -- Run conditions for instance info
-    -- do
-    -- 	UpdateConditionsForInstance();
-    -- 	UpdateConditionsForBoss();
-    -- 	UpdateConditionsForAffixes();
-    -- 	TriggerConditions();
-    -- end
+    do
+        Internal.UpdateConditionsForInstance();
+        Internal.UpdateConditionsForBoss();
+        Internal.UpdateConditionsForAffixes();
+        Internal.TriggerConditions();
+    end
 
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
--- A map from the equipment manager ids to our sets
-local equipmentSetMap = {};
 function frame:EQUIPMENT_SETS_CHANGED(...)
     -- Update our saved equipment sets to match the built in equipment sets
     local oldEquipmentSetMap = equipmentSetMap;
@@ -220,7 +222,7 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
 
             local location = locations[inventorySlotId] or 0;
             if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-                set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
+                set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location);
             end
         end
 
@@ -235,7 +237,7 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
     end
 
     BtWLoadoutsFrame:Update();
-    Internal.UpdateLauncher(GetActiveProfiles());
+    Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
 function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     do
@@ -267,20 +269,20 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
 function frame:ZONE_CHANGED(...)
-    -- UpdateConditionsForBoss();
-    -- TriggerConditions();
+    Internal.UpdateConditionsForBoss();
+    Internal.TriggerConditions();
 end
 function frame:UPDATE_MOUSEOVER_UNIT(...)
-    -- UpdateConditionsForBoss("mouseover");
-    -- TriggerConditions();
+    Internal.UpdateConditionsForBoss("mouseover");
+    Internal.TriggerConditions();
 end
 function frame:NAME_PLATE_UNIT_ADDED(...)
-    -- UpdateConditionsForBoss(...);
-    -- TriggerConditions();
+    Internal.UpdateConditionsForBoss(...);
+    Internal.TriggerConditions();
 end
 function frame:PLAYER_TARGET_CHANGED(...)
-    -- UpdateConditionsForBoss("target");
-    -- TriggerConditions();
+    Internal.UpdateConditionsForBoss("target");
+    Internal.TriggerConditions();
 end
 function frame:PLAYER_TALENT_UPDATE(...)
     Internal.UpdateLauncher(Internal.GetActiveProfiles());

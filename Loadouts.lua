@@ -154,6 +154,7 @@ local function CancelActivateProfile()
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 end
+Internal.CancelActivateProfile = CancelActivateProfile;
 
 -- Check all the pieces of a profile and make sure they are valid together
 local function IsProfileValid(set)

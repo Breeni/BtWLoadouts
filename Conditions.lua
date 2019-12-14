@@ -18,31 +18,18 @@ local UIDropDownMenu_JustifyText = UIDropDownMenu_JustifyText
 local UIDropDownMenu_EnableDropDown = UIDropDownMenu_EnableDropDown;
 local UIDropDownMenu_DisableDropDown = UIDropDownMenu_DisableDropDown;
 local UIDropDownMenu_SetSelectedValue = UIDropDownMenu_SetSelectedValue;
+local UIDropDownMenu_CreateInfo = UIDropDownMenu_CreateInfo;
 
 local sort = table.sort
+
+local CONDITION_TYPES = Internal.CONDITION_TYPES;
+local CONDITION_TYPE_NAMES = Internal.CONDITION_TYPE_NAMES;
 
 local CONDITION_TYPE_WORLD = "none";
 local CONDITION_TYPE_DUNGEONS = "party";
 local CONDITION_TYPE_RAIDS = "raid";
 local CONDITION_TYPE_ARENA = "arena";
 local CONDITION_TYPE_BATTLEGROUND = "pvp";
-local CONDITION_TYPES = {
-	CONDITION_TYPE_WORLD,
-	CONDITION_TYPE_DUNGEONS,
-	CONDITION_TYPE_RAIDS,
-	CONDITION_TYPE_ARENA,
-	CONDITION_TYPE_BATTLEGROUND
-}
-local CONDITION_TYPE_NAMES = {
-	[CONDITION_TYPE_WORLD] = L["World"],
-	[CONDITION_TYPE_DUNGEONS] = L["Dungeons"],
-	[CONDITION_TYPE_RAIDS] = L["Raids"],
-	[CONDITION_TYPE_ARENA] = L["Arena"],
-	[CONDITION_TYPE_BATTLEGROUND] = L["Battlegrounds"],
-}
-Internal.CONDITION_TYPES = CONDITION_TYPES;
-Internal.CONDITION_TYPE_NAMES = CONDITION_TYPE_NAMES;
-
 
 local activeConditionSelection;
 local previousActiveConditions = {}; -- List of the previously active conditions
@@ -65,6 +52,9 @@ local function ConditionProfilesDropDownInit(self, level, menuList)
             UIDropDownMenu_AddButton(info, level);
         end
     end
+end
+function Internal.GetAciveConditionSelection()
+	return activeConditionSelection
 end
 
 -- Maps condition flags to condition groups
@@ -104,6 +94,7 @@ local function AddConditionToMap(set)
 		end
 	end
 end
+Internal.AddConditionToMap = AddConditionToMap;
 local function RemoveConditionFromMap(set)
 	for k,v in pairs(set.map) do
 		conditionMap[k][v] = conditionMap[k][v] or {};
@@ -133,6 +124,7 @@ local function AddConditionSet()
     BtWLoadoutsSets.conditions[set.setID] = set;
     return set;
 end
+Internal.AddConditionSet = AddConditionSet;
 local function GetConditionSet(id)
     return BtWLoadoutsSets.conditions[id];
 end
