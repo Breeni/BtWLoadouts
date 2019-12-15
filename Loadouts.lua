@@ -695,6 +695,7 @@ function Internal.ProfilesTabUpdate(self)
 	self.PvPTalentsDropDown.Button:SetEnabled(self.set ~= nil);
 	self.EssencesDropDown.Button:SetEnabled(self.set ~= nil);
 	self.EquipmentDropDown.Button:SetEnabled(self.set ~= nil);
+	self.ActionBarDropDown.Button:SetEnabled(self.set ~= nil);
 
 	if self.set ~= nil then
 		local valid, class, specID, role, validForPlayer = Internal.IsProfileValid(self.set);
@@ -746,6 +747,14 @@ function Internal.ProfilesTabUpdate(self)
 			UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
 		end
 
+		local actionBarSetID = self.set.actionBarSet;
+		if actionBarSetID == nil then
+			UIDropDownMenu_SetText(self.ActionBarDropDown, L["None"]);
+		else
+			local actionBarSet = Internal.GetActionBarSet(actionBarSetID);
+			UIDropDownMenu_SetText(self.ActionBarDropDown, actionBarSet.name);
+		end
+		
 		if not self.Name:HasFocus() then
 			self.Name:SetText(self.set.name or "");
 		end

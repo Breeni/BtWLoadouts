@@ -32,6 +32,7 @@ BTWLOADOUTS_TALENTS = L["Talents"];
 BTWLOADOUTS_PVP_TALENTS = L["PvP Talents"];
 BTWLOADOUTS_ESSENCES = L["Essences"];
 BTWLOADOUTS_EQUIPMENT = L["Equipment"];
+BTWLOADOUTS_ACTION_BARS = L["Action Bars"];
 BTWLOADOUTS_CONDITIONS = L["Conditions"];
 BTWLOADOUTS_NEW_SET = L["New Set"];
 BTWLOADOUTS_ACTIVATE = L["Activate"];
@@ -1036,6 +1037,101 @@ local function EquipmentDropDownInit(self, level, menuList)
             info.checked = selected == setID;
             UIDropDownMenu_AddButton(info, level);
 		end
+    end
+end
+
+local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
+    local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+	if set.actionBarSet then
+		local subset = Internal.GetActionBarSet(set.actionBarSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	set.actionBarSet = arg1;
+
+	if set.actionBarSet then
+		local subset = Internal.GetActionBarSet(set.actionBarSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+    BtWLoadoutsFrame:Update();
+end
+local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
+    local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
+
+    CloseDropDownMenus();
+	local set = tab.set;
+
+	if set.actionBarSet then
+		local subset = Internal.GetActionBarSet(set.actionBarSet);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = Internal.AddActionBarSet();
+	set.actionBarSet = newSet.setID;
+
+	if set.actionBarSet then
+		local subset = Internal.GetActionBarSet(set.actionBarSet);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame.ActionBars.set = newSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_ACTION_BARS);
+
+    BtWLoadoutsFrame:Update();
+end
+local function ActionBarDropDownInit(self, level, menuList)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.actionbars then
+        return;
+    end
+
+    local info = UIDropDownMenu_CreateInfo();
+
+	local frame = self:GetParent():GetParent();
+	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
+	local tab = GetTabFrame(frame, selectedTab);
+
+	local set = tab.set;
+	local selected = set and set.actionBarSet;
+	
+    if (level or 1) == 1 then
+        info.text = NONE;
+        info.func = ActionBarDropDown_OnClick;
+        info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+        wipe(setsFiltered);
+        local sets = BtWLoadoutsSets.actionbars;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+        sort(setsFiltered, function (a,b)
+            return sets[a].name < sets[b].name;
+		end)
+
+        for _,setID in ipairs(setsFiltered) do
+            info.text = sets[setID].name;
+            info.arg1 = setID;
+            info.func = ActionBarDropDown_OnClick;
+            info.checked = selected == setID;
+            UIDropDownMenu_AddButton(info, level);
+		end
+
+        info.text = L["New Set"];
+        info.func = ActionBarDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+        info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
     end
 end
 
@@ -2306,6 +2402,10 @@ do
 			UIDropDownMenu_SetWidth(self.Profiles.EquipmentDropDown, 300);
 			UIDropDownMenu_Initialize(self.Profiles.EquipmentDropDown, EquipmentDropDownInit);
 			UIDropDownMenu_JustifyText(self.Profiles.EquipmentDropDown, "LEFT");
+
+			UIDropDownMenu_SetWidth(self.Profiles.ActionBarDropDown, 300);
+			UIDropDownMenu_Initialize(self.Profiles.ActionBarDropDown, ActionBarDropDownInit);
+			UIDropDownMenu_JustifyText(self.Profiles.ActionBarDropDown, "LEFT");
 
 
 			UIDropDownMenu_SetWidth(self.Talents.SpecDropDown, 170);

@@ -972,32 +972,39 @@
 						<FontString parentKey="SpecTitle" text="BTWLOADOUTS_SPECIALIZATION" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="10" y="-70"/>
+								<Anchor point="TOPLEFT" x="10" y="-60"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="TalentsTitle" text="BTWLOADOUTS_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="10" y="-130"/>
+								<Anchor point="TOPLEFT" x="10" y="-110"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="PvPTalentsTitle" text="BTWLOADOUTS_PVP_TALENTS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="10" y="-190"/>
+								<Anchor point="TOPLEFT" x="10" y="-160"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="EssencesTitle" text="BTWLOADOUTS_ESSENCES" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="10" y="-250"/>
+								<Anchor point="TOPLEFT" x="10" y="-210"/>
 							</Anchors>
 							<Color r="0.75" g="0.61" b="0"/>
 						</FontString>
 						<FontString parentKey="EquipmentTitle" text="BTWLOADOUTS_EQUIPMENT" inherits="GameFontNormalLeft">
+							<Size x="175" y="0"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="10" y="-260"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="ActionBarTitle" text="BTWLOADOUTS_ACTION_BARS" inherits="GameFontNormalLeft">
 							<Size x="175" y="0"/>
 							<Anchors>
 								<Anchor point="TOPLEFT" x="10" y="-310"/>
@@ -1028,27 +1035,32 @@
 					</EditBox>
 					<Frame parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
 						</Anchors>
 					</Frame>
 					<Frame parentKey="TalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.TalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.TalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
 						</Anchors>
 					</Frame>
 					<Frame parentKey="PvPTalentsDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.PvPTalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.PvPTalentsTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
 						</Anchors>
 					</Frame>
 					<Frame parentKey="EssencesDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.EssencesTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.EssencesTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
 						</Anchors>
 					</Frame>
 					<Frame parentKey="EquipmentDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.EquipmentTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.EquipmentTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
+						</Anchors>
+					</Frame>
+					<Frame parentKey="ActionBarDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ActionBarTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
 						</Anchors>
 					</Frame>
 				</Frames>

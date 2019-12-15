@@ -61,6 +61,10 @@ function frame:ADDON_LOADED(...)
                 if set.equipmentSet then
                     BtWLoadoutsSets.equipment[set.equipmentSet].useCount = BtWLoadoutsSets.equipment[set.equipmentSet].useCount + 1;
                 end
+
+                if set.actionBarSet then
+                    BtWLoadoutsSets.actionbars[set.actionBarSet].useCount = BtWLoadoutsSets.actionbars[set.actionBarSet].useCount + 1;
+                end
             end
         end
 
