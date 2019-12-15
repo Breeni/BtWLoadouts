@@ -535,6 +535,7 @@ local function ContinueActivateProfile()
 		if actionBarSet then
 			if not Internal.ActivateActionBarSet(actionBarSet) then
 				complete = false;
+				set.dirty = true; -- Just run next frame
 			end
 		end
 	end

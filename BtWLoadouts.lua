@@ -2690,6 +2690,9 @@ function BtWLoadoutsActionButtonMixin:SetActionToCursor(...)
 		elseif cursorType == "mount" then
 			local id = select(2, ...)
 			self:SetAction("summonmount", id)
+		elseif cursorType == "petaction" then
+			local id = select(2, ...)
+			self:SetAction("spell", id, "pet")
 		elseif cursorType == "spell" then
 			local subType, id = select(3, ...)
 			self:SetAction("spell", id, subType)
@@ -2767,7 +2770,7 @@ function BtWLoadoutsActionButtonMixin:Update()
 				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
 			end
 		else
-			print(tbl.type, tbl.id)
+			-- print(tbl.type, tbl.id)
 		end
 
 		if not icon then

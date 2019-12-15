@@ -109,18 +109,20 @@ local function SetActon(slot, tbl)
             end
         end
 
-        if not foundTalent then
+        if not foundSpell then
             if tbl.subType == "pet" then
                 if not IsSpellKnown(tbl.id, true) then
                     return false, true
                 end
+
+                PickupPetSpell(tbl.id)
             elseif tbl.subType == "spell" then
                 if not IsSpellKnown(tbl.id, false) then
                     return false, true
                 end
-            end
 
-            PickupSpell(tbl.id, tbl.subType)
+                PickupSpell(tbl.id)
+            end
         end
     elseif tbl.type == "item" then
         PickupItem(tbl.id)
@@ -226,8 +228,7 @@ local function ActivateActionBarSet(set)
 end
 local function AddActionBarSet()
     local classFile = select(2, UnitClass("player"))
-    local specID, specName = GetSpecializationInfo(GetSpecialization());
-    local name = format(L["New %s Set"], specName);
+    local name = format(L["New Set"]);
 
     local actions, ignored = {}, {}
     for slot=1,120 do
@@ -245,7 +246,6 @@ local function AddActionBarSet()
     end
 
     return Internal.AddSet(BtWLoadoutsSets.actionbars, {
-        specID = specID,
         name = name,
         ignored = ignored,
         actions = actions,
@@ -316,7 +316,7 @@ Internal.DeleteActionBarSet = DeleteActionBarSet
 
 function Internal.ActionBarsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
-	self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.actionbars, BtWLoadoutsCollapsed.actionbars);
+	self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.actionbars, BtWLoadoutsCollapsed.actionbars);
 
 	if self.set ~= nil then
 		local set = self.set;
@@ -329,7 +329,7 @@ function Internal.ActionBarsTabUpdate(self)
         for slot,item in pairs(self.Slots) do
             item:SetID(slot)
             item:Update();
-            item:SetEnabled(true);
+			item:SetEnabled(true);
             
             local icon = item.Icon:GetTexture()
             if icon ~= nil and icon ~= 134400 then
@@ -338,10 +338,10 @@ function Internal.ActionBarsTabUpdate(self)
 		end
 
 		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(character == playerCharacter);
+		activateButton:SetEnabled(true);
 
 		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(set.managerID == nil);
+		deleteButton:SetEnabled(true);
 
 		local addButton = self:GetParent().AddButton;
 		addButton.Flash:Hide();
