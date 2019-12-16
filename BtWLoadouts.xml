@@ -718,7 +718,7 @@
 				<Texture parentKey="Icon"/>
 			</Layer>
 			<Layer level="OVERLAY">
-				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
+				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent" hidden="true">
 					<Size x="32" y="32"/>
 					<Anchors>
 						<Anchor point="CENTER"/>
