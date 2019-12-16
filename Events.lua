@@ -217,7 +217,7 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
     for _,managerID in ipairs(managerIDs) do
         local set = oldEquipmentSetMap[managerID];
         if set == nil then
-            set = AddBlankEquipmentSet();
+            set = Internal.AddBlankEquipmentSet();
         end
 
         set.managerID = managerID;

@@ -734,6 +734,7 @@ local function DeleteEquipmentSet(id)
 	end
 end
 
+Internal.AddBlankEquipmentSet = AddBlankEquipmentSet
 Internal.AddEquipmentSet = AddEquipmentSet
 Internal.DeleteEquipmentSet = DeleteEquipmentSet
 Internal.ActivateEquipmentSet = ActivateEquipmentSet
