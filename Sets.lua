@@ -44,7 +44,8 @@ local function AddSet(sets, set)
 
     if not set.setID then
         set.setID = GetNextSetID(sets)
-    end
+	end
+	set.useCount = set.useCount or 0
     sets[set.setID] = set
     return set
 end
