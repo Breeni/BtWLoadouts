@@ -1539,6 +1539,70 @@
 					<Anchor point="TOPLEFT" x="200" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Row1Title" text="1" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" x="5" y="-38"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row2Title" text="2" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row1Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row3Title" text="3" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row2Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row4Title" text="4" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row3Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row5Title" text="5" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row4Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row6Title" text="6" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row5Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row7Title" text="7" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row6Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row8Title" text="8" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row7Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row9Title" text="9" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row8Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+						<FontString parentKey="Row10Title" text="10" inherits="GameFontNormalMed2" justifyH="CENTER">
+							<Size x="25" y="33"/>
+							<Anchors>
+								<Anchor point="TOPLEFT" relativeKey="$parent.Row9Title" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
 				<Frames>
 					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
 						<Anchors>
@@ -1561,7 +1625,7 @@
 					</EditBox>
 					<Button parentKey="Bar1Slot1" inherits="BtWLoadoutsActionButtonTemplate" id="1">
 						<Anchors>
-							<Anchor point="TOPLEFT" x="5" y="-38"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Row1Title" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
 					<Button parentKey="Bar1Slot2" inherits="BtWLoadoutsActionButtonTemplate" id="2">
