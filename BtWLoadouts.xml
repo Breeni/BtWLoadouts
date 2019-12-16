@@ -745,6 +745,26 @@
 		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
 		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
     </Button>
+    <Button name="BtWLoadoutsIgnoreActionBarTemplate" mixin="BtWLoadoutsIgnoreActionBarMixin" virtual="true">
+		<Size x="33" y="33"/>
+    	<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Arrow" file="Interface\Buttons\jumpuparrow">
+					<Size x="33" y="20"/>
+					<Anchors>
+						<Anchor point="CENTER" x="-10" y="0"/>
+					</Anchors>
+    			</Texture>
+			</Layer>
+		</Layers>
+        <Scripts>
+			<OnLoad>
+				self.Arrow:SetRotation(math.pi/2)
+			</OnLoad>
+            <OnClick method="OnClick"/>
+        </Scripts>
+		<NormalTexture parentKey="NormalTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent"/>
+    </Button>
 
 	<Button name="BtWLoadoutsScrollListItem" parentArray="ScrollButtons" virtual="true">
 		<Size x="160" y="21"/>
@@ -1599,6 +1619,15 @@
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar1Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
+					<Button parentKey="IgnoreBar1" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="1"/>
+							<KeyValue type="number" key="endID" value="12"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar1Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
 					
 					<Button parentKey="Bar2Slot1" inherits="BtWLoadoutsActionButtonTemplate" id="13">
 						<Anchors>
@@ -1658,6 +1687,15 @@
 					<Button parentKey="Bar2Slot12" inherits="BtWLoadoutsActionButtonTemplate" id="24">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar2Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
+					<Button parentKey="IgnoreBar2" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="13"/>
+							<KeyValue type="number" key="endID" value="24"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar2Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
 					
@@ -1721,6 +1759,15 @@
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar3Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
+					<Button parentKey="IgnoreBar3" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="25"/>
+							<KeyValue type="number" key="endID" value="36"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar3Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
 					
 					<Button parentKey="Bar4Slot1" inherits="BtWLoadoutsActionButtonTemplate" id="37">
 						<Anchors>
@@ -1780,6 +1827,15 @@
 					<Button parentKey="Bar4Slot12" inherits="BtWLoadoutsActionButtonTemplate" id="48">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar4Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
+					<Button parentKey="IgnoreBar4" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="37"/>
+							<KeyValue type="number" key="endID" value="48"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar4Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
 					
@@ -1843,6 +1899,15 @@
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar5Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
+					<Button parentKey="IgnoreBar5" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="49"/>
+							<KeyValue type="number" key="endID" value="60"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar5Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
 					
 					<Button parentKey="Bar6Slot1" inherits="BtWLoadoutsActionButtonTemplate" id="1">
 						<Anchors>
@@ -1902,6 +1967,15 @@
 					<Button parentKey="Bar6Slot12" inherits="BtWLoadoutsActionButtonTemplate" id="12">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar6Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
+					<Button parentKey="IgnoreBar6" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="61"/>
+							<KeyValue type="number" key="endID" value="72"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar6Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
 					
@@ -1965,6 +2039,15 @@
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar7Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
+					<Button parentKey="IgnoreBar7" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="73"/>
+							<KeyValue type="number" key="endID" value="84"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar7Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
 					
 					<Button parentKey="Bar8Slot1" inherits="BtWLoadoutsActionButtonTemplate" id="1">
 						<Anchors>
@@ -2024,6 +2107,15 @@
 					<Button parentKey="Bar8Slot12" inherits="BtWLoadoutsActionButtonTemplate" id="12">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar8Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
+					<Button parentKey="IgnoreBar8" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="85"/>
+							<KeyValue type="number" key="endID" value="96"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar8Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
 					
@@ -2087,6 +2179,15 @@
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar9Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
+					<Button parentKey="IgnoreBar9" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="97"/>
+							<KeyValue type="number" key="endID" value="108"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar9Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
 					
 					<Button parentKey="Bar10Slot1" inherits="BtWLoadoutsActionButtonTemplate" id="1">
 						<Anchors>
@@ -2146,6 +2247,15 @@
 					<Button parentKey="Bar10Slot12" inherits="BtWLoadoutsActionButtonTemplate" id="12">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.Bar10Slot11" relativePoint="TOPRIGHT" x="2" y="0"/>
+						</Anchors>
+					</Button>
+					<Button parentKey="IgnoreBar10" inherits="BtWLoadoutsIgnoreActionBarTemplate">
+						<KeyValues>
+							<KeyValue type="number" key="startID" value="109"/>
+							<KeyValue type="number" key="endID" value="120"/>
+						</KeyValues>
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.Bar10Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
 						</Anchors>
 					</Button>
 				</Frames>

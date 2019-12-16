@@ -2887,6 +2887,22 @@ function BtWLoadoutsActionButtonMixin:Update()
 	self.ignoreTexture:SetShown(ignored);
 end
 
+BtWLoadoutsIgnoreActionBarMixin = {}
+function BtWLoadoutsIgnoreActionBarMixin:OnClick()
+	local set = self:GetParent().set;
+	local setIgnored = true
+	for id=self.startID,self.endID do
+		if set.ignored[id] then
+			setIgnored = false
+			break
+		end
+	end
+	for id=self.startID,self.endID do
+		set.ignored[id] = setIgnored
+		self:GetParent().Slots[id]:Update()
+	end
+end
+
 do
 	local GetCursorPosition = GetCursorPosition;
 	-- This is very important, the global functions gives different responses than the math functions
