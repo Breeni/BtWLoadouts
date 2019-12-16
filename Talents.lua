@@ -241,7 +241,7 @@ function Internal.TalentsTabUpdate(self)
 
         local helpTipBox = self:GetParent().HelpTipBox;
         -- Tutorial stuff
-        if not Internal.BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
+        if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
             helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 
             HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
