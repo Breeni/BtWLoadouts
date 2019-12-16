@@ -336,6 +336,10 @@ function Internal.ActionBarsTabUpdate(self)
                 slots[slot].icon = icon
             end
 		end
+        for i=1,10 do
+            local item = self["IgnoreBar" .. i]
+			item:SetEnabled(true);
+		end
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(true);
@@ -365,6 +369,10 @@ function Internal.ActionBarsTabUpdate(self)
 
 		for _,item in pairs(self.Slots) do
 			item:SetEnabled(false);
+		end
+        for i=1,10 do
+            local item = self["IgnoreBar" .. i]
+			item:SetEnabled(true);
 		end
 
 		local activateButton = self:GetParent().ActivateButton;
