@@ -330,6 +330,7 @@ function Internal.ActionBarsTabUpdate(self)
 		local set = self.set;
 		local slots = set.actions;
 
+		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
 			self.Name:SetText(self.set.name or "");
 		end
