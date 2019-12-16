@@ -763,7 +763,12 @@
 			</OnLoad>
             <OnClick method="OnClick"/>
         </Scripts>
-		<NormalTexture parentKey="NormalTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent"/>
+		<NormalTexture parentKey="NormalTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="3" y="-3"/>
+				<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
+			</Anchors>
+		</NormalTexture>
     </Button>
 
 	<Button name="BtWLoadoutsScrollListItem" parentArray="ScrollButtons" virtual="true">
