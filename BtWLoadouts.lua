@@ -2653,7 +2653,7 @@ function BtWLoadoutsItemSlotButtonMixin:OnClick()
 end
 function BtWLoadoutsItemSlotButtonMixin:OnReceiveDrag()
 	local cursorType, _, itemLink = GetCursorInfo();
-	if cursorType == "item" then
+	if self:GetParent().set and cursorType == "item" then
 		if self:SetItem(itemLink, GetCursorItemSource()) then
 			ClearCursor();
 		end
@@ -2777,7 +2777,7 @@ function BtWLoadoutsActionButtonMixin:OnClick()
 end
 function BtWLoadoutsActionButtonMixin:OnReceiveDrag()
 	local cursorType = GetCursorInfo()
-	if cursorType then
+	if self:GetParent().set and cursorType then
 		self:SetActionToCursor(GetCursorInfo())
 	end
 end
