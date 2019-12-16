@@ -2795,6 +2795,7 @@ function BtWLoadoutsActionButtonMixin:SetActionToCursor(...)
 			self:SetAction("spell", id, "pet")
 		elseif cursorType == "spell" then
 			local subType, id = select(3, ...)
+			id = FindBaseSpellByID(id) or id
 			self:SetAction("spell", id, subType)
 		elseif cursorType == "equipmentset" then
 			local id = select(2, ...)
