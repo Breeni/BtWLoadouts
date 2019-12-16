@@ -21,6 +21,11 @@ local function GetActionInfoTable(slot, tbl)
 
     tbl = tbl or {}
 
+    -- If we use the base version of the spell it should always work
+    if actionType == "spell" then
+        id = FindBaseSpellByID(id) or id
+    end
+
     tbl.type, tbl.id, tbl.subType, tbl.macroText = actionType, id, subType, nil
     tbl.icon = GetActionTexture(slot)
     tbl.name = GetActionText(slot)
@@ -82,6 +87,9 @@ local function SetActon(slot, tbl)
             return false, true
         end
     elseif tbl.type == "spell" then
+        -- If we use the base version of the spell it should always work
+        tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
+
         local foundSpell = false
         local index = 1
         local skillType, id = GetSpellBookItemInfo(index, tbl.subType)
