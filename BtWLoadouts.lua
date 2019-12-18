@@ -40,6 +40,9 @@ BTWLOADOUTS_DELETE = L["Delete"];
 BTWLOADOUTS_NAME = L["Name"];
 BTWLOADOUTS_SPECIALIZATION = L["Specialization"];
 
+BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
+BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
+
 local dungeonDifficultiesAll = Internal.dungeonDifficultiesAll;
 local raidDifficultiesAll = Internal.raidDifficultiesAll;
 local instanceDifficulties = Internal.instanceDifficulties;
