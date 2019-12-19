@@ -2428,7 +2428,7 @@ do
 			};
 
 			HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWLoadoutsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
-			self.Essences.EssenceList.update = EssenceScrollFrameUpdate;
+			self.Essences.EssenceList.update = Internal.EssenceScrollFrameUpdate;
 
 			self.Equipment.flyoutSettings = {
 				onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,

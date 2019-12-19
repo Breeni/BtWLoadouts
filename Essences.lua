@@ -164,6 +164,7 @@ do
 		end
 	end
 end
+Internal.EssenceScrollFrameUpdate = EssenceScrollFrameUpdate
 function Internal.EssencesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Essences"]);
 	self.set = Internal.SetsScrollFrame_RoleFilter(self.set, BtWLoadoutsSets.essences, BtWLoadoutsCollapsed.essences);
