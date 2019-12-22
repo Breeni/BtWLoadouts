@@ -1,11 +1,30 @@
 ## Interface: 80205
 ## Title: BtWLoadouts
-## Version: 27
-## Notes: Change your characters spec, talents, equipment and essences all at once
+## Version: 31
+## Notes: Change your characters spec, talents, equipment, essences, and action bars all at once
 ## Author: Breen
 ## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings
 ## SavedVariablesPerCharacter: BtWLoadoutsCollapsed
 ## OptionalDeps: OPie
 
+Localizations.lua
+Localizations.esES.lua
+Localizations.ruRU.lua
+Localizations.zhTW.lua
+
+Characters.lua
+Instances.lua
+
 BtWLoadouts.xml
+
+Sets.lua
+Loadouts.lua
+Talents.lua
+PvPTalents.lua
+Essences.lua
+Equipment.lua
+ActionBars.lua
+Conditions.lua
+
 Launcher.lua
+Events.lua
