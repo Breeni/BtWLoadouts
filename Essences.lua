@@ -128,7 +128,7 @@ Internal.CombineEssenceSets = CombineEssenceSets
 
 local EssenceScrollFrameUpdate;
 do
-	local MAX_ESSENCES = 11;
+	local MAX_ESSENCES = 14;
 	function EssenceScrollFrameUpdate(self)
 		local pending = self:GetParent().pending;
 		local set = self:GetParent().set;
