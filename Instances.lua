@@ -350,6 +350,7 @@ Internal.uiMapIDToBossID = uiMapIDToBossID;
 function Internal.GetAffixesName(affixesID)
 	local names = {};
 	local icons = {};
+	local id = affixesID
 	while affixesID > 0 do
 		local affixID = bit.band(affixesID, 0xFF);
 		affixesID = bit.rshift(affixesID, 8);
@@ -359,7 +360,7 @@ function Internal.GetAffixesName(affixesID)
 		icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
 	end
 
-	return affixesID, table.concat(names, " "), table.concat(icons, ", ");
+	return id, table.concat(names, " "), table.concat(icons, ", ");
 end
 local function GetAffixesInfo(...)
 	local id = 0;
@@ -381,18 +382,18 @@ local function GetAffixesInfo(...)
 end
 Internal.GetAffixesInfo = GetAffixesInfo;
 local affixRotation = {
-	GetAffixesInfo(10, 7, 12, 119), -- Fortified, 	Bolstering, Grievous, 	Beguiling
-	GetAffixesInfo(9, 6, 13, 119), 	-- Tyrannical, 	Raging, 	Explosive, 	Beguiling
-	GetAffixesInfo(10, 8, 12, 119), -- Fortified, 	Sanguine, 	Grievous, 	Beguiling
-	GetAffixesInfo(9, 5, 3, 119), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Beguiling
-	GetAffixesInfo(10, 7, 2, 119), 	-- Fortified, 	Bolstering, Skittish, 	Beguiling
-	GetAffixesInfo(9, 11, 4, 119), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Beguiling
-	GetAffixesInfo(10, 8, 14, 119),	-- Fortified, 	Sanguine, 	Quaking, 	Beguiling
-	GetAffixesInfo(9, 7, 13, 119), 	-- Tyrannical, 	Bolstering, Explosive, 	Beguiling
-	GetAffixesInfo(10, 11, 3, 119),	-- Fortified, 	Bursting, 	Volcanic, 	Beguiling
-	GetAffixesInfo(9, 6, 4, 119),	-- Tyrannical, 	Raging, 	Necrotic, 	Beguiling
-	GetAffixesInfo(10, 5, 14, 119),	-- Fortified, 	Teeming, 	Quaking, 	Beguiling
-	GetAffixesInfo(9, 11, 2, 119),	-- Tyrannical, 	Bursting, 	Skittish, 	Beguiling
+	GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
+	GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened
+	GetAffixesInfo(10, 8, 12, 120), -- Fortified, 	Sanguine, 	Grievous, 	Awakened
+	GetAffixesInfo(9, 5, 3, 120), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Awakened
+	GetAffixesInfo(10, 7, 2, 120), 	-- Fortified, 	Bolstering, Skittish, 	Awakened
+	GetAffixesInfo(9, 11, 4, 120), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Awakened
+	GetAffixesInfo(10, 8, 14, 120),	-- Fortified, 	Sanguine, 	Quaking, 	Awakened
+	GetAffixesInfo(9, 7, 13, 120), 	-- Tyrannical, 	Bolstering, Explosive, 	Awakened
+	GetAffixesInfo(10, 11, 3, 120),	-- Fortified, 	Bursting, 	Volcanic, 	Awakened
+	GetAffixesInfo(9, 6, 4, 120),	-- Tyrannical, 	Raging, 	Necrotic, 	Awakened
+	GetAffixesInfo(10, 5, 14, 120),	-- Fortified, 	Teeming, 	Quaking, 	Awakened
+	GetAffixesInfo(9, 11, 2, 120),	-- Tyrannical, 	Bursting, 	Skittish, 	Awakened
 };
 function Internal.AffixRotation()
     return ipairs(affixRotation)

@@ -109,8 +109,12 @@ function frame:PLAYER_LOGIN(...)
 
     for _,set in pairs(BtWLoadoutsSets.conditions) do
         if type(set) == "table" then
-            if set.map.difficultyID ~= 8 then
+            if set.difficultyID ~= 8 then
                 set.map.affixesID = nil;
+            end
+            -- Fix to remove the season affix from condition mapping
+            if set.map.affixesID ~= nil then
+                set.map.affixesID = bit.band(set.map.affixesID, 0x00ffffff)
             end
 
             Internal.AddConditionToMap(set);

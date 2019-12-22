@@ -208,7 +208,8 @@ function Internal.UpdateConditionsForAffixes()
 	if difficultyID == 23 then -- In a mythic dungeon (not M+)
 		local affixes = GetCurrentAffixes();
 		if affixes then
-			affixesID = Internal.GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id, affixes[4].id).id;
+			-- Ignore the 4th (seasonal) affix
+			affixesID = Internal.GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id).id
 		end
 	end
 
@@ -321,7 +322,12 @@ function Internal.ConditionsTabUpdate(self)
 			set.mapDifficultyID = set.difficultyID;
 		end
 
-		if set.map.instanceType ~= set.type or set.map.instanceID ~= set.instanceID or set.map.difficultyID ~= set.mapDifficultyID or set.map.bossID ~= set.bossID or set.map.affixesID ~= set.affixesID or set.mapProfileSet ~= set.profileSet then
+		if set.map.instanceType ~= set.type or
+		   set.map.instanceID ~= set.instanceID or
+		   set.map.difficultyID ~= set.mapDifficultyID or
+		   set.map.bossID ~= set.bossID or
+		   set.map.affixesID ~= bit.band(set.affixesID, 0x00ffffff) or
+		   set.mapProfileSet ~= set.profileSet then
 			RemoveConditionFromMap(set);
 
 			set.mapProfileSet = set.profileSet; -- Used to check if we should handle the condition
@@ -331,7 +337,7 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.instanceID = set.instanceID;
 			set.map.difficultyID = set.mapDifficultyID;
 			set.map.bossID = set.bossID;
-			set.map.affixesID = set.affixesID;
+			set.map.affixesID = bit.band(set.affixesID, 0x00ffffff);
 
 			AddConditionToMap(set);
 		end
