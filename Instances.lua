@@ -266,8 +266,11 @@ local instanceBosses = {
 		2372, -- The Hivemind
 		2367, -- Shad'har the Insatiable
 		2373, -- Drest'agath
+		2374, -- Il'gynoth, Corruption Reborn
 		2370, -- Vexiona
 		2364, -- Ra-den the Despoiled
+		2366, -- Carapace of N'Zoth
+		2375, -- N'Zoth the Corruptor
 	},
 };
 -- A map of npc ids to boss ids, this might not be the bosses npc id,
@@ -314,6 +317,8 @@ local InstanceAreaIDToBossID = {
 	[2217] = { -- Ny'alotha
 		[12879] = 2365, -- Maut
 		[12880] = 2369, -- The Prophet Skitra
+		[12895] = 2366, -- Carapace of N'Zoth
+		[12896] = 2375, -- N'Zoth the Corruptor
 	},
 };
 -- This is for bosses that have their own unique world map
@@ -338,6 +343,7 @@ local uiMapIDToBossID = {
 	[1595] = 2373, -- Drest'agath
 	[1593] = 2370, -- Vexiona
 	[1591] = 2364, -- Ra-den the Despoiled
+	[1596] = 2374, -- Il'gynoth, Corruption Reborn
 };
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
