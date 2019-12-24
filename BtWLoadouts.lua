@@ -3038,7 +3038,7 @@ do
 			end
 			table.sort(items, function (a, b)
 				if a.specID ~= b.specID then
-					return a.specID < b.specID
+					return (a.specID or 1000) < (b.specID or 1000)
 				end
 
 				return a.name < b.name
@@ -3220,7 +3220,7 @@ if OneRingLib then
 			end
 			table.sort(items, function (a, b)
 				if a.specID ~= b.specID then
-					return a.specID < b.specID
+					return (a.specID or 1000) < (b.specID or 1000)
 				end
 
 				return a.name < b.name
