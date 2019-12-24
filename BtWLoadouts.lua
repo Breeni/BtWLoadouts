@@ -1549,19 +1549,27 @@ local function AffixesDropDownInit(self, level, menuList)
 	end
 end
 
+local SetsScrollFrame_Update
 do
 	local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
 	local SCROLL_ROW_HEIGHT = 21;
 	local setScrollItems = {};
-	function BtWLoadoutsSetsScrollFrame_Update()
-		local offset = FauxScrollFrame_GetOffset(BtWLoadoutsFrame.Scroll);
+	function SetsScrollFrame_Update()
+		local self = BtWLoadoutsFrame.Scroll
+		local buttons = self.buttons;
+		local items = setScrollItems;
+		if not buttons then
+			return
+		end
 
-		local hasScrollBar = #setScrollItems > NUM_SCROLL_ITEMS_TO_DISPLAY;
-		for index=1,NUM_SCROLL_ITEMS_TO_DISPLAY do
-			local button = BtWLoadoutsFrame.ScrollButtons[index];
-			button:SetWidth(hasScrollBar and 153 or 175);
+		local totalHeight, displayedHeight = #items * (buttons[1]:GetHeight() + 1), self:GetHeight()
+		local hasScrollBar = totalHeight > displayedHeight
 
-			local item = setScrollItems[index + offset];
+		local offset = HybridScrollFrame_GetOffset(self);
+		for i,button in ipairs(buttons) do
+			button:SetWidth(hasScrollBar and 200 or 223)
+
+			local item = items[i+offset]
 			if item then
 				button.isAdd = item.isAdd;
 				if item.isAdd then
@@ -1612,7 +1620,7 @@ do
 				button:Hide();
 			end
 		end
-		FauxScrollFrame_Update(BtWLoadoutsFrame.Scroll, #setScrollItems, NUM_SCROLL_ITEMS_TO_DISPLAY, SCROLL_ROW_HEIGHT, nil, nil, nil, nil, nil, nil, false);
+		HybridScrollFrame_Update(self, totalHeight, displayedHeight);
 	end
 	function Internal.SetsScrollFrame_SpecFilter(selected, sets, collapsed)
 		wipe(setScrollItems);
@@ -1716,7 +1724,7 @@ do
 			end
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -1782,7 +1790,7 @@ do
 			end
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -1871,7 +1879,7 @@ do
 			end
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -1895,7 +1903,7 @@ do
 			};
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -2382,6 +2390,9 @@ do
 	end
 	function BtWLoadoutsFrameMixin:OnShow()
 		if not self.initialized then
+			HybridScrollFrame_CreateButtons(self.Scroll, "BtWLoadoutsScrollListItem", 0, 0, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+			self.Scroll.update = SetsScrollFrame_Update;
+
 			self.Profiles.SpecDropDown.includeNone = true;
 			UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
 			UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);

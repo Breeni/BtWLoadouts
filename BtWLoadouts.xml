@@ -772,7 +772,7 @@
     </Button>
 
 	<Button name="BtWLoadoutsScrollListItem" parentArray="ScrollButtons" virtual="true">
-		<Size x="160" y="21"/>
+		<Size x="233" y="21"/>
 		<Layers>
 			<Layer level="ARTWORK">
 				<Texture parentKey="ExpandedIcon" inherits="Char-Stat-Minus">
@@ -830,7 +830,7 @@
 		</Scripts>
 	</Button>
 	<Frame name="BtWLoadoutsFrame" mixin="BtWLoadoutsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
-		<Size x="779" y="448"/>
+		<Size x="829" y="448"/>
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
@@ -845,7 +845,7 @@
 					<Anchor point="TOPLEFT" x="4" y="-26" />
 					<Anchor point="BOTTOM" x="0" y="26" />
 				</Anchors>
-				<Size x="185" y="0"/>
+				<Size x="235" y="0"/>
 			</Frame>
 			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate" hidden="true">
 				<Anchors>
@@ -853,136 +853,24 @@
 					<Anchor point="BOTTOMRIGHT" x="-6" y="26" />
 				</Anchors>
 			</Frame>
-			<ScrollFrame parentKey="Scroll" inherits="FauxScrollFrameTemplate">
-				<Size x="153" y="0"/>
+			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
+				<Size x="225" y="0"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="10" y="-30"/>
-					<Anchor point="BOTTOM" x="0" y="28"/>
+					<Anchor point="TOPLEFT" x="10" y="-34"/>
+					<Anchor point="BOTTOM" x="0" y="31"/>
 				</Anchors>
-				<Layers>
-					<Layer level="BACKGROUND">
-						<Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
-							<Size x="31" y="256"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-2" y="5"/>
-							</Anchors>
-							<TexCoords left="0" right="0.484375" top="0" bottom="1.0"/>
-						</Texture>
-						<Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
-							<Size x="31" y="35"/>
-							<Anchors>
-								<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-2" y="-251"/>
-							</Anchors>
-							<TexCoords left="0.515625" right="1.0" top="0" bottom="0.13671875"/>
-						</Texture>
-						<Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
-							<Size x="31" y="108"/>
-							<Anchors>
-								<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-2" y="-4"/>
-							</Anchors>
-							<TexCoords left="0.515625" right="1.0" top="0" bottom="0.421875"/>
-						</Texture>
-					</Layer>
-				</Layers>
-				<Scripts>
-					<OnVerticalScroll>
-						FauxScrollFrame_OnVerticalScroll(self, offset, 21, BtWLoadoutsSetsScrollFrame_Update);
-					</OnVerticalScroll>
-				</Scripts>
+				<Frames>
+					<Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-20" y="-12"/>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-20" y="13"/>
+						</Anchors>
+					</Slider>
+				</Frames>
 			</ScrollFrame>
-			<Button name="$parentScrollItem1" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.Scroll" relativePoint="TOPLEFT" x="0" y="-4"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem2" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem1" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem3" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem2" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem4" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem3" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem5" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem4" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem6" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem5" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem7" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem6" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem8" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem7" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem9" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem8" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem10" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem9" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem11" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem10" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem12" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem11" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem13" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem12" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem14" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem13" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem15" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem14" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem16" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem15" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem17" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem16" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentScrollItem18" inherits="BtWLoadoutsScrollListItem">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentScrollItem17" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Button>
 			<Frame parentKey="Profiles" parentArray="TabFrames" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Layers>
@@ -1092,7 +980,7 @@
 			</Frame>
 			<Frame parentKey="Talents" parentArray="TabFrames" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
@@ -1159,7 +1047,7 @@
 			</Frame>
 			<Frame parentKey="PvPTalents" parentArray="TabFrames" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
@@ -1203,7 +1091,7 @@
 			</Frame>
 			<Frame parentKey="Essences" parentArray="TabFrames" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
@@ -1267,7 +1155,7 @@
 			</Frame>
 			<Frame parentKey="Equipment" parentArray="TabFrames" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Frames>
@@ -1541,7 +1429,7 @@
 			</Frame>
 			<Frame parentKey="ActionBars" parentArray="TabFrames" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Layers>
@@ -2331,7 +2219,7 @@
 			</Frame>
 			<Frame parentKey="Conditions" parentArray="TabFrames" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" x="200" y="-30"/>
+					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 				<Layers>
