@@ -6,6 +6,7 @@ local _, Internal = ...
 local L = Internal.L
 
 L["A tome is needed to continue equiping your set."] = "Для применения этого набора необходим фолиант."
+L["Action Bars"] = "Панели команд"
 L["Activate profile %s?"] = "Применить профиль %s?"
 L["Activate spec %s?\nThis set will require a tome or rested to activate"] = "Применить специализацию %s? Этот набор потребует фолианта или зоны отдыха для применения"
 L["Activate spec %s?\nThis will use a Tome"] = "Применить специализацию %s? Это задействует Фолиант"
