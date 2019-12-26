@@ -15,6 +15,7 @@
 	Set icons
 	Import/Export and custom links
 	Condition disabling
+	Better info for while a profile is disabled
 ]]
 
 local ADDON_NAME, Internal = ...;
