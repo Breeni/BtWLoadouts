@@ -87,12 +87,9 @@ end
 local function AddConditionToMap(set)
 	if set.profileSet ~= nil then
 		local profile = Internal.GetProfile(set.profileSet);
-		local valid = select(5, Internal.IsProfileValid(profile));
-		if valid then
-			for k,v in pairs(set.map) do
-				conditionMap[k][v] = conditionMap[k][v] or {};
-				conditionMap[k][v][set] = false;
-			end
+		for k,v in pairs(set.map) do
+			conditionMap[k][v] = conditionMap[k][v] or {};
+			conditionMap[k][v][set] = false;
 		end
 	end
 end
