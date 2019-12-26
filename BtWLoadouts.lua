@@ -1621,6 +1621,9 @@ do
 				else
 					name = item.name;
 				end
+				if item.disabled then
+					name = format("|cFF999999%s|r", name)
+				end
 				button.Name:SetText(name or L["Unnamed"]);
 				button:Show();
 			else
@@ -1906,6 +1909,7 @@ do
 			setScrollItems[#setScrollItems+1] = {
 				id = setID,
 				name = sets[setID].name,
+				disabled = sets[setID].disabled,
 				selected = sets[setID] == selected,
 			};
 		end
