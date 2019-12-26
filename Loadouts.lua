@@ -202,8 +202,7 @@ local function IsProfileValid(set)
 	end
 
 	if specID then
-		local specClass = select(6, GetSpecializationInfoByID(specID));
-		invalidForPlayer = invalidForPlayer or (playerClass ~= specClass);
+		invalidForPlayer = invalidForPlayer or not Internal.CanSwitchToSpecialization(specID);
 	end
 
 	if specID and (class ~= nil or role ~= nil) then
