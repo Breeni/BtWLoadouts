@@ -1,17 +1,20 @@
 --[[@TODO
 	Minimap icon should show progress texture and help box
-	Profiles need to support multiple sets of the same type
-	Equipment popout
-	Equipment sets should store location
+	Loadouts need to support multiple sets of the same type
+	Equipment flyout
+	Equipment sets should store location?
 	Equipment sets should store transmog?
-	Profile keybindings
-	Talent, equipment, etc. lock checking
+	Loadout keybindings
 	Conditions need to supoort boss, affixes and arena comp
 	Localization
 	Update new set text button based on tab?
 	What to do when the player has no tome
-	Acton Bar Support
 	External API
+	Configurable sidebar filtering?
+	New user UI, each tab should have a cleaner ui before creaitng a set
+	Set icons
+	Import/Export and custom links
+	Condition disabling
 ]]
 
 local ADDON_NAME, Internal = ...;
