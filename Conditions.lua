@@ -82,6 +82,8 @@ local function DeactivateConditionMap(map, key)
 		end
 	end
 end
+-- As long as a set hasnt been changed it can be added multiple times
+-- without causing any issues
 local function AddConditionToMap(set)
 	if set.profileSet ~= nil then
 		local profile = Internal.GetProfile(set.profileSet);
@@ -332,14 +334,21 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.difficultyID = set.mapDifficultyID;
 			set.map.bossID = set.bossID;
 			set.map.affixesID = set.affixesID;
+		end
 
+		if set.disabled then
+			RemoveConditionFromMap(set);
+		else
 			AddConditionToMap(set);
 		end
 
 		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
-			self.Name:SetText(self.set.name or "");
+			self.Name:SetText(set.name or "");
 		end
+		
+		self.Enabled:SetEnabled(true);
+		self.Enabled:SetChecked(not set.disabled);
 
 		self.ProfileDropDown.Button:SetEnabled(true);
 		self.ConditionTypeDropDown.Button:SetEnabled(true);
@@ -408,6 +417,9 @@ function Internal.ConditionsTabUpdate(self)
 	else
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");
+		
+		self.Enabled:SetEnabled(false);
+		self.Enabled:SetChecked(false);
 
 		self.ProfileDropDown.Button:SetEnabled(false);
 		self.ConditionTypeDropDown.Button:SetEnabled(false);

@@ -113,7 +113,9 @@ function frame:PLAYER_LOGIN(...)
                 set.map.affixesID = nil;
             end
 
-            Internal.AddConditionToMap(set);
+			if not set.disabled then
+                Internal.AddConditionToMap(set);
+            end
         end
     end
 

@@ -42,6 +42,7 @@ BTWLOADOUTS_ACTIVATE = L["Activate"];
 BTWLOADOUTS_DELETE = L["Delete"];
 BTWLOADOUTS_NAME = L["Name"];
 BTWLOADOUTS_SPECIALIZATION = L["Specialization"];
+BTWLOADOUTS_ENABLED = L["Enabled"]
 
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
@@ -2391,6 +2392,17 @@ do
 		if tab.set and tab.set.name ~= text then
 			tab.set.name = text;
 			BtWLoadoutsHelpTipFlags["TUTORIAL_RENAME_SET"] = true;
+			self:Update();
+		end
+	end
+	function BtWLoadoutsFrameMixin:SetEnabled(value)
+		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
+		if selectedTab ~= TAB_CONDITIONS then -- Other tabs dont support enabling/disabling
+			return
+		end
+		local tab = GetTabFrame(self, selectedTab);
+		if tab.set and tab.set.disabled ~= not value then
+			tab.set.disabled = not value;
 			self:Update();
 		end
 	end

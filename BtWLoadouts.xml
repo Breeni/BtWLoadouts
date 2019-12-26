@@ -2254,6 +2254,29 @@
 							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
 						</Anchors>
 					</Frame>
+					<CheckButton parentKey="Enabled" inherits="OptionsBaseCheckButtonTemplate">
+						<Size x="26" y="26"/>
+						<Anchors>
+							<Anchor point="TOPRIGHT" relativeKey="$parent.Inset" relativePoint="TOPRIGHT" x="-75" y="-10"/>
+						</Anchors>
+						<Layers>
+							<Layer level="ARTWORK">
+								<FontString parentKey="Text" inherits="GameFontNormalSmall" text="BTWLOADOUTS_ENABLED">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="RIGHT" x="0" y="1"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<HitRectInsets>
+							<AbsInset left="0" right="-65" top="0" bottom="0"/>
+						</HitRectInsets>
+						<Scripts>
+							<OnClick>
+								self:GetParent():GetParent():SetEnabled(self:GetChecked())
+							</OnClick>
+						</Scripts>
+					</CheckButton>
 					<EditBox letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
 						<Size x="0" y="22"/>
 						<Anchors>
