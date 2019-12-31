@@ -327,7 +327,7 @@ function Internal.ConditionsTabUpdate(self)
 		   set.map.instanceID ~= set.instanceID or
 		   set.map.difficultyID ~= set.mapDifficultyID or
 		   set.map.bossID ~= set.bossID or
-		   set.map.affixesID ~= (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff)) or
+		   set.map.affixesID ~= (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff) or nil) or
 		   set.mapProfileSet ~= set.profileSet then
 			RemoveConditionFromMap(set);
 
@@ -338,7 +338,7 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.instanceID = set.instanceID;
 			set.map.difficultyID = set.mapDifficultyID;
 			set.map.bossID = set.bossID;
-			set.map.affixesID = (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff));
+			set.map.affixesID = (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff) or nil);
 
 			AddConditionToMap(set);
 		end
