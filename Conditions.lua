@@ -30,6 +30,7 @@ local CONDITION_TYPE_DUNGEONS = "party";
 local CONDITION_TYPE_RAIDS = "raid";
 local CONDITION_TYPE_ARENA = "arena";
 local CONDITION_TYPE_BATTLEGROUND = "pvp";
+local CONDITION_TYPE_SCENARIO = "scenario";
 
 local activeConditionSelection;
 local previousActiveConditions = {}; -- List of the previously active conditions
