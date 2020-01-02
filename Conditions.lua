@@ -148,6 +148,7 @@ local function DeleteConditionSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+Internal.DeleteConditionSet = DeleteConditionSet
 local previousConditionInfo = {};
 _G['BtWLoadoutsPreviousConditionInfo'] = previousConditionInfo; --@TODO Remove
 function Internal.ClearConditions()
