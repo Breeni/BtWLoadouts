@@ -235,7 +235,7 @@ end
 local conditionMatchCount = {};
 function Internal.TriggerConditions()
 	-- In a Mythic Plus cant cant change anything anyway
-	if select(8,GetInstanceInfo()) == 8 then
+	if select(3,GetInstanceInfo()) == 8 then
 		return;
 	end
 
