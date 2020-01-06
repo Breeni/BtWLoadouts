@@ -38,6 +38,10 @@ local function GetActionInfoTable(slot, tbl)
 end
 local function CompareSlot(slot, tbl)
     local actionType, id, subType = GetActionInfo(slot)
+    if actionType == "spell" then
+        id = FindBaseSpellByID(id) or id
+    end
+
     if tbl == nil then
         return actionType == nil
     elseif actionType == "macro" and tbl.type == "macro" then
