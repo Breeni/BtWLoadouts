@@ -248,7 +248,7 @@ function Internal.TriggerConditions()
 	wipe(activeConditions);
 	wipe(conditionMatchCount);
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
-		if type(set) == "table" and set.profileSet ~= nil then
+		if type(set) == "table" and set.profileSet ~= nil and not set.disabled then
 			local profile = Internal.GetProfile(set.profileSet);
 			if select(5, Internal.IsProfileValid(profile)) then
 				local match = IsConditionActive(set);
