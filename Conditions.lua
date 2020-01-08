@@ -339,6 +339,7 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.difficultyID = set.mapDifficultyID;
 			set.map.bossID = set.bossID;
 			set.map.affixesID = (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff) or nil);
+		end
 
 		if set.disabled then
 			RemoveConditionFromMap(set);
