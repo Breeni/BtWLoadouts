@@ -83,15 +83,14 @@ local function DeactivateConditionMap(map, key)
 		end
 	end
 end
+-- As long as a set hasnt been changed it can be added multiple times
+-- without causing any issues
 local function AddConditionToMap(set)
 	if set.profileSet ~= nil then
 		local profile = Internal.GetProfile(set.profileSet);
-		local valid = select(5, Internal.IsProfileValid(profile));
-		if valid then
-			for k,v in pairs(set.map) do
-				conditionMap[k][v] = conditionMap[k][v] or {};
-				conditionMap[k][v][set] = false;
-			end
+		for k,v in pairs(set.map) do
+			conditionMap[k][v] = conditionMap[k][v] or {};
+			conditionMap[k][v][set] = false;
 		end
 	end
 end
@@ -150,6 +149,7 @@ local function DeleteConditionSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+Internal.DeleteConditionSet = DeleteConditionSet
 local previousConditionInfo = {};
 _G['BtWLoadoutsPreviousConditionInfo'] = previousConditionInfo; --@TODO Remove
 function Internal.ClearConditions()
@@ -237,7 +237,7 @@ end
 local conditionMatchCount = {};
 function Internal.TriggerConditions()
 	-- In a Mythic Plus cant cant change anything anyway
-	if select(8,GetInstanceInfo()) == 8 then
+	if select(3,GetInstanceInfo()) == 8 then
 		return;
 	end
 
@@ -250,7 +250,7 @@ function Internal.TriggerConditions()
 	wipe(activeConditions);
 	wipe(conditionMatchCount);
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
-		if type(set) == "table" and set.profileSet ~= nil then
+		if type(set) == "table" and set.profileSet ~= nil and not set.disabled then
 			local profile = Internal.GetProfile(set.profileSet);
 			if select(5, Internal.IsProfileValid(profile)) then
 				local match = IsConditionActive(set);
@@ -340,13 +340,19 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.bossID = set.bossID;
 			set.map.affixesID = (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff) or nil);
 
+		if set.disabled then
+			RemoveConditionFromMap(set);
+		else
 			AddConditionToMap(set);
 		end
 
 		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
-			self.Name:SetText(self.set.name or "");
+			self.Name:SetText(set.name or "");
 		end
+		
+		self.Enabled:SetEnabled(true);
+		self.Enabled:SetChecked(not set.disabled);
 
 		self.ProfileDropDown.Button:SetEnabled(true);
 		self.ConditionTypeDropDown.Button:SetEnabled(true);
@@ -415,6 +421,9 @@ function Internal.ConditionsTabUpdate(self)
 	else
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");
+		
+		self.Enabled:SetEnabled(false);
+		self.Enabled:SetChecked(false);
 
 		self.ProfileDropDown.Button:SetEnabled(false);
 		self.ConditionTypeDropDown.Button:SetEnabled(false);

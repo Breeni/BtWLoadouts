@@ -117,7 +117,9 @@ function frame:PLAYER_LOGIN(...)
                 set.map.affixesID = bit.band(set.map.affixesID, 0x00ffffff)
             end
 
-            Internal.AddConditionToMap(set);
+			if not set.disabled then
+                Internal.AddConditionToMap(set);
+            end
         end
     end
 

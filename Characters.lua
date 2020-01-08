@@ -2443,3 +2443,20 @@ function Internal.UpdatePlayerInfo()
 
     BtWLoadoutsCharacterInfo[realm .. "-" .. name] = {name = name, realm = GetRealmName(), class = class, race = race, sex = sex};
 end
+-- Checks if the player can switch to specID, used to check if loadouts are valid
+function Internal.CanSwitchToSpecialization(specID)
+	local playerClass = select(2, UnitClass("player"));
+	local specClass = select(6, GetSpecializationInfoByID(specID));
+	if playerClass ~= specClass then
+		return false
+	end
+	local specIndex = GetSpecialization()
+	if specIndex == nil then
+		return false
+	end
+	-- Can not switch specs in arena
+	if select(2, GetInstanceInfo()) == "arena" then
+		return GetSpecializationInfo(specIndex) ~= specID
+	end
+	return true
+end

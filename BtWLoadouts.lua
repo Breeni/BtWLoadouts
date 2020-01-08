@@ -1,17 +1,21 @@
 --[[@TODO
 	Minimap icon should show progress texture and help box
-	Profiles need to support multiple sets of the same type
-	Equipment popout
-	Equipment sets should store location
+	Loadouts need to support multiple sets of the same type
+	Equipment flyout
+	Equipment sets should store location?
 	Equipment sets should store transmog?
-	Profile keybindings
-	Talent, equipment, etc. lock checking
+	Loadout keybindings
 	Conditions need to supoort boss, affixes and arena comp
 	Localization
 	Update new set text button based on tab?
 	What to do when the player has no tome
-	Acton Bar Support
 	External API
+	Configurable sidebar filtering?
+	New user UI, each tab should have a cleaner ui before creaitng a set
+	Set icons
+	Import/Export and custom links
+	Condition disabling
+	Better info for while a profile is disabled
 ]]
 
 local ADDON_NAME, Internal = ...;
@@ -39,6 +43,10 @@ BTWLOADOUTS_ACTIVATE = L["Activate"];
 BTWLOADOUTS_DELETE = L["Delete"];
 BTWLOADOUTS_NAME = L["Name"];
 BTWLOADOUTS_SPECIALIZATION = L["Specialization"];
+BTWLOADOUTS_ENABLED = L["Enabled"]
+
+BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
+BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
 
 local dungeonDifficultiesAll = Internal.dungeonDifficultiesAll;
 local raidDifficultiesAll = Internal.raidDifficultiesAll;
@@ -1552,19 +1560,27 @@ local function AffixesDropDownInit(self, level, menuList)
 	end
 end
 
+local SetsScrollFrame_Update
 do
 	local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
 	local SCROLL_ROW_HEIGHT = 21;
 	local setScrollItems = {};
-	function BtWLoadoutsSetsScrollFrame_Update()
-		local offset = FauxScrollFrame_GetOffset(BtWLoadoutsFrame.Scroll);
+	function SetsScrollFrame_Update()
+		local self = BtWLoadoutsFrame.Scroll
+		local buttons = self.buttons;
+		local items = setScrollItems;
+		if not buttons then
+			return
+		end
 
-		local hasScrollBar = #setScrollItems > NUM_SCROLL_ITEMS_TO_DISPLAY;
-		for index=1,NUM_SCROLL_ITEMS_TO_DISPLAY do
-			local button = BtWLoadoutsFrame.ScrollButtons[index];
-			button:SetWidth(hasScrollBar and 153 or 175);
+		local totalHeight, displayedHeight = #items * (buttons[1]:GetHeight() + 1), self:GetHeight()
+		local hasScrollBar = totalHeight > displayedHeight
 
-			local item = setScrollItems[index + offset];
+		local offset = HybridScrollFrame_GetOffset(self);
+		for i,button in ipairs(buttons) do
+			button:SetWidth(hasScrollBar and 200 or 223)
+
+			local item = items[i+offset]
 			if item then
 				button.isAdd = item.isAdd;
 				if item.isAdd then
@@ -1609,13 +1625,16 @@ do
 				else
 					name = item.name;
 				end
+				if item.disabled then
+					name = format("|cFF999999%s|r", name)
+				end
 				button.Name:SetText(name or L["Unnamed"]);
 				button:Show();
 			else
 				button:Hide();
 			end
 		end
-		FauxScrollFrame_Update(BtWLoadoutsFrame.Scroll, #setScrollItems, NUM_SCROLL_ITEMS_TO_DISPLAY, SCROLL_ROW_HEIGHT, nil, nil, nil, nil, nil, nil, false);
+		HybridScrollFrame_Update(self, totalHeight, displayedHeight);
 	end
 	function Internal.SetsScrollFrame_SpecFilter(selected, sets, collapsed)
 		wipe(setScrollItems);
@@ -1719,7 +1738,7 @@ do
 			end
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -1785,7 +1804,7 @@ do
 			end
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -1874,7 +1893,7 @@ do
 			end
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -1894,11 +1913,12 @@ do
 			setScrollItems[#setScrollItems+1] = {
 				id = setID,
 				name = sets[setID].name,
+				disabled = sets[setID].disabled,
 				selected = sets[setID] == selected,
 			};
 		end
 
-		BtWLoadoutsSetsScrollFrame_Update();
+		SetsScrollFrame_Update();
 
 		return selected;
 	end
@@ -2383,8 +2403,22 @@ do
 			self:Update();
 		end
 	end
+	function BtWLoadoutsFrameMixin:SetEnabled(value)
+		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
+		if selectedTab ~= TAB_CONDITIONS then -- Other tabs dont support enabling/disabling
+			return
+		end
+		local tab = GetTabFrame(self, selectedTab);
+		if tab.set and tab.set.disabled ~= not value then
+			tab.set.disabled = not value;
+			self:Update();
+		end
+	end
 	function BtWLoadoutsFrameMixin:OnShow()
 		if not self.initialized then
+			HybridScrollFrame_CreateButtons(self.Scroll, "BtWLoadoutsScrollListItem", 0, 0, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+			self.Scroll.update = SetsScrollFrame_Update;
+
 			self.Profiles.SpecDropDown.includeNone = true;
 			UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
 			UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
@@ -3042,7 +3076,7 @@ do
 			end
 			table.sort(items, function (a, b)
 				if a.specID ~= b.specID then
-					return a.specID < b.specID
+					return (a.specID or 1000) < (b.specID or 1000)
 				end
 
 				return a.name < b.name
@@ -3224,7 +3258,7 @@ if OneRingLib then
 			end
 			table.sort(items, function (a, b)
 				if a.specID ~= b.specID then
-					return a.specID < b.specID
+					return (a.specID or 1000) < (b.specID or 1000)
 				end
 
 				return a.name < b.name
