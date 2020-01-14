@@ -38,12 +38,13 @@ local instanceDifficulties = {
 	[1771] = dungeonDifficultiesAll, -- Tol Dagor
 	[1862] = dungeonDifficultiesAll, -- Waycrest Manor
 	[1822] = dungeonDifficultiesAll, -- Siege of Boralus
-	[2097] = {23},					 -- Operation: Mechagon
+	[2097] = dungeonDifficultiesAll, -- Operation: Mechagon
 
 	[1861] = raidDifficultiesAll,	 -- Uldir
 	[2070] = raidDifficultiesAll,	 -- Battle of Dazar'alor
 	[2096] = raidDifficultiesAll,	 -- Crucible of Storms
 	[2164] = raidDifficultiesAll,	 -- The Eternal Palace
+	[2217] = raidDifficultiesAll, 	 -- Ny'alotha
 };
 Internal.dungeonDifficultiesAll = dungeonDifficultiesAll;
 Internal.raidDifficultiesAll = raidDifficultiesAll;
@@ -143,6 +144,7 @@ local raidInfo = {
 			2070, -- Battle for Dazar'alor
 			2096, -- Crucible of Storms
 			2164, -- Eternal Palace
+			2217, -- Ny'alotha
 		},
 	}
 };
@@ -256,6 +258,20 @@ local instanceBosses = {
 		2349, -- Za'qul, Harbinger of Ny'alotha
 		2361, -- Queen Azshara
 	},
+	[2217] = { -- Ny'alotha
+		2368, -- Wrathion
+		2365, -- Maut
+		2369, -- The Prophet Skitra
+		2377, -- Dark Inquisitor Xanesh
+		2372, -- The Hivemind
+		2367, -- Shad'har the Insatiable
+		2373, -- Drest'agath
+		2374, -- Il'gynoth, Corruption Reborn
+		2370, -- Vexiona
+		2364, -- Ra-den the Despoiled
+		2366, -- Carapace of N'Zoth
+		2375, -- N'Zoth the Corruptor
+	},
 };
 -- A map of npc ids to boss ids, this might not be the bosses npc id,
 -- just something that signifies the boss
@@ -298,6 +314,12 @@ local InstanceAreaIDToBossID = {
 		[9639] = 2094, -- Ring of Booty
 		[10040] = 2095, -- Harlan Sweete
 	},
+	[2217] = { -- Ny'alotha
+		[12879] = 2365, -- Maut
+		[12880] = 2369, -- The Prophet Skitra
+		[12895] = 2366, -- Carapace of N'Zoth
+		[12896] = 2375, -- N'Zoth the Corruptor
+	},
 };
 -- This is for bosses that have their own unique world map
 local uiMapIDToBossID = {
@@ -312,6 +334,16 @@ local uiMapIDToBossID = {
 	[1518] = 2359, -- The Queen's Court
 	[1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
 	[1520] = 2361, -- Queen Azshara
+	
+	-- Ny'alotha
+	[1580] = 2368, -- Wrathion
+	[1592] = 2377, -- Dark Inquisitor Xanesh
+	[1590] = 2372, -- The Hivemind
+	[1594] = 2367, -- Shad'har the Insatiable
+	[1595] = 2373, -- Drest'agath
+	[1593] = 2370, -- Vexiona
+	[1591] = 2364, -- Ra-den the Despoiled
+	[1596] = 2374, -- Il'gynoth, Corruption Reborn
 };
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
@@ -324,6 +356,7 @@ Internal.uiMapIDToBossID = uiMapIDToBossID;
 function Internal.GetAffixesName(affixesID)
 	local names = {};
 	local icons = {};
+	local id = affixesID
 	while affixesID > 0 do
 		local affixID = bit.band(affixesID, 0xFF);
 		affixesID = bit.rshift(affixesID, 8);
@@ -333,7 +366,7 @@ function Internal.GetAffixesName(affixesID)
 		icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
 	end
 
-	return affixesID, table.concat(names, " "), table.concat(icons, ", ");
+	return id, table.concat(names, " "), table.concat(icons, ", ");
 end
 local function GetAffixesInfo(...)
 	local id = 0;
@@ -355,18 +388,18 @@ local function GetAffixesInfo(...)
 end
 Internal.GetAffixesInfo = GetAffixesInfo;
 local affixRotation = {
-	GetAffixesInfo(10, 7, 12, 119), -- Fortified, 	Bolstering, Grievous, 	Beguiling
-	GetAffixesInfo(9, 6, 13, 119), 	-- Tyrannical, 	Raging, 	Explosive, 	Beguiling
-	GetAffixesInfo(10, 8, 12, 119), -- Fortified, 	Sanguine, 	Grievous, 	Beguiling
-	GetAffixesInfo(9, 5, 3, 119), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Beguiling
-	GetAffixesInfo(10, 7, 2, 119), 	-- Fortified, 	Bolstering, Skittish, 	Beguiling
-	GetAffixesInfo(9, 11, 4, 119), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Beguiling
-	GetAffixesInfo(10, 8, 14, 119),	-- Fortified, 	Sanguine, 	Quaking, 	Beguiling
-	GetAffixesInfo(9, 7, 13, 119), 	-- Tyrannical, 	Bolstering, Explosive, 	Beguiling
-	GetAffixesInfo(10, 11, 3, 119),	-- Fortified, 	Bursting, 	Volcanic, 	Beguiling
-	GetAffixesInfo(9, 6, 4, 119),	-- Tyrannical, 	Raging, 	Necrotic, 	Beguiling
-	GetAffixesInfo(10, 5, 14, 119),	-- Fortified, 	Teeming, 	Quaking, 	Beguiling
-	GetAffixesInfo(9, 11, 2, 119),	-- Tyrannical, 	Bursting, 	Skittish, 	Beguiling
+	GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
+	GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened
+	GetAffixesInfo(10, 8, 12, 120), -- Fortified, 	Sanguine, 	Grievous, 	Awakened
+	GetAffixesInfo(9, 5, 3, 120), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Awakened
+	GetAffixesInfo(10, 7, 2, 120), 	-- Fortified, 	Bolstering, Skittish, 	Awakened
+	GetAffixesInfo(9, 11, 4, 120), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Awakened
+	GetAffixesInfo(10, 8, 14, 120),	-- Fortified, 	Sanguine, 	Quaking, 	Awakened
+	GetAffixesInfo(9, 7, 13, 120), 	-- Tyrannical, 	Bolstering, Explosive, 	Awakened
+	GetAffixesInfo(10, 11, 3, 120),	-- Fortified, 	Bursting, 	Volcanic, 	Awakened
+	GetAffixesInfo(9, 6, 4, 120),	-- Tyrannical, 	Raging, 	Necrotic, 	Awakened
+	GetAffixesInfo(10, 5, 14, 120),	-- Fortified, 	Teeming, 	Quaking, 	Awakened
+	GetAffixesInfo(9, 11, 2, 120),	-- Tyrannical, 	Bursting, 	Skittish, 	Awakened
 };
 function Internal.AffixRotation()
     return ipairs(affixRotation)

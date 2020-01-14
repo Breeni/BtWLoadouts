@@ -63,12 +63,14 @@ local CONDITION_TYPE_DUNGEONS = "party";
 local CONDITION_TYPE_RAIDS = "raid";
 local CONDITION_TYPE_ARENA = "arena";
 local CONDITION_TYPE_BATTLEGROUND = "pvp";
+local CONDITION_TYPE_SCENARIO = "scenario";
 local CONDITION_TYPES = {
 	CONDITION_TYPE_WORLD,
 	CONDITION_TYPE_DUNGEONS,
 	CONDITION_TYPE_RAIDS,
 	CONDITION_TYPE_ARENA,
-	CONDITION_TYPE_BATTLEGROUND
+	CONDITION_TYPE_BATTLEGROUND,
+	CONDITION_TYPE_SCENARIO
 }
 local CONDITION_TYPE_NAMES = {
 	[CONDITION_TYPE_WORLD] = L["World"],
@@ -76,6 +78,7 @@ local CONDITION_TYPE_NAMES = {
 	[CONDITION_TYPE_RAIDS] = L["Raids"],
 	[CONDITION_TYPE_ARENA] = L["Arena"],
 	[CONDITION_TYPE_BATTLEGROUND] = L["Battlegrounds"],
+	[CONDITION_TYPE_SCENARIO] = L["Scenarios"]
 }
 Internal.CONDITION_TYPES = CONDITION_TYPES;
 Internal.CONDITION_TYPE_NAMES = CONDITION_TYPE_NAMES;
@@ -2459,6 +2462,7 @@ do
 				[115] = self.Essences.MajorSlot,
 				[116] = self.Essences.MinorSlot1,
 				[117] = self.Essences.MinorSlot2,
+				[119] = self.Essences.MinorSlot3,
 			};
 
 			HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWLoadoutsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");

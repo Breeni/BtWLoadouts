@@ -27,4 +27,5 @@ L["Raids"] = RAIDS
 L["Arena"] = ARENA
 L["Battlegrounds"] = BATTLEGROUNDS
 L["Other"] = OTHER
+L["Scenarios"] = SCENARIOS
 L["Enabled"] = VIDEO_OPTIONS_ENABLED

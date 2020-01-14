@@ -44,6 +44,7 @@ local function AddEssenceSet()
     selected[115] = C_AzeriteEssence.GetMilestoneEssence(115);
     selected[116] = C_AzeriteEssence.GetMilestoneEssence(116);
     selected[117] = C_AzeriteEssence.GetMilestoneEssence(117);
+    selected[119] = C_AzeriteEssence.GetMilestoneEssence(119);
 
     local set = {
 		setID = Internal.GetNextSetID(BtWLoadoutsSets.essences),
@@ -127,7 +128,7 @@ Internal.CombineEssenceSets = CombineEssenceSets
 
 local EssenceScrollFrameUpdate;
 do
-	local MAX_ESSENCES = 11;
+	local MAX_ESSENCES = 14;
 	function EssenceScrollFrameUpdate(self)
 		local pending = self:GetParent().pending;
 		local set = self:GetParent().set;
@@ -175,6 +176,7 @@ function Internal.EssencesTabUpdate(self)
 		self.MajorSlot:SetEnabled(true);
 		self.MinorSlot1:SetEnabled(true);
 		self.MinorSlot2:SetEnabled(true);
+		self.MinorSlot3:SetEnabled(true);
 
 		local role = self.set.role;
 		local selected = self.set.essences;
@@ -231,16 +233,20 @@ function Internal.EssencesTabUpdate(self)
 		self.MajorSlot:SetEnabled(false);
 		self.MinorSlot1:SetEnabled(false);
 		self.MinorSlot2:SetEnabled(false);
+		self.MinorSlot3:SetEnabled(false);
 
 		self.MajorSlot.EmptyGlow:Hide();
 		self.MinorSlot1.EmptyGlow:Hide();
 		self.MinorSlot2.EmptyGlow:Hide();
+		self.MinorSlot3.EmptyGlow:Hide();
 		self.MajorSlot.EmptyIcon:Hide();
 		self.MinorSlot1.EmptyIcon:Hide();
 		self.MinorSlot2.EmptyIcon:Hide();
+		self.MinorSlot3.EmptyIcon:Hide();
 		self.MajorSlot.Icon:Hide();
 		self.MinorSlot1.Icon:Hide();
 		self.MinorSlot2.Icon:Hide();
+		self.MinorSlot3.Icon:Hide();
 
 		self.Name:SetText("");
 

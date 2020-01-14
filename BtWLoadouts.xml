@@ -1128,12 +1128,17 @@
 					</Button>
 					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1">
 						<Anchors>
-							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="-120" y="-75"/>
+							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="-83" y="-114"/>
 						</Anchors>
 					</Button>
 					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot2">
 						<Anchors>
-							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="119" y="75"/>
+							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="139" y="-15"/>
+						</Anchors>
+					</Button>
+					<Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot3" virtual="true">
+						<Anchors>
+							<Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="-59" y="129"/>
 						</Anchors>
 					</Button>
 					<ScrollFrame parentKey="EssenceList" inherits="HybridScrollFrameTemplate">
