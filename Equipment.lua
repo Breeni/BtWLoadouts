@@ -603,17 +603,21 @@ do
 		return complete;
 	end
 end
+local function GetCharacterSlug()
+	local characterName, characterRealm = UnitFullName("player");
+	return characterRealm .. "-" .. characterName
+end
 local function AddEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
     local name = format(L["New %s Equipment Set"], characterName);
 	local equipment = {};
 	local ignored = {};
 
+	ignored[INVSLOT_BODY] = true;
+	ignored[INVSLOT_TABARD] = true;
+
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
-		if equipment[inventorySlotId] == nil then
-			ignored[inventorySlotId] = true;
-		end
 	end
 
     local set = {
@@ -631,10 +635,9 @@ local function AddEquipmentSet()
 end
 -- Adds a blank equipment set for the current character
 local function AddBlankEquipmentSet()
-    local characterName, characterRealm = UnitFullName("player");
     local set = {
 		setID = Internal.GetNextSetID(BtWLoadoutsSets.equipment),
-        character = characterRealm .. "-" .. characterName,
+        character = GetCharacterSlug(),
         name = "",
 		equipment = {},
 		extras = {},
@@ -644,6 +647,19 @@ local function AddBlankEquipmentSet()
     };
     BtWLoadoutsSets.equipment[set.setID] = set;
     return set;
+end
+-- Update an equipment set with the currently equipped gear
+local function RefreshEquipmentSet(set)
+	if set.character ~= GetCharacterSlug() then
+		return
+	end
+
+	ignored[INVSLOT_BODY] = true;
+	ignored[INVSLOT_TABARD] = true;
+
+	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
+	end
 end
 function Internal.GetEquipmentSet(id)
     if type(id) == "table" then
