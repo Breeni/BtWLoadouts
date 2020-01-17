@@ -241,6 +241,7 @@ local function GetProfileByName(name)
 		end
 	end
 end
+Internal.GetProfileByName = GetProfileByName
 local function DeleteProfile(id)
 	do
         local set = type(id) == "table" and id or GetProfile(id);
