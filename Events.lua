@@ -282,6 +282,11 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     end
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
+function frame:UPDATE_INSTANCE_INFO(...)
+    Internal.UpdateConditionsForInstance();
+    Internal.UpdateConditionsForBoss();
+    Internal.TriggerConditions();
+end
 function frame:ZONE_CHANGED(...)
     Internal.UpdateConditionsForBoss();
     Internal.TriggerConditions();
@@ -306,6 +311,7 @@ frame:RegisterEvent("PLAYER_LOGIN");
 frame:RegisterEvent("PLAYER_ENTERING_WORLD");
 frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
 frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+frame:RegisterEvent("UPDATE_INSTANCE_INFO");
 frame:RegisterEvent("ZONE_CHANGED");
 frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
 frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
