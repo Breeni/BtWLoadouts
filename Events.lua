@@ -283,6 +283,11 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
 function frame:UPDATE_INSTANCE_INFO(...)
+    local name, realm = UnitFullName("player")
+    if not realm then
+        return
+    end
+    
     Internal.UpdateConditionsForInstance();
     Internal.UpdateConditionsForBoss();
     Internal.TriggerConditions();
