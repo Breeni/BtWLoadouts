@@ -2456,7 +2456,7 @@ function Internal.CanSwitchToSpecialization(specID)
 	end
 	-- Can not switch specs in arena
 	if select(2, GetInstanceInfo()) == "arena" then
-		return GetSpecializationInfo(specIndex) ~= specID
+		return GetSpecializationInfo(specIndex) == specID
 	end
 	return true
 end
