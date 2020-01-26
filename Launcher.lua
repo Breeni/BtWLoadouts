@@ -7,7 +7,7 @@ function Internal.CreateLauncher()
     local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
     if LDB then
         launcher = LDB:NewDataObject("BtWLoadOuts", {
-            type = "launcher",
+            type = "data source",
             label = L["BtWLoadouts"],
             icon = [[Interface\ICONS\Ability_marksmanship]],
             OnClick = function(clickedframe, button)
