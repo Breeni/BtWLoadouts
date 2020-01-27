@@ -21,6 +21,8 @@
 	Better condition loadout list display, show specs
 	Better issue handling, equipment sets that have multiple of the same unique
 	  items should have errors, and invalidate their loadouts
+	Set save button?
+	Refresh set from currently equipped
 ]]
 
 local ADDON_NAME, Internal = ...;
