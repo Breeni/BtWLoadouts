@@ -2649,6 +2649,9 @@ function BtWLoadoutsAzeriteEssenceButtonMixin:OnEnter()
 	end
 end
 
+local gameTooltipErrorLink;
+local gameTooltipErrorText;
+
 BtWLoadoutsItemSlotButtonMixin = {};
 function BtWLoadoutsItemSlotButtonMixin:OnLoad()
 	self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
@@ -2724,6 +2727,13 @@ function BtWLoadoutsItemSlotButtonMixin:OnEnter()
 	if itemLink then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		GameTooltip:SetHyperlink(itemLink);
+		if self.errors then
+			gameTooltipErrorLink = itemLink
+			gameTooltipErrorText = self.errors
+		else
+			gameTooltipErrorLink = nil
+			gameTooltipErrorText = nil
+		end
 	end
 end
 function BtWLoadoutsItemSlotButtonMixin:OnLeave()
@@ -2775,7 +2785,7 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 				set.extras[self:GetID()] = nil;
 			end
 
-			self:Update();
+			BtWLoadoutsFrame:Update(); -- Refresh everything, this'll update the error handling too
 			return true;
 		end
 	end
@@ -2784,12 +2794,13 @@ end
 function BtWLoadoutsItemSlotButtonMixin:SetIgnored(ignored)
 	local set = self:GetParent().set;
 	set.ignored[self:GetID()] = ignored and true or nil;
-	self:Update();
+	BtWLoadoutsFrame:Update(); -- Refresh everything, this'll update the error handling too
 end
 function BtWLoadoutsItemSlotButtonMixin:Update()
 	local set = self:GetParent().set;
 	local slot = self:GetID();
 	local ignored = set.ignored[slot];
+	local errors = set.errors[slot];
 	local itemLink = set.equipment[slot];
 	if itemLink then
 		local itemID = GetItemInfoInstant(itemLink);
@@ -2805,8 +2816,17 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 		SetItemButtonQuality(self, nil, nil);
 	end
 
+	self.errors = errors -- For tooltip display
+	self.ErrorBorder:SetShown(errors ~= nil)
+	self.ErrorOverlay:SetShown(errors ~= nil)
 	self.ignoreTexture:SetShown(ignored);
 end
+GameTooltip:HookScript("OnTooltipSetItem", function (self)
+	local name, link = self:GetItem()
+	if gameTooltipErrorLink == link and gameTooltipErrorText then
+		self:AddLine(format("\n|cffff0000%s|r", gameTooltipErrorText))
+	end
+end)
 
 BtWLoadoutsActionButtonMixin = {}
 function BtWLoadoutsActionButtonMixin:OnClick()

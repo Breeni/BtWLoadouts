@@ -82,7 +82,7 @@ local function GetItemUniquenessCached(itemLink)
 	end
 
 	if uniqueFamily == -1 then
-		uniqueFamily = itemID
+		uniqueFamily = -itemID
 	end
 
 	return uniqueFamily, maxEquipped
@@ -436,6 +436,76 @@ do
 		return true;
 	end
 end
+local CheckEquipmentSetForIssues
+do
+	local uniqueFamilies = {}
+	local uniqueFamilyItems = {}
+	function CheckEquipmentSetForIssues(set)
+		local ignored = set.ignored
+		local expected = set.equipment
+		local errors = set.errors or {}
+		wipe(uniqueFamilies)
+		wipe(uniqueFamilyItems)
+
+		local firstEquipped = INVSLOT_FIRST_EQUIPPED
+		local lastEquipped = INVSLOT_LAST_EQUIPPED
+
+		for inventorySlotId = firstEquipped, lastEquipped do
+			errors[inventorySlotId] = nil
+
+			if not ignored[inventorySlotId] and expected[inventorySlotId] then
+				local itemLink = expected[inventorySlotId]
+				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+		
+				if uniqueFamily ~= nil then
+					uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+
+					if uniqueFamilyItems[uniqueFamily] then
+						uniqueFamilyItems[uniqueFamily][#uniqueFamilyItems[uniqueFamily]+1] = inventorySlotId
+					else
+						uniqueFamilyItems[uniqueFamily] = {inventorySlotId}
+					end
+				end
+
+				local index = 1
+				local gemName, gemLink = GetItemGem(itemLink, index)
+				while gemName do
+					uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+		
+					if uniqueFamily ~= nil then
+						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+
+						if uniqueFamilyItems[uniqueFamily] then
+							uniqueFamilyItems[uniqueFamily][#uniqueFamilyItems[uniqueFamily]+1] = inventorySlotId
+						else
+							uniqueFamilyItems[uniqueFamily] = {inventorySlotId}
+						end
+					end
+
+					index = index + 1
+					gemName, gemLink = GetItemGem(itemLink, index)
+				end
+			end
+		end
+
+		for uniqueFamily, maxEquipped in pairs(uniqueFamilies) do
+			if maxEquipped < 0 then
+				for _,inventorySlotId in ipairs(uniqueFamilyItems[uniqueFamily]) do
+					if errors[inventorySlotId] then
+						errors[inventorySlotId] = format("%s\n%s", errors[inventorySlotId], ERR_ITEM_UNIQUE_EQUIPPABLE)
+					elseif uniqueFamily < 0 then -- Item
+						errors[inventorySlotId] = ERR_ITEM_UNIQUE_EQUIPPABLE
+					else
+						errors[inventorySlotId] = ERR_ITEM_UNIQUE_EQUIPPABLE
+					end
+				end
+			end
+		end
+
+		set.errors = errors
+		return errors
+	end
+end
 local function IsEquipmentSetActive(set)
 	local expected = set.equipment;
 	local extras = set.extras;
@@ -482,6 +552,7 @@ do
 		local expected = set.equipment;
 		local extras = set.extras;
 		local locations = set.locations;
+		local errors = set.errors;
 		local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil
 		wipe(uniqueFamilies)
 
@@ -507,6 +578,10 @@ do
 
 		-- Loop through and empty slots that should be empty, also store locations for other slots
 		for inventorySlotId = firstEquipped, lastEquipped do
+			if errors and errors[inventorySlotId] then -- If there is an error in a slot, normally due to unique-equipped items then just ignore it
+				ignored[inventorySlotId] = true
+			end
+
 			if not ignored[inventorySlotId] then
 				local slotLocked = IsInventoryItemLocked(inventorySlotId)
 				anyLockedSlots = anyLockedSlots or slotLocked
@@ -857,6 +932,7 @@ Internal.DeleteEquipmentSet = DeleteEquipmentSet
 Internal.ActivateEquipmentSet = ActivateEquipmentSet
 Internal.IsEquipmentSetActive = IsEquipmentSetActive
 Internal.CombineEquipmentSets = CombineEquipmentSets
+Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
 
 function Internal.EquipmentTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Equipment"]);
@@ -864,6 +940,8 @@ function Internal.EquipmentTabUpdate(self)
 
 	if self.set ~= nil then
 		local set = self.set;
+		local errors = CheckEquipmentSetForIssues(set)
+
 		local character = set.character;
 		local characterInfo = Internal.GetCharacterInfo(character);
 		local equipment = set.equipment;

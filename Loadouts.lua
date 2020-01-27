@@ -522,6 +522,8 @@ local function ContinueActivateProfile()
 		equipmentSet = Internal.CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipmentSets)));
 
 		if equipmentSet then
+			Internal.CheckEquipmentSetForIssues(equipmentSet) -- This will "solve" any unique-equipped issues
+
 			if not Internal.ActivateEquipmentSet(equipmentSet) then
 				complete = false;
 			end
