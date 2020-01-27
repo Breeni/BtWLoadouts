@@ -3083,21 +3083,30 @@ do
 			end)
 
 			local info = UIDropDownMenu_CreateInfo();
+			local specID
 
 			if #items > 0 then
-				info.isTitle, info.disabled, info.notCheckable = true, true, true;
-				info.text = L["Profiles"];
 
-				UIDropDownMenu_AddButton(info, level);
-
-				info.isTitle, info.disabled, info.notCheckable = false, false, false;
-				info.func = function (self, id)
+				local func = function (self, id)
 					local set = BtWLoadoutsSets.profiles[id]
 					if set then
 						Internal.ActivateProfile(set)
 					end
 				end
+
 				for _,set in ipairs(items) do
+					if set.specID ~= specID then
+						info.isTitle, info.disabled, info.notCheckable = true, true, true;
+						info.text = set.specID and (select(2, GetSpecializationInfoByID(set.specID))) or L["Other"];
+		
+						UIDropDownMenu_AddButton(info, level);
+
+						specID = set.specID
+						
+						info.isTitle, info.disabled, info.notCheckable = false, false, false;
+						info.func = func
+					end
+					
 					info.text = set.name;
 					info.arg1 = set.setID;
 					info.checked = Internal.IsProfileActive(set)
