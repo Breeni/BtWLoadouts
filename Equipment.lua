@@ -70,6 +70,23 @@ local itemUniquenessCache = {
     [132378] = {357, 2},
     [132369] = {357, 2},
 }
+-- Returns the same as GetItemUniqueness except uses the above cache, also converts -1 family to itemID
+local function GetItemUniquenessCached(itemLink)
+	local itemID = GetItemInfoInstant(itemLink)
+	local uniqueFamily, maxEquipped
+
+	if itemUniquenessCache[itemID] then
+		uniqueFamily, maxEquipped = unpack(itemUniquenessCache[itemID])
+	else
+		uniqueFamily, maxEquipped = GetItemUniqueness(itemLink)
+	end
+
+	if uniqueFamily == -1 then
+		uniqueFamily = itemID
+	end
+
+	return uniqueFamily, maxEquipped
+end
 local freeSlotsCache = {}
 local function GetContainerItemLocked(bag, slot)
 	local locked = select(3, GetContainerItemInfo(bag, slot))
@@ -457,6 +474,7 @@ local ActivateEquipmentSet;
 do
 	local possibleItems = {};
 	local bestMatchForSlot = {};
+	local uniqueFamiliesTemp = {};
 	local uniqueFamilies = {};
 	-- This function is destructive to the set
 	function ActivateEquipmentSet(set)
@@ -464,8 +482,8 @@ do
 		local expected = set.equipment;
 		local extras = set.extras;
 		local locations = set.locations;
-		local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil;
-		wipe(uniqueFamilies);
+		local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil
+		wipe(uniqueFamilies)
 
 		local firstEquipped = INVSLOT_FIRST_EQUIPPED
 		local lastEquipped = INVSLOT_LAST_EQUIPPED
@@ -521,22 +539,6 @@ do
 							end
 						end
 					end
-
-					if not ignored[inventorySlotId] then
-						local itemID = GetItemInfoInstant(itemLink);
-						local uniqueFamily, maxEquipped
-						if itemUniquenessCache[itemID] then
-							uniqueFamily, maxEquipped = unpack(itemUniquenessCache[itemID])
-						else
-							uniqueFamily, maxEquipped = GetItemUniqueness(itemLink)
-						end
-
-						if uniqueFamily == -1 then
-							uniqueFamilies[itemID] = maxEquipped
-						elseif uniqueFamily ~= nil then
-							uniqueFamilies[uniqueFamily] = maxEquipped
-						end
-					end
 				else -- Unequip
 					if GetInventoryItemLink("player", inventorySlotId) ~= nil then
 						if not IsInventoryItemLocked(inventorySlotId) then
@@ -549,23 +551,122 @@ do
 					end
 				end
 			end
+			
+			-- If we arent swapping an item out and its in some way unique we may need to skip swapping another unique item in
+			if ignored[inventorySlotId] then
+				local itemLink = GetInventoryItemLink("player", inventorySlotId)
+				if itemLink then
+					local itemID = GetItemInfoInstant(itemLink)
+					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+			
+					if uniqueFamily ~= nil then
+						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+					end
+
+					local index = 1
+					local gemName, gemLink = GetItemGem(itemLink, index)
+					while gemName do
+						itemID = GetItemInfoInstant(gemLink)
+						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+			
+						if uniqueFamily ~= nil then
+							uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+						end
+
+						index = index + 1
+						gemName, gemLink = GetItemGem(itemLink, index)
+					end
+				end
+			end
 		end
 
-		-- Swap currently equipped "unique" items
+		-- Check expected items uniqueness
+		for inventorySlotId = firstEquipped, lastEquipped do
+			if not ignored[inventorySlotId] then
+				local itemLink = expected[inventorySlotId];
+
+				local itemID = GetItemInfoInstant(itemLink);
+				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+
+				if uniqueFamily then
+					if uniqueFamilies[uniqueFamily] then
+						if uniqueFamilies[uniqueFamily] <= 0 then
+							-- print(format("%s cannot be equipped because it is unique", itemLink))
+							ignored[inventorySlotId] = true -- To many of the unique items already equipped
+						else
+							uniqueFamiliesTemp[uniqueFamily] = true
+						end
+
+						uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
+					end
+				end
+
+				if not ignored[inventorySlotId] then
+					local index = 1
+					local gemName, gemLink = GetItemGem(itemLink, index)
+					while gemName do
+						itemID = GetItemInfoInstant(gemLink);
+						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+
+						if uniqueFamily and uniqueFamilies[uniqueFamily] then
+							uniqueFamiliesTemp[uniqueFamily] = true
+
+							if uniqueFamilies[uniqueFamily] <= 0 then
+								-- print(format("%s cannot be equipped because its gem is unique", itemLink))
+								ignored[inventorySlotId] = true -- To many of the unique items already equipped
+								break
+							else
+								uniqueFamiliesTemp[uniqueFamily] = true
+							end
+
+							uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
+						end
+
+						index = index + 1
+						gemName, gemLink = GetItemGem(itemLink, index)
+					end
+				end
+
+				if ignored[inventorySlotId] then
+					-- uniqueFamiliesTemp is a list of all the unique families that were non-blocking
+					-- because we found 1 that was blocking we will unblock the others
+					for uniqueFamily in pairs(uniqueFamiliesTemp) do
+						uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] + 1
+					end
+					wipe(uniqueFamiliesTemp)
+				end
+			end
+		end
+
+		-- Swap currently equipped "unique" items that need to be swapped out before others can be swapped in
 		for inventorySlotId = firstEquipped, lastEquipped do
 			local itemLink = GetInventoryItemLink("player", inventorySlotId)
 
 			if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] and itemLink ~= nil then
 				local itemID = GetItemInfoInstant(itemLink);
+				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
-				local uniqueFamily, maxEquipped
-				if itemUniquenessCache[itemID] then
-					uniqueFamily, maxEquipped = unpack(itemUniquenessCache[itemID])
-				else
-					uniqueFamily, maxEquipped = GetItemUniqueness(itemLink)
+				local swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
+
+				if not swapSlot then
+					local index = 1
+					local gemName, gemLink = GetItemGem(itemLink, index)
+					while gemName do
+						itemID = GetItemInfoInstant(gemLink)
+						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+
+						swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
+
+						if swapSlot then
+							break
+						end
+
+						index = index + 1
+						gemName, gemLink = GetItemGem(itemLink, index)
+					end
 				end
 
-				if (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil then
+				if swapSlot then
 					if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
 						anyChangedSlots = true
 					end
@@ -584,7 +685,7 @@ do
 
 		ClearCursor()
 
-		-- We assume that if we have any locked slots or any changes slots we are not complete yet
+		-- We assume that if we have any locked slots or any changed slots we are not complete yet
 		local complete = not anyLockedSlots and not anyChangedSlots
 		if complete then
 			-- If there are no locked slots and not changed slots and we never found a free slot
