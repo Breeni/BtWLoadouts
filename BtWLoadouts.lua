@@ -2736,6 +2736,8 @@ function BtWLoadoutsItemSlotButtonMixin:OnEnter()
 	end
 end
 function BtWLoadoutsItemSlotButtonMixin:OnLeave()
+	gameTooltipErrorLink = nil
+	gameTooltipErrorText = nil
 	GameTooltip:Hide();
 end
 function BtWLoadoutsItemSlotButtonMixin:OnUpdate()
