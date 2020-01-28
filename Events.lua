@@ -86,7 +86,7 @@ function frame:ADDON_LOADED(...)
         BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
 
         if not BtWLoadoutsHelpTipFlags["MINIMAP_ICON"] then
-            BtWLoadoutsMinimapButton.PulseAlpha:Play();
+            BtWLoadoutsMinimapButton.FirstTimeAnim:Play();
         end
     end
 end

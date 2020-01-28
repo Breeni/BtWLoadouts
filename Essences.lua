@@ -119,7 +119,22 @@ local function DeleteEssenceSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+local function EssenceSetDelay(set)
+	for milestoneID,essenceID in pairs(set.essences) do
+		local spellID = C_AzeriteEssence.GetMilestoneSpell(milestoneID)
+		if spellID and essenceID ~= C_AzeriteEssence.GetMilestoneEssence(milestoneID) then
+			spellID = FindSpellOverrideByID(spellID)
+			local start, duration = GetSpellCooldown(spellID)
+			if start ~= 0 then -- Milestone spell on cooldown, we need to wait before switching
+				Internal.DirtyAfter((start + duration) - GetTime() + 1)
+				return true
+			end
+		end
+	end
+	return false
+end
 
+Internal.EssenceSetDelay = EssenceSetDelay
 Internal.AddEssenceSet = AddEssenceSet
 Internal.DeleteEssenceSet = DeleteEssenceSet
 Internal.ActivateEssenceSet = ActivateEssenceSet

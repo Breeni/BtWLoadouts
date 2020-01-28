@@ -79,6 +79,22 @@ local function AddTalentSet()
     -- BtWLoadoutsSets.talents[set.setID] = set;
     -- return set;
 end
+local function TalentSetDelay(set)
+    for talentID in pairs(set.talents) do
+        local row = select(8, GetTalentInfoByID(talentID, 1))
+        local column = select(2, GetTalentTierInfo(row, 1))
+        local selectedTalentID, _, _, _, _, spellID = GetTalentInfo(row, column, 1)
+        if selectedTalentID ~= talentID and spellID then
+			spellID = FindSpellOverrideByID(spellID)
+			local start, duration = GetSpellCooldown(spellID)
+			if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+				Internal.DirtyAfter((start + duration) - GetTime() + 1)
+				return true
+			end
+        end
+    end
+    return false
+end
 function Internal.GetTalentSet(id)
     if type(id) == "table" then
 		return id;
@@ -153,6 +169,7 @@ local function DeleteTalentSet(id)
 	end
 end
 
+Internal.TalentSetDelay = TalentSetDelay
 Internal.AddTalentSet = AddTalentSet
 Internal.DeleteTalentSet = DeleteTalentSet
 Internal.ActivateTalentSet = ActivateTalentSet

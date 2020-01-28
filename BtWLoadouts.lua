@@ -3083,11 +3083,16 @@ do
 	end
 	function BtWLoadoutsMinimapMixin:OnEnter()
 		BtWLoadoutsHelpTipFlags["MINIMAP_ICON"] = true;
-		self.PulseAlpha:Stop();
+		self.FirstTimeAnim:Stop();
 
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT");
 		GameTooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
 		GameTooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
+		if Internal.IsActivatingLoadout() then
+			GameTooltip:AddLine(" ");
+			GameTooltip:AddLine(L["Activating Loadout"], 1, 1, 1);
+			GameTooltip:AddLine(Internal.GetWaitReason())
+		end
 		GameTooltip:Show();
 	end
 	function BtWLoadoutsMinimapMixin:OnLeave()

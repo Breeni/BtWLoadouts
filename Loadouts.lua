@@ -153,6 +153,7 @@ local function CancelActivateProfile()
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
+	BtWLoadoutsMinimapButton.PulseAnim:Stop()
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
 
@@ -293,8 +294,10 @@ local function ActivateProfile(profile)
 		return;
 	end
 
+	BtWLoadoutsMinimapButton.PulseAnim:Play()
+
 	target.name = profile.name
-	target.active = true;
+	target.active = true
 
 	if specID then
 		target.specID = specID or profile.specID;
@@ -332,6 +335,7 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("ZONE_CHANGED");
 	eventHandler:RegisterEvent("ZONE_CHANGED_INDOORS");
 	eventHandler:RegisterEvent("ITEM_UNLOCKED");
+	eventHandler:RegisterEvent("SPELL_UPDATE_COOLDOWN");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
@@ -429,10 +433,12 @@ local function ContinueActivateProfile()
 	Internal.UpdateLauncher(GetActiveProfiles());
 
 	if InCombatLockdown() then
+		Internal.SetWaitReason(L["Waiting for combat to end"])
         return;
     end
 
 	if IsChangingSpec() then
+		Internal.SetWaitReason(L["Waiting for specialization change"])
         return;
     end
 
@@ -453,6 +459,11 @@ local function ContinueActivateProfile()
 		talentSet = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talentSets)));
 	end
 
+	if talentSet and Internal.TalentSetDelay(talentSet) then
+		Internal.SetWaitReason(L["Waiting for talent cooldown"])
+        return;
+	end
+
 	local pvpTalentSet;
 	if set.pvpTalentSets then
 		pvpTalentSet = Internal.CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvpTalentSets)));
@@ -461,6 +472,11 @@ local function ContinueActivateProfile()
 	local essencesSet;
 	if set.essencesSets then
 		essencesSet = Internal.CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essencesSets)));
+	end
+
+	if essencesSet and Internal.EssenceSetDelay(essencesSet) then
+		Internal.SetWaitReason(L["Waiting for essence cooldown"])
+        return;
 	end
 
 	if talentSet and not Internal.IsTalentSetActive(talentSet) and PlayerNeedsTome() then
@@ -545,6 +561,12 @@ local function ContinueActivateProfile()
 	Internal.UpdateLauncher(GetActiveProfiles());
 end
 
+function Internal.DirtyAfter(timer)
+	C_Timer.After(timer, function()
+		target.dirty = true;
+	end);
+end
+
 eventHandler:SetScript("OnEvent", function (self, event, ...)
     self[event](self, ...);
 end);
@@ -579,6 +601,12 @@ end
 eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
 function eventHandler:ITEM_UNLOCKED(...)
 	target.dirty = true;
+end
+function eventHandler:SPELL_UPDATE_COOLDOWN()
+	-- Added delay because it didnt seem to always trigger correctly
+	C_Timer.After(1, function()
+		target.dirty = true;
+	end);
 end
 function eventHandler:UNIT_SPELLCAST_STOP(_, castGUID, spellId)
 	if IsChangingSpec(castGUID, spellId) then
@@ -619,6 +647,13 @@ end
 function Internal.IsActivatingLoadout()
     return target.active
 end
+function Internal.SetWaitReason(reason)
+	target.currentWaitReason = reason
+end
+function Internal.GetWaitReason()
+	return target.currentWaitReason
+end
+
 Internal.GetProfile = GetProfile
 Internal.GetActiveProfiles = GetActiveProfiles
 Internal.ActivateProfile = ActivateProfile

@@ -2512,7 +2512,23 @@
 			</Layer>
 		</Layers>
 		<Animations>
-			<AnimationGroup parentKey="PulseAlpha" looping="REPEAT">
+			<AnimationGroup parentKey="FirstTimeAnim" looping="REPEAT">
+				<Alpha childKey="PulseA" duration="1" order="1" fromAlpha="0" toAlpha="1" />
+				<Alpha childKey="PulseB" duration="1" order="1" fromAlpha="0" toAlpha="1" />
+				<Alpha childKey="PulseA" duration="1" order="2" fromAlpha="1" toAlpha="0" />
+				<Alpha childKey="PulseB" duration="1" order="2" fromAlpha="1" toAlpha="0" />
+                <Scripts>
+                    <OnPlay>
+                        self:GetParent().PulseA:Show()
+                        self:GetParent().PulseB:Show()
+                    </OnPlay>
+                    <OnStop>
+                        self:GetParent().PulseA:Hide()
+                        self:GetParent().PulseB:Hide()
+                    </OnStop>
+                </Scripts>
+			</AnimationGroup>
+			<AnimationGroup parentKey="PulseAnim" looping="REPEAT">
 				<Alpha childKey="PulseA" duration="1" order="1" fromAlpha="0" toAlpha="1" />
 				<Alpha childKey="PulseB" duration="1" order="1" fromAlpha="0" toAlpha="1" />
 				<Alpha childKey="PulseA" duration="1" order="2" fromAlpha="1" toAlpha="0" />
