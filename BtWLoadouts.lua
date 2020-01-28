@@ -22,6 +22,8 @@
 	Better issue handling
 	Set save button?
 	Refresh set from currently equipped
+	Show changes for the conditions
+	Better delay handling
 ]]
 
 local ADDON_NAME, Internal = ...;
