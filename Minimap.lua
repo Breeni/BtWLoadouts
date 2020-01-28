@@ -112,7 +112,7 @@ function BtWLoadoutsMinimapMixin:OnClick(button)
 end
 function BtWLoadoutsMinimapMixin:OnEnter()
     BtWLoadoutsHelpTipFlags["MINIMAP_ICON"] = true;
-    self.FirstTimeAnim:Stop();
+    self.FirstTimeAnim:Finish();
 
     GameTooltip:SetOwner(self, "ANCHOR_LEFT");
     GameTooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
