@@ -434,11 +434,13 @@ local function ContinueActivateProfile()
 
 	if InCombatLockdown() then
 		Internal.SetWaitReason(L["Waiting for combat to end"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
     end
 
 	if IsChangingSpec() then
 		Internal.SetWaitReason(L["Waiting for specialization change"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
     end
 
@@ -461,6 +463,7 @@ local function ContinueActivateProfile()
 
 	if talentSet and Internal.TalentSetDelay(talentSet) then
 		Internal.SetWaitReason(L["Waiting for talent cooldown"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
 	end
 
@@ -476,6 +479,7 @@ local function ContinueActivateProfile()
 
 	if essencesSet and Internal.EssenceSetDelay(essencesSet) then
 		Internal.SetWaitReason(L["Waiting for essence cooldown"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
 	end
 
@@ -489,7 +493,7 @@ local function ContinueActivateProfile()
 		return;
 	end
 
-	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME");
+	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
 
 	if uiErrorTracking == nil then
