@@ -28,3 +28,4 @@ Conditions.lua
 
 Launcher.lua
 Events.lua
+Minimap.xml

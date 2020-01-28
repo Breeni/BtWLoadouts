@@ -153,7 +153,7 @@ local function CancelActivateProfile()
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
-	BtWLoadoutsMinimapButton.PulseAnim:Finish()
+	Internal.Call("LOADOUT_CHANGE_END")
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
 
@@ -294,8 +294,6 @@ local function ActivateProfile(profile)
 		return;
 	end
 
-	BtWLoadoutsMinimapButton.PulseAnim:Play()
-
 	target.name = profile.name
 	target.active = true
 
@@ -323,6 +321,8 @@ local function ActivateProfile(profile)
 		target.actionBarSets = target.actionBarSets or {};
 		target.actionBarSets[#target.actionBarSets+1] = profile.actionBarSet;
 	end
+
+	Internal.Call("LOADOUT_CHANGE_START")
 
     target.dirty = true;
 	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
