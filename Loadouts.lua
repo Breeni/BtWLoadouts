@@ -153,7 +153,7 @@ local function CancelActivateProfile()
 	wipe(target);
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
-	BtWLoadoutsMinimapButton.PulseAnim:Stop()
+	BtWLoadoutsMinimapButton.PulseAnim:Finish()
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
 

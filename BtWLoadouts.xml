@@ -2542,6 +2542,10 @@
                         self:GetParent().PulseA:Hide()
                         self:GetParent().PulseB:Hide()
                     </OnStop>
+                    <OnFinished>
+                        self:GetParent().PulseA:Hide()
+                        self:GetParent().PulseB:Hide()
+                    </OnFinished>
                 </Scripts>
 			</AnimationGroup>
 		</Animations>
