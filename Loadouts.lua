@@ -468,11 +468,6 @@ local function ContinueActivateProfile()
 		return;
 	end
 
-	if pvpTalentSet and not Internal.IsPvPTalentSetActive(pvpTalentSet) and PlayerNeedsTome() then
-		RequestTome();
-		return;
-	end
-
 	if essencesSet and not Internal.IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
 		RequestTome();
 		return;
