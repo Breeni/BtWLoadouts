@@ -23,7 +23,6 @@
 	Set save button?
 	Refresh set from currently equipped
 	Show changes for the conditions
-	Better delay handling
 ]]
 
 local ADDON_NAME, Internal = ...;
@@ -1678,6 +1677,7 @@ do
 							id = setID,
 							name = sets[setID].name,
 							character = sets[setID].character,
+							disabled = sets[setID].disabled,
 							selected = sets[setID] == selected,
 						};
 					end
@@ -1712,6 +1712,7 @@ do
 									id = setID,
 									name = sets[setID].name,
 									character = sets[setID].character,
+									disabled = sets[setID].disabled,
 									selected = sets[setID] == selected,
 								};
 							end
@@ -1740,6 +1741,7 @@ do
 						id = setID,
 						name = sets[setID].name,
 						character = sets[setID].character,
+						disabled = sets[setID].disabled,
 						selected = sets[setID] == selected,
 					};
 				end
@@ -1778,6 +1780,7 @@ do
 					setScrollItems[#setScrollItems+1] = {
 						id = setID,
 						name = sets[setID].name,
+						disabled = sets[setID].disabled,
 						selected = sets[setID] == selected,
 					};
 				end
@@ -1804,6 +1807,7 @@ do
 							setScrollItems[#setScrollItems+1] = {
 								id = setID,
 								name = sets[setID].name,
+								disabled = sets[setID].disabled,
 								selected = sets[setID] == selected,
 							};
 						end
@@ -1860,6 +1864,7 @@ do
 						id = setID,
 						name = sets[setID].name,
 						selected = sets[setID] == selected,
+						disabled = sets[setID].disabled,
 						builtin = sets[setID].managerID ~= nil,
 					};
 				end
@@ -1893,6 +1898,7 @@ do
 								id = setID,
 								name = sets[setID].name,
 								selected = sets[setID] == selected,
+								disabled = sets[setID].disabled,
 								builtin = sets[setID].managerID ~= nil,
 							};
 						end
@@ -2413,7 +2419,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetEnabled(value)
 		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
-		if selectedTab ~= TAB_CONDITIONS then -- Other tabs dont support enabling/disabling
+		if selectedTab ~= TAB_PROFILES and selectedTab ~= TAB_CONDITIONS then -- Other tabs dont support enabling/disabling
 			return
 		end
 		local tab = GetTabFrame(self, selectedTab);

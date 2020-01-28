@@ -415,7 +415,7 @@ local function GetActiveProfiles()
 
 	local activeProfiles = {}
 	for _,profile in pairs(BtWLoadoutsSets.profiles) do
-		if type(profile) == "table" and IsProfileActive(profile) then
+		if type(profile) == "table" and not profile.disabled and IsProfileActive(profile) then
 			activeProfiles[#activeProfiles+1] = profile.name
 		end
 	end
@@ -750,6 +750,9 @@ function Internal.ProfilesTabUpdate(self)
 			local classColor = GetClassColor(classID);
 			UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 		end
+		
+		self.Enabled:SetEnabled(true);
+		self.Enabled:SetChecked(not self.set.disabled);
 
 		local talentSetID = self.set.talentSet;
 		if talentSetID == nil then
