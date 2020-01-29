@@ -2454,9 +2454,17 @@ function Internal.CanSwitchToSpecialization(specID)
 	if specIndex == nil then
 		return false
 	end
-	-- Can not switch specs in arena
+
 	if select(2, GetInstanceInfo()) == "arena" then
+		-- Can not switch specs in arena
 		return GetSpecializationInfo(specIndex) == specID
+	elseif select(2, GetInstanceInfo()) == "battleground" then
+		-- You can only switch specs in bgs unless you go from or to healer
+		local currentRole = GetSpecializationRole(specIndex)
+		local targetRole = GetSpecializationRoleByID(specID)
+
+		return (currentRole == targetRole) or not (currentRole == "HEALER" or targetRole == "HEALER")
 	end
+
 	return true
 end
