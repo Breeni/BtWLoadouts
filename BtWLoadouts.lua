@@ -3082,6 +3082,18 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 					equipmentSet = subset.setID;
 				}
 			end
+		elseif aType == "action-bars" then
+			local subset;
+			if tonumber(rest) then
+				subset = Internal.GetActionBarSet(tonumber(rest));
+			else
+				subset = Internal.GetActionBarSetByName(rest);
+			end
+			if subset then
+				set = {
+					actionBarSet = subset.setID;
+				}
+			end
 		else
 			-- Assume profile
 			rest = aType .. rest;
