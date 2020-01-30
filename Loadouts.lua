@@ -336,6 +336,7 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("ZONE_CHANGED_INDOORS");
 	eventHandler:RegisterEvent("ITEM_UNLOCKED");
 	eventHandler:RegisterEvent("SPELL_UPDATE_COOLDOWN");
+	eventHandler:RegisterEvent("PLAYER_STOPPED_MOVING");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
@@ -447,6 +448,12 @@ local function ContinueActivateProfile()
 	local specID = set.specID;
 	local playerSpecID = GetSpecializationInfo(GetSpecialization());
     if specID ~= playerSpecID then
+		if IsPlayerMoving() then -- Cannot change spec while moving
+			Internal.SetWaitReason(L["Waiting to change specialization"])
+			StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+			return;
+		end
+
 		for specIndex=1,GetNumSpecializations() do
 			if GetSpecializationInfo(specIndex) == specID then
 				SetSpecialization(specIndex);
@@ -584,6 +591,9 @@ function eventHandler:PLAYER_REGEN_ENABLED()
     target.dirty = true;
 end
 function eventHandler:PLAYER_UPDATE_RESTING()
+	target.dirty = true;
+end
+function eventHandler:PLAYER_STOPPED_MOVING()
 	target.dirty = true;
 end
 function eventHandler:UNIT_AURA()
