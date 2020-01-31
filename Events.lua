@@ -244,9 +244,16 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
         oldEquipmentSetMap[managerID] = nil;
     end
 
+    -- If a set previously managed by the blizzard manager is deleted
+    -- we delete our set unless its in use, then we just disconnect it from
+    -- the blizzard manager
     for managerID,set in pairs(oldEquipmentSetMap) do
         if set.managerID == managerID then
-            set.managerID = nil;
+            if set.useCount > 0 then
+                set.managerID = nil;
+            else
+                Internal.DeleteEquipmentSet(set)
+            end
         end
     end
 
