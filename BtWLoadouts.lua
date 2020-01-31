@@ -2304,6 +2304,10 @@ do
 	end
 	function BtWLoadoutsFrameMixin:ScrollItemDoubleClick(button)
 		CloseDropDownMenus();
+		if button.isHeader then
+			return
+		end
+
 		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
 		if selectedTab == TAB_PROFILES then
 			Internal.ActivateProfile(Internal.GetProfile(button.id));
