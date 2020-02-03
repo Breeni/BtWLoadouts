@@ -1,5 +1,6 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
+local Settings = Internal.Settings
 
 local GetSubZoneText = GetSubZoneText
 local GetRealZoneText = GetRealZoneText
@@ -289,6 +290,19 @@ function Internal.TriggerConditions()
 		sort(sortedActiveConditions, function(a,b)
 			return a.match > b.match;
 		end);
+
+		if Settings.limitConditions then
+			local match = sortedActiveConditions[1].match
+			for _,condition in ipairs(sortedActiveConditions) do
+				if condition.match ~= match then
+					break
+				end
+
+				if Internal.IsProfileActive(condition.profile) then
+					return
+				end
+			end
+		end
 
 		if not conditionProfilesDropDown.initialized then
 			UIDropDownMenu_SetWidth(conditionProfilesDropDown, 170);

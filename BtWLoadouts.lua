@@ -131,6 +131,11 @@ local Settings = SettingsCreate({
         end,
         default = true,
     },
+    {
+        name = L["Limit condition suggestions"],
+        key = "limitConditions",
+        default = false,
+    },
 });
 Internal.Settings = Settings;
 
