@@ -23,6 +23,7 @@ local pairs = pairs
 local GetAffixInfo = C_ChallengeMode.GetAffixInfo
 local GetInstanceInfo = GetInstanceInfo
 local GetAreaInfo = C_Map.GetAreaInfo
+local IsEncounterComplete = C_EncounterJournal.IsEncounterComplete
 
 local dungeonDifficultiesAll = {1,2,23,8};
 local raidDifficultiesAll = {17,14,15,16};
@@ -334,7 +335,7 @@ local uiMapIDToBossID = {
 	[1518] = 2359, -- The Queen's Court
 	[1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
 	[1520] = 2361, -- Queen Azshara
-	
+
 	-- Ny'alotha
 	[1580] = 2368, -- Wrathion
 	[1592] = 2377, -- Dark Inquisitor Xanesh
@@ -422,4 +423,28 @@ function Internal.UpdateAreaMap()
 			end
 		end
 	end
+end
+
+-- This is only useful when you can go to the bosses room but cant pull it
+-- until other bosses are dead, see Lady Ashvane in The Eternal Palace
+
+-- Which bosses have to be dead for the other boss to be available
+local bossRequirements = {
+	[2354] = {2347, 2353} -- Lady Ashvane, requires Blackwater Behemoth and Radiance of Azshara
+}
+function Internal.BossAvailable(bossID)
+	if IsEncounterComplete(bossID) then
+		return false
+	end
+
+	local requiredBossIDs = bossRequirements[bossID]
+	if requiredBossIDs then
+		for _,requiredBossID in ipairs(requiredBossIDs) do
+			if not IsEncounterComplete(requiredBossID) then
+				return false
+			end
+		end
+	end
+
+	return true
 end

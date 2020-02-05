@@ -6,7 +6,7 @@ local GetSubZoneText = GetSubZoneText
 local GetRealZoneText = GetRealZoneText
 local GetInstanceInfo = GetInstanceInfo
 local GetDifficultyInfo = GetDifficultyInfo
-local GetCurrentAffixes = C_MythicPlus.GetCurrentAffixes;
+local GetCurrentAffixes = C_MythicPlus.GetCurrentAffixes
 local EJ_GetEncounterInfo = EJ_GetEncounterInfo
 
 local StaticPopup_Show = StaticPopup_Show
@@ -195,6 +195,11 @@ function Internal.UpdateConditionsForBoss(unitId)
 					bossID = Internal.npcIDToBossID[tonumber(npcId)] or bossID;
 				end
 			end
+		end
+
+		-- Boss is dead in the current version of the instance
+		if bossID and Internal.BossAvailable(bossID) then
+			bossID = nil
 		end
 	end
 
