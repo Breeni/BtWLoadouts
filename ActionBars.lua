@@ -95,16 +95,32 @@ local function SetActon(slot, tbl)
         tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
 
         local foundSpell = false
-        local index = 1
-        local skillType, id = GetSpellBookItemInfo(index, tbl.subType)
-        while skillType do
-            if skillType == "SPELL" and id == tbl.id then
-                break
+        local index
+        if tbl.subType == "spell" then
+            for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                local offset, numEntries = select(2, GetSpellTabInfo(tabIndex))
+                for spellIndex = offset,offset+numEntries do
+                    local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                    if skillType == "SPELL" and id == tbl.id then
+                        index = spellIndex
+                        break
+                    end
+                end
             end
-            index = index + 1
-            skillType, id = GetSpellBookItemInfo(index, tbl.subType)
+        else
+            local spellIndex = 1
+            local skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
+            while skillType do
+                if skillType == "SPELL" and id == tbl.id then
+                    index = spellIndex
+                    break
+                end
+
+                spellIndex = spellIndex + 1
+                skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
+            end
         end
-        if index and skillType then
+        if index then
             PickupSpellBookItem(index, tbl.subType)
             foundSpell = true
         end
@@ -183,16 +199,18 @@ local function SetActon(slot, tbl)
         end
 
         -- Find the spell book index for the flyout
-        local index = 1
-        local skillType, id = GetSpellBookItemInfo(index, "spell")
-        while skillType do
-            if skillType == "FLYOUT" and id == tbl.id then
-                break
+        local index
+        for tabIndex = 1,min(2,GetNumSpellTabs()) do
+            local offset, numEntries = select(2, GetSpellTabInfo(tabIndex))
+            for spellIndex = offset,offset+numEntries do
+                local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                if skillType == "FLYOUT" and id == tbl.id then
+                    index = spellIndex
+                    break
+                end
             end
-            index = index + 1
-            skillType, id = GetSpellBookItemInfo(index, "spell")
         end
-        if not skillType then -- Couldn't find the flyout in the spell book
+        if not index then -- Couldn't find the flyout in the spell book
             return false, true
         end
 
