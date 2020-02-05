@@ -46,7 +46,7 @@ local function CompareSlot(slot, tbl)
         return actionType == nil
     elseif actionType == "macro" and tbl.type == "macro" then
         local macroText = GetMacroBody(id)
-        return macroText == tbl.macroText
+        return macroText == tbl.macroText or id == GetMacroIndexByName(tbl.name)
     elseif actionType == "companion" and subType == "MOUNT" and tbl.type == "summonmount" then
         return id == select(2, C_MountJournal.GetDisplayedMountInfo(tbl.id))
     elseif tbl.type == "companion" and tbl.subType == "MOUNT" and actionType == "summonmount" then
@@ -79,7 +79,7 @@ local function PickupMacroByText(text)
 end
 local function SetActon(slot, tbl)
     local success = true
-    
+
     ClearCursor()
     if tbl == nil or tbl.type == nil then -- Clear the slot
         ClearCursor()
@@ -88,7 +88,7 @@ local function SetActon(slot, tbl)
         return true, true
     elseif tbl.type == "macro" then
         if not PickupMacroByText(tbl.macroText) then
-            return false, true
+            PickupMacro(tbl.id)
         end
     elseif tbl.type == "spell" then
         -- If we use the base version of the spell it should always work
@@ -145,7 +145,7 @@ local function SetActon(slot, tbl)
             if not select(11, C_MountJournal.GetMountInfoByID(tbl.id)) then
                 return false, true
             end
-            
+
             -- We will attempt to pickup the mount using the latest way, if that
             -- fails because of pet filtering we will pickup the spell instead
             local index = nil
