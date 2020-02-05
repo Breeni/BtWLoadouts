@@ -98,7 +98,7 @@ local function SetActon(slot, tbl)
         local index
         if tbl.subType == "spell" then
             for tabIndex = 1,min(2,GetNumSpellTabs()) do
-                local offset, numEntries = select(2, GetSpellTabInfo(tabIndex))
+                local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
                 for spellIndex = offset,offset+numEntries do
                     local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
                     if skillType == "SPELL" and id == tbl.id then
@@ -201,7 +201,7 @@ local function SetActon(slot, tbl)
         -- Find the spell book index for the flyout
         local index
         for tabIndex = 1,min(2,GetNumSpellTabs()) do
-            local offset, numEntries = select(2, GetSpellTabInfo(tabIndex))
+            local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
             for spellIndex = offset,offset+numEntries do
                 local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
                 if skillType == "FLYOUT" and id == tbl.id then
