@@ -446,22 +446,24 @@ local function ContinueActivateProfile()
     end
 
 	local specID = set.specID;
-	local playerSpecID = GetSpecializationInfo(GetSpecialization());
-    if specID ~= playerSpecID then
-		if IsPlayerMoving() then -- Cannot change spec while moving
-			Internal.SetWaitReason(L["Waiting to change specialization"])
-			StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-			return;
-		end
-
-		for specIndex=1,GetNumSpecializations() do
-			if GetSpecializationInfo(specIndex) == specID then
-				SetSpecialization(specIndex);
-				target.dirty = false;
+	if specID ~= nil then
+		local playerSpecID = GetSpecializationInfo(GetSpecialization());
+		if specID ~= playerSpecID then
+			if IsPlayerMoving() then -- Cannot change spec while moving
+				Internal.SetWaitReason(L["Waiting to change specialization"])
+				StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 				return;
 			end
+
+			for specIndex=1,GetNumSpecializations() do
+				if GetSpecializationInfo(specIndex) == specID then
+					SetSpecialization(specIndex);
+					target.dirty = false;
+					return;
+				end
+			end
 		end
-    end
+	end
 
 	local talentSet;
 	if set.talentSets then
