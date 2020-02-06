@@ -198,7 +198,7 @@ function Internal.UpdateConditionsForBoss(unitId)
 		end
 
 		-- Boss is dead in the current version of the instance
-		if bossID and Internal.BossAvailable(bossID) then
+		if bossID and not Internal.BossAvailable(bossID) then
 			bossID = nil
 		end
 	end
