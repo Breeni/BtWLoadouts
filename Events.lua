@@ -207,8 +207,12 @@ function frame:PLAYER_ENTERING_WORLD()
     -- Run conditions for instance info
     do
         Internal.UpdateConditionsForInstance();
-        Internal.UpdateConditionsForBoss();
+		local bossID = Internal.UpdateConditionsForBoss();
         Internal.UpdateConditionsForAffixes();
+        -- Boss is unavailable so dont trigger conditions
+        if bossID and not Internal.BossAvailable(bossID) then
+            return
+        end
         Internal.TriggerConditions();
     end
 
@@ -296,23 +300,43 @@ function frame:UPDATE_INSTANCE_INFO(...)
     end
     
     Internal.UpdateConditionsForInstance();
-    Internal.UpdateConditionsForBoss();
+    local bossID = Internal.UpdateConditionsForBoss();
+    -- Boss is unavailable so dont trigger conditions
+    if bossID and not Internal.BossAvailable(bossID) then
+        return
+    end
     Internal.TriggerConditions();
 end
 function frame:ZONE_CHANGED(...)
-    Internal.UpdateConditionsForBoss();
+    local bossID = Internal.UpdateConditionsForBoss();
+    -- Boss is unavailable so dont trigger conditions
+    if bossID and not Internal.BossAvailable(bossID) then
+        return
+    end
     Internal.TriggerConditions();
 end
 function frame:UPDATE_MOUSEOVER_UNIT(...)
-    Internal.UpdateConditionsForBoss("mouseover");
+    local bossID = Internal.UpdateConditionsForBoss("mouseover");
+    -- Boss is unavailable so dont trigger conditions
+    if bossID and not Internal.BossAvailable(bossID) then
+        return
+    end
     Internal.TriggerConditions();
 end
 function frame:NAME_PLATE_UNIT_ADDED(...)
-    Internal.UpdateConditionsForBoss(...);
+    local bossID = Internal.UpdateConditionsForBoss(...);
+    -- Boss is unavailable so dont trigger conditions
+    if bossID and not Internal.BossAvailable(bossID) then
+        return
+    end
     Internal.TriggerConditions();
 end
 function frame:PLAYER_TARGET_CHANGED(...)
-    Internal.UpdateConditionsForBoss("target");
+    local bossID = Internal.UpdateConditionsForBoss("target");
+    -- Boss is unavailable so dont trigger conditions
+    if bossID and not Internal.BossAvailable(bossID) then
+        return
+    end
     Internal.TriggerConditions();
 end
 function frame:PLAYER_TALENT_UPDATE(...)

@@ -196,11 +196,6 @@ function Internal.UpdateConditionsForBoss(unitId)
 				end
 			end
 		end
-
-		-- Boss is dead in the current version of the instance
-		if bossID and not Internal.BossAvailable(bossID) then
-			bossID = nil
-		end
 	end
 
 	if previousConditionInfo.bossID ~= bossID then
@@ -208,6 +203,8 @@ function Internal.UpdateConditionsForBoss(unitId)
 		ActivateConditionMap(conditionMap.bossID, bossID);
 		previousConditionInfo.bossID = bossID;
 	end
+
+	return bossID
 end
 function Internal.UpdateConditionsForAffixes()
 	local affixesID;

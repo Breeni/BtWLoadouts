@@ -2539,8 +2539,12 @@ do
 		-- When hiding the main window we are going to assume that something has dramatically changed and completely redo everything
 		Internal.ClearConditions()
 		Internal.UpdateConditionsForInstance();
-		Internal.UpdateConditionsForBoss();
+		local bossID = Internal.UpdateConditionsForBoss();
 		Internal.UpdateConditionsForAffixes();
+		-- Boss is unavailable so dont trigger conditions
+		if bossID and not Internal.BossAvailable(bossID) then
+			return
+		end
 		Internal.TriggerConditions();
 	end
 end
