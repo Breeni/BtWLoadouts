@@ -1,6 +1,8 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
+local GetMilestoneEssence = C_AzeriteEssence.GetMilestoneEssence;
+
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
@@ -35,6 +37,19 @@ local function ActivateEssenceSet(set)
 	end
 
 	return complete;
+end
+local function RefreshEssenceSet(set)
+    local essences = set.essences or {}
+    wipe(essences)
+
+    essences[115] = GetMilestoneEssence(115);
+    essences[116] = GetMilestoneEssence(116);
+    essences[117] = GetMilestoneEssence(117);
+	essences[119] = GetMilestoneEssence(119);
+
+    set.essences = essences
+
+    return set
 end
 local function AddEssenceSet()
     local role = select(5,GetSpecializationInfo(GetSpecialization()));
@@ -136,6 +151,7 @@ end
 
 Internal.EssenceSetDelay = EssenceSetDelay
 Internal.AddEssenceSet = AddEssenceSet
+Internal.RefreshEssenceSet = RefreshEssenceSet
 Internal.DeleteEssenceSet = DeleteEssenceSet
 Internal.ActivateEssenceSet = ActivateEssenceSet
 Internal.IsEssenceSetActive = IsEssenceSetActive
@@ -230,6 +246,9 @@ function Internal.EssencesTabUpdate(self)
 			end
 		end
 
+        local playerSpecIndex = GetSpecialization()
+		self:GetParent().RefreshButton:SetEnabled(playerSpecIndex and role == select(5, GetSpecializationInfo(playerSpecIndex)))
+		
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(role == select(5, GetSpecializationInfo(GetSpecialization())));
 
@@ -264,6 +283,8 @@ function Internal.EssencesTabUpdate(self)
 		self.MinorSlot3.Icon:Hide();
 
 		self.Name:SetText("");
+
+        self:GetParent().RefreshButton:SetEnabled(false)
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);

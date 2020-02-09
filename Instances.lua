@@ -448,3 +448,29 @@ function Internal.BossAvailable(bossID)
 
 	return true
 end
+
+function Internal.GetCurrentBoss()
+	local bossID
+	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
+	if instanceType == "party" or instanceType == "raid" then
+		local uiMapID = C_Map.GetBestMapForUnit("player");
+		if uiMapID then
+			bossID = uiMapIDToBossID[uiMapID] or bossID;
+		end
+		local areaID = instanceID and areaNameToIDMap[instanceID] and areaNameToIDMap[instanceID][GetSubZoneText()] or nil;
+		if areaID then
+			bossID = InstanceAreaIDToBossID[instanceID][areaID] or bossID;
+		end
+		if unitId then
+			local unitGUID = UnitGUID(unitId);
+			if unitGUID and not UnitIsDead(unitId) then
+				local type, zero, serverId, instanceId, zone_uid, npcId, spawn_uid = strsplit("-", unitGUID);
+				if type == "Creature" and tonumber(npcId) then
+					bossID = npcIDToBossID[tonumber(npcId)] or bossID;
+				end
+			end
+		end
+	end
+
+	return bossID
+end

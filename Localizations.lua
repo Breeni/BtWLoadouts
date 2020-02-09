@@ -16,6 +16,7 @@ L["PvP Talents"] = PVP_TALENTS
 L["Equipment"] = BAG_FILTER_EQUIPMENT
 L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET
 L["Activate"] = TALENT_SPEC_ACTIVATE
+L["Update"] = UPDATE
 L["Delete"] = DELETE
 L["Name"] = NAME
 L["Specialization"] = SPECIALIZATION

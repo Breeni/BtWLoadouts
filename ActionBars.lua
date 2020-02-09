@@ -256,12 +256,23 @@ local function ActivateActionBarSet(set)
     end
     return complete
 end
+local function RefreshActionBarSet(set)
+    local actions = set.actions or {}
+
+    for slot = 1,120 do
+        actions[slot] = GetActionInfoTable(slot)
+    end
+
+    set.actions = actions
+
+    return set
+end
 local function AddActionBarSet()
     local classFile = select(2, UnitClass("player"))
     local name = format(L["New Set"]);
 
     local actions, ignored = {}, {}
-    for slot=1,120 do
+    for slot = 1,120 do
         actions[slot] = GetActionInfoTable(slot)
     end
 
@@ -271,7 +282,7 @@ local function AddActionBarSet()
     elseif classFile == "DRUID" then
         ignoredStart = 121 -- After Form Bars
     end
-    for slot=ignoredStart,120 do
+    for slot = ignoredStart,120 do
         ignored[slot] = true
     end
 
@@ -338,6 +349,7 @@ end
 Internal.IsActionBarSetActive = IsActionBarSetActive
 Internal.ActivateActionBarSet = ActivateActionBarSet
 Internal.AddActionBarSet = AddActionBarSet
+Internal.RefreshActionBarSet = RefreshActionBarSet
 Internal.GetActionBarSet = GetActionBarSet
 Internal.GetActionBarSetByName = GetActionBarSetByName
 Internal.GetActionBarSets = GetActionBarSets
@@ -361,7 +373,7 @@ function Internal.ActionBarsTabUpdate(self)
             item:SetID(slot)
             item:Update();
 			item:SetEnabled(true);
-            
+
             local icon = item.Icon:GetTexture()
             if icon ~= nil and icon ~= 134400 then
                 slots[slot].icon = icon
@@ -371,6 +383,8 @@ function Internal.ActionBarsTabUpdate(self)
             local item = self["IgnoreBar" .. i]
 			item:SetEnabled(true);
 		end
+
+        self:GetParent().RefreshButton:SetEnabled(true)
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(true);
@@ -405,6 +419,8 @@ function Internal.ActionBarsTabUpdate(self)
             local item = self["IgnoreBar" .. i]
 			item:SetEnabled(true);
 		end
+
+        self:GetParent().RefreshButton:SetEnabled(false)
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);

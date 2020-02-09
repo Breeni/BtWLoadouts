@@ -51,6 +51,7 @@ BTWLOADOUTS_DELETE = L["Delete"];
 BTWLOADOUTS_NAME = L["Name"];
 BTWLOADOUTS_SPECIALIZATION = L["Specialization"];
 BTWLOADOUTS_ENABLED = L["Enabled"]
+BTWLOADOUTS_UPDATE = L["Update"]
 
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
@@ -2061,6 +2062,8 @@ do
 						func = Internal.DeleteProfile,
 					});
 				end
+			elseif button.isRefresh then
+				-- Do nothing
 			elseif button.isActivate then
 				BtWLoadoutsHelpTipFlags["TUTORIAL_ACTIVATE_SET"] = true;
 
@@ -2101,6 +2104,10 @@ do
 						func = Internal.DeleteTalentSet,
 					});
 				end
+			elseif button.isRefresh then
+				local set = frame.set;
+				Internal.RefreshTalentSet(set)
+				Internal.TalentsTabUpdate(frame);
 			elseif button.isActivate then
 				local set = frame.set;
 				if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
@@ -2146,6 +2153,10 @@ do
 						func = Internal.DeletePvPTalentSet,
 					});
 				end
+			elseif button.isRefresh then
+				local set = frame.set;
+				Internal.RefreshPvPTalentSet(set)
+				Internal.PvPTalentsTabUpdate(frame);
 			elseif button.isActivate then
 				local set = frame.set;
 				if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
@@ -2191,6 +2202,10 @@ do
 						func = Internal.DeleteEssenceSet,
 					});
 				end
+			elseif button.isRefresh then
+				local set = frame.set;
+				Internal.RefreshEssenceSet(set)
+				Internal.EssencesTabUpdate(frame);
 			elseif button.isActivate then
 				Internal.ActivateProfile({
 					essencesSet = frame.set.setID;
@@ -2230,6 +2245,10 @@ do
 						func = Internal.DeleteEquipmentSet,
 					});
 				end
+			elseif button.isRefresh then
+				local set = frame.set;
+				Internal.RefreshEquipmentSet(set)
+				Internal.EquipmentTabUpdate(frame);
 			elseif button.isActivate then
 				Internal.ActivateProfile({
 					equipmentSet = frame.set.setID;
@@ -2269,13 +2288,17 @@ do
 						func = Internal.DeleteActionBarSet,
 					});
 				end
+			elseif button.isRefresh then
+				local set = frame.set;
+				Internal.RefreshActionBarSet(set)
+				Internal.ActionBarsTabUpdate(frame);
 			elseif button.isActivate then
 				Internal.ActivateProfile({
 					actionBarSet = frame.set.setID;
 				});
 			elseif button.isHeader then
 				BtWLoadoutsCollapsed.actionbars[button.id] = not BtWLoadoutsCollapsed.actionbars[button.id] and true or nil;
-				Internal.ActionBarTabUpdate(frame);
+				Internal.ActionBarsTabUpdate(frame);
 			else
 				if IsModifiedClick("SHIFT") then
 					Internal.ActivateProfile({
@@ -2301,6 +2324,10 @@ do
 					set = set,
 					func = Internal.DeleteConditionSet,
 				});
+			elseif button.isRefresh then
+				local set = frame.set;
+				Internal.RefreshConditionSet(set)
+				Internal.ConditionsTabUpdate(frame);
 			else
 				frame.Name:ClearFocus();
 				self:SetConditionSet(Internal.GetConditionSet(button.id));

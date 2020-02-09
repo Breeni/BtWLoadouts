@@ -113,6 +113,32 @@ local function IsConditionActive(condition)
 
 	return matchCount;
 end
+local function RefreshConditionSet(set)
+	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
+
+	if instanceType ~= "party" and instanceType ~= "raid" and instanceType ~= "arena" and instanceType ~= "pvp" and instanceType ~= "scenario" then
+		instanceType = "none"
+		difficultyID = nil
+		instanceID = nil
+	end
+
+	set.type = instanceType
+	set.instanceID = instanceID
+	set.difficultyID = difficultyID
+	set.bossID = nil
+	set.affixesID = nil
+	if difficultyID == 8 then -- In M+
+		local affixes = GetCurrentAffixes();
+		if affixes then
+			-- Ignore the 4th (seasonal) affix
+			set.affixesID = Internal.GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id).id
+		end
+	else
+		set.bossID = Internal.GetCurrentBoss()
+	end
+
+	return set
+end
 local function AddConditionSet()
 	local name = L["New Condition Set"];
 
@@ -125,7 +151,6 @@ local function AddConditionSet()
     BtWLoadoutsSets.conditions[set.setID] = set;
     return set;
 end
-Internal.AddConditionSet = AddConditionSet;
 local function GetConditionSet(id)
     return BtWLoadoutsSets.conditions[id];
 end
@@ -150,7 +175,6 @@ local function DeleteConditionSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
-Internal.DeleteConditionSet = DeleteConditionSet
 local previousConditionInfo = {};
 _G['BtWLoadoutsPreviousConditionInfo'] = previousConditionInfo; --@TODO Remove
 function Internal.ClearConditions()
@@ -176,27 +200,7 @@ function Internal.UpdateConditionsForInstance()
 	end
 end
 function Internal.UpdateConditionsForBoss(unitId)
-	local bossID = previousConditionInfo.bossID;
-	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
-	if instanceType == "party" or instanceType == "raid" then
-		local uiMapID = C_Map.GetBestMapForUnit("player");
-		if uiMapID then
-			bossID = Internal.uiMapIDToBossID[uiMapID] or bossID;
-		end
-		local areaID = instanceID and Internal.areaNameToIDMap[instanceID] and Internal.areaNameToIDMap[instanceID][GetSubZoneText()] or nil;
-		if areaID then
-			bossID = Internal.InstanceAreaIDToBossID[instanceID][areaID] or bossID;
-		end
-		if unitId then
-			local unitGUID = UnitGUID(unitId);
-			if unitGUID and not UnitIsDead(unitId) then
-				local type, zero, serverId, instanceId, zone_uid, npcId, spawn_uid = strsplit("-", unitGUID);
-				if type == "Creature" and tonumber(npcId) then
-					bossID = Internal.npcIDToBossID[tonumber(npcId)] or bossID;
-				end
-			end
-		end
-	end
+	local bossID = Internal.GetCurrentBoss() or previousConditionInfo.bossID;
 
 	if previousConditionInfo.bossID ~= bossID then
 		DeactivateConditionMap(conditionMap.bossID, previousConditionInfo.bossID);
@@ -322,7 +326,10 @@ function Internal.TriggerConditions()
 	end
 end
 
+Internal.AddConditionSet = AddConditionSet
+Internal.RefreshConditionSet = RefreshConditionSet
 Internal.GetConditionSet = GetConditionSet
+Internal.DeleteConditionSet = DeleteConditionSet
 
 function Internal.ConditionsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Conditions"]);
@@ -367,7 +374,7 @@ function Internal.ConditionsTabUpdate(self)
 		if not self.Name:HasFocus() then
 			self.Name:SetText(set.name or "");
 		end
-		
+
 		self.Enabled:SetEnabled(true);
 		self.Enabled:SetChecked(not set.disabled);
 
@@ -423,6 +430,8 @@ function Internal.ConditionsTabUpdate(self)
 			end
 		end
 
+		self:GetParent().RefreshButton:SetEnabled(true)
+
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);
 
@@ -448,6 +457,8 @@ function Internal.ConditionsTabUpdate(self)
 		self.DifficultyDropDown.Button:SetEnabled(false);
 		self.BossDropDown.Button:SetEnabled(false);
 		self.AffixesDropDown:Hide();
+
+		self:GetParent().RefreshButton:SetEnabled(false)
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);

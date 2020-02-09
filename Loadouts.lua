@@ -745,6 +745,8 @@ function Internal.ProfilesTabUpdate(self)
 	self.EquipmentDropDown.Button:SetEnabled(self.set ~= nil);
 	self.ActionBarDropDown.Button:SetEnabled(self.set ~= nil);
 
+	self:GetParent().RefreshButton:SetEnabled(false)
+
 	if self.set ~= nil then
 		local valid, class, specID, role, validForPlayer = Internal.IsProfileValid(self.set);
 		if type(specID) == "number" and self.set.specID ~= specID then

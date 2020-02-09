@@ -2393,6 +2393,20 @@
 					</OnClick>
 				</Scripts>
 			</Button>
+			<Button parentKey="RefreshButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_UPDATE">
+				<KeyValues>
+					<KeyValue type="boolean" key="isRefresh" value="true"/>
+				</KeyValues>
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.Profiles" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BtWLoadoutsFrame:ScrollItemClick(self);
+					</OnClick>
+				</Scripts>
+			</Button>
 			<Button parentKey="ActivateButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_ACTIVATE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isActivate" value="true"/>

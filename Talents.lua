@@ -51,10 +51,9 @@ local function ActivateTalentSet(set)
 	end
 	return complete;
 end
-local function AddTalentSet()
-    local specID, specName = GetSpecializationInfo(GetSpecialization());
-    local talents = {};
-
+local function RefreshTalentSet(set)
+    local talents = set.talents or {}
+    wipe(talents)
 	for tier=1,MAX_TALENT_TIERS do
         local _, column = GetTalentTierInfo(tier, 1);
         local talentID = GetTalentInfo(tier, column, 1);
@@ -62,22 +61,18 @@ local function AddTalentSet()
             talents[talentID] = true;
         end
     end
+    set.talents = talents
 
-    return AddSet("talents", {
+    return set
+end
+local function AddTalentSet()
+    local specID, specName = GetSpecializationInfo(GetSpecialization());
+    return AddSet("talents", RefreshTalentSet({
         specID = specID,
 		name = format(L["New %s Set"], specName),
 		useCount = 0,
-        talents = talents,
-    })
-    -- local set = {
-	-- 	setID = GetNextSetID(BtWLoadoutsSets.talents),
-    --     specID = specID,
-    --     name = name,
-    --     talents = talents,
-	-- 	useCount = 0,
-    -- };
-    -- BtWLoadoutsSets.talents[set.setID] = set;
-    -- return set;
+        talents = {},
+    }))
 end
 local function TalentSetDelay(set)
     for talentID in pairs(set.talents) do
@@ -171,6 +166,7 @@ end
 
 Internal.TalentSetDelay = TalentSetDelay
 Internal.AddTalentSet = AddTalentSet
+Internal.RefreshTalentSet = RefreshTalentSet
 Internal.DeleteTalentSet = DeleteTalentSet
 Internal.ActivateTalentSet = ActivateTalentSet
 Internal.IsTalentSetActive = IsTalentSetActive
@@ -225,6 +221,9 @@ function Internal.TalentsTabUpdate(self)
             end
         end
 
+        local playerSpecIndex = GetSpecialization()
+        self:GetParent().RefreshButton:SetEnabled(playerSpecIndex and specID == GetSpecializationInfo(playerSpecIndex))
+
         local activateButton = self:GetParent().ActivateButton;
         activateButton:SetEnabled(classID == select(2, UnitClass("player")));
 
@@ -245,6 +244,8 @@ function Internal.TalentsTabUpdate(self)
         end
 
         self.Name:SetText("");
+
+        self:GetParent().RefreshButton:SetEnabled(false)
 
         local activateButton = self:GetParent().ActivateButton;
         activateButton:SetEnabled(false);

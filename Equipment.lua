@@ -830,12 +830,16 @@ local function RefreshEquipmentSet(set)
 		return
 	end
 
-	ignored[INVSLOT_BODY] = true;
-	ignored[INVSLOT_TABARD] = true;
-
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
 	end
+
+	-- Need to update the built in manager too
+	if set.managerID then
+		C_EquipmentSet.SaveEquipmentSet(set.managerID)
+	end
+
+	return set
 end
 function Internal.GetEquipmentSet(id)
     if type(id) == "table" then
@@ -928,6 +932,7 @@ end
 
 Internal.AddBlankEquipmentSet = AddBlankEquipmentSet
 Internal.AddEquipmentSet = AddEquipmentSet
+Internal.RefreshEquipmentSet = RefreshEquipmentSet
 Internal.DeleteEquipmentSet = DeleteEquipmentSet
 Internal.ActivateEquipmentSet = ActivateEquipmentSet
 Internal.IsEquipmentSetActive = IsEquipmentSetActive
@@ -978,6 +983,8 @@ function Internal.EquipmentTabUpdate(self)
 			item:Update();
 			item:SetEnabled(character == playerCharacter and set.managerID == nil);
 		end
+
+		self:GetParent().RefreshButton:SetEnabled(set.character == GetCharacterSlug())
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(character == playerCharacter);
@@ -1034,6 +1041,8 @@ function Internal.EquipmentTabUpdate(self)
 		for _,item in pairs(self.Slots) do
 			item:SetEnabled(false);
 		end
+
+        self:GetParent().RefreshButton:SetEnabled(false)
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);

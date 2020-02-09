@@ -80,6 +80,19 @@ local function ActivatePvPTalentSet(set, checkExtraTalents)
 
 	return complete
 end
+local function RefreshPvPTalentSet(set)
+    local talents = set.talents or {}
+    wipe(talents)
+
+    local talentIDs = GetAllSelectedPvpTalentIDs();
+    for _,talentID in ipairs(talentIDs) do
+		talents[talentID] = true;
+	end
+
+    set.talents = talents
+
+    return set
+end
 local function AddPvPTalentSet()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
     local name = format(L["New %s Set"], specName);
@@ -167,6 +180,7 @@ local function DeletePvPTalentSet(id)
 end
 
 Internal.AddPvPTalentSet = AddPvPTalentSet
+Internal.RefreshPvPTalentSet = RefreshPvPTalentSet
 Internal.DeletePvPTalentSet = DeletePvPTalentSet
 Internal.ActivatePvPTalentSet = ActivatePvPTalentSet
 Internal.IsPvPTalentSetActive = IsPvPTalentSetActive
@@ -259,6 +273,9 @@ function Internal.PvPTalentsTabUpdate(self)
 			end
 		end
 
+        local playerSpecIndex = GetSpecialization()
+        self:GetParent().RefreshButton:SetEnabled(playerSpecIndex and specID == GetSpecializationInfo(playerSpecIndex))
+
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(classID == select(2, UnitClass("player")));
 
@@ -278,6 +295,8 @@ function Internal.PvPTalentsTabUpdate(self)
 		self.others:SetShown(false);
 
 		self.Name:SetText("");
+
+        self:GetParent().RefreshButton:SetEnabled(false)
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);
