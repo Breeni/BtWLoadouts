@@ -582,6 +582,14 @@ do
 				ignored[inventorySlotId] = true
 			end
 
+			if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] ~= -1 and not expected[inventorySlotId] then
+				expected[inventorySlotId] = GetItemLinkByLocation(locations[inventorySlotId])
+
+				if not expected[inventorySlotId] then
+					ignored[inventorySlotId] = true
+				end
+			end
+
 			if not ignored[inventorySlotId] then
 				local slotLocked = IsInventoryItemLocked(inventorySlotId)
 				anyLockedSlots = anyLockedSlots or slotLocked
