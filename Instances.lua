@@ -430,7 +430,9 @@ end
 
 -- Which bosses have to be dead for the other boss to be available
 local bossRequirements = {
-	[2354] = {2347, 2353} -- Lady Ashvane, requires Blackwater Behemoth and Radiance of Azshara
+	[2354] = {2347, 2353}, -- Lady Ashvane, requires Blackwater Behemoth and Radiance of Azshara
+	[2370] = {2377}, -- Vexiona, requires Dark Inquisitor Xanesh
+	[2364] = {2372}, -- Ra-den the Despoiled, requires The Hivemind
 }
 function Internal.BossAvailable(bossID)
 	if IsEncounterComplete(bossID) then
