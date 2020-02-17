@@ -36,7 +36,7 @@ local function IsPvPTalentSetActive(set)
     return true;
 end
 local function ActivatePvPTalentSet(set, checkExtraTalents)
-	local complete = true;
+	local success, complete = true, true;
 	local talents = {};
 	local usedSlots = {};
 
@@ -67,7 +67,8 @@ local function ActivatePvPTalentSet(set, checkExtraTalents)
 		if not usedSlots[slot] and slotInfo.enabled then
 			for _,talentID in ipairs(slotInfo.availableTalentIDs) do
 				if talents[talentID] then
-					complete = LearnPvpTalent(talentID, slot) and complete;
+					success = LearnPvpTalent(talentID, slot) and success;
+					complete = false
 
 					usedSlots[slot] = true;
 					talents[talentID] = nil;

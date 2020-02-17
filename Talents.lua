@@ -42,11 +42,12 @@ local function IsTalentSetActive(set)
     return true;
 end
 local function ActivateTalentSet(set)
-	local complete = true;
+	local success, complete = true, true;
 	for talentID in pairs(set.talents) do
 		local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
-		if not selected and GetTalentTierInfo(tier, 1) then
-			complete = LearnTalent(talentID) and complete;
+        if not selected and GetTalentTierInfo(tier, 1) then
+            success = LearnTalent(talentID) and success
+            complete = false
 		end
 	end
 	return complete;

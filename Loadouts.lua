@@ -337,6 +337,10 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("ITEM_UNLOCKED");
 	eventHandler:RegisterEvent("SPELL_UPDATE_COOLDOWN");
 	eventHandler:RegisterEvent("PLAYER_STOPPED_MOVING");
+	eventHandler:RegisterEvent("PLAYER_TALENT_UPDATE");
+	eventHandler:RegisterEvent("PLAYER_LEARN_TALENT_FAILED");
+	eventHandler:RegisterEvent("PLAYER_PVP_TALENT_UPDATE");
+	eventHandler:RegisterEvent("PLAYER_LEARN_PVP_TALENT_FAILED");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
@@ -514,7 +518,6 @@ local function ContinueActivateProfile()
     if talentSet then
 		if not Internal.ActivateTalentSet(talentSet) then
 			complete = false;
-			set.dirty = true; -- Just run next frame
 		end
 	end
 
@@ -530,7 +533,6 @@ local function ContinueActivateProfile()
     if pvpTalentSet then
 		if not Internal.ActivatePvPTalentSet(pvpTalentSet, conflictAndStrife) then
 			complete = false;
-			set.dirty = true; -- Just run next frame
 		end
     end
 
@@ -616,6 +618,18 @@ function eventHandler:ZONE_CHANGED(...)
 end
 eventHandler.ZONE_CHANGED_INDOORS = eventHandler.ZONE_CHANGED;
 function eventHandler:ITEM_UNLOCKED(...)
+	target.dirty = true;
+end
+function eventHandler:PLAYER_TALENT_UPDATE(...)
+	target.dirty = true;
+end
+function eventHandler:PLAYER_LEARN_TALENT_FAILED(...)
+	target.dirty = true;
+end
+function eventHandler:PLAYER_PVP_TALENT_UPDATE(...)
+	target.dirty = true;
+end
+function eventHandler:PLAYER_LEARN_PVP_TALENT_FAILED(...)
 	target.dirty = true;
 end
 function eventHandler:SPELL_UPDATE_COOLDOWN()
