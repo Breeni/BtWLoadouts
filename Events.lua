@@ -342,6 +342,15 @@ end
 function frame:PLAYER_TALENT_UPDATE(...)
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
+function frame:ENCOUNTER_END(...)
+    -- We dont trigger events during an encounter so we retrigger things after an encounter ends
+    local bossID = Internal.UpdateConditionsForBoss();
+    -- Boss is unavailable so dont trigger conditions
+    if bossID and not Internal.BossAvailable(bossID) then
+        return
+    end
+    Internal.TriggerConditions();
+end
 frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");
 frame:RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -353,3 +362,4 @@ frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
 frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
 frame:RegisterEvent("PLAYER_TARGET_CHANGED");
 frame:RegisterEvent("PLAYER_TALENT_UPDATE");
+frame:RegisterEvent("ENCOUNTER_END");

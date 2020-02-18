@@ -243,8 +243,8 @@ end
 -- Loops through conditions and checks if they are active
 local conditionMatchCount = {};
 function Internal.TriggerConditions()
-	-- In a Mythic Plus cant cant change anything anyway
-	if select(3,GetInstanceInfo()) == 8 then
+	-- In a Mythic Plus cant cant change anything anyway or during a boss
+	if select(3,GetInstanceInfo()) == 8 or IsEncounterInProgress() then
 		return;
 	end
 
