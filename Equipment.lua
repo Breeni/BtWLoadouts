@@ -932,8 +932,8 @@ local function DeleteEquipmentSet(id)
 
 	local frame = BtWLoadoutsFrame.Equipment;
 	local set = frame.set;
-	if set.setID == id then
-		frame.set = nil;-- = select(2,next(BtWLoadoutsSets.equipment)) or {};
+	if set and set.setID == id then
+		frame.set = nil;
 		BtWLoadoutsFrame:Update();
 	end
 end
