@@ -117,19 +117,32 @@ do
 		end
 	end
 end
--- 200749 is the changing spec spell id
-local function IsChangingSpec(verifyCastGUID, verifySpellId)
-	local _, _, _, _, _, _, castGUID, _, spellId = UnitCastingInfo("player");
-	if spellId == 200749 then
-		if verifyCastGUID ~= nil and verifyCastGUID ~= castGUID or verifySpellId ~= 200749 then
-			return false;
-		end
-		return true;
-	else
-		return false;
-	end
-end
 
+-- We need to add a small delay after switching specs before changing other things because Blizzard is
+-- still changing things after the cast is finished
+local specChangeInfo = {
+	spellId = 200749, -- 200749 is the changing spec spell id
+	endTime = nil,
+	castGUID = nil,
+}
+local function IsChangingSpec(verifyCastGUID)
+	if not specChangeInfo.endTime then
+		return false
+	end
+
+	if specChangeInfo.endTime + .5 < GetTime() then
+		specChangeInfo.endTime = nil
+		specChangeInfo.castGUID = nil
+
+		return false
+	end
+
+	if verifyCastGUID ~= nil and specChangeInfo.castGUID ~= verifyCastGUID then
+		return false
+	end
+
+	return true
+end
 
 -- Activating a set can take multiple passes, things maybe delayed
 -- by switching spec or waiting for the player to use a tome
@@ -341,9 +354,7 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("PLAYER_LEARN_TALENT_FAILED");
 	eventHandler:RegisterEvent("PLAYER_PVP_TALENT_UPDATE");
 	eventHandler:RegisterEvent("PLAYER_LEARN_PVP_TALENT_FAILED");
-	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
-	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
-	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_FAILED_QUIET", "player");
+	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_START", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
 	eventHandler:Show();
 end
@@ -447,7 +458,7 @@ local function ContinueActivateProfile()
 		Internal.SetWaitReason(L["Waiting for specialization change"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
-    end
+	end
 
 	local specID = set.specID;
 	if specID ~= nil then
@@ -638,26 +649,15 @@ function eventHandler:SPELL_UPDATE_COOLDOWN()
 		target.dirty = true;
 	end);
 end
-function eventHandler:UNIT_SPELLCAST_STOP(_, castGUID, spellId)
-	if IsChangingSpec(castGUID, spellId) then
-		CancelActivateProfile();
-		Internal.UpdateLauncher(GetActiveProfiles());
+function eventHandler:UNIT_SPELLCAST_START()
+	local endTime, _, castGUID, _, spellId = select(5, UnitCastingInfo("player"))
+	if spellId == specChangeInfo.spellId then
+		specChangeInfo.endTime = endTime / 1000
+		specChangeInfo.castGUID = castGUID
 	end
 end
-function eventHandler:UNIT_SPELLCAST_FAILED(_, castGUID, spellId)
-	if IsChangingSpec(castGUID, spellId) then
-		CancelActivateProfile();
-		Internal.UpdateLauncher(GetActiveProfiles());
-	end
-end
-function eventHandler:UNIT_SPELLCAST_FAILED_QUIET(_, castGUID, spellId)
-	if IsChangingSpec(castGUID, spellId) then
-		CancelActivateProfile();
-		Internal.UpdateLauncher(GetActiveProfiles());
-	end
-end
-function eventHandler:UNIT_SPELLCAST_INTERRUPTED(_, castGUID, spellId)
-	if IsChangingSpec(castGUID, spellId) then
+function eventHandler:UNIT_SPELLCAST_INTERRUPTED(_, castGUID, spellId, ...)
+	if spellId == specChangeInfo.spellId and IsChangingSpec(castGUID) then
 		CancelActivateProfile();
 		Internal.UpdateLauncher(GetActiveProfiles());
 	end
