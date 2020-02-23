@@ -164,6 +164,7 @@ local function CancelActivateProfile()
 	end)
 
 	wipe(target);
+	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 	Internal.Call("LOADOUT_CHANGE_END")
@@ -446,8 +447,16 @@ local function GetActiveProfiles()
 	return table.concat(activeProfiles, "/");
 end
 local function ContinueActivateProfile()
-    local set = target;
-	set.dirty = false;
+    local set = target
+	set.dirty = false
+
+	if Internal.CheckTimeout() then
+		Internal.LogMessage("--- TIMEOUT ---")
+		CancelActivateProfile()
+		return
+	end
+
+	Internal.SetWaitReason() -- Clear wait reason
 
 	Internal.UpdateLauncher(GetActiveProfiles());
 
@@ -512,11 +521,13 @@ local function ContinueActivateProfile()
 	end
 
 	if talentSet and not Internal.IsTalentSetActive(talentSet) and PlayerNeedsTome() then
+		Internal.SetWaitReason(L["Waiting for tome"])
 		RequestTome();
 		return;
 	end
 
 	if essencesSet and not Internal.IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
+		Internal.SetWaitReason(L["Waiting for tome"])
 		RequestTome();
 		return;
 	end
@@ -682,7 +693,20 @@ function Internal.IsActivatingLoadout()
     return target.active
 end
 function Internal.SetWaitReason(reason)
+	if reason == nil then
+		target.timeout = target.timeout or (GetTime() + 10) -- Set a timeout
+	else
+		target.timeout = nil
+	end
+
 	target.currentWaitReason = reason
+end
+function Internal.CheckTimeout()
+	if not target.timeout then
+		return false
+	end
+
+	return target.timeout < GetTime()
 end
 function Internal.GetWaitReason()
 	return target.currentWaitReason
