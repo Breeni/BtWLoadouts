@@ -88,7 +88,7 @@ local function SetActon(slot, tbl)
         return true, true
     elseif tbl.type == "macro" then
         if not PickupMacroByText(tbl.macroText) then
-            PickupMacro(tbl.id)
+            PickupMacro(GetMacroIndexByName(tbl.name) or tbl.id)
         end
     elseif tbl.type == "spell" then
         -- If we use the base version of the spell it should always work
