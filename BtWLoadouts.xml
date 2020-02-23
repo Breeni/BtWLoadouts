@@ -2506,4 +2506,46 @@
 			<OnHide method="OnHide"/>
 		</Scripts>
 	</Frame>
+
+	
+	<Frame name="BtWLoadoutsLogFrame" mixin="BtWLoadoutsLogFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
+		<Size x="829" y="448"/>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Frames>
+			<Button name="$parentCloseButton" parentKey="CloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="5.6" y="5"/>
+				</Anchors>
+			</Button>
+			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="4" y="-26" />
+					<Anchor point="BOTTOMRIGHT" x="-6" y="6" />
+				</Anchors>
+			</Frame>
+            <ScrollFrame enableMouse="true" parentKey="Scroll" inherits="InputScrollFrameTemplate">
+                <Size x="575" y="377"/>
+				<KeyValues>
+					<KeyValue key="hideCharCount" value="true" type="boolean"/>
+					<!--
+					<KeyValue key="maxLetters" value="127" type="number"/>
+					<KeyValue key="instructions" value="INSTRUCTION_TEXT" type="global"/>
+					-->
+				</KeyValues>
+                <Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.BodyInset" relativePoint="TOPLEFT" x="5" y="-5" />
+					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.BodyInset" relativePoint="BOTTOMRIGHT" x="-26" y="6"/>
+                </Anchors>
+				<Scripts>
+				</Scripts>
+            </ScrollFrame>
+		</Frames>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnDragStart method="OnDragStart"/>
+			<OnDragStop method="OnDragStop"/>
+		</Scripts>
+	</Frame>
 </Ui>

@@ -146,6 +146,24 @@ local function EmptyInventorySlot(inventorySlotId)
 
     return complete, foundSlot
 end
+-- Modified version of EquipmentManager_GetItemInfoByLocation but gets the item link instead
+local function GetItemLinkByLocation(location)
+	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location);
+	if not player and not bank and not bags and not voidStorage then -- Invalid location
+		return;
+	end
+
+	local itemLink;
+	if voidStorage then
+		itemLink = GetVoidItemHyperlinkString(tab, voidSlot);
+	elseif not bags then -- and (player or bank)
+		itemLink = GetInventoryItemLink("player", slot);
+	else -- bags
+		itemLink = GetContainerItemLink(bag, slot);
+	end
+
+	return itemLink;
+end
 local function SwapInventorySlot(inventorySlotId, itemLink, location)
 	local complete = false;
 	local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
@@ -166,28 +184,12 @@ local function SwapInventorySlot(inventorySlotId, itemLink, location)
 			end
 		end
 
+		Internal.LogMessage("Switching inventory slot %d to %s (%s)", inventorySlotId, GetItemLinkByLocation(location), complete and "true" or "false")
+
 		ClearCursor();
     end
 
     return complete
-end
--- Modified version of EquipmentManager_GetItemInfoByLocation but gets the item link instead
-local function GetItemLinkByLocation(location)
-	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location);
-	if not player and not bank and not bags and not voidStorage then -- Invalid location
-		return;
-	end
-
-	local itemLink;
-	if voidStorage then
-		itemLink = GetVoidItemHyperlinkString(tab, voidSlot);
-	elseif not bags then -- and (player or bank)
-		itemLink = GetInventoryItemLink("player", slot);
-	else -- bags
-		itemLink = GetContainerItemLink(bag, slot);
-	end
-
-	return itemLink;
 end
 Internal.GetItemLinkByLocation = GetItemLinkByLocation;
 local function CompareItemLinks(a, b)

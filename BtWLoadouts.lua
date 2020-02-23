@@ -52,6 +52,7 @@ BTWLOADOUTS_NAME = L["Name"];
 BTWLOADOUTS_SPECIALIZATION = L["Specialization"];
 BTWLOADOUTS_ENABLED = L["Enabled"]
 BTWLOADOUTS_UPDATE = L["Update"]
+BTWLOADOUTS_LOG = L["Log"]
 
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
@@ -3018,6 +3019,30 @@ function BtWLoadoutsIgnoreActionBarMixin:OnClick()
 	end
 end
 
+
+-- [[ LOG ]]
+BtWLoadoutsLogFrameMixin = {}
+function BtWLoadoutsLogFrameMixin:OnLoad()
+	tinsert(UISpecialFrames, self:GetName());
+	self:RegisterForDrag("LeftButton");
+
+	self.TitleText:SetText(BTWLOADOUTS_LOG)
+	self.TitleText:SetHeight(24)
+end
+function BtWLoadoutsLogFrameMixin:OnDragStart()
+	self:StartMoving();
+end
+function BtWLoadoutsLogFrameMixin:OnDragStop()
+	self:StopMovingOrSizing();
+end
+
+function Internal.ClearLog()
+	BtWLoadoutsLogFrame.Scroll.EditBox:SetText("")
+end
+function Internal.LogMessage(...)
+	BtWLoadoutsLogFrame.Scroll.EditBox:Insert(string.format("[%.03f] %s\n", GetTime(), string.format(...):gsub("|", "||")))
+end
+
 do
 	local currentCursorSource = {};
 	local function Hook_PickupContainerItem(bag, slot)
@@ -3152,6 +3177,12 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 		end
 	elseif command == "minimap" then
 		Settings.minimapShown = not Settings.minimapShown;
+	elseif command == "log" then
+        if BtWLoadoutsLogFrame:IsShown() then
+            BtWLoadoutsLogFrame:Hide()
+        else
+            BtWLoadoutsLogFrame:Show()
+		end
 	elseif command == nil then
         if BtWLoadoutsFrame:IsShown() then
             BtWLoadoutsFrame:Hide()

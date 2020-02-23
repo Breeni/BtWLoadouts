@@ -19,9 +19,10 @@ local function IsEssenceSetActive(set)
     return true;
 end
 local function ActivateEssenceSet(set)
-	local complete = true;
+	local success, complete = true, true;
 	for milestoneID,essenceID in pairs(set.essences) do
 		local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
+		local essenceName, essenceRank = info.name, info.rank
 		if info and info.valid and info.unlocked then
 			local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
 			if info.canUnlock then
@@ -32,6 +33,8 @@ local function ActivateEssenceSet(set)
 			if info.unlocked and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
 				C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
 				complete = false;
+
+				Internal.LogMessage("Switching essence %d to %s", milestoneID, C_AzeriteEssence.GetEssenceHyperlink(essenceID, essenceRank or 4))
 			end
 		end
 	end

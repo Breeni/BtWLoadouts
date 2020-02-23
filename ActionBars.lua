@@ -230,6 +230,12 @@ local function SetActon(slot, tbl)
         success = false
     end
 
+    if tbl.type == "macro" then
+        Internal.LogMessage("Switching action bar slot %d to %s:%s:%s (%s)", slot, tbl.type, tbl.id, tbl.macroText:gsub("\n", "\\ "), success and "true" or "false")
+    else
+        Internal.LogMessage("Switching action bar slot %d to %s:%s (%s)", slot, tbl.type, tbl.id, success and "true" or "false")
+    end
+
     ClearCursor()
     return success, success
 end

@@ -167,6 +167,7 @@ local function CancelActivateProfile()
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 	Internal.Call("LOADOUT_CHANGE_END")
+	Internal.LogMessage("--- END ---")
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
 
@@ -336,6 +337,8 @@ local function ActivateProfile(profile)
 	end
 
 	Internal.Call("LOADOUT_CHANGE_START")
+	Internal.ClearLog()
+	Internal.LogMessage("--- START ---")
 
     target.dirty = true;
 	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
@@ -472,6 +475,7 @@ local function ContinueActivateProfile()
 
 			for specIndex=1,GetNumSpecializations() do
 				if GetSpecializationInfo(specIndex) == specID then
+					Internal.LogMessage("Switching specialization to %s", (select(2, GetSpecializationInfo(specIndex))))
 					SetSpecialization(specIndex);
 					target.dirty = false;
 					return;
@@ -878,16 +882,16 @@ function Internal.ProfilesTabUpdate(self)
 
 		local helpTipBox = self:GetParent().HelpTipBox;
 		-- Tutorial stuff
-			if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
-				helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
+		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
+			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 
-				HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
 
-				helpTipBox:Show();
-				HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-			else
-				helpTipBox.closeFlag = nil;
-				helpTipBox:Hide();
-			end
+			helpTipBox:Show();
+			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
+		else
+			helpTipBox.closeFlag = nil;
+			helpTipBox:Hide();
 		end
+	end
 end

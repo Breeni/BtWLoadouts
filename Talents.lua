@@ -46,8 +46,11 @@ local function ActivateTalentSet(set)
 	for talentID in pairs(set.talents) do
 		local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
         if not selected and GetTalentTierInfo(tier, 1) then
-            success = LearnTalent(talentID) and success
+            local slotSuccess = LearnTalent(talentID)
+            success = slotSuccess and success
             complete = false
+
+            Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
 		end
 	end
 	return complete;

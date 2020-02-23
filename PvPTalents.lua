@@ -67,11 +67,14 @@ local function ActivatePvPTalentSet(set, checkExtraTalents)
 		if not usedSlots[slot] and slotInfo.enabled then
 			for _,talentID in ipairs(slotInfo.availableTalentIDs) do
 				if talents[talentID] then
-					success = LearnPvpTalent(talentID, slot) and success;
+					local slotSuccess = LearnPvpTalent(talentID, slot)
+					success = slotSuccess and success;
 					complete = false
 
 					usedSlots[slot] = true;
 					talents[talentID] = nil;
+
+					Internal.LogMessage("Switching pvp talent %d to %s (%s)", slot, GetPvpTalentLink(talentID), slotSuccess and "true" or "false")
 
 					break;
 				end
