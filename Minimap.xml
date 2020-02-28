@@ -70,10 +70,10 @@
                         self:GetParent().PulseA:Show()
                         self:GetParent().PulseB:Show()
                     </OnPlay>
-                    <OnStop>
+                    <OnFinished>
                         self:GetParent().PulseA:Hide()
                         self:GetParent().PulseB:Hide()
-                    </OnStop>
+                    </OnFinished>
                 </Scripts>
 			</AnimationGroup>
 			<AnimationGroup parentKey="ProgressAnim" looping="REPEAT">
