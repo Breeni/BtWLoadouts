@@ -296,7 +296,7 @@ local function DeleteProfile(id)
 		-- Disconnect conditions for the deleted loadout
 		for _,superset in pairs(BtWLoadoutsSets.conditions) do
 			if type(superset) == "table" and superset.profileSet == set.setID then
-				RemoveConditionFromMap(superset);
+				Internal.RemoveConditionFromMap(superset);
 
 				superset.profileSet = nil;
 			end

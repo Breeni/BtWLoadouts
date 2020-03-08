@@ -46,24 +46,31 @@ function frame:ADDON_LOADED(...)
         end
         for setID,set in pairs(BtWLoadoutsSets.profiles) do
             if type(set) == "table" then
-                if set.talentSet then
+                if set.talentSet and BtWLoadoutsSets.talents[set.talentSet] then
                     BtWLoadoutsSets.talents[set.talentSet].useCount = BtWLoadoutsSets.talents[set.talentSet].useCount + 1;
                 end
 
-                if set.pvpTalentSet then
+                if set.pvpTalentSet and BtWLoadoutsSets.pvptalents[set.pvpTalentSet] then
                     BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount = BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount + 1;
                 end
 
-                if set.essencesSet then
+                if set.essencesSet and BtWLoadoutsSets.essences[set.essencesSet] then
                     BtWLoadoutsSets.essences[set.essencesSet].useCount = BtWLoadoutsSets.essences[set.essencesSet].useCount + 1;
                 end
 
-                if set.equipmentSet then
+                if set.equipmentSet and BtWLoadoutsSets.equipment[set.equipmentSet] then
                     BtWLoadoutsSets.equipment[set.equipmentSet].useCount = BtWLoadoutsSets.equipment[set.equipmentSet].useCount + 1;
                 end
 
-                if set.actionBarSet then
+                if set.actionBarSet and BtWLoadoutsSets.actionbars[set.actionBarSet] then
                     BtWLoadoutsSets.actionbars[set.actionBarSet].useCount = BtWLoadoutsSets.actionbars[set.actionBarSet].useCount + 1;
+                end
+            end
+        end
+        for setID,set in pairs(BtWLoadoutsSets.conditions) do
+            if type(set) == "table" then
+                if set.profileSet and BtWLoadoutsSets.profiles[set.profileSet] then
+                    BtWLoadoutsSets.profiles[set.profileSet].useCount = BtWLoadoutsSets.profiles[set.profileSet].useCount + 1;
                 end
             end
         end

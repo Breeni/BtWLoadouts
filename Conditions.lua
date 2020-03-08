@@ -102,6 +102,7 @@ local function RemoveConditionFromMap(set)
 		conditionMap[k][v][set] = nil;
 	end
 end
+Internal.RemoveConditionFromMap = RemoveConditionFromMap;
 local function IsConditionActive(condition)
 	local matchCount = 0;
 	for k,v in pairs(condition.map) do
