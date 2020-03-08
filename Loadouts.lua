@@ -292,6 +292,15 @@ local function DeleteProfile(id)
 			local subSet = Internal.GetActionBarSet(set.actionBarSet);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
+
+		-- Disconnect conditions for the deleted loadout
+		for _,superset in pairs(BtWLoadoutsSets.conditions) do
+			if type(superset) == "table" and superset.profileSet == set.setID then
+				RemoveConditionFromMap(superset);
+
+				superset.profileSet = nil;
+			end
+		end
 	end
 	DeleteSet(BtWLoadoutsSets.profiles, id);
 

@@ -117,6 +117,11 @@ function frame:PLAYER_LOGIN(...)
                 set.map.affixesID = bit.band(set.map.affixesID, 0x00ffffff)
             end
 
+            -- Fixes an issue where conditions could be left with a missing loadout
+            if set.profileSet and Internal.GetProfile(set.profileSet) == nil then
+                set.profileSet = nil
+            end
+
 			if not set.disabled then
                 Internal.AddConditionToMap(set);
             end
