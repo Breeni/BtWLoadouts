@@ -1194,7 +1194,7 @@ local function ProfilesDropDown_NewOnClick(self, arg1, arg2, checked)
 	end
 
 	local newSet = Internal.AddProfile();
-	set.equipmenprofileSettSet = newSet.setID;
+	set.profileSet = newSet.setID;
 
 	if set.profileSet then
 		local subset = Internal.GetProfile(set.profileSet);
