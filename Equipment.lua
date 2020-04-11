@@ -210,7 +210,7 @@ local function GetCompareItemInfo(itemLink)
 
 	local itemID = tonumber(linkData[2]);
 	local enchantID = tonumber(linkData[3]);
-	local gemIDs = {tonumber(linkData[4]), tonumber(linkData[5]), tonumber(linkData[6]), tonumber(linkData[7])};
+	local gemIDs = {n = 4, [tonumber(linkData[4]) or 0] = true, [tonumber(linkData[5]) or 0] = true, [tonumber(linkData[6]) or 0] = true, [tonumber(linkData[7]) or 0] = true};
 	local suffixID = tonumber(linkData[8]);
 	local uniqueID = tonumber(linkData[9]);
 	local upgradeTypeID = tonumber(linkData[12]);
@@ -218,41 +218,59 @@ local function GetCompareItemInfo(itemLink)
 	local index = 14;
 	local numBonusIDs = tonumber(linkData[index]) or 0;
 
-	local bonusIDs = {};
+	local bonusIDs = {n = numBonusIDs};
 	for i=1,numBonusIDs do
-		bonusIDs[i] = tonumber(linkData[index + i]);
+		local id = tonumber(linkData[index + i])
+		if id then
+			bonusIDs[id] = true;
+		end
 	end
 	index = index + numBonusIDs + 1;
 
-	local upgradeTypeIDs = {};
+	local upgradeTypeIDs = {n = 2};
 	if upgradeTypeID and upgradeTypeID ~= 0 then
-		upgradeTypeIDs[1] = tonumber(linkData[index + 1]);
+		local id = tonumber(linkData[index + 1]);
+		if id then
+			upgradeTypeIDs[id] = true
+		end
 		if bit.band(upgradeTypeID, 0x1000000) ~= 0 then
-			upgradeTypeIDs[2] = tonumber(linkData[index + 2]);
+			id = tonumber(linkData[index + 2]);
+			if id then
+				upgradeTypeIDs[id] = true
+			end
 		end
 	end
 	index = index + 2;
 
 	local relic1NumBonusIDs = tonumber(linkData[index]) or 0;
-	local relic1BonusIDs = {};
+	local relic1BonusIDs = {n = relic1NumBonusIDs};
 	for i=1,relic1NumBonusIDs do
-		relic1BonusIDs[i] = tonumber(linkData[index + i]);
+		local id = tonumber(linkData[index + i])
+		if id then
+			relic1BonusIDs[id] = true;
+		end
 	end
 	index = index + relic1NumBonusIDs + 1;
 
 	local relic2NumBonusIDs = tonumber(linkData[index]) or 0;
-	local relic2BonusIDs = {};
+	local relic2BonusIDs = {n = relic2NumBonusIDs};
 	for i=1,relic2NumBonusIDs do
-		relic2BonusIDs[i] = tonumber(linkData[index + i]);
+		local id = tonumber(linkData[index + i])
+		if id then
+			relic2BonusIDs[id] = true;
+		end
 	end
 	index = index + relic2NumBonusIDs + 1;
 
 	local relic3NumBonusIDs = tonumber(linkData[index]) or 0;
-	local relic3BonusIDs = {};
+	local relic3BonusIDs = {n = relic3NumBonusIDs};
 	for i=1,relic3NumBonusIDs do
-		relic3BonusIDs[i] = tonumber(linkData[index + i]);
+		local id = tonumber(linkData[index + i])
+		if id then
+			relic3BonusIDs[id] = true;
+		end
 	end
-	index = index + relic3NumBonusIDs + 1;
+	-- index = index + relic3NumBonusIDs + 1;
 
 	return itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs;
 end
@@ -293,23 +311,47 @@ do
 		if upgradeTypeID == locationUpgradeTypeID then
 			match = match + 1;
 		end
-		for i=1,math.max(#gemIDs,#locationGemIDs) do
-			match = match + 1;
+		local id = nil
+		for i=1,math.max(gemIDs.n,locationGemIDs.n) do
+			id = next(gemIDs, id)
+			if id and locationGemIDs[id] then
+				match = match + 1;
+			end
 		end
-		for i=1,math.max(#bonusIDs,#locationBonusIDs) do
-			match = match + 1;
+		id = nil
+		for i=1,math.max(bonusIDs.n,locationBonusIDs.n) do
+			id = next(bonusIDs, id)
+			if id and locationBonusIDs[id] then
+				match = match + 1;
+			end
 		end
-		for i=1,math.max(#upgradeTypeIDs,#locationUpgradeTypeIDs) do
-			match = match + 1;
+		id = nil
+		for i=1,math.max(upgradeTypeIDs.n,locationUpgradeTypeIDs.n) do
+			id = next(upgradeTypeIDs, id)
+			if id and locationUpgradeTypeIDs[id] then
+				match = match + 1;
+			end
 		end
-		for i=1,math.max(#relic1BonusIDs,#locationRelic1BonusIDs) do
-			match = match + 1;
+		id = nil
+		for i=1,math.max(relic1BonusIDs.n,locationRelic1BonusIDs.n) do
+			id = next(relic1BonusIDs, id)
+			if id and locationRelic1BonusIDs[id] then
+				match = match + 1;
+			end
 		end
-		for i=1,math.max(#relic2BonusIDs,#locationRelic2BonusIDs) do
-			match = match + 1;
+		id = nil
+		for i=1,math.max(relic2BonusIDs.n,locationRelic2BonusIDs.n) do
+			id = next(relic2BonusIDs, id)
+			if id and locationRelic2BonusIDs[id] then
+				match = match + 1;
+			end
 		end
-		for i=1,math.max(#relic3BonusIDs,#locationRelic3BonusIDs) do
-			match = match + 1;
+		id = nil
+		for i=1,math.max(relic3BonusIDs.n,locationRelic3BonusIDs.n) do
+			id = next(relic3BonusIDs, id)
+			if id and locationRelic3BonusIDs[id] then
+				match = match + 1;
+			end
 		end
 
 		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
@@ -335,6 +377,9 @@ do
 			end
 		end
 		sort(locationFiltered, function (a,b)
+			if locationMatchValue[a] == locationMatchValue[b] then
+				return a > b
+			end
 			return locationMatchValue[a] > locationMatchValue[b];
 		end);
 
@@ -343,6 +388,17 @@ do
 end
 local IsItemInLocation;
 do
+	local function CompareTables(a, b)
+		if a.n ~= b.n then
+			return false
+		end
+		for k in pairs(a) do
+			if not b[k] then
+				return false
+			end
+		end
+		return true
+	end
 	local itemLocation = ItemLocation:CreateEmpty();
 	function IsItemInLocation(itemLink, extras, player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
 		if type(player) == "number" then
@@ -374,57 +430,26 @@ do
 
 		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
 		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
-		-- if itemID == 158075 then
-		-- 	print(itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs);
-		-- 	print(locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs);
-		-- 	for i=1,math.max(#gemIDs,#locationGemIDs) do
-		-- 		print("gemIDs", gemIDs[i], locationGemIDs[i]);
-		-- 	end
-		-- 	for i=1,math.max(#bonusIDs,#locationBonusIDs) do
-		-- 		print("gemIDs", bonusIDs[i], locationBonusIDs[i]);
-		-- 	end
-		-- 	for i=1,math.max(#relic1BonusIDs,#locationRelic1BonusIDs) do
-		-- 		print(relic1BonusIDs[i], locationRelic1BonusIDs[i]);
-		-- 	end
-		-- 	for i=1,math.max(#relic2BonusIDs,#locationRelic2BonusIDs) do
-		-- 		print(relic2BonusIDs[i], locationRelic2BonusIDs[i]);
-		-- 	end
-		-- 	for i=1,math.max(#relic3BonusIDs,#locationRelic3BonusIDs) do
-		-- 		print(relic3BonusIDs[i], locationRelic3BonusIDs[i]);
-		-- 	end
-		-- end
 		if itemID ~= locationItemID or enchantID ~= locationEnchantID or #gemIDs ~= #locationGemIDs or suffixID ~= locationSuffixID or uniqueID ~= locationUniqueID or upgradeTypeID ~= locationUpgradeTypeID or #bonusIDs ~= #bonusIDs or #relic1BonusIDs ~= #locationRelic1BonusIDs or #relic2BonusIDs ~= #locationRelic2BonusIDs or #relic3BonusIDs ~= #locationRelic3BonusIDs then
 			return false;
 		end
-		for i=1,#gemIDs do
-			if gemIDs[i] ~= locationGemIDs[i] then
-				return false;
-			end
+		if not CompareTables(gemIDs, locationGemIDs) then
+			return false
 		end
-		for i=1,#bonusIDs do
-			if bonusIDs[i] ~= locationBonusIDs[i] then
-				return false;
-			end
+		if not CompareTables(bonusIDs, locationBonusIDs) then
+			return false
 		end
-		for i=1,#upgradeTypeIDs do
-			if upgradeTypeIDs[i] ~= locationUpgradeTypeIDs[i] then
-				return false;
-			end
+		if not CompareTables(upgradeTypeIDs, locationUpgradeTypeIDs) then
+			return false
 		end
-		for i=1,#relic1BonusIDs do
-			if relic1BonusIDs[i] ~= locationRelic1BonusIDs[i] then
-				return false;
-			end
+		if not CompareTables(relic1BonusIDs, locationRelic1BonusIDs) then
+			return false
 		end
-		for i=1,#relic2BonusIDs do
-			if relic2BonusIDs[i] ~= locationRelic2BonusIDs[i] then
-				return false;
-			end
+		if not CompareTables(relic2BonusIDs, locationRelic2BonusIDs) then
+			return false
 		end
-		for i=1,#relic3BonusIDs do
-			if relic3BonusIDs[i] ~= locationRelic3BonusIDs[i] then
-				return false;
-			end
+		if not CompareTables(relic3BonusIDs, locationRelic3BonusIDs) then
+			return false
 		end
 
 		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
