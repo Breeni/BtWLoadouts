@@ -354,7 +354,7 @@ do
 			end
 		end
 
-		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if extras and extras.azerite and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
 					match = match + 1;
@@ -452,7 +452,7 @@ do
 			return false
 		end
 
-		if extras and extras.azerite and itemLocation:HasAnyLocation() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if extras and extras.azerite and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if not C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
 					return false;
@@ -823,12 +823,30 @@ local function AddEquipmentSet()
     local name = format(L["New %s Equipment Set"], characterName);
 	local equipment = {};
 	local ignored = {};
+	local extras = {};
 
 	ignored[INVSLOT_BODY] = true;
 	ignored[INVSLOT_TABARD] = true;
 
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
+		
+		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
+		if itemLocation and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+			local slotExtras = {azerite = {}};
+
+			local tiers = C_AzeriteEmpoweredItem.GetAllTierInfo(itemLocation);
+			for index,tier in ipairs(tiers) do
+				for _,powerID in ipairs(tier.azeritePowerIDs) do
+					if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
+						slotExtras.azerite[index] = powerID;
+						break;
+					end
+				end
+			end
+
+			extras[inventorySlotId] = slotExtras;
+		end
 	end
 
     local set = {
@@ -836,7 +854,7 @@ local function AddEquipmentSet()
         character = characterRealm .. "-" .. characterName,
         name = name,
 		equipment = equipment,
-		extras = {},
+		extras = extras,
 		locations = {},
 		ignored = ignored,
 		useCount = 0,
@@ -867,6 +885,26 @@ local function RefreshEquipmentSet(set)
 
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
+		
+		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
+		if itemLocation and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+			set.extras[inventorySlotId] = set.extras[inventorySlotId] or {};
+			local extras = set.extras[inventorySlotId];
+			extras.azerite = extras.azerite or {};
+			wipe(extras.azerite);
+
+			local tiers = C_AzeriteEmpoweredItem.GetAllTierInfo(itemLocation);
+			for index,tier in ipairs(tiers) do
+				for _,powerID in ipairs(tier.azeritePowerIDs) do
+					if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
+						extras.azerite[index] = powerID;
+						break;
+					end
+				end
+			end
+		else
+			set.extras[inventorySlotId] = nil;
+		end
 	end
 
 	-- Need to update the built in manager too
