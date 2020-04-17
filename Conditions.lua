@@ -274,12 +274,14 @@ function Internal.TriggerConditions()
 		return
 	end
 
+	local specID = GetSpecializationInfo(GetSpecialization());
 	wipe(sortedActiveConditions);
 	for profile,condition in pairs(activeConditions) do
 		sortedActiveConditions[#sortedActiveConditions+1] = {
 			profile = profile,
 			condition = condition,
 			match = conditionMatchCount[profile],
+			specMatch = specID == profile.specID and 1 or 0
 		};
 	end
 
@@ -295,6 +297,9 @@ function Internal.TriggerConditions()
 		end
 	else
 		sort(sortedActiveConditions, function(a,b)
+			if a.match == b.match then
+				return a.specMatch > b.specMatch;
+			end
 			return a.match > b.match;
 		end);
 
