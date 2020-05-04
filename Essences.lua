@@ -11,7 +11,7 @@ local format = string.format
 local function IsEssenceSetActive(set)
     for milestoneID,essenceID in pairs(set.essences) do
         local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
-        if (info.unlocked or info.canUnlock) and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+        if info and (info.unlocked or info.canUnlock) and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
             return false;
         end
     end

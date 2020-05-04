@@ -571,7 +571,7 @@ local function ContinueActivateProfile()
 		end
     end
 
-    if essencesSet then
+    if essencesSet and C_AzeriteEmpoweredItem.IsHeartOfAzerothEquipped() then
 		if not Internal.ActivateEssenceSet(essencesSet) then
 			complete = false;
 			set.dirty = true; -- Just run next frame
