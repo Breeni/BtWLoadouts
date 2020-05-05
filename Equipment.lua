@@ -556,7 +556,8 @@ local function IsEquipmentSetActive(set)
 						return false;
 					end
 				else
-					if not CompareItemLinks(expected[inventorySlotId], GetInventoryItemLink("player", inventorySlotId)) then
+					local itemLink = GetInventoryItemLink("player", inventorySlotId)
+					if not itemLink or not CompareItemLinks(itemLink, expected[inventorySlotId]) then
 						return false;
 					end
 				end
@@ -692,9 +693,8 @@ do
 
 		-- Check expected items uniqueness
 		for inventorySlotId = firstEquipped, lastEquipped do
-			if not ignored[inventorySlotId] then
+			if not ignored[inventorySlotId] and expected[inventorySlotId] then
 				local itemLink = expected[inventorySlotId];
-
 				local itemID = GetItemInfoInstant(itemLink);
 				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
