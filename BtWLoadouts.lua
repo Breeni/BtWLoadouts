@@ -3174,9 +3174,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 			end
 		end
 		if set and select(5,Internal.IsProfileValid(set)) then
-			if not Internal.IsProfileActive(set) then
 				Internal.ActivateProfile(set);
-			end
 		else
 			print(L["Could not find a valid set"]);
 		end
