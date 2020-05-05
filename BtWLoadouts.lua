@@ -2366,6 +2366,10 @@ do
 			Internal.ActivateProfile({
 				equipmentSet = button.id;
 			});
+		elseif selectedTab == TAB_ACTION_BARS then
+			Internal.ActivateProfile({
+				actionBarSet = button.id;
+			});
 		end
 	end
 	function BtWLoadoutsFrameMixin:ScrollItemOnDragStart(button)
