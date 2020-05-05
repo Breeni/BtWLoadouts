@@ -2406,8 +2406,7 @@ do
 			if not button.isHeader then
 				set = Internal.GetEquipmentSet(button.id);
 				if set.managerID then
-					C_EquipmentSet.PickupEquipmentSet(set.managerID);
-					return;
+					icon = select(2, C_EquipmentSet.GetEquipmentSetInfo(set.managerID))
 				end
 				command = format("/btwloadouts activate equipment %d", button.id);
 			end
@@ -2434,6 +2433,12 @@ do
 				end
 
 				macroId = CreateMacro(set.name, icon, command, false);
+			else
+				-- Rename the macro while not in combat
+				if not InCombatLockdown() then
+					icon = select(2,GetMacroInfo(macroId))
+					EditMacro(macroId, set.name, icon, command)
+				end
 			end
 
 			if macroId then
