@@ -29,6 +29,23 @@ local DeleteSet = Internal.DeleteSet;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local function GetTalentSet(id)
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWLoadoutsSets.talents[id];
+	end;
+end
+-- In General, For Player, For Player Spec
+local function TalentSetIsValid(set)
+	set = GetTalentSet(set);
+
+	local playerSpecID = GetSpecializationInfo(GetSpecialization());
+	local playerClass = select(2, UnitClass("player"));
+	local specClass = select(6, GetSpecializationInfoByID(set.specID));
+
+	return true, (playerClass == specClass), (playerSpecID == set.specID)
+end
 -- Check if the talents in the table talentIDs are selected
 local function IsTalentSetActive(set)
     for talentID in pairs(set.talents) do
@@ -94,19 +111,11 @@ local function TalentSetDelay(set)
     end
     return false
 end
-function Internal.GetTalentSet(id)
-    if type(id) == "table" then
-		return id;
-	else
-		return BtWLoadoutsSets.talents[id];
-	end;
+local function GetTalentSetsByName(name)
+	return Internal.GetSetsByName("talents", name)
 end
-function Internal.GetTalentSetByName(name)
-	for _,set in pairs(BtWLoadoutsSets.talents) do
-		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
-			return set;
-		end
-	end
+local function GetTalentSetByName(name)
+	return Internal.GetSetByName("talents", name, TalentSetIsValid)
 end
 function Internal.GetTalentSets(id, ...)
 	if id ~= nil then
@@ -168,6 +177,9 @@ local function DeleteTalentSet(id)
 	end
 end
 
+Internal.GetTalentSet = GetTalentSet
+Internal.GetTalentSetsByName = GetTalentSetsByName
+Internal.GetTalentSetByName = GetTalentSetByName
 Internal.TalentSetDelay = TalentSetDelay
 Internal.AddTalentSet = AddTalentSet
 Internal.RefreshTalentSet = RefreshTalentSet

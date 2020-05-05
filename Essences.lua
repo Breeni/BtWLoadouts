@@ -8,6 +8,18 @@ local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
 local format = string.format
 
+local function GetEssenceSet(id)
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWLoadoutsSets.essences[id];
+	end
+end
+-- returns isValid and isValidForPlayer
+local function EssenceSetIsValid(set)
+	local set = GetEssenceSet(set);
+	return true, Internal.IsClassRoleValid(select(2, UnitClass("player")), set.role)
+end
 local function IsEssenceSetActive(set)
     for milestoneID,essenceID in pairs(set.essences) do
         local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
@@ -74,19 +86,11 @@ local function AddEssenceSet()
     BtWLoadoutsSets.essences[set.setID] = set;
     return set;
 end
-function Internal.GetEssenceSet(id)
-    if type(id) == "table" then
-		return id;
-	else
-		return BtWLoadoutsSets.essences[id];
-	end
+local function GetEssenceSetsByName(name)
+	return Internal.GetSetsByName("essences", name)
 end
-function Internal.GetEssenceSetByName(name)
-	for _,set in pairs(BtWLoadoutsSets.essences) do
-		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
-			return set;
-		end
-	end
+local function GetEssenceSetByName(name)
+	return Internal.GetSetByName("essences", name, EssenceSetIsValid)
 end
 function Internal.GetEssenceSets(id, ...)
 	if id ~= nil then
@@ -152,6 +156,9 @@ local function EssenceSetDelay(set)
 	return false
 end
 
+Internal.GetEssenceSet = GetEssenceSet
+Internal.GetEssenceSetsByName = GetEssenceSetsByName
+Internal.GetEssenceSetByName = GetEssenceSetByName
 Internal.EssenceSetDelay = EssenceSetDelay
 Internal.AddEssenceSet = AddEssenceSet
 Internal.RefreshEssenceSet = RefreshEssenceSet

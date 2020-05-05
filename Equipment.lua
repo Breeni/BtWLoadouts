@@ -818,6 +818,19 @@ local function GetCharacterSlug()
 	local characterName, characterRealm = UnitFullName("player");
 	return characterRealm .. "-" .. characterName
 end
+local function GetEquipmentSet(id)
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWLoadoutsSets.equipment[id];
+	end
+end
+-- returns isValid and isValidForPlayer
+local function EquipmentSetIsValid(set)
+	local set = GetEquipmentSet(set);
+	local isValidForPlayer = (set.character == GetCharacterSlug())
+	return true, isValidForPlayer
+end
 local function AddEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
     local name = format(L["New %s Equipment Set"], characterName);
@@ -914,19 +927,11 @@ local function RefreshEquipmentSet(set)
 
 	return set
 end
-function Internal.GetEquipmentSet(id)
-    if type(id) == "table" then
-		return id;
-	else
-		return BtWLoadoutsSets.equipment[id];
-	end
+local function GetEquipmentSetsByName(name)
+	return Internal.GetSetsByName("equipment", name)
 end
-function Internal.GetEquipmentSetByName(name)
-	for _,set in pairs(BtWLoadoutsSets.equipment) do
-		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
-			return set;
-		end
-	end
+local function GetEquipmentSetByName(name)
+	return Internal.GetSetByName("equipment", name, EquipmentSetIsValid)
 end
 function Internal.GetEquipmentSets(id, ...)
 	if id ~= nil then
@@ -1003,6 +1008,9 @@ local function DeleteEquipmentSet(id)
 	end
 end
 
+Internal.GetEquipmentSet = GetEquipmentSet
+Internal.GetEquipmentSetsByName = GetEquipmentSetsByName
+Internal.GetEquipmentSetByName = GetEquipmentSetByName
 Internal.AddBlankEquipmentSet = AddBlankEquipmentSet
 Internal.AddEquipmentSet = AddEquipmentSet
 Internal.RefreshEquipmentSet = RefreshEquipmentSet

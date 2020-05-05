@@ -24,6 +24,22 @@ local format = string.format;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local function GetPvPTalentSet(id)
+    if type(id) == "table" then
+		return id;
+	else
+		return BtWLoadoutsSets.pvptalents[id];
+	end
+end
+local function PvPTalentSetIsValid(set)
+	local set = GetPvPTalentSet(set);
+
+	local playerSpecID = GetSpecializationInfo(GetSpecialization());
+	local playerClass = select(2, UnitClass("player"));
+	local specClass = select(6, GetSpecializationInfoByID(set.specID));
+
+	return true, (playerClass == specClass), (playerSpecID == set.specID)
+end
 local function IsPvPTalentSetActive(set)
 	for talentID in pairs(set.talents) do
         local _, _, _, selected, available = GetPvpTalentInfoByID(talentID, 1);
@@ -117,19 +133,11 @@ local function AddPvPTalentSet()
     BtWLoadoutsSets.pvptalents[set.setID] = set;
     return set;
 end
-function Internal.GetPvPTalentSet(id)
-    if type(id) == "table" then
-		return id;
-	else
-		return BtWLoadoutsSets.pvptalents[id];
-	end
+local function GetPvPTalentSetsByName(name)
+	return Internal.GetSetsByName("pvptalents", name)
 end
-function Internal.GetPvPTalentSetByName(name)
-	for _,set in pairs(BtWLoadoutsSets.pvptalents) do
-		if type(set) == "table" and set.name:lower():trim() == name:lower():trim() then
-			return set;
-		end
-	end
+local function GetPvPTalentSetByName(name)
+	return Internal.GetSetByName("pvptalents", name, PvPTalentSetIsValid)
 end
 function Internal.GetPvPTalentSets(id, ...)
 	if id ~= nil then
@@ -183,6 +191,9 @@ local function DeletePvPTalentSet(id)
 	end
 end
 
+Internal.GetPvPTalentSet = GetPvPTalentSet
+Internal.GetPvPTalentSetsByName = GetPvPTalentSetsByName
+Internal.GetPvPTalentSetByName = GetPvPTalentSetByName
 Internal.AddPvPTalentSet = AddPvPTalentSet
 Internal.RefreshPvPTalentSet = RefreshPvPTalentSet
 Internal.DeletePvPTalentSet = DeletePvPTalentSet
