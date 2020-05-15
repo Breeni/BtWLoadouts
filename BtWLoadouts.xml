@@ -2362,6 +2362,11 @@
 						<Scripts>
 						</Scripts>
 					</Frame>
+					<Frame parentKey="ScenarioDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ConditionTypeDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+					</Frame>
 				</Frames>
 			</Frame>
 			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_NEW_SET">

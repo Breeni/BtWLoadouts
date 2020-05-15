@@ -23,6 +23,8 @@ local UIDropDownMenu_CreateInfo = UIDropDownMenu_CreateInfo;
 
 local sort = table.sort
 
+local scenarioInfo = Internal.scenarioInfo;
+
 local CONDITION_TYPES = Internal.CONDITION_TYPES;
 local CONDITION_TYPE_NAMES = Internal.CONDITION_TYPE_NAMES;
 
@@ -388,6 +390,7 @@ function Internal.ConditionsTabUpdate(self)
 		self.ConditionTypeDropDown.Button:SetEnabled(true);
 		self.InstanceDropDown.Button:SetEnabled(true);
 		self.DifficultyDropDown.Button:SetEnabled(true);
+		self.ScenarioDropDown.Button:SetEnabled(true);
 
 		if set.profileSet == nil then
 			UIDropDownMenu_SetText(self.ProfileDropDown, L["None"]);
@@ -435,6 +438,18 @@ function Internal.ConditionsTabUpdate(self)
 				UIDropDownMenu_SetText(self.AffixesDropDown, select(3, Internal.GetAffixesName(set.affixesID)));
 			end
 		end
+		self.ScenarioDropDown:SetShown(set.type == CONDITION_TYPE_SCENARIO);
+		if set.instanceID == nil and set.difficultyID == nil then
+			UIDropDownMenu_SetText(self.ScenarioDropDown, L["Any"]);
+		else
+			-- This isnt a good way to do this, but it'll work
+			local expansion = 8;
+			for _,details in ipairs(scenarioInfo[expansion].instances) do
+				if (set.instanceID == details[1]) and (set.difficultyID == details[2]) then
+					UIDropDownMenu_SetText(self.ScenarioDropDown, details[3]);
+				end
+			end
+		end
 
 		self:GetParent().RefreshButton:SetEnabled(true)
 
@@ -462,6 +477,8 @@ function Internal.ConditionsTabUpdate(self)
 		self.InstanceDropDown.Button:SetEnabled(false);
 		self.DifficultyDropDown.Button:SetEnabled(false);
 		self.BossDropDown.Button:SetEnabled(false);
+		self.ScenarioDropDown.Button:SetEnabled(false);
+		self.ScenarioDropDown:Hide();
 		self.AffixesDropDown:Hide();
 
 		self:GetParent().RefreshButton:SetEnabled(false)

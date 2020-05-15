@@ -149,6 +149,58 @@ local raidInfo = {
 		},
 	}
 };
+local scenarioInfo = {
+	{
+		name = L["Classic"],
+		instances = {
+		},
+	},
+	{
+		name = L["TBC"],
+		instances = {
+		},
+	},
+	{
+		name = L["Wrath"],
+		instances = {
+		},
+	},
+	{
+		name = L["Cata"],
+		instances = {
+		},
+	},
+	{
+		name = L["Panda"],
+		instances = {
+		},
+	},
+	{
+		name = L["WoD"],
+		instances = {
+		},
+	},
+	{
+		name = L["Legion"],
+		instances = {
+		},
+	},
+	{
+		name = L["Battle For Azeroth"],
+		instances = {
+			{nil, 38, (function () return string.format("%s %s", GetDifficultyInfo(38), L["Island Expedition"]) end)()}, -- Normal Island
+			{nil, 39, (function () return string.format("%s %s", GetDifficultyInfo(39), L["Island Expedition"]) end)()}, -- Heroic Island
+			{nil, 40, (function () return string.format("%s %s", GetDifficultyInfo(40), L["Island Expedition"]) end)()}, -- Mythic Island
+			{nil, 45, (function () return string.format("%s %s", GetDifficultyInfo(45), L["Island Expedition"]) end)()}, -- PvP Island
+
+			{nil, 147, (function () return string.format("%s %s", GetDifficultyInfo(147), L["Warfront"]) end)()}, -- Normal Warfront
+			{nil, 149, (function () return string.format("%s %s", GetDifficultyInfo(149), L["Warfront"]) end)()}, -- Heroic Warfront
+
+			{nil, 152, (function () return GetDifficultyInfo(152) end)()}, -- Vision of N'Zoth
+			{nil, 153, (function () return GetDifficultyInfo(153) end)()}, -- Teeming Island
+		},
+	}
+};
 -- List of bosses within an instance
 local instanceBosses = {
 	[1763] = { -- Atal'Dazar
@@ -349,6 +401,7 @@ local uiMapIDToBossID = {
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
 Internal.raidInfo = raidInfo;
+Internal.scenarioInfo = scenarioInfo;
 Internal.instanceBosses = instanceBosses;
 Internal.npcIDToBossID = npcIDToBossID;
 Internal.InstanceAreaIDToBossID = InstanceAreaIDToBossID;

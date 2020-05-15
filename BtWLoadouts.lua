@@ -62,6 +62,7 @@ local raidDifficultiesAll = Internal.raidDifficultiesAll;
 local instanceDifficulties = Internal.instanceDifficulties;
 local dungeonInfo = Internal.dungeonInfo;
 local raidInfo = Internal.raidInfo;
+local scenarioInfo = Internal.scenarioInfo;
 local instanceBosses = Internal.instanceBosses;
 local npcIDToBossID = Internal.npcIDToBossID;
 local InstanceAreaIDToBossID = Internal.InstanceAreaIDToBossID;
@@ -1574,6 +1575,52 @@ local function AffixesDropDownInit(self, level, menuList)
 	end
 end
 
+
+local function ScenarioDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
+    local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
+
+    CloseDropDownMenus();
+    local set = tab.set;
+
+	set.instanceID = arg1;
+	set.difficultyID = arg2;
+
+    BtWLoadoutsFrame:Update();
+end
+local function ScenarioDropDownInit(self, level, menuList)
+    local info = UIDropDownMenu_CreateInfo();
+
+	local set = self:GetParent().set;
+	local instanceID = set and set.instanceID;
+	local difficultyID = set and set.difficultyID;
+
+	if (level or 1) == 1 then
+		info.text = L["Any"];
+		info.func = ScenarioDropDown_OnClick;
+		info.checked = (instanceID == nil) and (difficultyID == nil);
+		UIDropDownMenu_AddButton(info, level);
+
+	-- 	for expansion,expansionData in ipairs(dungeonInfo) do
+	-- 		info.text = expansionData.name;
+	-- 		info.hasArrow, info.menuList = true, expansion;
+	-- 		info.keepShownOnClick = true;
+	-- 		info.notCheckable = true;
+	-- 		UIDropDownMenu_AddButton(info, level);
+	-- 	end
+	-- else
+		local expansion = 8;
+		for _,details in ipairs(scenarioInfo[expansion].instances) do
+			info.text = details[3];
+			info.arg1 = details[1];
+			info.arg2 = details[2];
+			info.func = ScenarioDropDown_OnClick;
+			info.checked = (instanceID == details[1]) and (difficultyID == details[2]);
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+end
+
 local SetsScrollFrame_Update
 do
 	local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
@@ -2563,6 +2610,10 @@ do
 			UIDropDownMenu_SetWidth(self.Conditions.AffixesDropDown, 400);
 			UIDropDownMenu_Initialize(self.Conditions.AffixesDropDown, AffixesDropDownInit);
 			UIDropDownMenu_JustifyText(self.Conditions.AffixesDropDown, "LEFT");
+
+			UIDropDownMenu_SetWidth(self.Conditions.ScenarioDropDown, 400);
+			UIDropDownMenu_Initialize(self.Conditions.ScenarioDropDown, ScenarioDropDownInit);
+			UIDropDownMenu_JustifyText(self.Conditions.ScenarioDropDown, "LEFT");
 			self.initialized = true;
 		end
 
