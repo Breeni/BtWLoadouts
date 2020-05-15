@@ -2527,7 +2527,7 @@
 	</Frame>
 
 	<Button name="BtWLoadoutsConditionsAffixesDropDownList" mixin="BtWLoadoutsConditionsAffixesMixin" toplevel="true" frameStrata="FULLSCREEN_DIALOG" parent="UIParent" hidden="true">
-		<Size x="400" y="160"/>
+		<Size x="400" y="155"/>
 		<KeyValues>
 			<KeyValue type="number" key="maxWidth" value="400"/>
 		</KeyValues>
