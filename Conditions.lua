@@ -65,7 +65,10 @@ local conditionMap = {
 	difficultyID = {},
 	instanceID = {},
 	bossID = {},
-	affixesID = {},
+	affixID1 = {},
+	affixID2 = {},
+	affixID3 = {},
+	affixID4 = {},
 };
 _G['BtWLoadoutsConditionMap'] = conditionMap; --@TODO Remove
 local function ActivateConditionMap(map, key)
@@ -114,6 +117,7 @@ local function IsConditionActive(condition)
 
 	return matchCount;
 end
+-- Update a condition set with current active conditions
 local function RefreshConditionSet(set)
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 
@@ -127,13 +131,21 @@ local function RefreshConditionSet(set)
 	set.instanceID = instanceID
 	set.difficultyID = difficultyID
 	set.bossID = nil
-	set.affixesID = nil
+	set.affixID1 = nil
+	set.affixID2 = nil
+	set.affixID3 = nil
+	set.affixID4 = nil
 	if difficultyID == 8 then -- In M+
 		local affixes = GetCurrentAffixes();
 		if affixes then
-			-- Ignore the 4th (seasonal) affix
-			set.affixesID = Internal.GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id).id
+			for i=1,4 do
+				set["affixID" .. i] = affixes[i] and affixes[i].id or nil
+			end
 		end
+		-- if affixes then
+		-- 	-- Ignore the 4th (seasonal) affix
+		-- 	set.affixesID = Internal.GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id).id
+		-- end
 	else
 		set.bossID = Internal.GetCurrentBoss()
 	end
@@ -212,21 +224,33 @@ function Internal.UpdateConditionsForBoss(unitId)
 	return bossID
 end
 function Internal.UpdateConditionsForAffixes()
-	local affixesID;
+	-- local affixesID;
+	local affixIDs = {}
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	if difficultyID == 23 then -- In a mythic dungeon (not M+)
 		local affixes = GetCurrentAffixes();
 		if affixes then
-			-- Ignore the 4th (seasonal) affix
-			affixesID = Internal.GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id).id
+			for i=1,4 do
+				affixIDs[i] = affixes[i] and affixes[i].id or nil
+			end
+		-- 	-- Ignore the 4th (seasonal) affix
+		-- 	affixesID = Internal.GetAffixesInfo(affixes[1].id, affixes[2].id, affixes[3].id).id
 		end
 	end
 
-	if previousConditionInfo.affixesID ~= affixesID then
-		DeactivateConditionMap(conditionMap.affixesID, previousConditionInfo.affixesID);
-		ActivateConditionMap(conditionMap.affixesID, affixesID);
-		previousConditionInfo.affixesID = affixesID;
+	for i=1,4 do
+		local key = "affixID" .. i
+		if previousConditionInfo[key] ~= affixIDs[i] then
+			DeactivateConditionMap(conditionMap[key], previousConditionInfo[key]);
+			ActivateConditionMap(conditionMap[key], affixIDs[i]);
+			previousConditionInfo[key] = affixIDs[i];
+		end
 	end
+	-- if previousConditionInfo.affixesID ~= affixesID then
+	-- 	DeactivateConditionMap(conditionMap.affixesID, previousConditionInfo.affixesID);
+	-- 	ActivateConditionMap(conditionMap.affixesID, affixesID);
+	-- 	previousConditionInfo.affixesID = affixesID;
+	-- end
 end
 local function CompareConditions(a,b)
 	for k,v in pairs(a) do
@@ -352,11 +376,20 @@ function Internal.ConditionsTabUpdate(self)
 			set.mapDifficultyID = set.difficultyID;
 		end
 
+		local affixID1, affixID2, affixID3, affixID4
+		if set.affixesID then
+			affixID1, affixID2, affixID3, affixID4 = Internal.GetAffixesForID(set.affixesID)
+		end
 		if set.map.instanceType ~= set.type or
 		   set.map.instanceID ~= set.instanceID or
 		   set.map.difficultyID ~= set.mapDifficultyID or
 		   set.map.bossID ~= set.bossID or
-		   set.map.affixesID ~= (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff) or nil) or
+
+		   set.map.affixID1 ~= (affixID1 ~= 0 and affixID1 or nil) or
+		   set.map.affixID2 ~= (affixID2 ~= 0 and affixID2 or nil) or
+		   set.map.affixID3 ~= (affixID3 ~= 0 and affixID3 or nil) or
+		   set.map.affixID4 ~= (affixID4 ~= 0 and affixID4 or nil) or
+
 		   set.mapProfileSet ~= set.profileSet then
 			RemoveConditionFromMap(set);
 
@@ -367,7 +400,10 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.instanceID = set.instanceID;
 			set.map.difficultyID = set.mapDifficultyID;
 			set.map.bossID = set.bossID;
-			set.map.affixesID = (set.affixesID ~= nil and bit.band(set.affixesID, 0x00ffffff) or nil);
+			set.map.affixID1 = (affixID1 ~= 0 and affixID1 or nil)
+			set.map.affixID2 = (affixID2 ~= 0 and affixID2 or nil)
+			set.map.affixID3 = (affixID3 ~= 0 and affixID3 or nil)
+			set.map.affixID4 = (affixID4 ~= 0 and affixID4 or nil)
 		end
 
 		if set.disabled then
@@ -434,6 +470,7 @@ function Internal.ConditionsTabUpdate(self)
 			else
 				UIDropDownMenu_SetText(self.AffixesDropDown, select(3, Internal.GetAffixesName(set.affixesID)));
 			end
+			BtWLoadoutsConditionsAffixesDropDownList:Update(set.affixesID)
 		end
 
 		self:GetParent().RefreshButton:SetEnabled(true)

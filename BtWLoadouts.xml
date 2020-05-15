@@ -2257,7 +2257,7 @@
 					</Button>
 				</Frames>
 			</Frame>
-			<Frame parentKey="Conditions" parentArray="TabFrames" hidden="true">
+			<Frame name="$parentConditions" parentKey="Conditions" parentArray="TabFrames" hidden="true">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="250" y="-30"/>
 					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
@@ -2355,13 +2355,32 @@
 							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
 					</Frame>
-					<Frame parentKey="AffixesDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+					<Frame name="$parentAffixesDropDown" parentKey="AffixesDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
-						<Scripts>
-						</Scripts>
 					</Frame>
+
+					<!-- <Frame parentArray="AffixDropDowns" name="$parentAffix2DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="2">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+						</Anchors>
+					</Frame>
+					<Frame parentArray="AffixDropDowns" name="$parentAffix4DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="4">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="110" y="-10"/>
+						</Anchors>
+					</Frame>
+					<Frame parentArray="AffixDropDowns" name="$parentAffix7DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="7">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="220" y="-10"/>
+						</Anchors>
+					</Frame>
+					<Frame parentArray="AffixDropDowns" name="$parentAffix10DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="10">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="330" y="-10"/>
+						</Anchors>
+					</Frame> -->
 				</Frames>
 			</Frame>
 			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_NEW_SET">
@@ -2507,6 +2526,21 @@
 		</Scripts>
 	</Frame>
 
+	<Button name="BtWLoadoutsConditionsAffixesDropDownList" mixin="BtWLoadoutsConditionsAffixesMixin" toplevel="true" frameStrata="FULLSCREEN_DIALOG" parent="UIParent" hidden="true">
+		<Size x="400" y="160"/>
+		<KeyValues>
+			<KeyValue type="number" key="maxWidth" value="400"/>
+		</KeyValues>
+		<Anchors>
+			<Anchor point="TOPLEFT" relativeTo="BtWLoadoutsFrameConditionsAffixesDropDownLeft" relativePoint="BOTTOMLEFT" x="8" y="22"/>
+		</Anchors>
+		<Frames>
+			<Frame name="$parentBackdrop" parentKey="Border" inherits="DialogBorderDarkTemplate"/>
+		</Frames>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+		</Scripts>
+	</Button>
 	
 	<Frame name="BtWLoadoutsLogFrame" mixin="BtWLoadoutsLogFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
 		<Size x="829" y="448"/>

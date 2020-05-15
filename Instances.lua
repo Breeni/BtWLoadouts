@@ -354,40 +354,107 @@ Internal.npcIDToBossID = npcIDToBossID;
 Internal.InstanceAreaIDToBossID = InstanceAreaIDToBossID;
 Internal.uiMapIDToBossID = uiMapIDToBossID;
 
+-- AffixesID type: bit shifted and or'd affix ids
+-- (level 2 affix) | (level 4 affix << 8) | (level 7 affix << 16) | (level 10 affix << 24)
+-- This will be fine aslong as Blizz keeps ids below 255, right now seasonal affixes (except infested)
+-- are 117+, infested is 16, everything else is below
+-- Affixes are also handled as masks, this ignores the 4th (seasonal) affix and bit shifts 1 by id
+-- This might end up falling apart if blizzard goes beyond 32 affixes
+
+local affixLevels = {2, 4, 7, 10}
+function Internal.AffixesLevels()
+	return ipairs(affixLevels)
+end
+local affixesByLevel = {
+	[2] = {10, 9},
+	[4] = {7, 6, 8, 5, 11},
+	[7] = {12, 13, 3, 2, 4, 14},
+	[10] = {120},
+}
+function Internal.Affixes(level)
+	level = tonumber(level)
+	if level >= 10 then
+		return ipairs(affixesByLevel[10])
+	elseif level >= 7 then
+		return ipairs(affixesByLevel[7])
+	elseif level >= 4 then
+		return ipairs(affixesByLevel[4])
+	elseif level >= 2 then
+		return ipairs(affixesByLevel[2])
+	end
+end
+
+-- A list of affixesIDs along with the mask of available affixes for other levels excludes seasonal affixes,
+-- built from affixRotation later
+local affixesMask = {};
+local function PushAffixMask(a, b)
+	affixesMask[a] = bit.bor(affixesMask[a] or 0, b)
+end
+_G["BtWLoadoutsAffixesMask"] = affixesMask;
+function Internal.GetExclusiveAffixes(affixesID)
+	affixesID = bit.band(affixesID or 0, 0xffffff)
+	if affixesID == 0 then
+		return 0xffffffff
+	end
+	return affixesMask[affixesID];
+end
+
 function Internal.GetAffixesName(affixesID)
 	local names = {};
 	local icons = {};
 	local id = affixesID
+	local mask = 0
+	local i = 1
 	while affixesID > 0 do
 		local affixID = bit.band(affixesID, 0xFF);
 		affixesID = bit.rshift(affixesID, 8);
 
-		local name, _, icon = GetAffixInfo(affixID);
-		names[#names+1] = name;
-		icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
+		if affixID ~= 0 then
+			local name, _, icon = GetAffixInfo(affixID);
+			names[#names+1] = name;
+			icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
+
+			if affixID < 32 then
+				mask = bit.bor(mask, bit.lshift(1, affixID));
+			end
+		end
+		i = i + 1
 	end
 
-	return id, table.concat(names, " "), table.concat(icons, ", ");
+	return id, table.concat(names, " "), table.concat(icons, ", "), mask
 end
+local function GetAffixMaskForID(id)
+	return bit.lshift(1, id);
+end
+Internal.GetAffixMaskForID = GetAffixMaskForID
 local function GetAffixesInfo(...)
 	local id = 0;
+	local mask = 0;
 	local names = {};
 	local icons = {};
 	for i=1,select('#', ...) do
 		local affixID = select(i, ...);
 		local name, _, icon = GetAffixInfo(affixID);
 
+		if i < 4 then
+			mask = bit.bor(mask, bit.lshift(1, affixID));
+		end
 		id = bit.bor(bit.rshift(id, 8), bit.lshift(affixID, 24));
 		names[#names+1] = name;
 		icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
 	end
 	return {
 		id = id,
+		mask = mask,
 		name = table.concat(names, ", "),
 		fullName = table.concat(icons, ", "),
 	};
 end
 Internal.GetAffixesInfo = GetAffixesInfo;
+local function GetAffixesForID(id)
+	return bit.band(id, 0xff), bit.band(bit.rshift(id, 8), 0xff), bit.band(bit.rshift(id, 16), 0xff), bit.band(bit.rshift(id, 24), 0xff)
+end
+Internal.GetAffixesForID = GetAffixesForID
 local affixRotation = {
 	GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
 	GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened
@@ -403,7 +470,23 @@ local affixRotation = {
 	GetAffixesInfo(9, 11, 2, 120),	-- Tyrannical, 	Bursting, 	Skittish, 	Awakened
 };
 function Internal.AffixRotation()
-    return ipairs(affixRotation)
+	return ipairs(affixRotation)
+end
+-- Fill affixes mask based on Affix Rotation
+for _,affixes in Internal.AffixRotation() do
+	local ma, mb, mc = bit.band(affixes.id, 0xff), bit.band(affixes.id, 0xff00), bit.band(affixes.id, 0xff0000)
+	local a, b, c = ma, bit.rshift(mb, 8), bit.rshift(mc, 16)
+	local r = bit.bor(bit.lshift(1, a), bit.lshift(1, b), bit.lshift(1, c))
+
+	PushAffixMask(ma, r)
+	PushAffixMask(mb, r)
+	PushAffixMask(mc, r)
+
+	PushAffixMask(bit.bor(ma, mb), r)
+	PushAffixMask(bit.bor(mb, mc), r)
+	PushAffixMask(bit.bor(ma, mc), r)
+
+	PushAffixMask(bit.band(affixes.id, 0xffffff), r)
 end
 
 local areaNameToIDMap = {};

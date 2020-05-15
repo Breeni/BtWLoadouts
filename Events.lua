@@ -117,11 +117,23 @@ function frame:PLAYER_LOGIN(...)
     for _,set in pairs(BtWLoadoutsSets.conditions) do
         if type(set) == "table" then
             if set.difficultyID ~= 8 then
-                set.map.affixesID = nil;
+                set.map.affixesID = nil
+                set.map.affixID1 = nil
+                set.map.affixID2 = nil
+                set.map.affixID3 = nil
+                set.map.affixID4 = nil
             end
             -- Fix to remove the season affix from condition mapping
             if set.map.affixesID ~= nil then
-                set.map.affixesID = bit.band(set.map.affixesID, 0x00ffffff)
+                local affixID1, affixID2, affixID3, affixID4 = Internal.GetAffixesForID(set.affixesID)
+
+                set.map.affixID1 = (affixID1 ~= 0 and affixID1 or nil)
+                set.map.affixID2 = (affixID2 ~= 0 and affixID1 or nil)
+                set.map.affixID3 = (affixID3 ~= 0 and affixID1 or nil)
+                set.map.affixID4 = (affixID4 ~= 0 and affixID1 or nil)
+                
+                set.map.affixesID = nil
+                -- set.map.affixesID = bit.band(set.map.affixesID, 0x00ffffff)
             end
 
             -- Fixes an issue where conditions could be left with a missing loadout

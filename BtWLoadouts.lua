@@ -1574,6 +1574,74 @@ local function AffixesDropDownInit(self, level, menuList)
 	end
 end
 
+local function AffixDropDown_OnClick(self, arg1, arg2, checked)
+    local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
+    local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
+
+    CloseDropDownMenus();
+	local set = tab.set;
+
+	if set.affixesID ~= nil and bit.band(set.affixesID, arg2) == arg2 then
+		set.affixesID = bit.band(set.affixesID, arg1);
+	else
+		set.affixesID = bit.bor(bit.band(set.affixesID or 0, arg1), arg2);
+	end
+	if set.affixesID == 0 then
+		set.affixesID = nil
+	end
+
+    BtWLoadoutsFrame:Update();
+end
+
+do
+	BtWLoadoutsConditionsAffixesMixin = {}
+	function BtWLoadoutsConditionsAffixesMixin:OnLoad()
+		self.Buttons = {}
+		for index,level in Internal.AffixesLevels() do
+			local x = ((index - 1) * 90) + 20
+			local y = -17
+			local relativeTo
+			for _,affix in Internal.Affixes(level) do
+				local name = self:GetName() .. "Button" .. affix
+				local button = CreateFrame("Button", name, self, "UIDropDownMenuButtonTemplate", affix);
+				button:SetWidth(85);
+				if relativeTo then
+					button:SetPoint("TOP", relativeTo, "BOTTOM", 0, -5);
+				else
+					button:SetPoint("TOPLEFT", x, y);
+				end
+
+				local fullname, icons, mask = select(2, Internal.GetAffixesName(affix));
+				_G[name .. "NormalText"]:SetText(icons);
+				button.mask = mask;
+
+				button.keepShownOnClick = true
+				button.notCheckable = true
+				button.arg1 = bit.bxor(0xffffffff, bit.lshift(0xff, 8*(index-1)))
+				button.arg2 = bit.lshift(affix, 8*(index-1))
+				button.func = AffixDropDown_OnClick
+
+				self.Buttons[#self.Buttons+1] = button
+				
+				button:Show();
+				relativeTo = button;
+			end
+		end
+		hooksecurefunc("CloseDropDownMenus", function ()
+			if not MouseIsOver(self) then
+				self:Hide();
+			end
+		end)
+	end
+	-- Changes the buttons based on mask
+	function BtWLoadoutsConditionsAffixesMixin:Update(affixesID)
+		local mask = Internal.GetExclusiveAffixes(affixesID)
+		for _,button in ipairs(self.Buttons) do
+			button:SetEnabled(bit.band(button.mask, mask) == button.mask);
+		end
+	end
+end
+
 local SetsScrollFrame_Update
 do
 	local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
@@ -2561,8 +2629,12 @@ do
 			UIDropDownMenu_JustifyText(self.Conditions.BossDropDown, "LEFT");
 
 			UIDropDownMenu_SetWidth(self.Conditions.AffixesDropDown, 400);
-			UIDropDownMenu_Initialize(self.Conditions.AffixesDropDown, AffixesDropDownInit);
+			-- UIDropDownMenu_Initialize(self.Conditions.AffixesDropDown, AffixesDropDownInit);
 			UIDropDownMenu_JustifyText(self.Conditions.AffixesDropDown, "LEFT");
+			self.Conditions.AffixesDropDown.Button:SetScript("OnClick", function ()
+				BtWLoadoutsConditionsAffixesDropDownList:SetShown(not BtWLoadoutsConditionsAffixesDropDownList:IsShown());
+			end)
+
 			self.initialized = true;
 		end
 
