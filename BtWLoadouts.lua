@@ -1603,7 +1603,7 @@ do
 			local relativeTo
 			for _,affix in Internal.Affixes(level) do
 				local name = self:GetName() .. "Button" .. affix
-				local button = CreateFrame("Button", name, self, "UIDropDownMenuButtonTemplate", affix);
+				local button = CreateFrame("Button", name, self, "BtWLoadoutsConditionsAffixesDropDownButton", affix);
 				button:SetWidth(85);
 				if relativeTo then
 					button:SetPoint("TOP", relativeTo, "BOTTOM", 0, -5);
@@ -1635,9 +1635,12 @@ do
 	end
 	-- Changes the buttons based on mask
 	function BtWLoadoutsConditionsAffixesMixin:Update(affixesID)
+		local a, b, c, d = Internal.GetAffixesForID(affixesID)
 		local mask = Internal.GetExclusiveAffixes(affixesID)
 		for _,button in ipairs(self.Buttons) do
 			button:SetEnabled(bit.band(button.mask, mask) == button.mask);
+			local affixID = button:GetID()
+			button.Selection:SetShown(affixID == a or affixID == b or affixID == c or affixID == d);
 		end
 	end
 end

@@ -125,15 +125,16 @@ function frame:PLAYER_LOGIN(...)
             end
             -- Fix to remove the season affix from condition mapping
             if set.map.affixesID ~= nil then
-                local affixID1, affixID2, affixID3, affixID4 = Internal.GetAffixesForID(set.affixesID)
+                if set.affixesID then
+                    local affixID1, affixID2, affixID3, affixID4 = Internal.GetAffixesForID(set.affixesID)
 
-                set.map.affixID1 = (affixID1 ~= 0 and affixID1 or nil)
-                set.map.affixID2 = (affixID2 ~= 0 and affixID1 or nil)
-                set.map.affixID3 = (affixID3 ~= 0 and affixID1 or nil)
-                set.map.affixID4 = (affixID4 ~= 0 and affixID1 or nil)
-                
+                    set.map.affixID1 = (affixID1 ~= 0 and affixID1 or nil)
+                    set.map.affixID2 = (affixID2 ~= 0 and affixID2 or nil)
+                    set.map.affixID3 = (affixID3 ~= 0 and affixID3 or nil)
+                    set.map.affixID4 = (affixID4 ~= 0 and affixID4 or nil)
+                end
+
                 set.map.affixesID = nil
-                -- set.map.affixesID = bit.band(set.map.affixesID, 0x00ffffff)
             end
 
             -- Fixes an issue where conditions could be left with a missing loadout

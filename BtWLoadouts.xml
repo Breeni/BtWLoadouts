@@ -2526,6 +2526,17 @@
 		</Scripts>
 	</Frame>
 
+	<Button name="BtWLoadoutsConditionsAffixesDropDownButton" inherits="UIDropDownMenuButtonTemplate" virtual="true">
+		<Size x="100" y="16"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Selection" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD" setAllPoints="true" desaturated="true" hidden="true">
+					<Color r="0.65" g="0.80" b="1"/>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Button>
+
 	<Button name="BtWLoadoutsConditionsAffixesDropDownList" mixin="BtWLoadoutsConditionsAffixesMixin" toplevel="true" frameStrata="FULLSCREEN_DIALOG" parent="UIParent" hidden="true">
 		<Size x="400" y="155"/>
 		<KeyValues>
