@@ -2360,27 +2360,11 @@
 							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
 					</Frame>
-
-					<!-- <Frame parentArray="AffixDropDowns" name="$parentAffix2DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="2">
+					<Frame parentKey="ScenarioDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
 						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+							<Anchor point="TOPLEFT" relativeKey="$parent.ConditionTypeDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
 						</Anchors>
 					</Frame>
-					<Frame parentArray="AffixDropDowns" name="$parentAffix4DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="4">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="110" y="-10"/>
-						</Anchors>
-					</Frame>
-					<Frame parentArray="AffixDropDowns" name="$parentAffix7DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="7">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="220" y="-10"/>
-						</Anchors>
-					</Frame>
-					<Frame parentArray="AffixDropDowns" name="$parentAffix10DropDown" inherits="UIDropDownMenuTemplate" enableMouse="true" id="10">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeKey="$parent.InstanceDropDown" relativePoint="BOTTOMLEFT" x="330" y="-10"/>
-						</Anchors>
-					</Frame> -->
 				</Frames>
 			</Frame>
 			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_NEW_SET">
