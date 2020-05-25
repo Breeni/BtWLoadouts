@@ -489,7 +489,7 @@ function Internal.ConditionsTabUpdate(self)
 			else
 				UIDropDownMenu_SetText(self.AffixesDropDown, select(3, Internal.GetAffixesName(set.affixesID)));
 			end
-			BtWLoadoutsConditionsAffixesDropDownList:Update(set.affixesID)
+			BtWLoadoutsConditionsAffixesDropDownList:Update(set.affixesID or 0)
 		end
 		self.ScenarioDropDown:SetShown(set.type == CONDITION_TYPE_SCENARIO);
 		if set.instanceID == nil and set.difficultyID == nil then
