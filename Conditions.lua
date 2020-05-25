@@ -196,8 +196,24 @@ function Internal.ClearConditions()
 	wipe(previousConditionInfo);
 	wipe(activeConditions);
 end
+-- Table of Instances IDs that we want to override instanceType
+local instanceTypeOverride = {
+	-- Garrisons
+	[1152] = "none",
+	[1330] = "none",
+	[1153] = "none",
+	[1154] = "none",
+
+	[1158] = "none",
+	[1331] = "none",
+	[1159] = "none",
+	[1160] = "none",
+}
 function Internal.UpdateConditionsForInstance()
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
+
+	instanceType = instanceTypeOverride[instanceID] or instanceType
+
 	if previousConditionInfo.instanceType ~= instanceType then
 		DeactivateConditionMap(conditionMap.instanceType, previousConditionInfo.instanceType);
 		ActivateConditionMap(conditionMap.instanceType, instanceType);
