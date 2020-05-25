@@ -786,7 +786,8 @@ end
 
 function Internal.ProfilesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Profiles"]);
-	self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
+	-- self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
+	self.set = Internal.SetsScrollFrame_Display(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsFrame.SearchBox:GetText():lower(), BtWLoadoutsCollapsed.profiles, "character", "spec");
 
 	self.Name:SetEnabled(self.set ~= nil);
 	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
@@ -801,8 +802,8 @@ function Internal.ProfilesTabUpdate(self)
 	if self.set ~= nil then
 		local valid, class, specID, role, validForPlayer = Internal.IsProfileValid(self.set);
 		if type(specID) == "number" and self.set.specID ~= specID then
-			self.set.specID = specID;
-			Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
+			-- self.set.specID = specID;
+			-- Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
 		end
 
 		specID = self.set.specID;

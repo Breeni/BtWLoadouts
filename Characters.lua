@@ -2435,6 +2435,17 @@ end
 function Internal.GetCharacterInfo(character)
 	return BtWLoadoutsCharacterInfo and BtWLoadoutsCharacterInfo[character];
 end
+local characterIteratorTemp = {}
+function Internal.CharacterIterator()
+	wipe(characterIteratorTemp);
+	for character in pairs(BtWLoadoutsCharacterInfo or {}) do
+		characterIteratorTemp[#characterIteratorTemp+1] = character
+	end
+	table.sort(characterIteratorTemp, function (a, b)
+		return a < b
+	end)
+	return ipairs(characterIteratorTemp)
+end
 function Internal.UpdatePlayerInfo()
     local name, realm = UnitFullName("player");
     local class = select(2, UnitClass("player"));

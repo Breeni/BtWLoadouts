@@ -854,6 +854,7 @@
 			</Button>
 			<Frame parentKey="ScrollInset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
+					<!-- <Anchor point="TOPLEFT" x="4" y="-61" /> -->
 					<Anchor point="TOPLEFT" x="4" y="-26" />
 					<Anchor point="BOTTOM" x="0" y="26" />
 				</Anchors>
@@ -865,10 +866,43 @@
 					<Anchor point="BOTTOMRIGHT" x="-6" y="26" />
 				</Anchors>
 			</Frame>
+			<EditBox parentKey="SearchBox" inherits="SearchBoxTemplate" letters="40">
+				<Size x="115" y="20"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.ScrollInset" x="15" y="-9"/>
+				</Anchors>
+				<Scripts>
+					<!-- <OnTextChanged function="PetJournal_OnSearchTextChanged"/> -->
+				</Scripts>
+			</EditBox>
+			<DropDownToggleButton parentKey="FilterButton" inherits="UIMenuButtonStretchTemplate" text="FILTER">
+				<Size x="93" y="22"/>
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativeKey="$parent.ScrollInset" x="-5" y="-9"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Icon" file="Interface\ChatFrame\ChatFrameExpandArrow">
+							<Size x="10" y="12"/>
+							<Anchors>
+								<Anchor point="RIGHT" relativeKey="$parent.Right" relativePoint="RIGHT" x="-5"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+				<Scripts>
+					<OnMouseDown>
+						UIMenuButtonStretchMixin.OnMouseDown(self, button);
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+						<!-- ToggleDropDownMenu(1, nil, PetJournalFilterDropDown, "PetJournalFilterButton", 74, 15); -->
+					</OnMouseDown>
+				</Scripts>
+			</DropDownToggleButton>
 			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
 				<Size x="225" y="0"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="10" y="-34"/>
+					<Anchor point="TOPLEFT" x="10" y="-69" />
+					<!-- <Anchor point="TOPLEFT" x="10" y="-34"/> -->
 					<Anchor point="BOTTOM" x="0" y="31"/>
 				</Anchors>
 				<Frames>
