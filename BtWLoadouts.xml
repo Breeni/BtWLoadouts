@@ -783,8 +783,11 @@
 		</NormalTexture>
     </Button>
 
+	<Frame name="BtWLoadoutsScrollListItemButtons" inherits="UIDropDownCustomMenuEntryTemplate" virtual="true">
+
+	</Frame>
 	<Button name="BtWLoadoutsScrollListItem" parentArray="ScrollButtons" virtual="true">
-		<Size x="233" y="21"/>
+		<Size x="223" y="21"/>
 		<Layers>
 			<Layer level="ARTWORK">
 				<Texture parentKey="ExpandedIcon" inherits="Char-Stat-Minus">
@@ -882,7 +885,7 @@
 			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
 				<Size x="225" y="0"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="6" y="-43" />
+					<Anchor point="TOPLEFT" x="6" y="-39" />
 					<Anchor point="BOTTOM" x="0" y="5"/>
 				</Anchors>
 				<Frames>

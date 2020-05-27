@@ -19,6 +19,8 @@ function frame:ADDON_LOADED(...)
         BtWLoadoutsSettings = BtWLoadoutsSettings or {};
         Internal.Settings(BtWLoadoutsSettings);
 
+        Internal.UpdateClassInfo();
+        
         BtWLoadoutsSets = BtWLoadoutsSets or {
             profiles = {},
             talents = {},
@@ -35,6 +37,45 @@ function frame:ADDON_LOADED(...)
                 if type(set) == "table" then
                     set.setID = setID;
                     set.useCount = 0;
+
+                    -- Refresh filtering
+                    set.filters = set.filters or {}
+                    if set.character then
+                        set.filters.character = set.character
+                        local characterInfo = Internal.GetCharacterInfo(set.character)
+                        if characterInfo then
+                            set.filters.class = characterInfo.class
+                        end
+                    end
+                    if set.specID then
+                        set.filters.spec = set.specID
+                        set.filters.role, set.filters.class = select(5, GetSpecializationInfoByID(set.specID))
+
+                        if not set.filters.character then
+                            local characters = {}
+                            local class = set.filters.class
+                            for _,character in Internal.CharacterIterator() do
+                                if class == Internal.GetCharacterInfo(character).class then
+                                    characters[#characters+1] = character
+                                end
+                            end
+                            set.filters.character = characters
+                        end
+                    end
+                    if set.role then
+                        set.filters.role = set.role
+
+                        if not set.filters.character then
+                            local characters = {}
+                            local role = set.filters.role
+                            for _,character in Internal.CharacterIterator() do
+                                if Internal.IsClassRoleValid(Internal.GetCharacterInfo(character).class, role) then
+                                    characters[#characters+1] = character
+                                end
+                            end
+                            set.filters.character = characters
+                        end
+                    end
                 end
             end
         end
@@ -88,7 +129,22 @@ function frame:ADDON_LOADED(...)
             actionbars = {},
         };
         BtWLoadoutsCollapsed.actionbars = BtWLoadoutsCollapsed.actionbars or {}
-        Internal.UpdateClassInfo();
+        BtWLoadoutsCategories = BtWLoadoutsCategories or {
+            profiles = {},
+            talents = {},
+            pvptalents = {},
+            essences = {},
+            equipment = {},
+            actionbars = {},
+        };
+        BtWLoadoutsFilters = BtWLoadoutsFilters or {
+            profiles = {},
+            talents = {},
+            pvptalents = {},
+            essences = {},
+            equipment = {},
+            actionbars = {},
+        };
 
         BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
 

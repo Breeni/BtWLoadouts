@@ -1696,87 +1696,41 @@ end
 	BtWLoadoutsSidebarMixin, sidebar display with filtering
 ]]
 do
-	local function FilterSets_Spec(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local specID = set.specID or 0
-				result[specID] = result[specID] or {};
-				result[specID][#result[specID]+1] = set;
+	local function OrganiseSetsByFilter(result, sets, filter)
+		if filter == nil then
+			for _,set in pairs(sets) do
+				if type(set) == "table" then
+					result[#result+1] = set;
+				end
 			end
-		end
-
-		return result
-	end
-	local function FilterSets_Class(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local specID = set.specID or 0
-				local classID = select(6, GetSpecializationInfoByID(specID)) or "other"
-				result[classID] = result[classID] or {};
-				result[classID][#result[classID]+1] = set;
+	
+			return result
+		else
+			for setID,set in pairs(sets) do
+				if type(set) == "table" then
+					local value = set.filters[filter] or 0
+					if type(value) == "table" then
+						for _,v in pairs(value) do
+							result[v] = result[v] or {};
+							result[v][#result[v] + 1] = set;
+						end
+					else
+						result[value] = result[value] or {};
+						result[value][#result[value] + 1] = set;
+					end
+				end
 			end
-		end
-
-		return result
-	end
-	local function FilterSets_Role(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local role = set.role or select(5, GetSpecializationInfoByID(set.specID or 0)) or "other"
-				result[role] = result[role] or {};
-				result[role][#result[role]+1] = set;
-			end
-		end
-
-		return result
-	end
-	local function FilterSets_Character(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local character = set.character or "other"
-				result[character] = result[character] or {};
-				result[character][#result[character]+1] = set;
-			end
-		end
-
-		return result
-	end
-	local function FilterSets_Clone(result, sets)
-		for _,set in pairs(sets) do
-			if type(set) == "table" then
-				result[#result+1] = set;
-			end
-		end
-
-		return result
-	end
-	--[[
-		Takes a list of sets and returns a table containing the filter values as keys and 
-		a list of the sets
-	]]
-	local function FilterSets(result, sets, filter)
-		if filter == "spec" then
-			return FilterSets_Spec(result, sets)
-		elseif filter == "class" then
-			return FilterSets_Class(result, sets)
-		elseif filter == "role" then
-			return FilterSets_Role(result, sets)
-		elseif filter == "character" then
-			return FilterSets_Character(result, sets)
-		elseif filter == nil then
-			return FilterSets_Clone(result, sets)
-		else -- @TODO Character, role
-			error(format("Unsupported filter type %s", filter))
+			return result
 		end
 	end
 	--[[
 		... is a list of filters, eg spec, role, class, character, instanceType, etc.
 	]]
-	local function SetsScrollFrame_FilterSets(sets, ...)
-		local tbl = FilterSets({}, sets, ...)
+	local function CategoriesSets(sets, ...)
+		local tbl = OrganiseSetsByFilter({}, sets, ...)
 		if select('#', ...) > 1 then
 			for k,v in pairs(tbl) do
-				tbl[k] = SetsScrollFrame_FilterSets(v, select(2, ...))
+				tbl[k] = CategoriesSets(v, select(2, ...))
 			end
 		end
 		return tbl
@@ -1792,6 +1746,35 @@ do
 
 		return result
 	end
+	local function ContainsOrMatches(tbl, value)
+		if type(tbl) == "table" then
+			for _,v in pairs(tbl) do
+				if v == value then
+					return true
+				end
+			end
+		elseif tbl == value then
+			return true
+		end
+		return false
+	end
+	local function FiltersMatch(filters, setFilters)
+		for filter,value in pairs(filters) do
+			if not ContainsOrMatches(setFilters[filter], value) then
+				return false
+			end
+		end
+		return true
+	end
+	local function FilterSets(result, filters, sets)
+		for _,set in pairs(sets) do
+			if type(set) == "table" and FiltersMatch(filters, set.filters) then
+				result[#result+1] = set;
+			end
+		end
+
+		return result
+	end
 	local SpecFilterEnumerator
 	do
 		local specEnumertorList
@@ -1868,7 +1851,7 @@ do
 				end
 				
 				classEnumertorList[#classEnumertorList+1] = {
-					id = "other",
+					id = 0,
 					name = L["Other"],
 				}
 			end
@@ -1900,7 +1883,7 @@ do
 				end
 				
 				roleEnumertorList[#roleEnumertorList+1] = {
-					id = "other",
+					id = 0,
 					name = L["Other"],
 				}
 			end
@@ -1942,7 +1925,7 @@ do
 			end
 
 			charaterEnumertorList[#charaterEnumertorList+1] = {
-				id = "other",
+				id = 0,
 				name = L["Other"],
 			};
 
@@ -1962,7 +1945,7 @@ do
 			error(format("Unsupported filter type %s", filter))
 		end
 	end
-	local function BuildList(items, selected, filtered, collapsed, ...)
+	local function BuildList(items, depth, selected, filtered, collapsed, ...)
 		if select('#', ...) == 0 then
 			table.sort(filtered, function (a, b)
 				return a.name < b.name
@@ -1971,26 +1954,29 @@ do
 				selected = selected or set
 				items[#items+1] = {
 					id = set.setID,
-					name = set.name,
+					name = (set.name == nil or set.name == "") and L["Unnamed"] or set.name,
 					disabled = set.disabled,
 					selected = set == selected,
+					depth = depth,
 				};
 			end
 		else
 			local filter = ...
-			collapsed[filter] = collapsed[filter] or {}
+			collapsed.children = collapsed.children or {}
 			for _,filterItem in FilterEnumerator(filter) do
 				if filtered[filterItem.id] then
-					local isCollapsed = collapsed[filter][filterItem.id] and true or false
+					local isCollapsed = collapsed[filterItem.id] and true or false
 					items[#items+1] = {
 						id = filterItem.id,
 						type = filter,
 						isHeader = true,
 						isCollapsed = isCollapsed,
+						collapsed = collapsed,
 						name = filterItem.name,
+						depth = depth,
 					};
 					if not isCollapsed then
-						selected = BuildList(items, selected, filtered[filterItem.id], collapsed, select(2, ...))
+						selected = BuildList(items, depth + 1, selected, filtered[filterItem.id], collapsed.children, select(2, ...))
 					end
 				end
 			end
@@ -2006,11 +1992,12 @@ do
 		end
 
 		local totalHeight, displayedHeight = #items * (buttons[1]:GetHeight() + 1), self:GetHeight()
-		local hasScrollBar = totalHeight > displayedHeight
+		-- local hasScrollBar = totalHeight > displayedHeight
 
 		local offset = HybridScrollFrame_GetOffset(self);
 		for i,button in ipairs(buttons) do
-			button:SetWidth(hasScrollBar and 200 or 223)
+			-- button:SetWidth(223)
+			-- button:SetWidth(hasScrollBar and 200 or 223)
 
 			local item = items[i+offset]
 			if item then
@@ -2023,6 +2010,7 @@ do
 				button.isHeader = item.isHeader;
 				if item.isHeader then
 					button.id = item.id;
+					button.collapsed = item.collapsed;
 
 					button.SelectedBar:Hide();
 
@@ -2034,6 +2022,10 @@ do
 						button.CollapsedIcon:Hide();
 					end
 					button.BuiltinIcon:Hide();
+
+					button.ExpandedIcon:SetPoint("LEFT", (item.depth * 15) + 4, 0)
+					button.CollapsedIcon:SetPoint("LEFT", (item.depth * 15) + 4, 0)
+					button.Name:SetPoint("LEFT", (item.depth * 15) + 15, 0)
 				else
 					if not item.isAdd then
 						button.id = item.id;
@@ -2044,19 +2036,21 @@ do
 
 					button.ExpandedIcon:Hide();
 					button.CollapsedIcon:Hide();
+
+					button.Name:SetPoint("LEFT", (item.depth * 15) + 4, 0)
 				end
 
 				local name;
-				if item.character then
-					local characterInfo = GetCharacterInfo(item.character);
-					if characterInfo then
-						name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
-					else
-						name = format("%s |cFFD5D5D5(%s)|r", item.name, item.character);
-					end
-				else
+				-- if item.character then
+				-- 	local characterInfo = GetCharacterInfo(item.character);
+				-- 	if characterInfo then
+				-- 		name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
+				-- 	else
+				-- 		name = format("%s |cFFD5D5D5(%s)|r", item.name, item.character);
+				-- 	end
+				-- else
 					name = item.name;
-				end
+				-- end
 				if item.disabled then
 					name = format("|cFF999999%s|r", name)
 				end
@@ -2067,6 +2061,10 @@ do
 			end
 		end
 		HybridScrollFrame_Update(self, totalHeight, displayedHeight);
+	end
+	local function GetCharacterSlug()
+		local characterName, characterRealm = UnitFullName("player");
+		return characterRealm .. "-" .. characterName
 	end
 	local function DropDown_Initialize(self, level)
 		local sidebar = self:GetParent()
@@ -2079,36 +2077,55 @@ do
 			-- Own only?
 			local active = {}
 
+			self.MovePool:ReleaseAll()
+
+			info.isTitle = false
+			info.disabled = false
+			info.func = function (self, arg1, arg2)
+				sidebar:SetFilter(arg1, sidebar:GetFilter(arg1) ~= arg2 and arg2 or nil)
+				CloseDropDownMenus()
+				ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
+			end
+			
+			do
+				local character = GetCharacterSlug()
+				info.checked = sidebar:GetFilter("character") == character
+				info.arg1 = "character"
+				info.arg2 = character
+				info.text = L["Current Character Only"]
+				UIDropDownMenu_AddButton(info, level)
+			end
+
 			info.isTitle = true
+			info.isCheckable = false
+			info.checked = false
 			info.text = L["Categories"]
 			UIDropDownMenu_AddButton(info, level)
 
 			info.isTitle = false
 			info.disabled = false
+			info.isCheckable = true
 			info.checked = true
 			info.func = function (self, arg1)
-				sidebar:RemoveFilter(arg1)
+				sidebar:RemoveCategory(arg1)
 				CloseDropDownMenus()
 				ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
 			end
 
-			for index,value in ipairs({sidebar:GetFilters()}) do
+			for index,value in ipairs({sidebar:GetCategories()}) do
 				info.text = value
 				info.arg1 = value
 				info.arg2 = index
+				-- info.customFrame = self.MovePool:Acquire()
 				active[value] = true
 				UIDropDownMenu_AddButton(info, level);
 			end
 
-			-- info.isTitle = true
-			-- info.text = L["Filters"]
-			-- UIDropDownMenu_AddButton(info, level)
-			-- UIDropDownMenu_AddSeparator(level)
-
 			info.isTitle = false
 			info.checked = false
+			info.customFrame = nil
 			info.func = function (self, arg1)
-				sidebar:AddFilter(arg1)
+				sidebar:AddCategory(arg1)
 				CloseDropDownMenus()
 				ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
 			end
@@ -2121,17 +2138,6 @@ do
 					UIDropDownMenu_AddButton(info, level);
 				end
 			end
-			-- info.text = COLLECTED
-
-
-
-			-- info.text = COLLECTED
-			-- info.func = function(_, _, _, value)
-			-- 				C_PetJournal.SetFilterChecked(LE_PET_JOURNAL_FILTER_COLLECTED, value);
-			-- 			end
-			-- info.checked = C_PetJournal.IsFilterChecked(LE_PET_JOURNAL_FILTER_COLLECTED);
-			-- info.isNotRadio = true;
-			-- UIDropDownMenu_AddButton(info, level);
 		end
 	end
 	BtWLoadoutsSidebarMixin = {}
@@ -2140,10 +2146,12 @@ do
 	end
 	function BtWLoadoutsSidebarMixin:Init()
 		self.Scroll.items = {}
+		self.Scroll.ScrollBar.doNotHide = true;
 		HybridScrollFrame_CreateButtons(self.Scroll, "BtWLoadoutsScrollListItem", 0, 0, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 		self.Scroll.update = Scroll_Update
 
 		UIDropDownMenu_Initialize(self.FilterDropDown, DropDown_Initialize, "MENU");
+		self.FilterDropDown.MovePool = CreateFramePool("FRAME", self, "BtWLoadoutsScrollListItemButtons", FramePool_HideAndClearAnchors);
 	end
 	function BtWLoadoutsSidebarMixin:OnShow()
 		if not self.initialized then
@@ -2151,15 +2159,7 @@ do
 			self:Init()
 		end
 	end
-	function BtWLoadoutsSidebarMixin:OnSearchChanged()
-		self.query = self.SearchBox:GetText():lower()
-		self:Update()
-	end
-	function BtWLoadoutsSidebarMixin:Display(sets, collapsed, filters)
-		self.sets, self.collapsed, self.filters = sets, collapsed, filters
-		self:Update()
-	end
-	-- Set by the current tab
+
 	function BtWLoadoutsSidebarMixin:SetSupportedFilters(...)
 		wipe(self.supportedFilters)
 		for i=1,select('#', ...) do
@@ -2169,429 +2169,79 @@ do
 	function BtWLoadoutsSidebarMixin:GetSupportedFilters(...)
 		return unpack(self.supportedFilters)
 	end
-	function BtWLoadoutsSidebarMixin:SetFilters(...)
-		wipe(self.filters)
-		for i=1,select('#', ...) do
-			self.filters[i] = select(i, ...)
+
+	function BtWLoadoutsSidebarMixin:SetSets(value)
+		self.sets = value
+	end
+	function BtWLoadoutsSidebarMixin:SetCollapsed(value)
+		self.collapsed = value
+	end
+	function BtWLoadoutsSidebarMixin:SetCategories(value)
+		self.categories = value
+	end
+	function BtWLoadoutsSidebarMixin:SetFilters(value)
+		self.filters = value
+	end
+	function BtWLoadoutsSidebarMixin:SetSelected(selected)
+		self.selected = selected
+	end
+	function BtWLoadoutsSidebarMixin:GetSelected()
+		return self.selected
+	end
+
+	function BtWLoadoutsSidebarMixin:GetCategories()
+		return unpack(self.categories)
+	end
+	function BtWLoadoutsSidebarMixin:GetFilters()
+		local temp = {}
+		for k in pairs(self.filters) do
+			temp[#temp+1] = k
 		end
+		return unpack(temp)
+	end
+	function BtWLoadoutsSidebarMixin:GetFilter(name)
+		return self.filters[name]
+	end
+	function BtWLoadoutsSidebarMixin:SetFilter(name, value)
+		self.filters[name] = value
 		self:Update()
 	end
-	function BtWLoadoutsSidebarMixin:GetFilters(...)
-		return unpack(self.filters)
-	end
-	function BtWLoadoutsSidebarMixin:AddFilter(filter)
-		self.filters[#self.filters+1] = filter
+
+	function BtWLoadoutsSidebarMixin:AddCategory(filter)
+		self.categories[#self.categories+1] = filter
 		self:Update()
 	end
-	function BtWLoadoutsSidebarMixin:RemoveFilter(filter)
-		for i=1,#self.filters do
-			if self.filters[i] == filter then
-				table.remove(self.filters, i)
+	function BtWLoadoutsSidebarMixin:RemoveCategory(filter)
+		for i=1,#self.categories do
+			if self.categories[i] == filter then
+				table.remove(self.categories, i)
 				break
 			end
 		end
 		self:Update()
 	end
+	function BtWLoadoutsSidebarMixin:OnSearchChanged()
+		self.query = self.SearchBox:GetText():lower()
+		self:Update()
+	end
 	function BtWLoadoutsSidebarMixin:Update()
 		if not self.initialized then return end
 		
-		sets = FilterSetsBySearch({}, self.query, self.sets)
-		local filtered = SetsScrollFrame_FilterSets(sets, unpack(self.filters))
+		local filtered = FilterSetsBySearch({}, self.query, self.sets)
+		filtered = FilterSets({}, self.filters, filtered)
+		filtered = CategoriesSets(filtered, unpack(self.categories))
 
 		wipe(self.Scroll.items);
-		selected = BuildList(self.Scroll.items, selected, filtered, self.collapsed, unpack(self.filters))
+		self.selected = BuildList(self.Scroll.items, 0, self.selected, filtered, self.collapsed, unpack(self.categories))
 		self.Scroll:update();
 	end
 end
+
 
 local SetsScrollFrame_Update
 do
 	local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
 	local SCROLL_ROW_HEIGHT = 21;
-	local setScrollItems = {};
-	function SetsScrollFrame_Update()
-		local self = BtWLoadoutsFrame.Scroll
-		local buttons = self.buttons;
-		local items = setScrollItems;
-		if not buttons then
-			return
-		end
-
-		local totalHeight, displayedHeight = #items * (buttons[1]:GetHeight() + 1), self:GetHeight()
-		local hasScrollBar = totalHeight > displayedHeight
-
-		local offset = HybridScrollFrame_GetOffset(self);
-		for i,button in ipairs(buttons) do
-			button:SetWidth(hasScrollBar and 200 or 223)
-
-			local item = items[i+offset]
-			if item then
-				button.isAdd = item.isAdd;
-				if item.isAdd then
-					button.SelectedBar:Hide();
-					button.BuiltinIcon:Hide();
-				end
-
-				button.isHeader = item.isHeader;
-				if item.isHeader then
-					button.id = item.id;
-
-					button.SelectedBar:Hide();
-
-					if item.isCollapsed then
-						button.ExpandedIcon:Hide();
-						button.CollapsedIcon:Show();
-					else
-						button.ExpandedIcon:Show();
-						button.CollapsedIcon:Hide();
-					end
-					button.BuiltinIcon:Hide();
-				else
-					if not item.isAdd then
-						button.id = item.id;
-
-						button.SelectedBar:SetShown(item.selected);
-						button.BuiltinIcon:SetShown(item.builtin);
-					end
-
-					button.ExpandedIcon:Hide();
-					button.CollapsedIcon:Hide();
-				end
-
-				local name;
-				if item.character then
-					local characterInfo = GetCharacterInfo(item.character);
-					if characterInfo then
-						name = format("%s |cFFD5D5D5(%s - %s)|r", item.name, characterInfo.name, characterInfo.realm);
-					else
-						name = format("%s |cFFD5D5D5(%s)|r", item.name, item.character);
-					end
-				else
-					name = item.name;
-				end
-				if item.disabled then
-					name = format("|cFF999999%s|r", name)
-				end
-				button.Name:SetText(name or L["Unnamed"]);
-				button:Show();
-			else
-				button:Hide();
-			end
-		end
-		HybridScrollFrame_Update(self, totalHeight, displayedHeight);
-	end
-	local function FilterSets_Spec(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local specID = set.specID or 0
-				result[specID] = result[specID] or {};
-				result[specID][#result[specID]+1] = set;
-			end
-		end
-
-		return result
-	end
-	local function FilterSets_Class(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local specID = set.specID or 0
-				local classID = select(6, GetSpecializationInfoByID(specID)) or "other"
-				result[classID] = result[classID] or {};
-				result[classID][#result[classID]+1] = set;
-			end
-		end
-
-		return result
-	end
-	local function FilterSets_Role(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local role = set.role or select(5, GetSpecializationInfoByID(set.specID or 0)) or "other"
-				result[role] = result[role] or {};
-				result[role][#result[role]+1] = set;
-			end
-		end
-
-		return result
-	end
-	local function FilterSets_Character(result, sets)
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				local character = set.character or "other"
-				result[character] = result[character] or {};
-				result[character][#result[character]+1] = set;
-			end
-		end
-
-		return result
-	end
-	local function FilterSets_Clone(result, sets)
-		for _,set in pairs(sets) do
-			if type(set) == "table" then
-				result[#result+1] = set;
-			end
-		end
-
-		return result
-	end
-	--[[
-		Takes a list of sets and returns a table containing the filter values as keys and 
-		a list of the sets
-	]]
-	local function FilterSets(result, sets, filter)
-		if filter == "spec" then
-			return FilterSets_Spec(result, sets)
-		elseif filter == "class" then
-			return FilterSets_Class(result, sets)
-		elseif filter == "role" then
-			return FilterSets_Role(result, sets)
-		elseif filter == "character" then
-			return FilterSets_Character(result, sets)
-		elseif filter == nil then
-			return FilterSets_Clone(result, sets)
-		else -- @TODO Character, role
-			error(format("Unsupported filter type %s", filter))
-		end
-	end
-	--[[
-		... is a list of filters, eg spec, role, class, character, instanceType, etc.
-	]]
-	local function SetsScrollFrame_FilterSets(sets, ...)
-		local tbl = FilterSets({}, sets, ...)
-		if select('#', ...) > 1 then
-			for k,v in pairs(tbl) do
-				tbl[k] = SetsScrollFrame_FilterSets(v, select(2, ...))
-			end
-		end
-		return tbl
-	end
-	local SpecFilterEnumerator
-	do
-		local specEnumertorList
-		function SpecFilterEnumerator()
-			if specEnumertorList == nil then
-				specEnumertorList = {}
-				_G['BtWLoadouts_SpecEnumertorList'] = specEnumertorList -- @TODO REMOVE
-
-				local className, classFile, classID = UnitClass("player");
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					specEnumertorList[#specEnumertorList+1] = {
-						id = specID,
-						name = format("%s: %s", className, specName),
-					}
-				end
-
-				local playerClassID = classID;
-				for classID=1,GetNumClasses() do
-					if classID ~= playerClassID then
-						local className, classFile = GetClassInfo(classID);
-						local classColor = C_ClassColor.GetClassColor(classFile);
-						className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-						for specIndex=1,GetNumSpecializationsForClassID(classID) do
-							local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-							specEnumertorList[#specEnumertorList+1] = {
-								id = specID,
-								name = format("%s: %s", className, specName),
-							}
-						end
-					end
-				end
-				
-				specEnumertorList[#specEnumertorList+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(specEnumertorList)
-		end
-	end
-	local ClassFilterEnumerator
-	do
-		local classEnumertorList
-		function ClassFilterEnumerator()
-			if classEnumertorList == nil then
-				classEnumertorList = {}
-				_G['BtWLoadouts_ClassEnumertorList'] = classEnumertorList -- @TODO REMOVE
-
-				local className, classFile, classID = UnitClass("player");
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-				classEnumertorList[#classEnumertorList+1] = {
-					id = classFile,
-					name = className,
-				}
-
-				local playerClassID = classID;
-				for classID=1,GetNumClasses() do
-					if classID ~= playerClassID then
-						local className, classFile = GetClassInfo(classID);
-						local classColor = C_ClassColor.GetClassColor(classFile);
-						className = classColor and classColor:WrapTextInColorCode(className) or className;
-						classEnumertorList[#classEnumertorList+1] = {
-							id = classFile,
-							name = className,
-						}
-					end
-				end
-				
-				classEnumertorList[#classEnumertorList+1] = {
-					id = "other",
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(classEnumertorList)
-		end
-	end
-	local RoleFilterEnumerator
-	do
-		local roleEnumertorList
-		function RoleFilterEnumerator()
-			if roleEnumertorList == nil then
-				roleEnumertorList = {}
-
-				local role = select(5, GetSpecializationInfo(GetSpecialization()));
-				roleEnumertorList[#roleEnumertorList+1] = {
-					id = role,
-					name = _G[role],
-				}
-
-				local playerRole = role;
-				for _,role in Internal.Roles() do
-					if role ~= playerRole then
-						roleEnumertorList[#roleEnumertorList+1] = {
-							id = role,
-							name = _G[role],
-						}
-					end
-				end
-				
-				roleEnumertorList[#roleEnumertorList+1] = {
-					id = "other",
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(roleEnumertorList)
-		end
-	end
-	local CharacterFilterEnumerator
-	do
-		local charaterEnumertorList = {}
-		function CharacterFilterEnumerator()
-			wipe(charaterEnumertorList)
-
-			local name, realm = UnitFullName("player");
-			local character = realm .. "-" .. name;
-			local characterInfo = GetCharacterInfo(character);
-			if characterInfo then
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-			end
-			charaterEnumertorList[#charaterEnumertorList+1] = {
-				id = character,
-				name = name,
-			};
-
-			local playerCharacter = character
-			for _,character in Internal.CharacterIterator() do
-				if playerCharacter ~= character then
-					local characterInfo = GetCharacterInfo(character);
-					if characterInfo then
-						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					end
-					charaterEnumertorList[#charaterEnumertorList+1] = {
-						id = character,
-						name = name,
-					};
-				end
-			end
-
-			charaterEnumertorList[#charaterEnumertorList+1] = {
-				id = "other",
-				name = L["Other"],
-			};
-
-			return ipairs(charaterEnumertorList)
-		end
-	end
-	local function FilterEnumerator(filter)
-		if filter == "spec" then
-			return SpecFilterEnumerator()
-		elseif filter == "class" then
-			return ClassFilterEnumerator()
-		elseif filter == "role" then
-			return RoleFilterEnumerator()
-		elseif filter == "character" then
-			return CharacterFilterEnumerator()
-		else -- @TODO Character, role
-			error(format("Unsupported filter type %s", filter))
-		end
-	end
-	local function BuildList(items, selected, collapsed, filtered, ...)
-		if select('#', ...) == 0 then
-			table.sort(filtered, function (a, b)
-				return a.name < b.name
-			end)
-			for _,set in ipairs(filtered) do
-				selected = selected or set
-				items[#items+1] = {
-					id = set.setID,
-					name = set.name,
-					disabled = set.disabled,
-					selected = set == selected,
-				};
-			end
-		else
-			local filter = ...
-			collapsed[filter] = collapsed[filter] or {}
-			for _,filterItem in FilterEnumerator(filter) do
-				if filtered[filterItem.id] then
-					local isCollapsed = collapsed[filter][filterItem.id] and true or false
-					items[#items+1] = {
-						id = filterItem.id,
-						type = filter,
-						isHeader = true,
-						isCollapsed = isCollapsed,
-						name = filterItem.name,
-					};
-					if not isCollapsed then
-						selected = BuildList(items, selected, collapsed, filtered[filterItem.id], select(2, ...))
-					end
-				end
-			end
-		end
-
-		return selected
-	end
-	local function FilterSets_Search(result, query, sets)
-		for _,set in pairs(sets) do
-			if type(set) == "table" then
-				if query == nil or set.name:lower():find(query) ~= nil then
-					result[#result+1] = set;
-				end
-			end
-		end
-
-		return result
-	end
-	local function SetsScrollFrame_Display(selected, sets, query, collapsed, ...)
-		sets = FilterSets_Search({}, query, sets)
-		local filtered = SetsScrollFrame_FilterSets(sets, ...)
-
-		wipe(setScrollItems);
-		selected = BuildList(setScrollItems, selected, collapsed, filtered, ...)
-		SetsScrollFrame_Update();
-		return selected
-	end
-	Internal.SetsScrollFrame_Display = SetsScrollFrame_Display
 	function Internal.SetsScrollFrame_SpecFilter(selected, sets, collapsed)
 		wipe(setScrollItems);
 		wipe(setsFiltered);
@@ -3015,7 +2665,8 @@ do
 
 				Internal.ProfilesTabUpdate(frame);
 			elseif button.isHeader then
-				BtWLoadoutsCollapsed.profiles[button.id] = not BtWLoadoutsCollapsed.profiles[button.id] and true or nil;
+				button.collapsed[button.id] = not button.collapsed[button.id]
+				-- BtWLoadoutsCollapsed.profiles[button.id] = not BtWLoadoutsCollapsed.profiles[button.id] and true or nil;
 				Internal.ProfilesTabUpdate(frame);
 			else
 				if IsModifiedClick("SHIFT") then
