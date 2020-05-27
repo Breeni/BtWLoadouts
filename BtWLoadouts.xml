@@ -841,44 +841,24 @@
 			</OnClick>
 		</Scripts>
 	</Button>
-	<Frame name="BtWLoadoutsFrame" mixin="BtWLoadoutsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
-		<Size x="829" y="448"/>
-		<Anchors>
-			<Anchor point="CENTER"/>
-		</Anchors>
+	<Frame name="BtWLoadoutsSidebarTemplate" mixin="BtWLoadoutsSidebarMixin" virtual="true">
 		<Frames>
-			<Button name="$parentCloseButton" parentKey="CloseButton" inherits="UIPanelCloseButton">
-				<Anchors>
-					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="5.6" y="5"/>
-				</Anchors>
-			</Button>
-			<Frame parentKey="ScrollInset" useParentLevel="true" inherits="InsetFrameTemplate">
-				<Anchors>
-					<!-- <Anchor point="TOPLEFT" x="4" y="-61" /> -->
-					<Anchor point="TOPLEFT" x="4" y="-26" />
-					<Anchor point="BOTTOM" x="0" y="26" />
-				</Anchors>
-				<Size x="235" y="0"/>
-			</Frame>
-			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate" hidden="true">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.ScrollInset" relativePoint="TOPRIGHT" x="6" y="0" />
-					<Anchor point="BOTTOMRIGHT" x="-6" y="26" />
-				</Anchors>
-			</Frame>
 			<EditBox parentKey="SearchBox" inherits="SearchBoxTemplate" letters="40">
 				<Size x="115" y="20"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.ScrollInset" x="15" y="-9"/>
+					<Anchor point="TOPLEFT" x="15" y="-9"/>
 				</Anchors>
 				<Scripts>
-					<!-- <OnTextChanged function="PetJournal_OnSearchTextChanged"/> -->
+					<OnTextChanged>
+						SearchBoxTemplate_OnTextChanged(self);
+						self:GetParent():OnSearchChanged(self)
+					</OnTextChanged>
 				</Scripts>
 			</EditBox>
 			<DropDownToggleButton parentKey="FilterButton" inherits="UIMenuButtonStretchTemplate" text="FILTER">
 				<Size x="93" y="22"/>
 				<Anchors>
-					<Anchor point="TOPRIGHT" relativeKey="$parent.ScrollInset" x="-5" y="-9"/>
+					<Anchor point="TOPRIGHT" x="-5" y="-9"/>
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
@@ -894,26 +874,77 @@
 					<OnMouseDown>
 						UIMenuButtonStretchMixin.OnMouseDown(self, button);
 						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
-						<!-- ToggleDropDownMenu(1, nil, PetJournalFilterDropDown, "PetJournalFilterButton", 74, 15); -->
+						ToggleDropDownMenu(1, nil, self:GetParent().FilterDropDown, self, 74, 15);
 					</OnMouseDown>
 				</Scripts>
 			</DropDownToggleButton>
+			<Frame parentKey="FilterDropDown" inherits="UIDropDownMenuTemplate"/>
 			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
 				<Size x="225" y="0"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" x="10" y="-69" />
-					<!-- <Anchor point="TOPLEFT" x="10" y="-34"/> -->
-					<Anchor point="BOTTOM" x="0" y="31"/>
+					<Anchor point="TOPLEFT" x="6" y="-43" />
+					<Anchor point="BOTTOM" x="0" y="5"/>
 				</Anchors>
 				<Frames>
-					<Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
+					<!-- <Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
 						<Anchors>
 							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-20" y="-12"/>
 							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-20" y="13"/>
 						</Anchors>
+					</Slider> -->
+					<Slider parentKey="ScrollBar" inherits="HybridScrollBarTrimTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="4" y="20"/>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="4" y="11"/>
+						</Anchors>
+						<Scripts>
+							<OnLoad>
+								self.trackBG:Show();
+								self.trackBG:SetVertexColor(0, 0, 0, 0.75);
+							</OnLoad>
+						</Scripts>
 					</Slider>
 				</Frames>
 			</ScrollFrame>
+		</Frames>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnShow method="OnShow"/>
+		</Scripts>
+	</Frame>
+
+	<Frame name="BtWLoadoutsFrame" mixin="BtWLoadoutsFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
+		<Size x="829" y="448"/>
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Frames>
+			<Button name="$parentCloseButton" parentKey="CloseButton" inherits="UIPanelCloseButton">
+				<Anchors>
+					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="5.6" y="5"/>
+				</Anchors>
+			</Button>
+			<Frame parentKey="SidebarInset" useParentLevel="true" inherits="InsetFrameTemplate">
+				<Anchors>
+					<!-- <Anchor point="TOPLEFT" x="4" y="-61" /> -->
+					<Anchor point="TOPLEFT" x="4" y="-26" />
+					<Anchor point="BOTTOM" x="0" y="26" />
+				</Anchors>
+				<Size x="235" y="0"/>
+			</Frame>
+			<Frame parentKey="Sidebar" inherits="BtWLoadoutsSidebarTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="4" y="-26" />
+					<Anchor point="BOTTOM" x="0" y="26" />
+				</Anchors>
+				<Size x="235" y="0"/>
+			</Frame>
+			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate" hidden="true">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeKey="$parent.SidebarInset" relativePoint="TOPRIGHT" x="6" y="0" />
+					<Anchor point="BOTTOMRIGHT" x="-6" y="26" />
+				</Anchors>
+			</Frame>
 			<Frame parentKey="Profiles" parentArray="TabFrames" hidden="true">
 				<Anchors>
 					<Anchor point="TOPLEFT" x="250" y="-30"/>
@@ -2407,7 +2438,7 @@
 				</KeyValues>
 				<Size x="120" y="22"/>
 				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.ScrollInset" relativePoint="BOTTOM" x="0" y="0"/>
+					<Anchor point="TOP" relativeKey="$parent.SidebarInset" relativePoint="BOTTOM" x="0" y="0"/>
 				</Anchors>
 				<Layers>
 					<Layer level="OVERLAY">

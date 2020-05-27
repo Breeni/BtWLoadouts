@@ -786,8 +786,11 @@ end
 
 function Internal.ProfilesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Profiles"]);
+	BtWLoadoutsFrame.Sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	BtWLoadoutsFrame.Sidebar:Display(BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles, {"spec"})
 	-- self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
-	self.set = Internal.SetsScrollFrame_Display(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsFrame.SearchBox:GetText():lower(), BtWLoadoutsCollapsed.profiles, "character", "spec");
+	-- self.set = Internal.SetsScrollFrame_Display(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsFrame.SearchBox:GetText():lower(), BtWLoadoutsCollapsed.profiles, "character", "spec");
+	if true then return end
 
 	self.Name:SetEnabled(self.set ~= nil);
 	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
