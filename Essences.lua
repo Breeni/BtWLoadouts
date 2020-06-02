@@ -209,7 +209,18 @@ end
 Internal.EssenceScrollFrameUpdate = EssenceScrollFrameUpdate
 function Internal.EssencesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Essences"]);
-	self.set = Internal.SetsScrollFrame_RoleFilter(self.set, BtWLoadoutsSets.essences, BtWLoadoutsCollapsed.essences);
+	local sidebar = BtWLoadoutsFrame.Sidebar
+
+	sidebar:SetSupportedFilters("role", "character")
+	sidebar:SetSets(BtWLoadoutsSets.essences)
+	sidebar:SetCollapsed(BtWLoadoutsCollapsed.essences)
+	sidebar:SetCategories(BtWLoadoutsCategories.essences)
+	sidebar:SetFilters(BtWLoadoutsFilters.essences)
+	sidebar:SetSelected(self.set)
+
+	sidebar:Update()
+	self.set = sidebar:GetSelected()
+	-- self.set = Internal.SetsScrollFrame_RoleFilter(self.set, BtWLoadoutsSets.essences, BtWLoadoutsCollapsed.essences);
 
 	if self.set ~= nil then
 		self.Name:SetEnabled(true);

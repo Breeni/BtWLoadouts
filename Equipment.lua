@@ -1022,7 +1022,18 @@ Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
 
 function Internal.EquipmentTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Equipment"]);
-	self.set = Internal.SetsScrollFrame_CharacterFilter(self.set, BtWLoadoutsSets.equipment, BtWLoadoutsCollapsed.equipment);
+	local sidebar = BtWLoadoutsFrame.Sidebar
+
+	sidebar:SetSupportedFilters("character")
+	sidebar:SetSets(BtWLoadoutsSets.equipment)
+	sidebar:SetCollapsed(BtWLoadoutsCollapsed.equipment)
+	sidebar:SetCategories(BtWLoadoutsCategories.equipment)
+	sidebar:SetFilters(BtWLoadoutsFilters.equipment)
+	sidebar:SetSelected(self.set)
+
+	sidebar:Update()
+	self.set = sidebar:GetSelected()
+	-- self.set = Internal.SetsScrollFrame_CharacterFilter(self.set, BtWLoadoutsSets.equipment, BtWLoadoutsCollapsed.equipment);
 
 	if self.set ~= nil then
 		local set = self.set;

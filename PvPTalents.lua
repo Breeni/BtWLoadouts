@@ -204,7 +204,18 @@ Internal.CombinePvPTalentSets = CombinePvPTalentSets
 local MAX_PVP_TALENTS = 15;
 function Internal.PvPTalentsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["PvP Talents"]);
-	self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.pvptalents, BtWLoadoutsCollapsed.pvptalents);
+	local sidebar = BtWLoadoutsFrame.Sidebar
+
+	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSets(BtWLoadoutsSets.pvptalents)
+	sidebar:SetCollapsed(BtWLoadoutsCollapsed.pvptalents)
+	sidebar:SetCategories(BtWLoadoutsCategories.pvptalents)
+	sidebar:SetFilters(BtWLoadoutsFilters.pvptalents)
+	sidebar:SetSelected(self.set)
+
+	sidebar:Update()
+	self.set = sidebar:GetSelected()
+	-- self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.pvptalents, BtWLoadoutsCollapsed.pvptalents);
 
 	if self.set ~= nil then
 		self.Name:SetEnabled(true);

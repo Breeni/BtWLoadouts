@@ -364,7 +364,18 @@ Internal.DeleteActionBarSet = DeleteActionBarSet
 
 function Internal.ActionBarsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
-	self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.actionbars, BtWLoadoutsCollapsed.actionbars);
+	local sidebar = BtWLoadoutsFrame.Sidebar
+
+	sidebar:SetSupportedFilters()
+	sidebar:SetSets(BtWLoadoutsSets.actionbars)
+	sidebar:SetCollapsed(BtWLoadoutsCollapsed.actionbars)
+	sidebar:SetCategories(BtWLoadoutsCategories.actionbars)
+	sidebar:SetFilters(BtWLoadoutsFilters.actionbars)
+	sidebar:SetSelected(self.set)
+
+	sidebar:Update()
+	self.set = sidebar:GetSelected()
+	-- self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.actionbars, BtWLoadoutsCollapsed.actionbars);
 
 	if self.set ~= nil then
 		local set = self.set;

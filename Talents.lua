@@ -190,7 +190,18 @@ Internal.CombineTalentSets = CombineTalentSets
 
 function Internal.TalentsTabUpdate(self)
     self:GetParent().TitleText:SetText(L["Talents"]);
-    self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.talents, BtWLoadoutsCollapsed.talents);
+	local sidebar = BtWLoadoutsFrame.Sidebar
+
+	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSets(BtWLoadoutsSets.talents)
+	sidebar:SetCollapsed(BtWLoadoutsCollapsed.talents)
+	sidebar:SetCategories(BtWLoadoutsCategories.talents)
+	sidebar:SetFilters(BtWLoadoutsFilters.talents)
+	sidebar:SetSelected(self.set)
+
+	sidebar:Update()
+	self.set = sidebar:GetSelected()
+    -- self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.talents, BtWLoadoutsCollapsed.talents);
 
     if self.set ~= nil then
         self.Name:SetEnabled(true);

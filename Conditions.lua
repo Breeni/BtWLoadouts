@@ -381,7 +381,18 @@ Internal.DeleteConditionSet = DeleteConditionSet
 
 function Internal.ConditionsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Conditions"]);
-	self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.conditions);
+	local sidebar = BtWLoadoutsFrame.Sidebar
+
+	sidebar:SetSupportedFilters()
+	sidebar:SetSets(BtWLoadoutsSets.conditions)
+	sidebar:SetCollapsed(BtWLoadoutsCollapsed.conditions)
+	sidebar:SetCategories(BtWLoadoutsCategories.conditions)
+	sidebar:SetFilters(BtWLoadoutsFilters.conditions)
+	sidebar:SetSelected(self.set)
+
+	sidebar:Update()
+	self.set = sidebar:GetSelected()
+	-- self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.conditions);
 
 	if self.set ~= nil then
 		local set = self.set;
