@@ -3706,12 +3706,13 @@ end
 -- /btwloadouts activate profile Raid
 -- /btwloadouts activate talents Outlaw: Mythic Plus
 SLASH_BTWLOADOUTS1 = "/btwloadouts"
+SLASH_BTWLOADOUTS2 = "/btwl"
 SlashCmdList["BTWLOADOUTS"] = function (msg)
 	local command, rest = msg:match("^[%s]*([^%s]+)(.*)");
-	if command == "activate" then
+	if command == "activate" or command == "a" then
 		local aType, rest = rest:match("^[%s]*([^%s]+)(.*)");
 		local set;
-		if aType == "profile" then
+		if aType == "profile" or aType == "loadout" then
 			if tonumber(rest) then
 				set = Internal.GetProfile(tonumber(rest));
 			else
@@ -3765,7 +3766,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 					equipmentSet = subset.setID;
 				}
 			end
-		elseif aType == "action-bars" then
+		elseif aType == "action-bars" or aType == "actionbars" then
 			local subset;
 			if tonumber(rest) then
 				subset = Internal.GetActionBarSet(tonumber(rest));
@@ -3791,13 +3792,13 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 		else
 			print(L["Could not find a valid set"]);
 		end
-	elseif command == "minimap" then
+	elseif command == "minimap" or command == "m" then
 		Settings.minimapShown = not Settings.minimapShown;
-	elseif command == "log" then
-		if BtWLoadoutsLogFrame:IsShown() then
-			BtWLoadoutsLogFrame:Hide()
-		else
-			BtWLoadoutsLogFrame:Show()
+	elseif command == "log" or command == "l" then
+        if BtWLoadoutsLogFrame:IsShown() then
+            BtWLoadoutsLogFrame:Hide()
+        else
+            BtWLoadoutsLogFrame:Show()
 		end
 	elseif command == nil then
 		if BtWLoadoutsFrame:IsShown() then
