@@ -2087,7 +2087,7 @@ do
 				ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
 			end
 			
-			do
+			if sidebar:SupportsFilters("character") then
 				local character = GetCharacterSlug()
 				info.checked = sidebar:GetFilter("character") == character
 				info.arg1 = "character"
@@ -2096,46 +2096,48 @@ do
 				UIDropDownMenu_AddButton(info, level)
 			end
 
-			info.isTitle = true
-			info.isCheckable = false
-			info.checked = false
-			info.text = L["Categories"]
-			UIDropDownMenu_AddButton(info, level)
+			if sidebar:GetCategories() then
+				info.isTitle = true
+				info.isCheckable = false
+				info.checked = false
+				info.text = L["Categories"]
+				UIDropDownMenu_AddButton(info, level)
 
-			info.isTitle = false
-			info.disabled = false
-			info.isCheckable = true
-			info.checked = true
-			info.func = function (self, arg1)
-				sidebar:RemoveCategory(arg1)
-				CloseDropDownMenus()
-				ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
-			end
+				info.isTitle = false
+				info.disabled = false
+				info.isCheckable = true
+				info.checked = true
+				info.func = function (self, arg1)
+					sidebar:RemoveCategory(arg1)
+					CloseDropDownMenus()
+					ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
+				end
 
-			for index,value in ipairs({sidebar:GetCategories()}) do
-				info.text = value
-				info.arg1 = value
-				info.arg2 = index
-				-- info.customFrame = self.MovePool:Acquire()
-				active[value] = true
-				UIDropDownMenu_AddButton(info, level);
-			end
-
-			info.isTitle = false
-			info.checked = false
-			info.customFrame = nil
-			info.func = function (self, arg1)
-				sidebar:AddCategory(arg1)
-				CloseDropDownMenus()
-				ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
-			end
-
-			for _,value in ipairs({sidebar:GetSupportedFilters()}) do
-				if not active[value] then
+				for index,value in ipairs({sidebar:GetCategories()}) do
 					info.text = value
 					info.arg1 = value
+					info.arg2 = index
+					-- info.customFrame = self.MovePool:Acquire()
 					active[value] = true
 					UIDropDownMenu_AddButton(info, level);
+				end
+
+				info.isTitle = false
+				info.checked = false
+				info.customFrame = nil
+				info.func = function (self, arg1)
+					sidebar:AddCategory(arg1)
+					CloseDropDownMenus()
+					ToggleDropDownMenu(1, nil, sidebar.FilterDropDown, sidebar.FilterButton, 74, 15)
+				end
+
+				for _,value in ipairs({sidebar:GetSupportedFilters()}) do
+					if not active[value] then
+						info.text = value
+						info.arg1 = value
+						active[value] = true
+						UIDropDownMenu_AddButton(info, level);
+					end
 				end
 			end
 		end
@@ -2165,6 +2167,15 @@ do
 		for i=1,select('#', ...) do
 			self.supportedFilters[i] = select(i, ...)
 		end
+	end
+	function BtWLoadoutsSidebarMixin:SupportsFilters(value)
+		for _,filter in ipairs(self.supportedFilters) do
+			if filter == value then
+				return true
+			end
+		end
+
+		return false
 	end
 	function BtWLoadoutsSidebarMixin:GetSupportedFilters(...)
 		return unpack(self.supportedFilters)
