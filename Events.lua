@@ -127,15 +127,18 @@ function frame:ADDON_LOADED(...)
             essences = {},
             equipment = {},
             actionbars = {},
+            conditions = {},
         };
         BtWLoadoutsCollapsed.actionbars = BtWLoadoutsCollapsed.actionbars or {}
+        BtWLoadoutsCollapsed.conditions = BtWLoadoutsCollapsed.conditions or {}
         BtWLoadoutsCategories = BtWLoadoutsCategories or {
-            profiles = {},
-            talents = {},
-            pvptalents = {},
-            essences = {},
-            equipment = {},
+            profiles = {"spec"},
+            talents = {"spec"},
+            pvptalents = {"spec"},
+            essences = {"role"},
+            equipment = {"character"},
             actionbars = {},
+            conditions = {},
         };
         BtWLoadoutsFilters = BtWLoadoutsFilters or {
             profiles = {},
@@ -144,6 +147,7 @@ function frame:ADDON_LOADED(...)
             essences = {},
             equipment = {},
             actionbars = {},
+            conditions = {},
         };
 
         BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
