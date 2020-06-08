@@ -224,6 +224,24 @@ function Internal.PvPTalentsTabUpdate(self)
 		self.others:SetShown(true);
 
 		local specID = self.set.specID;
+
+		local set = self.set
+
+		-- Update filters
+		do
+			local filters = set.filters or {}
+			filters.spec = specID
+			if specID then
+				filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+			else
+				filters.role, filters.class = nil, nil
+			end
+			set.filters = filters
+
+			sidebar:Update()
+		end
+
+
 		local selected = self.set.talents;
 
 		if not self.Name:HasFocus() then

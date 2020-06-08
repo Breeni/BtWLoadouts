@@ -1708,7 +1708,7 @@ do
 		else
 			for setID,set in pairs(sets) do
 				if type(set) == "table" then
-					local value = set.filters[filter] or 0
+					local value = set.filters and set.filters[filter] or 0
 					if type(value) == "table" then
 						for _,v in pairs(value) do
 							result[v] = result[v] or {};

@@ -223,6 +223,17 @@ function Internal.EssencesTabUpdate(self)
 	-- self.set = Internal.SetsScrollFrame_RoleFilter(self.set, BtWLoadoutsSets.essences, BtWLoadoutsCollapsed.essences);
 
 	if self.set ~= nil then
+		local set = self.set
+
+		-- Update filters
+		do
+			local filters = set.filters or {}
+			filters.role = set.role
+			set.filters = filters
+
+			sidebar:Update()
+		end
+
 		self.Name:SetEnabled(true);
 		self.RoleDropDown.Button:SetEnabled(true);
 		self.MajorSlot:SetEnabled(true);

@@ -1036,7 +1036,17 @@ function Internal.EquipmentTabUpdate(self)
 	-- self.set = Internal.SetsScrollFrame_CharacterFilter(self.set, BtWLoadoutsSets.equipment, BtWLoadoutsCollapsed.equipment);
 
 	if self.set ~= nil then
-		local set = self.set;
+		local set = self.set
+
+		-- Update filters
+		do
+			local filters = set.filters or {}
+			filters.character = set.character
+			set.filters = filters
+
+			sidebar:Update()
+		end
+
 		local errors = CheckEquipmentSetForIssues(set)
 
 		local character = set.character;

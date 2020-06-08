@@ -820,6 +820,23 @@ function Internal.ProfilesTabUpdate(self)
 
 		specID = self.set.specID;
 
+		local set = self.set
+
+		-- Update filters
+		do
+			local filters = set.filters or {}
+			filters.spec = specID
+			if specID then
+				filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+			else
+				filters.role, filters.class = nil, nil
+			end
+			filters.character = set.character
+			set.filters = filters
+
+			sidebar:Update()
+		end
+
 		if specID == nil or specID == 0 then
 			UIDropDownMenu_SetText(self.SpecDropDown, L["None"]);
 		else
