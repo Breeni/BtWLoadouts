@@ -354,7 +354,7 @@ do
 			end
 		end
 
-		if extras and extras.azerite and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if extras and extras.azerite and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
 					match = match + 1;
@@ -452,7 +452,7 @@ do
 			return false
 		end
 
-		if extras and extras.azerite and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if extras and extras.azerite and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if not C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
 					return false;
@@ -845,7 +845,7 @@ local function AddEquipmentSet()
 		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
 		
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
-		if itemLocation and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			local slotExtras = {azerite = {}};
 
 			local tiers = C_AzeriteEmpoweredItem.GetAllTierInfo(itemLocation);
@@ -900,7 +900,7 @@ local function RefreshEquipmentSet(set)
 		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
 		
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
-		if itemLocation and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			set.extras[inventorySlotId] = set.extras[inventorySlotId] or {};
 			local extras = set.extras[inventorySlotId];
 			extras.azerite = extras.azerite or {};
