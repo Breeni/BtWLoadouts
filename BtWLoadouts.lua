@@ -2096,7 +2096,7 @@ do
 				UIDropDownMenu_AddButton(info, level)
 			end
 
-			if sidebar:GetCategories() then
+			if sidebar:GetSupportedFilters() then
 				info.isTitle = true
 				info.isCheckable = false
 				info.checked = false
@@ -2114,7 +2114,7 @@ do
 				end
 
 				for index,value in ipairs({sidebar:GetCategories()}) do
-					info.text = value
+					info.text = sidebar:GetFilterName(value)
 					info.arg1 = value
 					info.arg2 = index
 					-- info.customFrame = self.MovePool:Acquire()
@@ -2122,7 +2122,6 @@ do
 					UIDropDownMenu_AddButton(info, level);
 				end
 
-				info.isTitle = false
 				info.checked = false
 				info.customFrame = nil
 				info.func = function (self, arg1)
@@ -2133,7 +2132,7 @@ do
 
 				for _,value in ipairs({sidebar:GetSupportedFilters()}) do
 					if not active[value] then
-						info.text = value
+						info.text = sidebar:GetFilterName(value)
 						info.arg1 = value
 						active[value] = true
 						UIDropDownMenu_AddButton(info, level);
@@ -2144,6 +2143,12 @@ do
 	end
 	BtWLoadoutsSidebarMixin = {}
 	function BtWLoadoutsSidebarMixin:OnLoad()
+		self.names = {
+			["spec"] = L["Specialization"],
+			["class"] = L["Class"],
+			["role"] = L["Role"],
+			["character"] = L["Character"],
+		}
 		self.supportedFilters = {}
 	end
 	function BtWLoadoutsSidebarMixin:Init()
@@ -2180,7 +2185,10 @@ do
 	function BtWLoadoutsSidebarMixin:GetSupportedFilters(...)
 		return unpack(self.supportedFilters)
 	end
-
+	function BtWLoadoutsSidebarMixin:GetFilterName(key)
+		return self.names[key] or key
+	end
+	
 	function BtWLoadoutsSidebarMixin:SetSets(value)
 		self.sets = value
 	end
@@ -2237,6 +2245,8 @@ do
 	end
 	function BtWLoadoutsSidebarMixin:Update()
 		if not self.initialized then return end
+
+		self.FilterButton:SetEnabled(#self.supportedFilters > 0)
 		
 		local filtered = FilterSetsBySearch({}, self.query, self.sets)
 		filtered = FilterSets({}, self.filters, filtered)
