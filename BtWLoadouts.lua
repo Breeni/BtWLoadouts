@@ -558,7 +558,7 @@ local function TalentsDropDownInit(self, level, menuList)
     end
     local info = UIDropDownMenu_CreateInfo();
 
-	local frame = self:GetParent():GetParent();
+	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 
@@ -698,7 +698,7 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 
     local info = UIDropDownMenu_CreateInfo();
 
-	local frame = self:GetParent():GetParent();
+	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 
@@ -839,7 +839,7 @@ local function EssencesDropDownInit(self, level, menuList)
 
     local info = UIDropDownMenu_CreateInfo();
 
-	local frame = self:GetParent():GetParent();
+	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 
@@ -968,7 +968,7 @@ local function EquipmentDropDownInit(self, level, menuList)
 
     local info = UIDropDownMenu_CreateInfo();
 
-	local frame = self:GetParent():GetParent();
+	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 
@@ -1119,7 +1119,7 @@ local function ActionBarDropDownInit(self, level, menuList)
 
     local info = UIDropDownMenu_CreateInfo();
 
-	local frame = self:GetParent():GetParent();
+	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 
@@ -1214,7 +1214,7 @@ local function ProfilesDropDownInit(self, level, menuList)
 
     local info = UIDropDownMenu_CreateInfo();
 
-	local frame = self:GetParent():GetParent();
+	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
 	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
 	local tab = GetTabFrame(frame, selectedTab);
 
@@ -1689,6 +1689,53 @@ do
 			local affixID = button:GetID()
 			button.Selection:SetShown(affixID == a or affixID == b or affixID == c or affixID == d);
 		end
+	end
+end
+
+do
+	BtWLoadoutsSetsScrollListItemMixin = {}
+	function BtWLoadoutsSetsScrollListItemMixin:OnLoad()
+		self:RegisterForDrag("LeftButton");
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:OnClick()
+		if self.isHeader then
+			local frame = self:GetParent():GetParent():GetParent()
+			frame.Collapsed[self.type] = not frame.Collapsed[self.type]
+			Internal.ProfilesTabUpdate(frame)
+		elseif self.isAdd then
+			self:Add(self)
+		else
+			
+		end
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:Add(button)
+		local DropDown = self:GetParent():GetParent().DropDown
+		
+		if self.type == "talents" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, TalentsDropDownInit)
+		elseif self.type == "pvptalents" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, PvPTalentsDropDownInit)
+		elseif self.type == "essences" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, EssencesDropDownInit)
+		elseif self.type == "equipment" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, EquipmentDropDownInit)
+		elseif self.type == "actionbars" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, ActionBarDropDownInit)
+		end
+
+		ToggleDropDownMenu(nil, nil, DropDown, button, 0, 0)
+		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:Remove()
+		print("Remove")
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:MoveUp()
+		print("MoveUp")
+		
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:MoveDown()
+		print("MoveDown")
+		
 	end
 end
 
@@ -2602,26 +2649,28 @@ do
 			UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
 			UIDropDownMenu_JustifyText(self.Profiles.SpecDropDown, "LEFT");
 
-			UIDropDownMenu_SetWidth(self.Profiles.TalentsDropDown, 300);
-			UIDropDownMenu_Initialize(self.Profiles.TalentsDropDown, TalentsDropDownInit);
-			UIDropDownMenu_JustifyText(self.Profiles.TalentsDropDown, "LEFT");
+			-- UIDropDownMenu_SetWidth(self.Profiles.TalentsDropDown, 300);
+			-- UIDropDownMenu_Initialize(self.Profiles.TalentsDropDown, TalentsDropDownInit);
+			-- UIDropDownMenu_JustifyText(self.Profiles.TalentsDropDown, "LEFT");
 
-			UIDropDownMenu_SetWidth(self.Profiles.PvPTalentsDropDown, 300);
-			UIDropDownMenu_Initialize(self.Profiles.PvPTalentsDropDown, PvPTalentsDropDownInit);
-			UIDropDownMenu_JustifyText(self.Profiles.PvPTalentsDropDown, "LEFT");
+			-- UIDropDownMenu_SetWidth(self.Profiles.PvPTalentsDropDown, 300);
+			-- UIDropDownMenu_Initialize(self.Profiles.PvPTalentsDropDown, PvPTalentsDropDownInit);
+			-- UIDropDownMenu_JustifyText(self.Profiles.PvPTalentsDropDown, "LEFT");
 
-			UIDropDownMenu_SetWidth(self.Profiles.EssencesDropDown, 300);
-			UIDropDownMenu_Initialize(self.Profiles.EssencesDropDown, EssencesDropDownInit);
-			UIDropDownMenu_JustifyText(self.Profiles.EssencesDropDown, "LEFT");
+			-- UIDropDownMenu_SetWidth(self.Profiles.EssencesDropDown, 300);
+			-- UIDropDownMenu_Initialize(self.Profiles.EssencesDropDown, EssencesDropDownInit);
+			-- UIDropDownMenu_JustifyText(self.Profiles.EssencesDropDown, "LEFT");
 
-			UIDropDownMenu_SetWidth(self.Profiles.EquipmentDropDown, 300);
-			UIDropDownMenu_Initialize(self.Profiles.EquipmentDropDown, EquipmentDropDownInit);
-			UIDropDownMenu_JustifyText(self.Profiles.EquipmentDropDown, "LEFT");
+			-- UIDropDownMenu_SetWidth(self.Profiles.EquipmentDropDown, 300);
+			-- UIDropDownMenu_Initialize(self.Profiles.EquipmentDropDown, EquipmentDropDownInit);
+			-- UIDropDownMenu_JustifyText(self.Profiles.EquipmentDropDown, "LEFT");
 
-			UIDropDownMenu_SetWidth(self.Profiles.ActionBarDropDown, 300);
-			UIDropDownMenu_Initialize(self.Profiles.ActionBarDropDown, ActionBarDropDownInit);
-			UIDropDownMenu_JustifyText(self.Profiles.ActionBarDropDown, "LEFT");
+			-- UIDropDownMenu_SetWidth(self.Profiles.ActionBarDropDown, 300);
+			-- UIDropDownMenu_Initialize(self.Profiles.ActionBarDropDown, ActionBarDropDownInit);
+			-- UIDropDownMenu_JustifyText(self.Profiles.ActionBarDropDown, "LEFT");
 
+			HybridScrollFrame_CreateButtons(self.Profiles.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+			self.Profiles.SetsScroll.update = Internal.SetsScrollFrameUpdate;
 
 			UIDropDownMenu_SetWidth(self.Talents.SpecDropDown, 170);
 			UIDropDownMenu_Initialize(self.Talents.SpecDropDown, SpecDropDownInit);
