@@ -805,27 +805,30 @@ function Internal.SetsScrollFrameUpdate(self)
 			if item.isSeparator then
 				button:Hide()
 			else
+				button:SetEnabled(not item.isHeader)
 				if item.isHeader then
 					button.id = item.id
 
+					button.Name:SetPoint("LEFT", 0, 0)
 					button.Name:SetTextColor(0.75, 0.61, 0)
 					
-					if item.isEmpty then
+					-- if item.isEmpty then
 						button.ExpandedIcon:Hide()
 						button.CollapsedIcon:Hide()
-					elseif item.isCollapsed then
-						button.ExpandedIcon:Hide()
-						button.CollapsedIcon:Show()
-					else
-						button.ExpandedIcon:Show()
-						button.CollapsedIcon:Hide()
-					end
+					-- elseif item.isCollapsed then
+					-- 	button.ExpandedIcon:Hide()
+					-- 	button.CollapsedIcon:Show()
+					-- else
+					-- 	button.ExpandedIcon:Show()
+					-- 	button.CollapsedIcon:Hide()
+					-- end
 
 					button.AddButton:Show()
 					button.RemoveButton:Hide()
 					button.MoveDownButton:Hide()
 					button.MoveUpButton:Hide()
 				elseif item.isAdd then
+					button.Name:SetPoint("LEFT", 15, 0)
 					button.Name:SetTextColor(0.973, 0.937, 0.580)
 
 					button.AddButton:Hide()
@@ -836,12 +839,18 @@ function Internal.SetsScrollFrameUpdate(self)
 					button.ExpandedIcon:Hide()
 					button.CollapsedIcon:Hide()
 				else
+					button.Name:SetPoint("LEFT", 15, 0)
 					button.Name:SetTextColor(1, 1, 1)
 
 					button.AddButton:Hide()
-					button.RemoveButton:Show()
-					button.MoveDownButton:Show()
-					button.MoveUpButton:Show()
+					button.RemoveButton:Hide()
+					button.MoveDownButton:Hide()
+					button.MoveUpButton:Hide()
+
+					-- button.AddButton:Hide()
+					-- button.RemoveButton:Show()
+					-- button.MoveDownButton:Show()
+					-- button.MoveUpButton:Show()
 					
 					button.MoveUpButton:SetEnabled(not item.first)
 					button.MoveDownButton:SetEnabled(not item.last)

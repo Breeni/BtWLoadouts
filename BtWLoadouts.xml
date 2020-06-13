@@ -834,7 +834,7 @@
 	</Button>
 
 	<Button name="BtWLoadoutsSetsScrollListItemTemplate" mixin="BtWLoadoutsSetsScrollListItemMixin" parentArray="ScrollButtons" virtual="true">
-		<Size x="400" y="21"/>
+		<Size x="540" y="21"/>
 		<Layers>
 			<Layer level="ARTWORK">
 				<Texture parentKey="ExpandedIcon" inherits="Char-Stat-Minus">
@@ -866,14 +866,9 @@
 				<Anchors>
 					<Anchor point="RIGHT" x="0" y="0"/>
 				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
-							<Size x="16" y="16"/>
-							<TexCoords left="0.2255859375" right="0.2490234375" top="0.888671875" bottom="0.935546875"/>
-						</Texture>
-					</Layer>
-				</Layers>
+				<NormalTexture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
+					<TexCoords left="0.2255859375" right="0.2490234375" top="0.888671875" bottom="0.935546875"/>
+				</NormalTexture>
 				<Scripts>
 					<OnClick>
 						self:GetParent():Add(self)
@@ -885,14 +880,9 @@
 				<Anchors>
 					<Anchor point="RIGHT" x="0" y="0"/>
 				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
-							<Size x="16" y="16"/>
-							<TexCoords left="0.3037109375" right="0.3271484375" top="0.880859375" bottom="0.927734375"/>
-						</Texture>
-					</Layer>
-				</Layers>
+				<NormalTexture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
+					<TexCoords left="0.3037109375" right="0.3271484375" top="0.880859375" bottom="0.927734375"/>
+				</NormalTexture>
 				<Scripts>
 					<OnClick>
 						self:GetParent():Remove(self)
@@ -904,16 +894,12 @@
 				<Anchors>
 					<Anchor point="RIGHT" relativeKey="$parent.RemoveButton" relativePoint="LEFT" x="-8" y="0"/>
 				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture parentKey="Icon" file="Interface\ChatFrame\ChatFrameExpandArrow">
-							<Size x="16" y="16"/>
-						</Texture>
-					</Layer>
-				</Layers>
+				<NormalTexture file="Interface\ChatFrame\ChatFrameExpandArrow"/>
+				<DisabledTexture file="Interface\ChatFrame\ChatFrameExpandArrow" desaturated="true"/>
 				<Scripts>
 					<OnLoad>
-						self.Icon:SetRotation(math.pi * 0.5)
+						self:GetNormalTexture():SetRotation(math.pi * 0.5)
+						self:GetDisabledTexture():SetRotation(math.pi * 0.5)
 					</OnLoad>
 					<OnClick>
 						self:GetParent():MoveUp(self)
@@ -925,16 +911,12 @@
 				<Anchors>
 					<Anchor point="RIGHT" relativeKey="$parent.MoveUpButton" relativePoint="LEFT" x="-8" y="0"/>
 				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture parentKey="Icon" file="Interface\ChatFrame\ChatFrameExpandArrow">
-							<Size x="16" y="16"/>
-						</Texture>
-					</Layer>
-				</Layers>
+				<NormalTexture file="Interface\ChatFrame\ChatFrameExpandArrow"/>
+				<DisabledTexture file="Interface\ChatFrame\ChatFrameExpandArrow" desaturated="true"/>
 				<Scripts>
 					<OnLoad>
-						self.Icon:SetRotation(- math.pi * 0.5)
+						self:GetNormalTexture():SetRotation(-math.pi * 0.5)
+						self:GetDisabledTexture():SetRotation(-math.pi * 0.5)
 					</OnLoad>
 					<OnClick>
 						self:GetParent():MoveDown(self)
@@ -1106,10 +1088,10 @@
 					</Frame>
 
 					<ScrollFrame parentKey="SetsScroll" inherits="HybridScrollFrameTemplate">
-						<Size x="185" y="250"/>
+						<Size x="548" y="250"/>
 						<Anchors>
 							<Anchor point="TOP" relativeKey="$parent.SpecDropDown" relativePoint="BOTTOM" x="0" y="0"/>
-							<Anchor point="LEFT" x="3" y="0"/>
+							<Anchor point="LEFT" x="6" y="0"/>
 							<Anchor point="BOTTOMRIGHT" x="-18" y="3"/>
 						</Anchors>
 						<Frames>
