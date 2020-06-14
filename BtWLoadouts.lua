@@ -512,15 +512,15 @@ local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.talentSet then
-		local subset = Internal.GetTalentSet(set.talentSet);
+	if set.talents[1] then
+		local subset = Internal.GetTalentSet(set.talents[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.talentSet = arg1;
+	set.talents[1] = arg1;
 
-	if set.talentSet then
-		local subset = Internal.GetTalentSet(set.talentSet);
+	if set.talents[1] then
+		local subset = Internal.GetTalentSet(set.talents[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -533,16 +533,16 @@ local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.talentSet then
-		local subset = Internal.GetTalentSet(set.talentSet);
+	if set.talents[1] then
+		local subset = Internal.GetTalentSet(set.talents[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local talentSet = Internal.AddTalentSet();
-	set.talentSet = talentSet.setID;
+	set.talents[1] = talentSet.setID;
 
-	if set.talentSet then
-		local subset = Internal.GetTalentSet(set.talentSet);
+	if set.talents[1] then
+		local subset = Internal.GetTalentSet(set.talents[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -563,7 +563,7 @@ local function TalentsDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.talentSet;
+	local selected = set and set.talents and set.talents[1];
 
 	if (level or 1) == 1 then
         info.text = L["None"];
@@ -652,15 +652,15 @@ local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.pvpTalentSet then
-		local subset = Internal.GetPvPTalentSet(set.pvpTalentSet);
+	if set.pvptalents[1] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.pvpTalentSet = arg1;
+	set.pvptalents[1] = arg1;
 
-	if set.pvpTalentSet then
-		local subset = Internal.GetPvPTalentSet(set.pvpTalentSet);
+	if set.pvptalents[1] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -673,16 +673,16 @@ local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.pvpTalentSet then
-		local subset = Internal.GetPvPTalentSet(set.pvpTalentSet);
+	if set.pvptalents[1] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddPvPTalentSet();
-	set.pvpTalentSet = newSet.setID;
+	set.pvptalents[1] = newSet.setID;
 
-	if set.pvpTalentSet then
-		local subset = Internal.GetPvPTalentSet(set.pvpTalentSet);
+	if set.pvptalents[1] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -703,7 +703,7 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.pvpTalentSet;
+	local selected = set and set.pvptalents and set.pvptalents[1];
 
     if (level or 1) == 1 then
         info.text = NONE;
@@ -792,15 +792,15 @@ local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
     local set = tab.set;
 
-	if set.essencesSet then
-		local subset = Internal.GetEssenceSet(set.essencesSet);
+	if set.essences[1] then
+		local subset = Internal.GetEssenceSet(set.essences[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-    set.essencesSet = arg1;
+    set.essences[1] = arg1;
 
-	if set.essencesSet then
-		local subset = Internal.GetEssenceSet(set.essencesSet);
+	if set.essences[1] then
+		local subset = Internal.GetEssenceSet(set.essences[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -813,16 +813,16 @@ local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.essencesSet then
-		local subset = Internal.GetEssenceSet(set.essencesSet);
+	if set.essences[1] then
+		local subset = Internal.GetEssenceSet(set.essences[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddEssenceSet();
-	set.essencesSet = newSet.setID;
+	set.essences[1] = newSet.setID;
 
-	if set.essencesSet then
-		local subset = Internal.GetEssenceSet(set.essencesSet);
+	if set.essences[1] then
+		local subset = Internal.GetEssenceSet(set.essences[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -844,7 +844,7 @@ local function EssencesDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.essencesSet;
+	local selected = set and set.essences and set.essences[1];
 
     if (level or 1) == 1 then
         info.text = NONE;
@@ -920,16 +920,16 @@ local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
     local set = tab.set;
 
-	if set.equipmentSet then
-		local subset = Internal.GetEquipmentSet(set.equipmentSet);
+	if set.equipment[1] then
+		local subset = Internal.GetEquipmentSet(set.equipment[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.equipmentSet = arg1;
+	set.equipment[1] = arg1;
 	set.character = arg2;
 
-	if set.equipmentSet then
-		local subset = Internal.GetEquipmentSet(set.equipmentSet);
+	if set.equipment[1] then
+		local subset = Internal.GetEquipmentSet(set.equipment[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -942,17 +942,17 @@ local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.equipmentSet then
-		local subset = Internal.GetEquipmentSet(set.equipmentSet);
+	if set.equipment[1] then
+		local subset = Internal.GetEquipmentSet(set.equipment[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddEquipmentSet();
-	set.equipmentSet = newSet.setID;
+	set.equipment[1] = newSet.setID;
 	set.character = newSet.character;
 
-	if set.equipmentSet then
-		local subset = Internal.GetEquipmentSet(set.equipmentSet);
+	if set.equipment[1] then
+		local subset = Internal.GetEquipmentSet(set.equipment[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -973,7 +973,7 @@ local function EquipmentDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.equipmentSet;
+	local selected = set and set.equipment and set.equipment[1];
 
     if (level or 1) == 1 then
         info.text = NONE;
@@ -1073,15 +1073,15 @@ local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
     local set = tab.set;
 
-	if set.actionBarSet then
-		local subset = Internal.GetActionBarSet(set.actionBarSet);
+	if set.actionbars[1] then
+		local subset = Internal.GetActionBarSet(set.actionbars[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.actionBarSet = arg1;
+	set.actionbars[1] = arg1;
 
-	if set.actionBarSet then
-		local subset = Internal.GetActionBarSet(set.actionBarSet);
+	if set.actionbars[1] then
+		local subset = Internal.GetActionBarSet(set.actionbars[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -1094,16 +1094,16 @@ local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.actionBarSet then
-		local subset = Internal.GetActionBarSet(set.actionBarSet);
+	if set.actionbars[1] then
+		local subset = Internal.GetActionBarSet(set.actionbars[1]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddActionBarSet();
-	set.actionBarSet = newSet.setID;
+	set.actionbars[1] = newSet.setID;
 
-	if set.actionBarSet then
-		local subset = Internal.GetActionBarSet(set.actionBarSet);
+	if set.actionbars[1] then
+		local subset = Internal.GetActionBarSet(set.actionbars[1]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -1124,7 +1124,7 @@ local function ActionBarDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.actionBarSet;
+	local selected = set and set.actionbars and set.actionbars[1];
 	
     if (level or 1) == 1 then
         info.text = NONE;
@@ -2231,7 +2231,7 @@ do
 				local set = frame.set;
 				if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
 					Internal.ActivateProfile({
-						talentSet = set.setID;
+						talents = {set.setID}
 					});
 				end
 			elseif button.isHeader then
@@ -2242,7 +2242,7 @@ do
 					local set = Internal.GetTalentSet(button.id);
 					if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
 						Internal.ActivateProfile({
-							talentSet = button.id;
+							talents = {button.id}
 						});
 					end
 				else
@@ -2280,7 +2280,7 @@ do
 				local set = frame.set;
 				if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
 					Internal.ActivateProfile({
-						pvpTalentSet = set.setID;
+						pvptalents = {set.setID}
 					});
 				end
 			elseif button.isHeader then
@@ -2291,7 +2291,7 @@ do
 					local set = Internal.GetPvPTalentSet(button.id);
 					if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
 						Internal.ActivateProfile({
-							pvpTalentSet = button.id;
+							pvptalents = {button.id}
 						});
 					end
 				else
@@ -2327,7 +2327,7 @@ do
 				Internal.EssencesTabUpdate(frame);
 			elseif button.isActivate then
 				Internal.ActivateProfile({
-					essencesSet = frame.set.setID;
+					essences = {frame.set.setID}
 				});
 			elseif button.isHeader then
 				BtWLoadoutsCollapsed.essences[button.id] = not BtWLoadoutsCollapsed.essences[button.id] and true or nil;
@@ -2335,7 +2335,7 @@ do
 			else
 				if IsModifiedClick("SHIFT") then
 					Internal.ActivateProfile({
-						essencesSet = button.id;
+						essences = {button.id}
 					});
 				else
 					frame.Name:ClearFocus();
@@ -2370,7 +2370,7 @@ do
 				Internal.EquipmentTabUpdate(frame);
 			elseif button.isActivate then
 				Internal.ActivateProfile({
-					equipmentSet = frame.set.setID;
+					equipment = {frame.set.setID}
 				});
 			elseif button.isHeader then
 				BtWLoadoutsCollapsed.equipment[button.id] = not BtWLoadoutsCollapsed.equipment[button.id] and true or nil;
@@ -2378,7 +2378,7 @@ do
 			else
 				if IsModifiedClick("SHIFT") then
 					Internal.ActivateProfile({
-						equipmentSet = button.id;
+						equipment = {button.id}
 					});
 				else
 					frame.Name:ClearFocus();
@@ -2413,7 +2413,7 @@ do
 				Internal.ActionBarsTabUpdate(frame);
 			elseif button.isActivate then
 				Internal.ActivateProfile({
-					actionBarSet = frame.set.setID;
+					actionbars = {frame.set.setID}
 				});
 			elseif button.isHeader then
 				BtWLoadoutsCollapsed.actionbars[button.id] = not BtWLoadoutsCollapsed.actionbars[button.id] and true or nil;
@@ -2421,7 +2421,7 @@ do
 			else
 				if IsModifiedClick("SHIFT") then
 					Internal.ActivateProfile({
-						actionBarSet = button.id;
+						actionbars = {button.id}
 					});
 				else
 					frame.Name:ClearFocus();
@@ -2466,27 +2466,27 @@ do
 			local set = Internal.GetTalentSet(button.id);
 			if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
 				Internal.ActivateProfile({
-					talentSet = button.id;
+					talents = {button.id}
 				});
 			end
 		elseif selectedTab == TAB_PVP_TALENTS then
 			local set = Internal.GetPvPTalentSet(button.id);
 			if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
 				Internal.ActivateProfile({
-					pvpTalentSet = button.id;
+					pvptalents = {button.id}
 				});
 			end
 		elseif selectedTab == TAB_ESSENCES then
 			Internal.ActivateProfile({
-				essencesSet = button.id;
+				essences = {button.id}
 			});
 		elseif selectedTab == TAB_EQUIPMENT then
 			Internal.ActivateProfile({
-				equipmentSet = button.id;
+				equipment = {button.id}
 			});
 		elseif selectedTab == TAB_ACTION_BARS then
 			Internal.ActivateProfile({
-				actionBarSet = button.id;
+				actionbars = {button.id}
 			});
 		end
 	end
@@ -3244,7 +3244,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 			end
 			if subset then
 				set = {
-					talentSet = subset.setID;
+					talents = {subset.setID}
 				}
 			end
 		elseif aType == "pvptalents" then
@@ -3256,7 +3256,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 			end
 			if subset then
 				set = {
-					pvpTalentSet = subset.setID;
+					pvptalents = {subset.setID}
 				}
 			end
 		elseif aType == "essences" then
@@ -3268,7 +3268,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 			end
 			if subset then
 				set = {
-					essencesSet = subset.setID;
+					essences = {subset.setID}
 				}
 			end
 		elseif aType == "equipment" then
@@ -3280,7 +3280,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 			end
 			if subset then
 				set = {
-					equipmentSet = subset.setID;
+					equipment = {subset.setID}
 				}
 			end
 		elseif aType == "action-bars" or aType == "actionbars" then
@@ -3292,7 +3292,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 			end
 			if subset then
 				set = {
-					actionBarSet = subset.setID;
+					actionbars = {subset.setID}
 				}
 			end
 		else
@@ -3358,7 +3358,7 @@ if OneRingLib then
 			for id, set in pairs(BtWLoadoutsSets.talents) do
 				if type(set) == "table" then
 					if select(5, Internal.IsProfileValid({
-						talentSet = set
+						talents = {set.setID}
 					})) then
 						items[#items+1] = set
 					end
@@ -3381,7 +3381,7 @@ if OneRingLib then
 			for id, set in pairs(BtWLoadoutsSets.pvptalents) do
 				if type(set) == "table" then
 					if select(5, Internal.IsProfileValid({
-						pvpTalentSet = set
+						pvptalents = {set.setID}
 					})) then
 						items[#items+1] = set
 					end
@@ -3404,7 +3404,7 @@ if OneRingLib then
 			for id, set in pairs(BtWLoadoutsSets.essences) do
 				if type(set) == "table" then
 					if select(5, Internal.IsProfileValid({
-						essencesSet = set
+						essences = {set.setID}
 					})) then
 						items[#items+1] = set
 					end
@@ -3427,7 +3427,7 @@ if OneRingLib then
 			for id, set in pairs(BtWLoadoutsSets.equipment) do
 				if type(set) == "table" then
 					if select(5, Internal.IsProfileValid({
-						equipmentSet = set
+						equipment = {set.setID}
 					})) then
 						items[#items+1] = set
 					end
@@ -3480,7 +3480,7 @@ if OneRingLib then
 		local function hint(id)
 			local set = BtWLoadoutsSets.talents[id]
 			local usable = select(5, Internal.IsProfileValid({
-				talentSet = set.setID;
+				talents = {set.setID}
 			}))
 			return usable, false, nil, set.name
 		end
@@ -3488,7 +3488,7 @@ if OneRingLib then
 			local set = BtWLoadoutsSets.talents[id]
 			if set then
 				Internal.ActivateProfile({
-					talentSet = set.setID;
+					talents = {set.setID}
 				});
 			end
 		end
@@ -3518,7 +3518,7 @@ if OneRingLib then
 		local function hint(id)
 			local set = BtWLoadoutsSets.pvptalents[id]
 			local usable = select(5, Internal.IsProfileValid({
-				pvpTalentSet = set.setID;
+				pvptalents = {set.setID}
 			}))
 			return usable, false, nil, set.name
 		end
@@ -3526,7 +3526,7 @@ if OneRingLib then
 			local set = BtWLoadoutsSets.pvptalents[id]
 			if set then
 				Internal.ActivateProfile({
-					pvpTalentSet = set.setID;
+					pvptalents = {set.setID}
 				});
 			end
 		end
@@ -3556,7 +3556,7 @@ if OneRingLib then
 		local function hint(id)
 			local set = BtWLoadoutsSets.essences[id]
 			local usable = select(5, Internal.IsProfileValid({
-				essencesSet = set.setID;
+				essences = {set.setID}
 			}))
 			return usable, false, nil, set.name
 		end
@@ -3564,7 +3564,7 @@ if OneRingLib then
 			local set = BtWLoadoutsSets.essences[id]
 			if set then
 				Internal.ActivateProfile({
-					essencesSet = set.setID;
+					essences = {set.setID}
 				});
 			end
 		end
@@ -3592,7 +3592,7 @@ if OneRingLib then
 		local function hint(id)
 			local set = BtWLoadoutsSets.equipment[id]
 			local usable = select(5, Internal.IsProfileValid({
-				equipmentSet = set.setID;
+				equipment = {set.setID}
 			}))
 			return usable, false, nil, set.name
 		end
@@ -3600,7 +3600,7 @@ if OneRingLib then
 			local set = BtWLoadoutsSets.equipment[id]
 			if set then
 				Internal.ActivateProfile({
-					equipmentSet = set.setID;
+					equipment = {set.setID}
 				});
 			end
 		end

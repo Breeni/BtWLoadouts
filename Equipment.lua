@@ -994,9 +994,13 @@ local function DeleteEquipmentSet(id)
 		id = id.setID;
 	end
 	for _,set in pairs(BtWLoadoutsSets.profiles) do
-		if type(set) == "table" and set.equipmentSet == id then
-			set.equipmentSet = nil;
-			set.character = nil;
+        if type(set) == "table" then
+            for index,setID in ipairs(set.equipment) do
+                if setID == id then
+                    table.remove(set.equipment, index)
+                end
+			end
+			set.character = nil
 		end
 	end
 
