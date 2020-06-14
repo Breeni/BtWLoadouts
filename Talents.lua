@@ -164,8 +164,12 @@ local function DeleteTalentSet(id)
 		id = id.setID;
 	end
 	for _,set in pairs(BtWLoadoutsSets.profiles) do
-		if type(set) == "table" and set.talentSet == id then
-			set.talentSet = nil;
+        if type(set) == "table" then
+            for index,setID in ipairs(set.talents) do
+                if setID == id then
+                    table.remove(set.talents, index)
+                end
+            end
 		end
 	end
 

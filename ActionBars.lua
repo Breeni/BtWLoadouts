@@ -339,9 +339,13 @@ local function DeleteActionBarSet(id)
 		id = id.setID;
 	end
 	for _,set in pairs(BtWLoadoutsSets.profiles) do
-		if type(set) == "table" and set.actionBarSet == id then
-			set.actionBarSet = nil;
-		end
+        if type(set) == "table" then
+            for index,setID in ipairs(set.actionbars) do
+                if setID == id then
+                    table.remove(set.actionbars, index)
+                end
+            end
+        end
 	end
 
 	local frame = BtWLoadoutsFrame.ActionBars;
