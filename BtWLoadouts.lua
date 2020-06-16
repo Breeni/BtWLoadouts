@@ -511,16 +511,21 @@ local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
 	local set = tab.set;
+	local index = arg2 or (#set.talents + 1)
 
-	if set.talents[1] then
-		local subset = Internal.GetTalentSet(set.talents[1]);
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.talents[1] = arg1;
+	if arg1 == nil then
+		table.remove(set.talents, index);
+	else
+		set.talents[index] = arg1;
+	end
 
-	if set.talents[1] then
-		local subset = Internal.GetTalentSet(set.talents[1]);
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -532,17 +537,18 @@ local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
 	local set = tab.set;
+	local index = arg2 or (#set.talents + 1)
 
-	if set.talents[1] then
-		local subset = Internal.GetTalentSet(set.talents[1]);
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local talentSet = Internal.AddTalentSet();
-	set.talents[1] = talentSet.setID;
+	set.talents[index] = talentSet.setID;
 
-	if set.talents[1] then
-		local subset = Internal.GetTalentSet(set.talents[1]);
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -552,10 +558,10 @@ local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 	BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] = true;
     BtWLoadoutsFrame:Update();
 end
-local function TalentsDropDownInit(self, level, menuList)
+local function TalentsDropDownInit(self, level, menuList, index)
     if not BtWLoadoutsSets or not BtWLoadoutsSets.talents then
         return;
-    end
+	end
     local info = UIDropDownMenu_CreateInfo();
 
 	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
@@ -563,7 +569,9 @@ local function TalentsDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.talents and set.talents[1];
+	local selected = set and set.talents and set.talents[index];
+
+	info.arg2 = index
 
 	if (level or 1) == 1 then
         info.text = L["None"];
@@ -637,7 +645,7 @@ local function TalentsDropDownInit(self, level, menuList)
 
         for _,setID in ipairs(setsFiltered) do
             info.text = sets[setID].name;
-            info.arg1 = setID;
+			info.arg1 = setID;
             info.func = TalentsDropDown_OnClick;
             info.checked = selected == setID;
             UIDropDownMenu_AddButton(info, level);
@@ -651,16 +659,21 @@ local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
 	local set = tab.set;
+	local index = arg2 or (#set.pvptalents + 1)
 
-	if set.pvptalents[1] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
+	if set.pvptalents[index] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.pvptalents[1] = arg1;
+	if arg1 == nil then
+		table.remove(set.pvptalents, index);
+	else
+		set.pvptalents[index] = arg1;
+	end
 
-	if set.pvptalents[1] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
+	if set.pvptalents[index] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -673,16 +686,16 @@ local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.pvptalents[1] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
+	if set.pvptalents[index] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddPvPTalentSet();
-	set.pvptalents[1] = newSet.setID;
+	set.pvptalents[index] = newSet.setID;
 
-	if set.pvptalents[1] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[1]);
+	if set.pvptalents[index] then
+		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -691,7 +704,7 @@ local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 
     BtWLoadoutsFrame:Update();
 end
-local function PvPTalentsDropDownInit(self, level, menuList)
+local function PvPTalentsDropDownInit(self, level, menuList, index)
     if not BtWLoadoutsSets or not BtWLoadoutsSets.pvptalents then
         return;
 	end
@@ -703,7 +716,9 @@ local function PvPTalentsDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.pvptalents and set.pvptalents[1];
+	local selected = set and set.pvptalents and set.pvptalents[index];
+
+	info.arg2 = index
 
     if (level or 1) == 1 then
         info.text = NONE;
@@ -792,15 +807,19 @@ local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
     local set = tab.set;
 
-	if set.essences[1] then
-		local subset = Internal.GetEssenceSet(set.essences[1]);
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-    set.essences[1] = arg1;
+	if arg1 == nil then
+		table.remove(set.essences, index);
+	else
+		set.essences[index] = arg1;
+	end
 
-	if set.essences[1] then
-		local subset = Internal.GetEssenceSet(set.essences[1]);
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -813,16 +832,16 @@ local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.essences[1] then
-		local subset = Internal.GetEssenceSet(set.essences[1]);
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddEssenceSet();
-	set.essences[1] = newSet.setID;
+	set.essences[index] = newSet.setID;
 
-	if set.essences[1] then
-		local subset = Internal.GetEssenceSet(set.essences[1]);
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -832,7 +851,7 @@ local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
 
     BtWLoadoutsFrame:Update();
 end
-local function EssencesDropDownInit(self, level, menuList)
+local function EssencesDropDownInit(self, level, menuList, index)
     if not BtWLoadoutsSets or not BtWLoadoutsSets.essences then
         return;
     end
@@ -844,7 +863,9 @@ local function EssencesDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.essences and set.essences[1];
+	local selected = set and set.essences and set.essences[index];
+
+	info.arg2 = index
 
     if (level or 1) == 1 then
         info.text = NONE;
@@ -920,16 +941,19 @@ local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
     local set = tab.set;
 
-	if set.equipment[1] then
-		local subset = Internal.GetEquipmentSet(set.equipment[1]);
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.equipment[1] = arg1;
-	set.character = arg2;
+	if arg1 == nil then
+		table.remove(set.equipment, index);
+	else
+		set.equipment[index] = arg1;
+	end
 
-	if set.equipment[1] then
-		local subset = Internal.GetEquipmentSet(set.equipment[1]);
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -942,17 +966,17 @@ local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.equipment[1] then
-		local subset = Internal.GetEquipmentSet(set.equipment[1]);
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddEquipmentSet();
-	set.equipment[1] = newSet.setID;
+	set.equipment[index] = newSet.setID;
 	set.character = newSet.character;
 
-	if set.equipment[1] then
-		local subset = Internal.GetEquipmentSet(set.equipment[1]);
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -961,7 +985,7 @@ local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
 
     BtWLoadoutsFrame:Update();
 end
-local function EquipmentDropDownInit(self, level, menuList)
+local function EquipmentDropDownInit(self, level, menuList, index)
     if not BtWLoadoutsSets or not BtWLoadoutsSets.equipment then
         return;
     end
@@ -973,7 +997,9 @@ local function EquipmentDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.equipment and set.equipment[1];
+	local selected = set and set.equipment and set.equipment[index];
+
+	info.arg2 = index
 
     if (level or 1) == 1 then
         info.text = NONE;
@@ -1073,15 +1099,19 @@ local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
     local set = tab.set;
 
-	if set.actionbars[1] then
-		local subset = Internal.GetActionBarSet(set.actionbars[1]);
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
-	set.actionbars[1] = arg1;
+	if arg1 == nil then
+		table.remove(set.actionbars, index);
+	else
+		set.actionbars[index] = arg1;
+	end
 
-	if set.actionbars[1] then
-		local subset = Internal.GetActionBarSet(set.actionbars[1]);
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -1094,16 +1124,16 @@ local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
     CloseDropDownMenus();
 	local set = tab.set;
 
-	if set.actionbars[1] then
-		local subset = Internal.GetActionBarSet(set.actionbars[1]);
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
 		subset.useCount = (subset.useCount or 1) - 1;
 	end
 
 	local newSet = Internal.AddActionBarSet();
-	set.actionbars[1] = newSet.setID;
+	set.actionbars[index] = newSet.setID;
 
-	if set.actionbars[1] then
-		local subset = Internal.GetActionBarSet(set.actionbars[1]);
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
 		subset.useCount = (subset.useCount or 0) + 1;
 	end
 
@@ -1112,7 +1142,7 @@ local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
 
     BtWLoadoutsFrame:Update();
 end
-local function ActionBarDropDownInit(self, level, menuList)
+local function ActionBarDropDownInit(self, level, menuList, index)
     if not BtWLoadoutsSets or not BtWLoadoutsSets.actionbars then
         return;
     end
@@ -1124,7 +1154,9 @@ local function ActionBarDropDownInit(self, level, menuList)
 	local tab = GetTabFrame(frame, selectedTab);
 
 	local set = tab.set;
-	local selected = set and set.actionbars and set.actionbars[1];
+	local selected = set and set.actionbars and set.actionbars[index];
+
+	info.arg2 = index
 	
     if (level or 1) == 1 then
         info.text = NONE;
@@ -1705,7 +1737,30 @@ do
 		elseif self.isAdd then
 			self:Add(self)
 		else
-			
+			local DropDown = self:GetParent():GetParent().DropDown
+			local index = self.index
+
+			if self.type == "talents" then
+				UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+					return TalentsDropDownInit(self, level, menuList, index)
+				end)
+			elseif self.type == "pvptalents" then
+			elseif self.type == "essences" then
+				UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+					return EssencesDropDownInit(self, level, menuList, index)
+				end)
+			elseif self.type == "equipment" then
+				UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+					return EquipmentDropDownInit(self, level, menuList, index)
+				end)
+			elseif self.type == "actionbars" then
+				UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+					return ActionBarDropDownInit(self, level, menuList, index)
+				end)
+			end
+	
+			ToggleDropDownMenu(nil, nil, DropDown, self, 0, 0)
+			PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
 		end
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:Add(button)
@@ -1727,15 +1782,34 @@ do
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:Remove()
-		print("Remove")
+		local tab = self:GetParent():GetParent():GetParent()
+		local set = tab.set
+
+		local index = self.index
+		assert(type(set[self.type]) == "table" and index ~= nil and index >= 1 and index <= #set[self.type])
+		table.remove(set[self.type], index);
+
+		Internal.ProfilesTabUpdate(tab)
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:MoveUp()
-		print("MoveUp")
-		
+		local tab = self:GetParent():GetParent():GetParent()
+		local set = tab.set
+
+		local index = self.index
+		assert(type(set[self.type]) == "table" and index > 1 and index <= #set[self.type])
+		set[self.type][index-1], set[self.type][index] = set[self.type][index], set[self.type][index-1]
+
+		Internal.ProfilesTabUpdate(tab)
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:MoveDown()
-		print("MoveDown")
-		
+		local tab = self:GetParent():GetParent():GetParent()
+		local set = tab.set
+
+		local index = self.index
+		assert(type(set[self.type]) == "table" and index >= 1 and index < #set[self.type])
+		set[self.type][index+1], set[self.type][index] = set[self.type][index], set[self.type][index+1]
+
+		Internal.ProfilesTabUpdate(tab)
 	end
 end
 
@@ -2648,26 +2722,6 @@ do
 			UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
 			UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
 			UIDropDownMenu_JustifyText(self.Profiles.SpecDropDown, "LEFT");
-
-			-- UIDropDownMenu_SetWidth(self.Profiles.TalentsDropDown, 300);
-			-- UIDropDownMenu_Initialize(self.Profiles.TalentsDropDown, TalentsDropDownInit);
-			-- UIDropDownMenu_JustifyText(self.Profiles.TalentsDropDown, "LEFT");
-
-			-- UIDropDownMenu_SetWidth(self.Profiles.PvPTalentsDropDown, 300);
-			-- UIDropDownMenu_Initialize(self.Profiles.PvPTalentsDropDown, PvPTalentsDropDownInit);
-			-- UIDropDownMenu_JustifyText(self.Profiles.PvPTalentsDropDown, "LEFT");
-
-			-- UIDropDownMenu_SetWidth(self.Profiles.EssencesDropDown, 300);
-			-- UIDropDownMenu_Initialize(self.Profiles.EssencesDropDown, EssencesDropDownInit);
-			-- UIDropDownMenu_JustifyText(self.Profiles.EssencesDropDown, "LEFT");
-
-			-- UIDropDownMenu_SetWidth(self.Profiles.EquipmentDropDown, 300);
-			-- UIDropDownMenu_Initialize(self.Profiles.EquipmentDropDown, EquipmentDropDownInit);
-			-- UIDropDownMenu_JustifyText(self.Profiles.EquipmentDropDown, "LEFT");
-
-			-- UIDropDownMenu_SetWidth(self.Profiles.ActionBarDropDown, 300);
-			-- UIDropDownMenu_Initialize(self.Profiles.ActionBarDropDown, ActionBarDropDownInit);
-			-- UIDropDownMenu_JustifyText(self.Profiles.ActionBarDropDown, "LEFT");
 
 			HybridScrollFrame_CreateButtons(self.Profiles.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 			self.Profiles.SetsScroll.update = Internal.SetsScrollFrameUpdate;

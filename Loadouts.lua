@@ -816,10 +816,11 @@ function Internal.SetsScrollFrameUpdate(self)
 			if item.isSeparator then
 				button:Hide()
 			else
+				button.index = item.index
+				button.id = item.id
+
 				button:SetEnabled(not item.isHeader)
 				if item.isHeader then
-					button.id = item.id
-
 					button.Name:SetPoint("LEFT", 0, 0)
 					button.Name:SetTextColor(0.75, 0.61, 0)
 					
@@ -853,15 +854,15 @@ function Internal.SetsScrollFrameUpdate(self)
 					button.Name:SetPoint("LEFT", 15, 0)
 					button.Name:SetTextColor(1, 1, 1)
 
-					button.AddButton:Hide()
-					button.RemoveButton:Hide()
-					button.MoveDownButton:Hide()
-					button.MoveUpButton:Hide()
-
 					-- button.AddButton:Hide()
-					-- button.RemoveButton:Show()
-					-- button.MoveDownButton:Show()
-					-- button.MoveUpButton:Show()
+					-- button.RemoveButton:Hide()
+					-- button.MoveDownButton:Hide()
+					-- button.MoveUpButton:Hide()
+
+					button.AddButton:Hide()
+					button.RemoveButton:Show()
+					button.MoveDownButton:Show()
+					button.MoveUpButton:Show()
 					
 					button.MoveUpButton:SetEnabled(not item.first)
 					button.MoveDownButton:SetEnabled(not item.last)
@@ -888,7 +889,7 @@ local function AddItem(items, index)
 
 	return item, index + 1
 end
-local function BuildSubSetItems(type, header, subset, items, index, isCollapsed)
+local function BuildSubSetItems(type, header, getcallback, sets, items, index, isCollapsed)
 	local item
 
 	do
@@ -902,24 +903,28 @@ local function BuildSubSetItems(type, header, subset, items, index, isCollapsed)
 	end
 	
 	if not isCollapsed then
-		if subset ~= nil then
-			item, index = AddItem(items, index)
-			
-			if subset.character then
-				local characterInfo = Internal.GetCharacterInfo(subset.character);
-				if characterInfo then
-					item.name = format("%s |cFFD5D5D5(%s - %s)|r", subset.name, characterInfo.name, characterInfo.realm);
+		if #sets > 0 then
+			for i,setID in ipairs(sets) do
+				local subset = getcallback(setID)
+				item, index = AddItem(items, index)
+				
+				if subset.character then
+					local characterInfo = Internal.GetCharacterInfo(subset.character);
+					if characterInfo then
+						item.name = format("%s |cFFD5D5D5(%s - %s)|r", subset.name, characterInfo.name, characterInfo.realm);
+					else
+						item.name = format("%s |cFFD5D5D5(%s)|r", subset.name, subset.character);
+					end
 				else
-					item.name = format("%s |cFFD5D5D5(%s)|r", subset.name, subset.character);
+					item.name = subset.name;
 				end
-			else
-				item.name = subset.name;
+	
+				item.type = type
+				item.index = i
+				item.id = subset.setID
+				item.first = i == 1
+				item.last = i == #sets
 			end
-
-			item.type = type
-			item.id = subset.setID
-			item.first = true
-			item.last = true
 		else
 			item, index = AddItem(items, index)
 
@@ -939,19 +944,19 @@ end
 local function BuildSetItems(set, items, collapsed)
 	local index = 1
 
-	index = BuildSubSetItems("talents", L["Talents"], Internal.GetTalentSet(set.talentSet), items, index, collapsed["talents"])
+	index = BuildSubSetItems("talents", L["Talents"], Internal.GetTalentSet, set.talents, items, index, collapsed["talents"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("pvptalents", L["PvP Talents"], Internal.GetPvPTalentSet(set.pvpTalentSet), items, index, collapsed["pvptalents"])
+	index = BuildSubSetItems("pvptalents", L["PvP Talents"], Internal.GetPvPTalentSet, set.pvptalents, items, index, collapsed["pvptalents"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("essences", L["Essences"], Internal.GetEssenceSet(set.essencesSet), items, index, collapsed["essences"])
+	index = BuildSubSetItems("essences", L["Essences"], Internal.GetEssenceSet, set.essences, items, index, collapsed["essences"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("equipment", L["Equipment"], Internal.GetEquipmentSet(set.equipmentSet), items, index, collapsed["equipment"])
+	index = BuildSubSetItems("equipment", L["Equipment"], Internal.GetEquipmentSet, set.equipment, items, index, collapsed["equipment"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("actionbars", L["Action Bars"], Internal.GetActionBarSet(set.actionBarSet), items, index, collapsed["actionbars"])
+	index = BuildSubSetItems("actionbars", L["Action Bars"], Internal.GetActionBarSet, set.actionbars, items, index, collapsed["actionbars"])
 
 	while items[index] do
 		table.remove(items, index)
@@ -966,11 +971,6 @@ function Internal.ProfilesTabUpdate(self)
 
 	self.Name:SetEnabled(self.set ~= nil);
 	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
-	-- self.TalentsDropDown.Button:SetEnabled(self.set ~= nil);
-	-- self.PvPTalentsDropDown.Button:SetEnabled(self.set ~= nil);
-	-- self.EssencesDropDown.Button:SetEnabled(self.set ~= nil);
-	-- self.EquipmentDropDown.Button:SetEnabled(self.set ~= nil);
-	-- self.ActionBarDropDown.Button:SetEnabled(self.set ~= nil);
 
 	self:GetParent().RefreshButton:SetEnabled(false)
 
@@ -999,46 +999,6 @@ function Internal.ProfilesTabUpdate(self)
 
 		self.SetsScroll.items = BuildSetItems(self.set, self.SetsScroll.items or {}, self.Collapsed)
 		Internal.SetsScrollFrameUpdate(self.SetsScroll)
-
-		-- local talentSetID = self.set.talents[1];
-		-- if talentSetID == nil then
-		-- 	UIDropDownMenu_SetText(self.TalentsDropDown, L["None"]);
-		-- else
-		-- 	local talentSet = Internal.GetTalentSet(talentSetID);
-		-- 	UIDropDownMenu_SetText(self.TalentsDropDown, talentSet.name);
-		-- end
-
-		-- local pvpTalentSetID = self.set.pvptalents[1];
-		-- if pvpTalentSetID == nil then
-		-- 	UIDropDownMenu_SetText(self.PvPTalentsDropDown, L["None"]);
-		-- else
-		-- 	local pvpTalentSet = Internal.GetPvPTalentSet(pvpTalentSetID);
-		-- 	UIDropDownMenu_SetText(self.PvPTalentsDropDown, pvpTalentSet.name);
-		-- end
-
-		-- local essencesSetID = self.set.essences[1];
-		-- if essencesSetID == nil then
-		-- 	UIDropDownMenu_SetText(self.EssencesDropDown, L["None"]);
-		-- else
-		-- 	local essencesSet = Internal.GetEssenceSet(essencesSetID);
-		-- 	UIDropDownMenu_SetText(self.EssencesDropDown, essencesSet.name);
-		-- end
-
-		-- local equipmentSetID = self.set.equipment[1];
-		-- if equipmentSetID == nil then
-		-- 	UIDropDownMenu_SetText(self.EquipmentDropDown, L["None"]);
-		-- else
-		-- 	local equipmentSet = Internal.GetEquipmentSet(equipmentSetID);
-		-- 	UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
-		-- end
-
-		-- local actionBarSetID = self.set.actionbars[1];
-		-- if actionBarSetID == nil then
-		-- 	UIDropDownMenu_SetText(self.ActionBarDropDown, L["None"]);
-		-- else
-		-- 	local actionBarSet = Internal.GetActionBarSet(actionBarSetID);
-		-- 	UIDropDownMenu_SetText(self.ActionBarDropDown, actionBarSet.name);
-		-- end
 		
 		if not self.Name:HasFocus() then
 			self.Name:SetText(self.set.name or "");
