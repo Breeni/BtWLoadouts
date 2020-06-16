@@ -292,75 +292,6 @@ local function IsLoadoutActivatable(set)
 	return true
 end
 
--- Check all the pieces of a profile and make sure they are valid together
-local function IsProfileValid(set)
-	local class, specID, role, invalidForPlayer = nil, nil, nil, nil;
-
-	local playerClass = select(2, UnitClass("player"));
-	if set.equipment[1] then
-		local subSet = Internal.GetEquipmentSet(set.equipment[1]);
-		local characterInfo = Internal.GetCharacterInfo(subSet.character);
-		if not characterInfo then
-			return false, true, false, false, false;
-		end
-		class = characterInfo.class;
-
-		local name, realm = UnitFullName("player");
-		local playerCharacter = format("%s-%s", realm, name);
-		invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
-	end
-
-	if set.essences[1] then
-		local subSet = Internal.GetEssenceSet(set.essences[1]);
-		role = subSet.role;
-
-		invalidForPlayer = invalidForPlayer or not Internal.IsClassRoleValid(playerClass, role);
-	end
-
-	if set.talents[1] then
-		local subSet = Internal.GetTalentSet(set.talents[1]);
-
-		if specID ~= nil and specID ~= subSet.specID then
-			return false, false, true, false, false;
-		end
-
-		specID = subSet.specID;
-	end
-
-	if set.pvptalents[1] then
-		local subSet = Internal.GetPvPTalentSet(set.pvptalents[1]);
-
-		if specID ~= nil and specID ~= subSet.specID then
-			return false, false, true, false, false;
-		end
-
-		specID = subSet.specID;
-	end
-
-	if specID then
-		invalidForPlayer = invalidForPlayer or not Internal.CanSwitchToSpecialization(specID);
-	end
-
-	if specID and (class ~= nil or role ~= nil) then
-		local specRole, specClass = select(5, GetSpecializationInfoByID(specID));
-
-		if class ~= nil and class ~= specClass then
-			return false, true, true, false, false;
-		end
-
-		if role ~= nil and role ~= specRole then
-			return false, false, true, true, false;
-		end
-	end
-
-	if class and role then
-		if not Internal.IsClassRoleValid(class, role) then
-			return false, true, false, true, false;
-		end
-	end
-
-	return true, class, specID, role, not invalidForPlayer;
-end
 local function AddProfile()
     return AddSet("profiles", {
 		name = L["New Profile"],
@@ -855,7 +786,6 @@ end
 Internal.GetProfile = GetProfile
 Internal.GetActiveProfiles = GetActiveProfiles
 Internal.ActivateProfile = ActivateProfile
-Internal.IsProfileValid = IsProfileValid
 Internal.LoadoutHasErrors = LoadoutHasErrors
 Internal.GetLoadoutErrors = GetLoadoutErrors
 Internal.IsLoadoutActivatable = IsLoadoutActivatable
