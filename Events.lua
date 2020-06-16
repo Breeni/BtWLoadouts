@@ -66,6 +66,8 @@ function frame:ADDON_LOADED(...)
                     set.version = 2
                 end
 
+                set.character = nil -- Loadouts are no longer character restricted
+
                 for _,subsetID in ipairs(set.talents) do
                     if BtWLoadoutsSets.talents[subsetID] then
                         BtWLoadoutsSets.talents[subsetID].useCount = BtWLoadoutsSets.talents[subsetID].useCount + 1;
