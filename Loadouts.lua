@@ -172,6 +172,126 @@ local function CancelActivateProfile()
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
 
+local function LoadoutHasErrors(set)
+	local specID, role, class = set.specID
+
+	if set.talents then
+		for _,subsetID in ipairs(set.talents) do
+			local subset = Internal.GetTalentSet(subsetID)
+			specID = specID or subset.specID
+
+			if specID ~= subset.specID then
+				return true, specID
+			end
+		end
+	end
+
+	if set.pvptalents then
+		for _,subsetID in ipairs(set.pvptalents) do
+			local subset = Internal.GetPvPTalentSet(subsetID)
+			specID = specID or subset.specID
+
+			if specID ~= subset.specID then
+				return true, specID
+			end
+		end
+	end
+
+	if specID then
+		role, class = select(5, GetSpecializationInfoByID(specID))
+	end
+
+	if set.essences then
+		for _,subsetID in ipairs(set.essences) do
+			local subset = Internal.GetEssenceSet(subsetID)
+			role = role or subset.role
+
+			if role ~= subset.role then
+				return true, specID
+			end
+		end
+	end
+
+	if set.equipment then
+		for _,subsetID in ipairs(set.equipment) do
+			local subset = Internal.GetEquipmentSet(subsetID)
+			local characterInfo = Internal.GetCharacterInfo(subset.character);
+			class = class or characterInfo.class;
+
+			if class ~= characterInfo.class then
+				return true, specID
+			end
+		end
+	end
+
+	return false, specID
+end
+
+local function GetLoadoutErrors(errors, set)
+	local specID, hasError, role, class = set.specID, false
+
+	wipe(errors["talents"])
+	for index,subsetID in ipairs(set.talents) do
+		local subset = Internal.GetTalentSet(subsetID)
+		specID = specID or subset.specID
+
+		if specID ~= subset.specID then
+			hasError = true
+			errors["talents"][index] = L["Incompatible Specialization"]
+		end
+	end
+
+	wipe(errors["pvptalents"])
+	for index,subsetID in ipairs(set.pvptalents) do
+		local subset = Internal.GetPvPTalentSet(subsetID)
+		specID = specID or subset.specID
+
+		if specID ~= subset.specID then
+			hasError = true
+			errors["pvptalents"][index] = L["Incompatible Specialization"]
+		end
+	end
+
+	if specID then
+		role, class = select(5, GetSpecializationInfoByID(specID))
+	end
+
+	wipe(errors["essences"])
+	for index,subsetID in ipairs(set.essences) do
+		local subset = Internal.GetEssenceSet(subsetID)
+		role = role or subset.role
+
+		if role ~= subset.role then
+			hasError = true
+			errors["essences"][index] = L["Incompatible Role"]
+		end
+	end
+
+	wipe(errors["equipment"])
+	for index,subsetID in ipairs(set.equipment) do
+		local subset = Internal.GetEquipmentSet(subsetID)
+		local characterInfo = Internal.GetCharacterInfo(subset.character);
+		class = class or characterInfo.class;
+
+		if class ~= characterInfo.class then
+			hasError = true
+			errors["equipment"][index] = L["Incompatible Class"]
+		end
+	end
+
+	return hasError, errors, specID
+end
+-- Checks of a loadout is activatable
+local function IsLoadoutActivatable(set)
+	local specID = set.specID
+
+	if specID and not Internal.CanSwitchToSpecialization(specID) then
+		return false
+	end
+
+	return true
+end
+
 -- Check all the pieces of a profile and make sure they are valid together
 local function IsProfileValid(set)
 	local class, specID, role, invalidForPlayer = nil, nil, nil, nil;
@@ -318,8 +438,8 @@ local function DeleteProfile(id)
 	end
 end
 local function ActivateProfile(profile)
-	local valid, class, specID, role, validForPlayer = IsProfileValid(profile);
-	if not valid or not validForPlayer then
+	local hasErrors, specID = LoadoutHasErrors(profile)
+	if not hasErrors and not IsLoadoutActivatable(profile) then
 		--@TODO display an error
 		return;
 	end
@@ -736,6 +856,9 @@ Internal.GetProfile = GetProfile
 Internal.GetActiveProfiles = GetActiveProfiles
 Internal.ActivateProfile = ActivateProfile
 Internal.IsProfileValid = IsProfileValid
+Internal.LoadoutHasErrors = LoadoutHasErrors
+Internal.GetLoadoutErrors = GetLoadoutErrors
+Internal.IsLoadoutActivatable = IsLoadoutActivatable
 Internal.IsProfileActive = IsProfileActive
 Internal.AddProfile = AddProfile
 Internal.DeleteProfile = DeleteProfile
@@ -787,7 +910,7 @@ do
 	function External.GetCharacterLoadouts()
 		wipe(loadouts);
 		for id,set in pairs(BtWLoadoutsSets.profiles) do
-			if type(set) == "table" and select(5, IsProfileValid(set)) then
+			if type(set) == "table" and IsLoadoutActivatable(set) then
 				loadouts[#loadouts+1] = id
 			end
 		end
@@ -812,6 +935,11 @@ function Internal.SetsScrollFrameUpdate(self)
 			button.type = item.type
 			button.isAdd = item.isAdd
 			button.isHeader = item.isHeader
+
+			button.name = item.name
+			button.error = item.error
+			button.ErrorBorder:SetShown(item.error ~= nil)
+			button.ErrorOverlay:SetShown(item.error ~= nil)
 
 			if item.isSeparator then
 				button:Hide()
@@ -889,7 +1017,7 @@ local function AddItem(items, index)
 
 	return item, index + 1
 end
-local function BuildSubSetItems(type, header, getcallback, sets, items, index, isCollapsed)
+local function BuildSubSetItems(type, header, getcallback, sets, items, index, isCollapsed, errors)
 	local item
 
 	do
@@ -919,6 +1047,7 @@ local function BuildSubSetItems(type, header, getcallback, sets, items, index, i
 					item.name = subset.name;
 				end
 	
+				item.error = errors[i]
 				item.type = type
 				item.index = i
 				item.id = subset.setID
@@ -941,22 +1070,22 @@ local function AddSeparator(items, index)
 	-- item.isSeparator = true
 	return index
 end
-local function BuildSetItems(set, items, collapsed)
+local function BuildSetItems(set, items, collapsed, errors)
 	local index = 1
 
-	index = BuildSubSetItems("talents", L["Talents"], Internal.GetTalentSet, set.talents, items, index, collapsed["talents"])
+	index = BuildSubSetItems("talents", L["Talents"], Internal.GetTalentSet, set.talents, items, index, collapsed["talents"], errors["talents"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("pvptalents", L["PvP Talents"], Internal.GetPvPTalentSet, set.pvptalents, items, index, collapsed["pvptalents"])
+	index = BuildSubSetItems("pvptalents", L["PvP Talents"], Internal.GetPvPTalentSet, set.pvptalents, items, index, collapsed["pvptalents"], errors["pvptalents"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("essences", L["Essences"], Internal.GetEssenceSet, set.essences, items, index, collapsed["essences"])
+	index = BuildSubSetItems("essences", L["Essences"], Internal.GetEssenceSet, set.essences, items, index, collapsed["essences"], errors["essences"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("equipment", L["Equipment"], Internal.GetEquipmentSet, set.equipment, items, index, collapsed["equipment"])
+	index = BuildSubSetItems("equipment", L["Equipment"], Internal.GetEquipmentSet, set.equipment, items, index, collapsed["equipment"], errors["equipment"])
 	index = AddSeparator(items, index)
 
-	index = BuildSubSetItems("actionbars", L["Action Bars"], Internal.GetActionBarSet, set.actionbars, items, index, collapsed["actionbars"])
+	index = BuildSubSetItems("actionbars", L["Action Bars"], Internal.GetActionBarSet, set.actionbars, items, index, collapsed["actionbars"], errors["actionbars"])
 
 	while items[index] do
 		table.remove(items, index)
@@ -965,6 +1094,15 @@ local function BuildSetItems(set, items, collapsed)
 	return items
 end
 
+-- Stores errors for currently viewed set
+local errors = {
+	talents = {},
+	pvptalents = {},
+	essences = {},
+	equipment = {},
+	actionbars = {},
+}
+_G['BtWLoadoutsErrors'] = errors
 function Internal.ProfilesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Profiles"]);
 	self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
@@ -977,7 +1115,7 @@ function Internal.ProfilesTabUpdate(self)
 	self.Collapsed = self.Collapsed or {}
 
 	if self.set ~= nil then
-		local valid, class, specID, role, validForPlayer = Internal.IsProfileValid(self.set);
+		local hasErrors, errors, specID = GetLoadoutErrors(errors, self.set)
 		if type(specID) == "number" and self.set.specID ~= specID then
 			self.set.specID = specID;
 			Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
@@ -997,7 +1135,7 @@ function Internal.ProfilesTabUpdate(self)
 		self.Enabled:SetEnabled(true);
 		self.Enabled:SetChecked(not self.set.disabled);
 
-		self.SetsScroll.items = BuildSetItems(self.set, self.SetsScroll.items or {}, self.Collapsed)
+		self.SetsScroll.items = BuildSetItems(self.set, self.SetsScroll.items or {}, self.Collapsed, errors)
 		Internal.SetsScrollFrameUpdate(self.SetsScroll)
 		
 		if not self.Name:HasFocus() then
@@ -1005,7 +1143,7 @@ function Internal.ProfilesTabUpdate(self)
 		end
 
 		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(validForPlayer);
+		activateButton:SetEnabled(not hasErrors and IsLoadoutActivatable(self.set));
 
 		local deleteButton =  self:GetParent().DeleteButton;
 		deleteButton:SetEnabled(true);

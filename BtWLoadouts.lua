@@ -685,6 +685,7 @@ local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
 	local set = tab.set;
+	local index = arg2 or (#set.pvptalents + 1)
 
 	if set.pvptalents[index] then
 		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
@@ -806,6 +807,7 @@ local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
     local set = tab.set;
+	local index = arg2 or (#set.essences + 1)
 
 	if set.essences[index] then
 		local subset = Internal.GetEssenceSet(set.essences[index]);
@@ -831,6 +833,7 @@ local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
 	local set = tab.set;
+	local index = arg2 or (#set.essences + 1)
 
 	if set.essences[index] then
 		local subset = Internal.GetEssenceSet(set.essences[index]);
@@ -940,6 +943,7 @@ local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
     local set = tab.set;
+	local index = arg2 or (#set.equipment + 1)
 
 	if set.equipment[index] then
 		local subset = Internal.GetEquipmentSet(set.equipment[index]);
@@ -965,6 +969,7 @@ local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
 	local set = tab.set;
+	local index = arg2 or (#set.equipment + 1)
 
 	if set.equipment[index] then
 		local subset = Internal.GetEquipmentSet(set.equipment[index]);
@@ -973,7 +978,6 @@ local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
 
 	local newSet = Internal.AddEquipmentSet();
 	set.equipment[index] = newSet.setID;
-	set.character = newSet.character;
 
 	if set.equipment[index] then
 		local subset = Internal.GetEquipmentSet(set.equipment[index]);
@@ -1084,7 +1088,6 @@ local function EquipmentDropDownInit(self, level, menuList, index)
         for _,setID in ipairs(setsFiltered) do
             info.text = sets[setID].name;
             info.arg1 = setID;
-			info.arg2 = sets[setID].character;
             info.func = EquipmentDropDown_OnClick;
             info.checked = selected == setID;
             UIDropDownMenu_AddButton(info, level);
@@ -1098,6 +1101,7 @@ local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
     local set = tab.set;
+	local index = arg2 or (#set.actionbars + 1)
 
 	if set.actionbars[index] then
 		local subset = Internal.GetActionBarSet(set.actionbars[index]);
@@ -1123,6 +1127,7 @@ local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
 
     CloseDropDownMenus();
 	local set = tab.set;
+	local index = arg2 or (#set.actionbars + 1)
 
 	if set.actionbars[index] then
 		local subset = Internal.GetActionBarSet(set.actionbars[index]);
@@ -1762,6 +1767,17 @@ do
 			ToggleDropDownMenu(nil, nil, DropDown, self, 0, 0)
 			PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
 		end
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:OnEnter()
+		if self.error then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetText(self.name, 1, 1, 1)
+			GameTooltip:AddLine(format("\n|cffff0000%s|r", self.error))
+			GameTooltip:Show()
+		end
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:OnLeave()
+		GameTooltip:Hide()
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:Add(button)
 		local DropDown = self:GetParent():GetParent().DropDown
@@ -3407,7 +3423,7 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 				set = Internal.GetProfileByName(rest);
 			end
 		end
-		if set and select(5,Internal.IsProfileValid(set)) then
+		if set and Internal.IsLoadoutActivatable(set) then
 			Internal.ActivateProfile(set);
 		else
 			print(L["Could not find a valid set"]);
@@ -3439,7 +3455,7 @@ if OneRingLib then
 		do
 			for id, set in pairs(BtWLoadoutsSets.profiles) do
 				if type(set) == "table" then
-					if select(5, Internal.IsProfileValid(set)) then
+					if Internal.IsLoadoutActivatable(set) then
 						items[#items+1] = set
 					end
 				end
@@ -3460,9 +3476,9 @@ if OneRingLib then
 			wipe(items)
 			for id, set in pairs(BtWLoadoutsSets.talents) do
 				if type(set) == "table" then
-					if select(5, Internal.IsProfileValid({
+					if Internal.IsLoadoutActivatable({
 						talents = {set.setID}
-					})) then
+					}) then
 						items[#items+1] = set
 					end
 				end
@@ -3483,9 +3499,9 @@ if OneRingLib then
 			wipe(items)
 			for id, set in pairs(BtWLoadoutsSets.pvptalents) do
 				if type(set) == "table" then
-					if select(5, Internal.IsProfileValid({
+					if Internal.IsLoadoutActivatable({
 						pvptalents = {set.setID}
-					})) then
+					}) then
 						items[#items+1] = set
 					end
 				end
@@ -3506,9 +3522,9 @@ if OneRingLib then
 			wipe(items)
 			for id, set in pairs(BtWLoadoutsSets.essences) do
 				if type(set) == "table" then
-					if select(5, Internal.IsProfileValid({
+					if Internal.IsLoadoutActivatable({
 						essences = {set.setID}
-					})) then
+					}) then
 						items[#items+1] = set
 					end
 				end
@@ -3529,9 +3545,9 @@ if OneRingLib then
 			wipe(items)
 			for id, set in pairs(BtWLoadoutsSets.equipment) do
 				if type(set) == "table" then
-					if select(5, Internal.IsProfileValid({
+					if Internal.IsLoadoutActivatable({
 						equipment = {set.setID}
-					})) then
+					}) then
 						items[#items+1] = set
 					end
 				end
@@ -3548,7 +3564,7 @@ if OneRingLib then
 	do
 		local function hint(id)
 			local set = BtWLoadoutsSets.profiles[id]
-			local usable = select(5, Internal.IsProfileValid(set))
+			local usable = Internal.IsLoadoutActivatable(set)
 			return usable, false, nil, set.name
 		end
 		local function activate(id)
@@ -3582,9 +3598,9 @@ if OneRingLib then
 	do
 		local function hint(id)
 			local set = BtWLoadoutsSets.talents[id]
-			local usable = select(5, Internal.IsProfileValid({
+			local usable = Internal.IsLoadoutActivatable({
 				talents = {set.setID}
-			}))
+			})
 			return usable, false, nil, set.name
 		end
 		local function activate(id)
@@ -3620,9 +3636,9 @@ if OneRingLib then
 	do
 		local function hint(id)
 			local set = BtWLoadoutsSets.pvptalents[id]
-			local usable = select(5, Internal.IsProfileValid({
+			local usable = Internal.IsLoadoutActivatable({
 				pvptalents = {set.setID}
-			}))
+			})
 			return usable, false, nil, set.name
 		end
 		local function activate(id)
@@ -3658,9 +3674,9 @@ if OneRingLib then
 	do
 		local function hint(id)
 			local set = BtWLoadoutsSets.essences[id]
-			local usable = select(5, Internal.IsProfileValid({
+			local usable = Internal.IsLoadoutActivatable({
 				essences = {set.setID}
-			}))
+			})
 			return usable, false, nil, set.name
 		end
 		local function activate(id)
@@ -3694,9 +3710,9 @@ if OneRingLib then
 	do
 		local function hint(id)
 			local set = BtWLoadoutsSets.equipment[id]
-			local usable = select(5, Internal.IsProfileValid({
+			local usable = Internal.IsLoadoutActivatable({
 				equipment = {set.setID}
-			}))
+			})
 			return usable, false, nil, set.name
 		end
 		local function activate(id)
