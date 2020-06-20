@@ -36,25 +36,6 @@ local function GetActionInfoTable(slot, tbl)
 
     return tbl
 end
-local function CompareSlot(slot, tbl)
-    local actionType, id, subType = GetActionInfo(slot)
-    if actionType == "spell" then
-        id = FindBaseSpellByID(id) or id
-    end
-
-    if tbl == nil then
-        return actionType == nil
-    elseif actionType == "macro" and tbl.type == "macro" then
-        local macroText = GetMacroBody(id)
-        return macroText == tbl.macroText or id == GetMacroIndexByName(tbl.name)
-    elseif actionType == "companion" and subType == "MOUNT" and tbl.type == "summonmount" then
-        return id == select(2, C_MountJournal.GetDisplayedMountInfo(tbl.id))
-    elseif tbl.type == "companion" and tbl.subType == "MOUNT" and actionType == "summonmount" then
-        return tbl.id == select(2, C_MountJournal.GetDisplayedMountInfo(id))
-    else
-        return tbl.type == actionType and tbl.id == id and tbl.subType == subType
-    end
-end
 local function GetMacroByText(text)
     local global, character = GetNumMacros()
     for i=1,global do
@@ -66,6 +47,35 @@ local function GetMacroByText(text)
         if GetMacroBody(i) == text then
             return i
         end
+    end
+end
+local function CompareSlot(slot, tbl)
+    local actionType, id, subType = GetActionInfo(slot)
+    if actionType == "spell" then
+        id = FindBaseSpellByID(id) or id
+    end
+
+    if tbl == nil then
+        return actionType == nil
+    elseif actionType == "macro" and tbl.type == "macro" then
+        local macroText = GetMacroBody(id)
+        -- Macro in the action slot has the same text as the macro we want
+        if macroText == tbl.macroText then
+            return true
+        end
+
+        -- There is a macro with the text we want and its not the one in the action slot
+        if GetMacroByText(tbl.macroText) ~= nil then
+            return false
+        end
+
+        return id == GetMacroIndexByName(tbl.name)
+    elseif actionType == "companion" and subType == "MOUNT" and tbl.type == "summonmount" then
+        return id == select(2, C_MountJournal.GetDisplayedMountInfo(tbl.id))
+    elseif tbl.type == "companion" and tbl.subType == "MOUNT" and actionType == "summonmount" then
+        return tbl.id == select(2, C_MountJournal.GetDisplayedMountInfo(id))
+    else
+        return tbl.type == actionType and tbl.id == id and tbl.subType == subType
     end
 end
 Internal.GetMacroByText = GetMacroByText
