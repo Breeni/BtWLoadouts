@@ -88,7 +88,6 @@ function frame:ADDON_LOADED(...)
 
                 for _,subsetID in ipairs(set.equipment) do
                     if BtWLoadoutsSets.equipment[subsetID] then
-                        set.character = BtWLoadoutsSets.equipment[subsetID].character -- Make sure the loadout character is the same as the equipment character
                         BtWLoadoutsSets.equipment[subsetID].useCount = BtWLoadoutsSets.equipment[subsetID].useCount + 1;
                     end
                 end
