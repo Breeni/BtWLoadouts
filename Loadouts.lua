@@ -177,7 +177,7 @@ local function IsProfileValid(set)
 	local class, specID, role, invalidForPlayer = nil, nil, nil, nil;
 
 	local playerClass = select(2, UnitClass("player"));
-	if set.equipment[1] then
+	if set.equipment and set.equipment[1] then
 		local subSet = Internal.GetEquipmentSet(set.equipment[1]);
 		local characterInfo = Internal.GetCharacterInfo(subSet.character);
 		if not characterInfo then
@@ -190,14 +190,14 @@ local function IsProfileValid(set)
 		invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
 	end
 
-	if set.essences[1] then
+	if set.essences and set.essences[1] then
 		local subSet = Internal.GetEssenceSet(set.essences[1]);
 		role = subSet.role;
 
 		invalidForPlayer = invalidForPlayer or not Internal.IsClassRoleValid(playerClass, role);
 	end
 
-	if set.talents[1] then
+	if set.talents and set.talents[1] then
 		local subSet = Internal.GetTalentSet(set.talents[1]);
 
 		if specID ~= nil and specID ~= subSet.specID then
@@ -207,7 +207,7 @@ local function IsProfileValid(set)
 		specID = subSet.specID;
 	end
 
-	if set.pvptalents[1] then
+	if set.pvptalents and set.pvptalents[1] then
 		local subSet = Internal.GetPvPTalentSet(set.pvptalents[1]);
 
 		if specID ~= nil and specID ~= subSet.specID then
