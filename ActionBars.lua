@@ -122,6 +122,7 @@ local function SetActon(slot, tbl)
         return true, true
     elseif tbl.type == "macro" then
         if not PickupMacroByText(tbl.macroText) then
+            Internal.LogMessage("Warning: Pickup Macro by name or id (%d, %s, %d)", slot, tbl.name, tbl.id)
             PickupMacro(GetMacroIndexByName(tbl.name) or tbl.id)
         end
     elseif tbl.type == "spell" then
