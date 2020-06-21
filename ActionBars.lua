@@ -13,6 +13,28 @@ local GetMacroBody = GetMacroBody
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local function push(tbl, ...)
+    local n = select('#', ...)
+    for i=1,n do
+        tbl[i] = select(i, ...)
+    end
+    tbl.n = n
+end
+local function compare(a, b)
+    if a.n ~= b.n then
+        return false
+    end
+
+    local n = a.n
+    for i=1,n do
+        if a[i] ~= b[i] then
+            return false
+        end
+    end
+
+    return true
+end
+
 local function GetActionInfoTable(slot, tbl)
     local actionType, id, subType = GetActionInfo(slot)
     if not actionType and not tbl then -- If no action and tbl is missing just return
@@ -87,8 +109,10 @@ local function PickupMacroByText(text)
     end
     return false
 end
+
+local ActionCacheA, ActionCacheB = {}, {}
 local function SetActon(slot, tbl)
-    local success = true
+    local success, msg = true, "Success"
 
     ClearCursor()
     if tbl == nil or tbl.type == nil then -- Clear the slot
@@ -231,19 +255,25 @@ local function SetActon(slot, tbl)
     end
 
     if GetCursorInfo() then
+        push(ActionCacheA, GetCursorInfo())
+
         PlaceAction(slot)
 
-        if GetCursorInfo() then -- Cursor should be empty now
+        push(ActionCacheB, GetCursorInfo())
+
+        if compare(ActionCacheA, ActionCacheB) then -- Compare the cursor now to before we placed the action, if they are the same it failed
+            msg = "Failed to place action"
             success = false
         end
     else
+        msg = "Failed to pickup action"
         success = false
     end
 
     if tbl.type == "macro" then
-        Internal.LogMessage("Switching action bar slot %d to %s:%s:%s (%s)", slot, tbl.type, tbl.id, tbl.macroText:gsub("\n", "\\ "), success and "true" or "false")
+        Internal.LogMessage("Switching action bar slot %d to %s:%s:%s (%s, %s)", slot, tbl.type, tbl.id, tbl.macroText:gsub("\n", "\\ "), success and "true" or "false", msg)
     else
-        Internal.LogMessage("Switching action bar slot %d to %s:%s (%s)", slot, tbl.type, tbl.id, success and "true" or "false")
+        Internal.LogMessage("Switching action bar slot %d to %s:%s (%s, %s)", slot, tbl.type, tbl.id, success and "true" or "false", msg)
     end
 
     ClearCursor()
