@@ -9,6 +9,7 @@ local GetSpecialization = GetSpecialization
 local GetSpecializationInfo = GetSpecializationInfo
 local GetActionInfo = GetActionInfo
 local GetMacroBody = GetMacroBody
+local trim = strtrim
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
@@ -53,20 +54,26 @@ local function GetActionInfoTable(slot, tbl)
     tbl.name = GetActionText(slot)
 
     if actionType == "macro" then
-        tbl.macroText = GetMacroBody(id)
+        tbl.macroText = trim(GetMacroBody(id))
     end
 
     return tbl
 end
 local function GetMacroByText(text)
+    if text == nil then
+        return
+    end
+
+    text = trim(text)
+
     local global, character = GetNumMacros()
     for i=1,global do
-        if GetMacroBody(i) == text then
+        if trim(GetMacroBody(i)) == text then
             return i
         end
     end
     for i=MAX_ACCOUNT_MACROS+1,MAX_ACCOUNT_MACROS+character do
-        if GetMacroBody(i) == text then
+        if trim(GetMacroBody(i)) == text then
             return i
         end
     end
@@ -80,9 +87,9 @@ local function CompareSlot(slot, tbl)
     if tbl == nil then
         return actionType == nil
     elseif actionType == "macro" and tbl.type == "macro" then
-        local macroText = GetMacroBody(id)
+        local macroText = trim(GetMacroBody(id))
         -- Macro in the action slot has the same text as the macro we want
-        if macroText == tbl.macroText then
+        if macroText == trim(tbl.macroText) then
             return true
         end
 
