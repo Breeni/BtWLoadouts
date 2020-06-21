@@ -365,6 +365,7 @@ local function ActivateProfile(profile)
 	Internal.Call("LOADOUT_CHANGE_START")
 	Internal.ClearLog()
 	Internal.LogMessage("--- START ---")
+	Internal.LogMessage(format("%s: %s", (select(2, GetAddOnInfo(ADDON_NAME))), (GetAddOnMetadata(ADDON_NAME, "Version"))))
 
     target.dirty = true;
 	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
