@@ -376,7 +376,6 @@ local function ActivateProfile(profile)
 	end
 
 	target.name = profile.name
-	target.active = true
 
 	if specID then
 		target.specID = specID or profile.specID;
@@ -413,11 +412,17 @@ local function ActivateProfile(profile)
 		end
 	end
 
-	Internal.Call("LOADOUT_CHANGE_START")
-	Internal.ClearLog()
-	Internal.LogMessage("--- START ---")
-	Internal.LogMessage(format("%s: %s", (select(2, GetAddOnInfo(ADDON_NAME))), (GetAddOnMetadata(ADDON_NAME, "Version"))))
+	if not target.active then
+		Internal.Call("LOADOUT_CHANGE_START")
+		Internal.ClearLog()
+		Internal.LogMessage("--- START ---")
+		Internal.LogMessage(format("%s: %s", (select(2, GetAddOnInfo(ADDON_NAME))), (GetAddOnMetadata(ADDON_NAME, "Version"))))
+	else
+		Internal.Call("LOADOUT_CHANGE_APPEND")
+		Internal.LogMessage("--- APPEND ---")
+	end
 
+	target.active = true
     target.dirty = true;
 	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 	eventHandler:RegisterEvent("PLAYER_REGEN_DISABLED");
