@@ -9,9 +9,32 @@ local GetSpecialization = GetSpecialization
 local GetSpecializationInfo = GetSpecializationInfo
 local GetActionInfo = GetActionInfo
 local GetMacroBody = GetMacroBody
+local trim = strtrim
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+
+local function push(tbl, ...)
+    local n = select('#', ...)
+    for i=1,n do
+        tbl[i] = select(i, ...)
+    end
+    tbl.n = n
+end
+local function compare(a, b)
+    if a.n ~= b.n then
+        return false
+    end
+
+    local n = a.n
+    for i=1,n do
+        if a[i] ~= b[i] then
+            return false
+        end
+    end
+
+    return true
+end
 
 local function GetActionInfoTable(slot, tbl)
     local actionType, id, subType = GetActionInfo(slot)
@@ -31,10 +54,29 @@ local function GetActionInfoTable(slot, tbl)
     tbl.name = GetActionText(slot)
 
     if actionType == "macro" then
-        tbl.macroText = GetMacroBody(id)
+        tbl.macroText = trim(GetMacroBody(id))
     end
 
     return tbl
+end
+local function GetMacroByText(text)
+    if text == nil then
+        return
+    end
+
+    text = trim(text)
+
+    local global, character = GetNumMacros()
+    for i=1,global do
+        if trim(GetMacroBody(i)) == text then
+            return i
+        end
+    end
+    for i=MAX_ACCOUNT_MACROS+1,MAX_ACCOUNT_MACROS+character do
+        if trim(GetMacroBody(i)) == text then
+            return i
+        end
+    end
 end
 local function CompareSlot(slot, tbl)
     local actionType, id, subType = GetActionInfo(slot)
@@ -45,27 +87,24 @@ local function CompareSlot(slot, tbl)
     if tbl == nil then
         return actionType == nil
     elseif actionType == "macro" and tbl.type == "macro" then
-        local macroText = GetMacroBody(id)
-        return macroText == tbl.macroText or id == GetMacroIndexByName(tbl.name)
+        local macroText = trim(GetMacroBody(id))
+        -- Macro in the action slot has the same text as the macro we want
+        if macroText == trim(tbl.macroText) then
+            return true
+        end
+
+        -- There is a macro with the text we want and its not the one in the action slot
+        if GetMacroByText(tbl.macroText) ~= nil then
+            return false
+        end
+
+        return id == GetMacroIndexByName(tbl.name)
     elseif actionType == "companion" and subType == "MOUNT" and tbl.type == "summonmount" then
         return id == select(2, C_MountJournal.GetDisplayedMountInfo(tbl.id))
     elseif tbl.type == "companion" and tbl.subType == "MOUNT" and actionType == "summonmount" then
         return tbl.id == select(2, C_MountJournal.GetDisplayedMountInfo(id))
     else
         return tbl.type == actionType and tbl.id == id and tbl.subType == subType
-    end
-end
-local function GetMacroByText(text)
-    local global, character = GetNumMacros()
-    for i=1,global do
-        if GetMacroBody(i) == text then
-            return i
-        end
-    end
-    for i=MAX_ACCOUNT_MACROS+1,MAX_ACCOUNT_MACROS+character do
-        if GetMacroBody(i) == text then
-            return i
-        end
     end
 end
 Internal.GetMacroByText = GetMacroByText
@@ -77,8 +116,10 @@ local function PickupMacroByText(text)
     end
     return false
 end
+
+local ActionCacheA, ActionCacheB = {}, {}
 local function SetActon(slot, tbl)
-    local success = true
+    local success, msg = true, "Success"
 
     ClearCursor()
     if tbl == nil or tbl.type == nil then -- Clear the slot
@@ -88,6 +129,7 @@ local function SetActon(slot, tbl)
         return true, true
     elseif tbl.type == "macro" then
         if not PickupMacroByText(tbl.macroText) then
+            Internal.LogMessage("Warning: Pickup Macro by name or id (%d, %s, %d)", slot, tbl.name, tbl.id)
             PickupMacro(GetMacroIndexByName(tbl.name) or tbl.id)
         end
     elseif tbl.type == "spell" then
@@ -221,19 +263,25 @@ local function SetActon(slot, tbl)
     end
 
     if GetCursorInfo() then
+        push(ActionCacheA, GetCursorInfo())
+
         PlaceAction(slot)
 
-        if GetCursorInfo() then -- Cursor should be empty now
+        push(ActionCacheB, GetCursorInfo())
+
+        if compare(ActionCacheA, ActionCacheB) then -- Compare the cursor now to before we placed the action, if they are the same it failed
+            msg = "Failed to place action"
             success = false
         end
     else
+        msg = "Failed to pickup action"
         success = false
     end
 
     if tbl.type == "macro" then
-        Internal.LogMessage("Switching action bar slot %d to %s:%s:%s (%s)", slot, tbl.type, tbl.id, tbl.macroText:gsub("\n", "\\ "), success and "true" or "false")
+        Internal.LogMessage("Switching action bar slot %d to %s:%s:%s (%s, %s)", slot, tbl.type, tbl.id, tbl.macroText:gsub("\n", "\\ "), success and "true" or "false", msg)
     else
-        Internal.LogMessage("Switching action bar slot %d to %s:%s (%s)", slot, tbl.type, tbl.id, success and "true" or "false")
+        Internal.LogMessage("Switching action bar slot %d to %s:%s (%s, %s)", slot, tbl.type, tbl.id, success and "true" or "false", msg)
     end
 
     ClearCursor()

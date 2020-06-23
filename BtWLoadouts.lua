@@ -3213,6 +3213,7 @@ end
 function BtWLoadoutsActionButtonMixin:Update()
 	local set = self:GetParent().set;
 	local slot = self:GetID();
+	local errors = nil
 	local ignored = set.ignored[slot];
 	local tbl = set.actions[slot];
 	if tbl and tbl.type ~= nil then
@@ -3233,11 +3234,15 @@ function BtWLoadoutsActionButtonMixin:Update()
 			local index = Internal.GetMacroByText(tbl.macroText)
 			if index then
 				name, icon = GetMacroInfo(index)
+			else
+				errors = L["Macro missing"]
 			end
 		elseif tbl.type == "equipmentset" then
 			local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
 			if id then
 				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
+			else
+				errors = L["Equipment set missing"]
 			end
 		else
 			-- print(tbl.type, tbl.id)
@@ -3254,6 +3259,9 @@ function BtWLoadoutsActionButtonMixin:Update()
 		self.Icon:SetTexture(nil)
 	end
 
+	self.errors = errors -- For tooltip display
+	self.ErrorBorder:SetShown(errors ~= nil)
+	self.ErrorOverlay:SetShown(errors ~= nil)
 	self.ignoreTexture:SetShown(ignored);
 end
 
