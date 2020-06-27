@@ -887,7 +887,7 @@
 					<Anchor point="RIGHT" x="0" y="0"/>
 				</Anchors>
 				<NormalTexture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
-					<TexCoords left="0.2255859375" right="0.2490234375" top="0.888671875" bottom="0.935546875"/>
+					<TexCoords left="0.2236328125" right="0.2509765625" top="0.884765625" bottom="0.939453125"/>
 				</NormalTexture>
 				<Scripts>
 					<OnClick>
@@ -922,9 +922,30 @@
 				<Anchors>
 					<Anchor point="LEFT" x="0" y="0"/>
 				</Anchors>
-				<NormalTexture file="Interface\ChatFrame\ChatFrameExpandArrow"/>
-				<DisabledTexture file="Interface\ChatFrame\ChatFrameExpandArrow" desaturated="true"/>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Up" file="Interface\ChatFrame\ChatFrameExpandArrow">
+							<Size x="10" y="10"/>
+							<Anchors>
+								<Anchor point="TOP" x="0" y="1"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Down" file="Interface\ChatFrame\ChatFrameExpandArrow">
+							<Size x="10" y="10"/>
+							<Anchors>
+								<Anchor point="BOTTOM" x="0" y="-1"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+
+				<!-- <NormalTexture file="Interface\ChatFrame\ChatFrameExpandArrow"/>
+				<DisabledTexture file="Interface\ChatFrame\ChatFrameExpandArrow" desaturated="true"/> -->
 				<Scripts>
+					<OnLoad>
+						self.Up:SetRotation(math.pi * 0.5)
+						self.Down:SetRotation(-math.pi * 0.5)
+					</OnLoad>
 					<OnMouseDown>
 						self:GetParent():StartDrag(self)
 					</OnMouseDown>

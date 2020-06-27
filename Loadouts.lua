@@ -866,8 +866,11 @@ function Internal.SetsScrollFrameUpdate(self)
 	end
 
 	local totalHeight, displayedHeight = #items * (buttons[1]:GetHeight() + 1), self:GetHeight()
+	local hasScrollBar = totalHeight > displayedHeight
 
 	for i,button in ipairs(buttons) do
+		button:SetWidth(hasScrollBar and 530 or 540)
+
 		local item = items[i+offset]
 		button:Set(item)
 	end
