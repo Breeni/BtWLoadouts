@@ -130,7 +130,11 @@ local Settings = SettingsCreate({
         name = L["Show minimap icon"],
         key = "minimapShown",
         onChange = function (id, value)
-            BtWLoadoutsMinimapButton:SetShown(value);
+			if value then
+				Internal.ShowMinimap()
+			else
+				Internal.HideMinimap()
+			end
         end,
         default = true,
     },

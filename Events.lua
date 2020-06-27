@@ -130,6 +130,7 @@ function frame:ADDON_LOADED(...)
 end
 function frame:PLAYER_LOGIN(...)
     Internal.CreateLauncher();
+    Internal.CreateLauncherMinimapIcon();
 
     do
         local name, realm = UnitFullName("player");
