@@ -855,6 +855,8 @@ do
 end
 
 function Internal.SetsScrollFrameUpdate(self)
+	self:GetScrollChild().currentDrag = nil -- Clear current drag
+
 	local buttons = self.buttons
 	local items = self.items
 	local offset = HybridScrollFrame_GetOffset(self)
@@ -867,81 +869,7 @@ function Internal.SetsScrollFrameUpdate(self)
 
 	for i,button in ipairs(buttons) do
 		local item = items[i+offset]
-		if item and not item.ignore then
-			button.type = item.type
-			button.isAdd = item.isAdd
-			button.isHeader = item.isHeader
-
-			button.name = item.name
-			button.error = item.error
-			button.ErrorBorder:SetShown(item.error ~= nil)
-			button.ErrorOverlay:SetShown(item.error ~= nil)
-
-			if item.isSeparator then
-				button:Hide()
-			else
-				button.index = item.index
-				button.id = item.id
-
-				button:SetEnabled(not item.isHeader)
-				if item.isHeader then
-					button.Name:SetPoint("LEFT", 0, 0)
-					button.Name:SetTextColor(0.75, 0.61, 0)
-					
-					-- if item.isEmpty then
-						button.ExpandedIcon:Hide()
-						button.CollapsedIcon:Hide()
-					-- elseif item.isCollapsed then
-					-- 	button.ExpandedIcon:Hide()
-					-- 	button.CollapsedIcon:Show()
-					-- else
-					-- 	button.ExpandedIcon:Show()
-					-- 	button.CollapsedIcon:Hide()
-					-- end
-
-					button.AddButton:Show()
-					button.RemoveButton:Hide()
-					button.MoveDownButton:Hide()
-					button.MoveUpButton:Hide()
-				elseif item.isAdd then
-					button.Name:SetPoint("LEFT", 15, 0)
-					button.Name:SetTextColor(0.973, 0.937, 0.580)
-
-					button.AddButton:Hide()
-					button.RemoveButton:Hide()
-					button.MoveDownButton:Hide()
-					button.MoveUpButton:Hide()
-
-					button.ExpandedIcon:Hide()
-					button.CollapsedIcon:Hide()
-				else
-					button.Name:SetPoint("LEFT", 15, 0)
-					button.Name:SetTextColor(1, 1, 1)
-
-					-- button.AddButton:Hide()
-					-- button.RemoveButton:Hide()
-					-- button.MoveDownButton:Hide()
-					-- button.MoveUpButton:Hide()
-
-					button.AddButton:Hide()
-					button.RemoveButton:Show()
-					button.MoveDownButton:Show()
-					button.MoveUpButton:Show()
-					
-					button.MoveUpButton:SetEnabled(not item.first)
-					button.MoveDownButton:SetEnabled(not item.last)
-
-					button.ExpandedIcon:Hide()
-					button.CollapsedIcon:Hide()
-				end
-
-				button.Name:SetText(item.name)
-
-				button:Show();
-			end
-		else
-			button:Hide();
-		end
+		button:Set(item)
 	end
 	HybridScrollFrame_Update(self, totalHeight, displayedHeight)
 end

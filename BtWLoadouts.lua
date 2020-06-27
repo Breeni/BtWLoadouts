@@ -1734,6 +1734,95 @@ do
 	function BtWLoadoutsSetsScrollListItemMixin:OnLoad()
 		self:RegisterForDrag("LeftButton");
 	end
+	function BtWLoadoutsSetsScrollListItemMixin:Set(item)
+		self.item = item
+
+		button = self
+		if item and not item.ignore then
+			button.type = item.type
+			button.isAdd = item.isAdd
+			button.isHeader = item.isHeader
+
+			button.name = item.name
+			button.error = item.error
+			button.ErrorBorder:SetShown(item.error ~= nil)
+			button.ErrorOverlay:SetShown(item.error ~= nil)
+
+			if item.isSeparator then
+				button:Hide()
+			else
+				button.index = item.index
+				button.id = item.id
+
+				button:SetEnabled(not item.isHeader)
+				if item.isHeader then
+					button.Name:SetPoint("LEFT", 0, 0)
+					button.Name:SetTextColor(0.75, 0.61, 0)
+					
+					-- if item.isEmpty then
+						button.ExpandedIcon:Hide()
+						button.CollapsedIcon:Hide()
+					-- elseif item.isCollapsed then
+					-- 	button.ExpandedIcon:Hide()
+					-- 	button.CollapsedIcon:Show()
+					-- else
+					-- 	button.ExpandedIcon:Show()
+					-- 	button.CollapsedIcon:Hide()
+					-- end
+
+					button.AddButton:Show()
+
+					button.MoveButton:SetEnabled(false)
+					button.MoveButton:Hide()
+
+					button.RemoveButton:SetEnabled(false)
+					button.RemoveButton:Hide()
+				elseif item.isAdd then
+					button.Name:SetPoint("LEFT", 15, 0)
+					button.Name:SetTextColor(0.973, 0.937, 0.580)
+
+					button.AddButton:Hide()
+
+					button.MoveButton:SetEnabled(false)
+					button.MoveButton:Hide()
+
+					button.RemoveButton:SetEnabled(false)
+					button.RemoveButton:Hide()
+
+					button.ExpandedIcon:Hide()
+					button.CollapsedIcon:Hide()
+				else
+					button.Name:SetPoint("LEFT", 15, 0)
+					button.Name:SetTextColor(1, 1, 1)
+
+					button.AddButton:Hide()
+
+					button.MoveButton:SetEnabled(true)
+					button.MoveButton:Hide()
+
+					button.RemoveButton:SetEnabled(true)
+					button.RemoveButton:Hide()
+
+					-- button.AddButton:Hide()
+					-- button.RemoveButton:Show()
+					-- button.MoveDownButton:Show()
+					-- button.MoveUpButton:Show()
+					
+					-- button.MoveUpButton:SetEnabled(not item.first)
+					-- button.MoveDownButton:SetEnabled(not item.last)
+
+					button.ExpandedIcon:Hide()
+					button.CollapsedIcon:Hide()
+				end
+
+				button.Name:SetText(item.name)
+
+				button:Show();
+			end
+		else
+			button:Hide();
+		end
+	end
 	function BtWLoadoutsSetsScrollListItemMixin:OnClick()
 		if self.isHeader then
 			local frame = self:GetParent():GetParent():GetParent()
@@ -1750,6 +1839,9 @@ do
 					return TalentsDropDownInit(self, level, menuList, index)
 				end)
 			elseif self.type == "pvptalents" then
+				UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+					return PvPTalentsDropDownInit(self, level, menuList, index)
+				end)
 			elseif self.type == "essences" then
 				UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
 					return EssencesDropDownInit(self, level, menuList, index)
@@ -1769,6 +1861,32 @@ do
 		end
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:OnEnter()
+		local scrollChild = self:GetParent()
+		local currentDrag = scrollChild.currentDrag
+		if currentDrag and currentDrag ~= self then
+			if self.isHeader or self.isAdd or self.type ~= currentDrag.type then
+				return
+			end
+
+			local frame = scrollChild:GetParent():GetParent()
+			local a, b = self.item, currentDrag.item
+		
+			-- Flip the set ids within the loadout and flip their indexes too
+			frame.set[a.type][a.index], frame.set[a.type][b.index] = frame.set[a.type][b.index], frame.set[a.type][a.index]
+			a.index, b.index = b.index, a.index
+
+			-- Update the buttons with the flipped sets
+			self:Set(b)
+			currentDrag:Set(a)
+
+			self:GetParent().currentDrag = self
+
+			return
+		end
+
+		self.MoveButton:SetShown(self.MoveButton:IsEnabled())
+		self.RemoveButton:SetShown(self.RemoveButton:IsEnabled())
+
 		if self.error then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			GameTooltip:SetText(self.name, 1, 1, 1)
@@ -1777,7 +1895,19 @@ do
 		end
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:OnLeave()
+		if not MouseIsOver(self) then
+			self.MoveButton:Hide()
+			self.RemoveButton:Hide()
+		end
+
 		GameTooltip:Hide()
+	end
+	function BtWLoadoutsSetsScrollListItemMixin:StartDrag()
+		if self.isHeader or self.isAdd then
+			return
+		end
+
+		self:GetParent().currentDrag = self
 	end
 	function BtWLoadoutsSetsScrollListItemMixin:Add(button)
 		local DropDown = self:GetParent():GetParent().DropDown
@@ -2202,7 +2332,6 @@ do
 	BtWLoadoutsFrameMixin = {};
 	function BtWLoadoutsFrameMixin:OnLoad()
 		tinsert(UISpecialFrames, self:GetName());
-		self:RegisterForDrag("LeftButton");
 
 		self.Talents.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
 
