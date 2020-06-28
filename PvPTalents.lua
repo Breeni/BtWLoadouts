@@ -240,6 +240,18 @@ function Internal.PvPTalentsTabUpdate(self)
 			else
 				filters.role, filters.class = nil, nil
 			end
+
+			-- Rebuild character list
+			filters.character = filters.character or {}
+			local characters = filters.character
+			wipe(characters)
+			local class = set.filters.class
+			for _,character in Internal.CharacterIterator() do
+				if class == Internal.GetCharacterInfo(character).class then
+					characters[#characters+1] = character
+				end
+			end
+
 			set.filters = filters
 
 			sidebar:Update()
