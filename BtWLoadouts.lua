@@ -2332,6 +2332,7 @@ do
 	BtWLoadoutsFrameMixin = {};
 	function BtWLoadoutsFrameMixin:OnLoad()
 		tinsert(UISpecialFrames, self:GetName());
+		self:RegisterForDrag("LeftButton");
 
 		self.Talents.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
 
