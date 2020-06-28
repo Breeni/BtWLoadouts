@@ -302,7 +302,7 @@ function Internal.TriggerConditions()
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
 		if type(set) == "table" and set.profileSet ~= nil and not set.disabled then
 			local profile = Internal.GetProfile(set.profileSet);
-			if select(5, Internal.IsProfileValid(profile)) then
+			if Internal.IsLoadoutActivatable(profile) then
 				local match = IsConditionActive(set);
 				if match then
 					activeConditions[profile] = set;

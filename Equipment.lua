@@ -354,7 +354,7 @@ do
 			end
 		end
 
-		if extras and extras.azerite and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if extras and extras.azerite and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
 					match = match + 1;
@@ -452,7 +452,7 @@ do
 			return false
 		end
 
-		if extras and extras.azerite and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if extras and extras.azerite and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			for _,powerID in ipairs(extras.azerite) do
 				if not C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
 					return false;
@@ -845,7 +845,7 @@ local function AddEquipmentSet()
 		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
 		
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
-		if itemLocation and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			local slotExtras = {azerite = {}};
 
 			local tiers = C_AzeriteEmpoweredItem.GetAllTierInfo(itemLocation);
@@ -900,7 +900,7 @@ local function RefreshEquipmentSet(set)
 		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
 		
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
-		if itemLocation and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			set.extras[inventorySlotId] = set.extras[inventorySlotId] or {};
 			local extras = set.extras[inventorySlotId];
 			extras.azerite = extras.azerite or {};
@@ -953,6 +953,9 @@ end
 local function CombineEquipmentSets(result, ...)
 	result = result or {};
 
+	local name, realm = UnitFullName("player");
+	local playerCharacter = format("%s-%s", realm, name);
+
 	result.equipment = {};
 	result.extras = {};
 	result.locations = {};
@@ -962,25 +965,27 @@ local function CombineEquipmentSets(result, ...)
 	end
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		if set.managerID then -- Just making sure everything is up to date
-			local ignored = C_EquipmentSet.GetIgnoredSlots(set.managerID);
-			local locations = C_EquipmentSet.GetItemLocations(set.managerID);
-			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-				set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
+		if set.character == playerCharacter then -- Skip other characters
+			if set.managerID then -- Just making sure everything is up to date
+				local ignored = C_EquipmentSet.GetIgnoredSlots(set.managerID);
+				local locations = C_EquipmentSet.GetItemLocations(set.managerID);
+				for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+					set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
 
-				local location = locations[inventorySlotId] or 0;
-				if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-					set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
+					local location = locations[inventorySlotId] or 0;
+					if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
+						set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
+					end
+					set.locations[inventorySlotId] = location;
 				end
-				set.locations[inventorySlotId] = location;
 			end
-		end
-		for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-			if not set.ignored[inventorySlotId] then
-				result.ignored[inventorySlotId] = nil;
-				result.equipment[inventorySlotId] = set.equipment[inventorySlotId];
-				result.extras[inventorySlotId] = set.extras[inventorySlotId] or nil;
-				result.locations[inventorySlotId] = set.locations[inventorySlotId] or nil;
+			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+				if not set.ignored[inventorySlotId] then
+					result.ignored[inventorySlotId] = nil;
+					result.equipment[inventorySlotId] = set.equipment[inventorySlotId];
+					result.extras[inventorySlotId] = set.extras[inventorySlotId] or nil;
+					result.locations[inventorySlotId] = set.locations[inventorySlotId] or nil;
+				end
 			end
 		end
 	end
@@ -994,9 +999,13 @@ local function DeleteEquipmentSet(id)
 		id = id.setID;
 	end
 	for _,set in pairs(BtWLoadoutsSets.profiles) do
-		if type(set) == "table" and set.equipmentSet == id then
-			set.equipmentSet = nil;
-			set.character = nil;
+        if type(set) == "table" then
+            for index,setID in ipairs(set.equipment) do
+                if setID == id then
+                    table.remove(set.equipment, index)
+                end
+			end
+			set.character = nil
 		end
 	end
 

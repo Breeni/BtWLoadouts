@@ -129,8 +129,12 @@ local function DeleteEssenceSet(id)
 		id = id.setID;
 	end
 	for _,set in pairs(BtWLoadoutsSets.profiles) do
-		if type(set) == "table" and set.essencesSet == id then
-			set.essencesSet = nil;
+        if type(set) == "table" then
+            for index,setID in ipairs(set.essences) do
+                if setID == id then
+                    table.remove(set.essences, index)
+                end
+            end
 		end
 	end
 

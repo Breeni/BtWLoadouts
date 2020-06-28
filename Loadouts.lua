@@ -172,78 +172,135 @@ local function CancelActivateProfile()
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
 
--- Check all the pieces of a profile and make sure they are valid together
-local function IsProfileValid(set)
-	local class, specID, role, invalidForPlayer = nil, nil, nil, nil;
+local function LoadoutHasErrors(set)
+	local specID, role, class = set.specID
 
-	local playerClass = select(2, UnitClass("player"));
-	if set.equipmentSet then
-		local subSet = Internal.GetEquipmentSet(set.equipmentSet);
-		local characterInfo = Internal.GetCharacterInfo(subSet.character);
-		if not characterInfo then
-			return false, true, false, false, false;
+	if set.talents then
+		for _,subsetID in ipairs(set.talents) do
+			local subset = Internal.GetTalentSet(subsetID)
+			specID = specID or subset.specID
+
+			if specID ~= subset.specID then
+				return true, specID
+			end
 		end
-		class = characterInfo.class;
-
-		local name, realm = UnitFullName("player");
-		local playerCharacter = format("%s-%s", realm, name);
-		invalidForPlayer = invalidForPlayer or (subSet.character ~= playerCharacter);
 	end
 
-	if set.essencesSet then
-		local subSet = Internal.GetEssenceSet(set.essencesSet);
-		role = subSet.role;
+	if set.pvptalents then
+		for _,subsetID in ipairs(set.pvptalents) do
+			local subset = Internal.GetPvPTalentSet(subsetID)
+			specID = specID or subset.specID
 
-		invalidForPlayer = invalidForPlayer or not Internal.IsClassRoleValid(playerClass, role);
-	end
-
-	if set.talentSet then
-		local subSet = Internal.GetTalentSet(set.talentSet);
-
-		if specID ~= nil and specID ~= subSet.specID then
-			return false, false, true, false, false;
+			if specID ~= subset.specID then
+				return true, specID
+			end
 		end
-
-		specID = subSet.specID;
-	end
-
-	if set.pvpTalentSet then
-		local subSet = Internal.GetPvPTalentSet(set.pvpTalentSet);
-
-		if specID ~= nil and specID ~= subSet.specID then
-			return false, false, true, false, false;
-		end
-
-		specID = subSet.specID;
 	end
 
 	if specID then
-		invalidForPlayer = invalidForPlayer or not Internal.CanSwitchToSpecialization(specID);
+		role, class = select(5, GetSpecializationInfoByID(specID))
 	end
 
-	if specID and (class ~= nil or role ~= nil) then
-		local specRole, specClass = select(5, GetSpecializationInfoByID(specID));
+	if set.essences then
+		for _,subsetID in ipairs(set.essences) do
+			local subset = Internal.GetEssenceSet(subsetID)
+			role = role or subset.role
 
-		if class ~= nil and class ~= specClass then
-			return false, true, true, false, false;
-		end
-
-		if role ~= nil and role ~= specRole then
-			return false, false, true, true, false;
-		end
-	end
-
-	if class and role then
-		if not Internal.IsClassRoleValid(class, role) then
-			return false, true, false, true, false;
+			if role ~= subset.role then
+				return true, specID
+			end
 		end
 	end
 
-	return true, class, specID, role, not invalidForPlayer;
+	if set.equipment then
+		for _,subsetID in ipairs(set.equipment) do
+			local subset = Internal.GetEquipmentSet(subsetID)
+			local characterInfo = Internal.GetCharacterInfo(subset.character);
+			class = class or characterInfo.class;
+
+			if class ~= characterInfo.class then
+				return true, specID
+			end
+		end
+	end
+
+	return false, specID
 end
+
+local function GetLoadoutErrors(errors, set)
+	local specID, hasError, role, class = set.specID, false
+
+	wipe(errors["talents"])
+	for index,subsetID in ipairs(set.talents) do
+		local subset = Internal.GetTalentSet(subsetID)
+		specID = specID or subset.specID
+
+		if specID ~= subset.specID then
+			hasError = true
+			errors["talents"][index] = L["Incompatible Specialization"]
+		end
+	end
+
+	wipe(errors["pvptalents"])
+	for index,subsetID in ipairs(set.pvptalents) do
+		local subset = Internal.GetPvPTalentSet(subsetID)
+		specID = specID or subset.specID
+
+		if specID ~= subset.specID then
+			hasError = true
+			errors["pvptalents"][index] = L["Incompatible Specialization"]
+		end
+	end
+
+	if specID then
+		role, class = select(5, GetSpecializationInfoByID(specID))
+	end
+
+	wipe(errors["essences"])
+	for index,subsetID in ipairs(set.essences) do
+		local subset = Internal.GetEssenceSet(subsetID)
+		role = role or subset.role
+
+		if role ~= subset.role then
+			hasError = true
+			errors["essences"][index] = L["Incompatible Role"]
+		end
+	end
+
+	wipe(errors["equipment"])
+	for index,subsetID in ipairs(set.equipment) do
+		local subset = Internal.GetEquipmentSet(subsetID)
+		local characterInfo = Internal.GetCharacterInfo(subset.character);
+		class = class or characterInfo.class;
+
+		if class ~= characterInfo.class then
+			hasError = true
+			errors["equipment"][index] = L["Incompatible Class"]
+		end
+	end
+
+	return hasError, errors, specID
+end
+-- Checks of a loadout is activatable
+local function IsLoadoutActivatable(set)
+	local specID = set.specID
+
+	if specID and not Internal.CanSwitchToSpecialization(specID) then
+		return false
+	end
+
+	return true
+end
+
 local function AddProfile()
     return AddSet("profiles", {
 		name = L["New Profile"],
+		talents = {},
+		pvptalents = {},
+		essences = {},
+		equipment = {},
+		actionbars = {},
+		version = 2,
 		useCount = 0,
     })
 end
@@ -272,24 +329,24 @@ local function DeleteProfile(id)
         --     end
         -- end
 
-		if set.talentSet then
-			local subSet = Internal.GetTalentSet(set.talentSet);
+		for _,setID in ipairs(set.talents) do
+			local subSet = Internal.GetTalentSet(setID);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
-		if set.pvpTalentSet then
-			local subSet = Internal.GetPvPTalentSet(set.pvpTalentSet);
+		for _,setID in ipairs(set.pvptalents) do
+			local subSet = Internal.GetPvPTalentSet(setID);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
-		if set.essences then
-			local subSet = Internal.GetEssencetSet(set.essences);
+		for _,setID in ipairs(set.essences) do
+			local subSet = Internal.GetEssencetSet(setID);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
-		if set.equipmentSet then
-			local subSet = Internal.GetEquipmentSet(set.equipmentSet);
+		for _,setID in ipairs(set.equipment) do
+			local subSet = Internal.GetEquipmentSet(setID);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
-		if set.actionBarSet then
-			local subSet = Internal.GetActionBarSet(set.actionBarSet);
+		for _,setID in ipairs(set.actionbars) do
+			local subSet = Internal.GetActionBarSet(setID);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
 
@@ -312,44 +369,60 @@ local function DeleteProfile(id)
 	end
 end
 local function ActivateProfile(profile)
-	local valid, class, specID, role, validForPlayer = IsProfileValid(profile);
-	if not valid or not validForPlayer then
+	local hasErrors, specID = LoadoutHasErrors(profile)
+	if not hasErrors and not IsLoadoutActivatable(profile) then
 		--@TODO display an error
 		return;
 	end
 
 	target.name = profile.name
-	target.active = true
 
 	if specID then
 		target.specID = specID or profile.specID;
 	end
 
-	if profile.talentSet then
-		target.talentSets = target.talentSets or {};
-		target.talentSets[#target.talentSets+1] = profile.talentSet;
+	if profile.talents then
+		target.talents = target.talents or {};
+		for _,setID in ipairs(profile.talents) do
+			target.talents[#target.talents+1] = setID;
+		end
 	end
-	if profile.pvpTalentSet then
-		target.pvpTalentSets = target.pvpTalentSets or {};
-		target.pvpTalentSets[#target.pvpTalentSets+1] = profile.pvpTalentSet;
+	if profile.pvptalents then
+		target.pvptalents = target.pvptalents or {};
+		for _,setID in ipairs(profile.pvptalents) do
+			target.pvptalents[#target.pvptalents+1] = setID;
+		end
 	end
-	if profile.essencesSet then
-		target.essencesSets = target.essencesSets or {};
-		target.essencesSets[#target.essencesSets+1] = profile.essencesSet;
+	if profile.essences then
+		target.essences = target.essences or {};
+		for _,setID in ipairs(profile.essences) do
+			target.essences[#target.essences+1] = setID;
+		end
 	end
-	if profile.equipmentSet then
-		target.equipmentSets = target.equipmentSets or {};
-		target.equipmentSets[#target.equipmentSets+1] = profile.equipmentSet;
+	if profile.equipment then
+		target.equipment = target.equipment or {};
+		for _,setID in ipairs(profile.equipment) do
+			target.equipment[#target.equipment+1] = setID;
+		end
 	end
-	if profile.actionBarSet then
-		target.actionBarSets = target.actionBarSets or {};
-		target.actionBarSets[#target.actionBarSets+1] = profile.actionBarSet;
+	if profile.actionbars then
+		target.actionbars = target.actionbars or {};
+		for _,setID in ipairs(profile.actionbars) do
+			target.actionbars[#target.actionbars+1] = setID;
+		end
 	end
 
-	Internal.Call("LOADOUT_CHANGE_START")
-	Internal.ClearLog()
-	Internal.LogMessage("--- START ---")
+	if not target.active then
+		Internal.Call("LOADOUT_CHANGE_START")
+		Internal.ClearLog()
+		Internal.LogMessage("--- START ---")
+		Internal.LogMessage(format("%s: %s", (select(2, GetAddOnInfo(ADDON_NAME))), (GetAddOnMetadata(ADDON_NAME, "Version"))))
+	else
+		Internal.Call("LOADOUT_CHANGE_APPEND")
+		Internal.LogMessage("--- APPEND ---")
+	end
 
+	target.active = true
     target.dirty = true;
 	eventHandler:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 	eventHandler:RegisterEvent("PLAYER_REGEN_DISABLED");
@@ -391,42 +464,37 @@ local function IsProfileActive(set)
     --     end
     -- end
 
-    if set.talentSet then
-		-- local talentSet = CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talentSets)));
-		local talentSet = Internal.GetTalentSet(set.talentSet);
-		if not Internal.IsTalentSetActive(talentSet) then
+    if set.talents then
+		local subset = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talents)));
+		if not Internal.IsTalentSetActive(subset) then
 			return false;
 		end
 	end
 
-	if set.pvpTalentSet then
-		-- local pvpTalentSet = CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvpTalentSets)));
-		local pvpTalentSet = Internal.GetPvPTalentSet(set.pvpTalentSet);
-		if not Internal.IsPvPTalentSetActive(pvpTalentSet) then
+    if set.pvptalents then
+		local subset = Internal.CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvptalents)));
+		if not Internal.IsPvPTalentSetActive(subset) then
 			return false;
 		end
 	end
 
-	if set.essencesSet then
-		-- local essencesSet = CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essencesSets)));
-		local essencesSet = Internal.GetEssenceSet(set.essencesSet);
-		if not Internal.IsEssenceSetActive(essencesSet) then
+    if set.essences then
+		local subset = Internal.CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essences)));
+		if not Internal.IsEssenceSetActive(subset) then
 			return false;
 		end
 	end
 
-	if set.equipmentSet then
-		-- local equipmentSet = CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipmentSets)));
-		local equipmentSet = Internal.GetEquipmentSet(set.equipmentSet);
-		if not Internal.IsEquipmentSetActive(equipmentSet) then
+    if set.equipment then
+		local subset = Internal.CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipment)));
+		if not Internal.IsEquipmentSetActive(subset) then
 			return false;
 		end
 	end
 
-	if set.actionBarSet then
-		-- local actionBarSet = CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionBarSets)));
-		local actionBarSet = Internal.GetActionBarSet(set.actionBarSet);
-		if not Internal.IsActionBarSetActive(actionBarSet) then
+    if set.actionbars then
+		local subset = Internal.CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionbars)));
+		if not Internal.IsActionBarSetActive(subset) then
 			return false;
 		end
 	end
@@ -503,8 +571,8 @@ local function ContinueActivateProfile()
 	end
 
 	local talentSet;
-	if set.talentSets then
-		talentSet = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talentSets)));
+	if set.talents then
+		talentSet = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talents)));
 	end
 
 	if talentSet and Internal.TalentSetDelay(talentSet) then
@@ -514,13 +582,13 @@ local function ContinueActivateProfile()
 	end
 
 	local pvpTalentSet;
-	if set.pvpTalentSets then
-		pvpTalentSet = Internal.CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvpTalentSets)));
+	if set.pvptalents then
+		pvpTalentSet = Internal.CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvptalents)));
 	end
 
 	local essencesSet;
-	if set.essencesSets then
-		essencesSet = Internal.CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essencesSets)));
+	if set.essences then
+		essencesSet = Internal.CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essences)));
 	end
 
 	if essencesSet and Internal.EssenceSetDelay(essencesSet) then
@@ -579,8 +647,8 @@ local function ContinueActivateProfile()
     end
 
 	local equipmentSet;
-	if set.equipmentSets then
-		equipmentSet = Internal.CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipmentSets)));
+	if set.equipment then
+		equipmentSet = Internal.CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipment)));
 
 		if equipmentSet then
 			Internal.CheckEquipmentSetForIssues(equipmentSet) -- This will "solve" any unique-equipped issues
@@ -592,8 +660,8 @@ local function ContinueActivateProfile()
 	end
 
 	local actionBarSet;
-	if set.actionBarSets then
-		actionBarSet = Internal.CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionBarSets)));
+	if set.actionbars then
+		actionBarSet = Internal.CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionbars)));
 
 		if actionBarSet then
 			if not Internal.ActivateActionBarSet(actionBarSet) then
@@ -724,7 +792,9 @@ end
 Internal.GetProfile = GetProfile
 Internal.GetActiveProfiles = GetActiveProfiles
 Internal.ActivateProfile = ActivateProfile
-Internal.IsProfileValid = IsProfileValid
+Internal.LoadoutHasErrors = LoadoutHasErrors
+Internal.GetLoadoutErrors = GetLoadoutErrors
+Internal.IsLoadoutActivatable = IsLoadoutActivatable
 Internal.IsProfileActive = IsProfileActive
 Internal.AddProfile = AddProfile
 Internal.DeleteProfile = DeleteProfile
@@ -776,7 +846,7 @@ do
 	function External.GetCharacterLoadouts()
 		wipe(loadouts);
 		for id,set in pairs(BtWLoadoutsSets.profiles) do
-			if type(set) == "table" and select(5, IsProfileValid(set)) then
+			if type(set) == "table" and IsLoadoutActivatable(set) then
 				loadouts[#loadouts+1] = id
 			end
 		end
@@ -784,6 +854,122 @@ do
 	end
 end
 
+function Internal.SetsScrollFrameUpdate(self)
+	self:GetScrollChild().currentDrag = nil -- Clear current drag
+
+	local buttons = self.buttons
+	local items = self.items
+	local offset = HybridScrollFrame_GetOffset(self)
+	
+	if not buttons then
+		return
+	end
+
+	local totalHeight, displayedHeight = #items * (buttons[1]:GetHeight() + 1), self:GetHeight()
+	local hasScrollBar = totalHeight > displayedHeight
+
+	for i,button in ipairs(buttons) do
+		button:SetWidth(hasScrollBar and 530 or 540)
+
+		local item = items[i+offset]
+		button:Set(item)
+	end
+	HybridScrollFrame_Update(self, totalHeight, displayedHeight)
+end
+local function AddItem(items, index)
+	item = items[index] or {}
+	items[index] = item
+	
+	wipe(item)
+
+	return item, index + 1
+end
+local function BuildSubSetItems(type, header, getcallback, sets, items, index, isCollapsed, errors)
+	local item
+
+	do
+		item, index = AddItem(items, index)
+
+		item.name = header
+		item.type = type
+		item.isCollapsed = isCollapsed
+		item.isHeader = true
+		-- item.isEmpty = subset == nil
+	end
+	
+	if not isCollapsed then
+		if #sets > 0 then
+			for i,setID in ipairs(sets) do
+				local subset = getcallback(setID)
+				item, index = AddItem(items, index)
+				
+				if subset.character then
+					local characterInfo = Internal.GetCharacterInfo(subset.character);
+					if characterInfo then
+						item.name = format("%s |cFFD5D5D5(%s - %s)|r", subset.name, characterInfo.name, characterInfo.realm);
+					else
+						item.name = format("%s |cFFD5D5D5(%s)|r", subset.name, subset.character);
+					end
+				else
+					item.name = subset.name;
+				end
+	
+				item.error = errors[i]
+				item.type = type
+				item.index = i
+				item.id = subset.setID
+				item.first = i == 1
+				item.last = i == #sets
+			end
+		else
+			item, index = AddItem(items, index)
+
+			item.type = type
+			item.name = L["Add"]
+			item.isAdd = true
+		end
+	end
+
+	return index
+end
+local function AddSeparator(items, index)
+	-- item, index = AddItem(items, index)
+	-- item.isSeparator = true
+	return index
+end
+local function BuildSetItems(set, items, collapsed, errors)
+	local index = 1
+
+	index = BuildSubSetItems("talents", L["Talents"], Internal.GetTalentSet, set.talents, items, index, collapsed["talents"], errors["talents"])
+	index = AddSeparator(items, index)
+
+	index = BuildSubSetItems("pvptalents", L["PvP Talents"], Internal.GetPvPTalentSet, set.pvptalents, items, index, collapsed["pvptalents"], errors["pvptalents"])
+	index = AddSeparator(items, index)
+
+	index = BuildSubSetItems("essences", L["Essences"], Internal.GetEssenceSet, set.essences, items, index, collapsed["essences"], errors["essences"])
+	index = AddSeparator(items, index)
+
+	index = BuildSubSetItems("equipment", L["Equipment"], Internal.GetEquipmentSet, set.equipment, items, index, collapsed["equipment"], errors["equipment"])
+	index = AddSeparator(items, index)
+
+	index = BuildSubSetItems("actionbars", L["Action Bars"], Internal.GetActionBarSet, set.actionbars, items, index, collapsed["actionbars"], errors["actionbars"])
+
+	while items[index] do
+		table.remove(items, index)
+	end
+
+	return items
+end
+
+-- Stores errors for currently viewed set
+local errors = {
+	talents = {},
+	pvptalents = {},
+	essences = {},
+	equipment = {},
+	actionbars = {},
+}
+_G['BtWLoadoutsErrors'] = errors
 function Internal.ProfilesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Profiles"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
@@ -803,16 +989,13 @@ function Internal.ProfilesTabUpdate(self)
 
 	self.Name:SetEnabled(self.set ~= nil);
 	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
-	self.TalentsDropDown.Button:SetEnabled(self.set ~= nil);
-	self.PvPTalentsDropDown.Button:SetEnabled(self.set ~= nil);
-	self.EssencesDropDown.Button:SetEnabled(self.set ~= nil);
-	self.EquipmentDropDown.Button:SetEnabled(self.set ~= nil);
-	self.ActionBarDropDown.Button:SetEnabled(self.set ~= nil);
 
 	self:GetParent().RefreshButton:SetEnabled(false)
 
+	self.Collapsed = self.Collapsed or {}
+
 	if self.set ~= nil then
-		local valid, class, specID, role, validForPlayer = Internal.IsProfileValid(self.set);
+		local hasErrors, errors, specID = GetLoadoutErrors(errors, self.set)
 		if type(specID) == "number" and self.set.specID ~= specID then
 			-- self.set.specID = specID;
 			-- Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
@@ -849,52 +1032,15 @@ function Internal.ProfilesTabUpdate(self)
 		self.Enabled:SetEnabled(true);
 		self.Enabled:SetChecked(not self.set.disabled);
 
-		local talentSetID = self.set.talentSet;
-		if talentSetID == nil then
-			UIDropDownMenu_SetText(self.TalentsDropDown, L["None"]);
-		else
-			local talentSet = Internal.GetTalentSet(talentSetID);
-			UIDropDownMenu_SetText(self.TalentsDropDown, talentSet.name);
-		end
-
-		local pvpTalentSetID = self.set.pvpTalentSet;
-		if pvpTalentSetID == nil then
-			UIDropDownMenu_SetText(self.PvPTalentsDropDown, L["None"]);
-		else
-			local pvpTalentSet = Internal.GetPvPTalentSet(pvpTalentSetID);
-			UIDropDownMenu_SetText(self.PvPTalentsDropDown, pvpTalentSet.name);
-		end
-
-		local essencesSetID = self.set.essencesSet;
-		if essencesSetID == nil then
-			UIDropDownMenu_SetText(self.EssencesDropDown, L["None"]);
-		else
-			local essencesSet = Internal.GetEssenceSet(essencesSetID);
-			UIDropDownMenu_SetText(self.EssencesDropDown, essencesSet.name);
-		end
-
-		local equipmentSetID = self.set.equipmentSet;
-		if equipmentSetID == nil then
-			UIDropDownMenu_SetText(self.EquipmentDropDown, L["None"]);
-		else
-			local equipmentSet = Internal.GetEquipmentSet(equipmentSetID);
-			UIDropDownMenu_SetText(self.EquipmentDropDown, equipmentSet.name);
-		end
-
-		local actionBarSetID = self.set.actionBarSet;
-		if actionBarSetID == nil then
-			UIDropDownMenu_SetText(self.ActionBarDropDown, L["None"]);
-		else
-			local actionBarSet = Internal.GetActionBarSet(actionBarSetID);
-			UIDropDownMenu_SetText(self.ActionBarDropDown, actionBarSet.name);
-		end
+		self.SetsScroll.items = BuildSetItems(self.set, self.SetsScroll.items or {}, self.Collapsed, errors)
+		Internal.SetsScrollFrameUpdate(self.SetsScroll)
 		
 		if not self.Name:HasFocus() then
 			self.Name:SetText(self.set.name or "");
 		end
 
 		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(validForPlayer);
+		activateButton:SetEnabled(not hasErrors and IsLoadoutActivatable(self.set));
 
 		local deleteButton =  self:GetParent().DeleteButton;
 		deleteButton:SetEnabled(true);

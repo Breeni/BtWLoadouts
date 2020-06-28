@@ -87,24 +87,56 @@ function frame:ADDON_LOADED(...)
         end
         for setID,set in pairs(BtWLoadoutsSets.profiles) do
             if type(set) == "table" then
-                if set.talentSet and BtWLoadoutsSets.talents[set.talentSet] then
-                    BtWLoadoutsSets.talents[set.talentSet].useCount = BtWLoadoutsSets.talents[set.talentSet].useCount + 1;
+                -- Convert from version 1 to version 2 loadouts
+                if set.version == nil then
+                    set.talents = {set.talentSet}
+                    set.talentSet = nil
+
+                    set.pvptalents = {set.pvpTalentSet}
+                    set.pvpTalentSet = nil
+
+                    set.essences = {set.essencesSet}
+                    set.essencesSet = nil
+
+                    set.equipment = {set.equipmentSet}
+                    set.equipmentSet = nil
+
+                    set.actionbars = {set.actionBarSet}
+                    set.actionBarSet = nil
+
+                    set.version = 2
                 end
 
-                if set.pvpTalentSet and BtWLoadoutsSets.pvptalents[set.pvpTalentSet] then
-                    BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount = BtWLoadoutsSets.pvptalents[set.pvpTalentSet].useCount + 1;
+                set.character = nil -- Loadouts are no longer character restricted
+
+                for _,subsetID in ipairs(set.talents) do
+                    if BtWLoadoutsSets.talents[subsetID] then
+                        BtWLoadoutsSets.talents[subsetID].useCount = BtWLoadoutsSets.talents[subsetID].useCount + 1;
+                    end
                 end
 
-                if set.essencesSet and BtWLoadoutsSets.essences[set.essencesSet] then
-                    BtWLoadoutsSets.essences[set.essencesSet].useCount = BtWLoadoutsSets.essences[set.essencesSet].useCount + 1;
+                for _,subsetID in ipairs(set.pvptalents) do
+                    if BtWLoadoutsSets.pvptalents[subsetID] then
+                        BtWLoadoutsSets.pvptalents[subsetID].useCount = BtWLoadoutsSets.pvptalents[subsetID].useCount + 1;
+                    end
                 end
 
-                if set.equipmentSet and BtWLoadoutsSets.equipment[set.equipmentSet] then
-                    BtWLoadoutsSets.equipment[set.equipmentSet].useCount = BtWLoadoutsSets.equipment[set.equipmentSet].useCount + 1;
+                for _,subsetID in ipairs(set.essences) do
+                    if BtWLoadoutsSets.essences[subsetID] then
+                        BtWLoadoutsSets.essences[subsetID].useCount = BtWLoadoutsSets.essences[subsetID].useCount + 1;
+                    end
                 end
 
-                if set.actionBarSet and BtWLoadoutsSets.actionbars[set.actionBarSet] then
-                    BtWLoadoutsSets.actionbars[set.actionBarSet].useCount = BtWLoadoutsSets.actionbars[set.actionBarSet].useCount + 1;
+                for _,subsetID in ipairs(set.equipment) do
+                    if BtWLoadoutsSets.equipment[subsetID] then
+                        BtWLoadoutsSets.equipment[subsetID].useCount = BtWLoadoutsSets.equipment[subsetID].useCount + 1;
+                    end
+                end
+
+                for _,subsetID in ipairs(set.actionbars) do
+                    if BtWLoadoutsSets.actionbars[subsetID] then
+                        BtWLoadoutsSets.actionbars[subsetID].useCount = BtWLoadoutsSets.actionbars[subsetID].useCount + 1;
+                    end
                 end
             end
         end
