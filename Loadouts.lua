@@ -1015,7 +1015,9 @@ function Internal.ProfilesTabUpdate(self)
 			end
 
 			-- Rebuild character list
-			filters.character = filters.character or {}
+			if type(filters.character) ~= "table" then
+				filters.character = {}
+			end
 			local characters = filters.character
 			wipe(characters)
 			local class = filters.class
