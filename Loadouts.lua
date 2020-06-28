@@ -997,7 +997,7 @@ function Internal.ProfilesTabUpdate(self)
 	if self.set ~= nil then
 		local hasErrors, errors, specID = GetLoadoutErrors(errors, self.set)
 		if type(specID) == "number" and self.set.specID ~= specID then
-			-- self.set.specID = specID;
+			self.set.specID = specID
 			-- Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
 		end
 
