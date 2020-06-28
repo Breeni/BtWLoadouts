@@ -238,13 +238,13 @@ function Internal.EssencesTabUpdate(self)
 			filters.character = filters.character or {}
 			local characters = filters.character
 			wipe(characters)
-			local class = set.filters.class
+			local role = filters.role
 			for _,character in Internal.CharacterIterator() do
-				if class == Internal.GetCharacterInfo(character).class then
+				if Internal.IsClassRoleValid(Internal.GetCharacterInfo(character).class, role) then
 					characters[#characters+1] = character
 				end
 			end
-			
+
 			set.filters = filters
 
 			sidebar:Update()

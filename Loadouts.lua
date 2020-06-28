@@ -1019,7 +1019,7 @@ function Internal.ProfilesTabUpdate(self)
 			filters.character = filters.character or {}
 			local characters = filters.character
 			wipe(characters)
-			local class = set.filters.class
+			local class = filters.class
 			for _,character in Internal.CharacterIterator() do
 				if class == Internal.GetCharacterInfo(character).class then
 					characters[#characters+1] = character
