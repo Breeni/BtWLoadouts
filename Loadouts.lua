@@ -1090,6 +1090,10 @@ function Internal.ProfilesTabUpdate(self)
 	else
 		self.Name:SetText("");
 
+		self.SetsScroll.items = self.SetsScroll.items or {}
+		wipe(self.SetsScroll.items)
+		Internal.SetsScrollFrameUpdate(self.SetsScroll)
+
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);
 
