@@ -885,6 +885,7 @@ local function AddBlankEquipmentSet()
 		extras = {},
 		locations = {},
 		ignored = {},
+		filters = {character = GetCharacterSlug()},
 		useCount = 0,
     };
     BtWLoadoutsSets.equipment[set.setID] = set;
