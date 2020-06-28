@@ -37,7 +37,7 @@ function BtWLoadoutsMinimapMixin:OnLoad()
     self:RegisterEvent("PLAYER_LOGIN");
 end
 function BtWLoadoutsMinimapMixin:OnEvent(event, ...)
-    self:SetShown(Settings.minimapShown);
+    self:SetShown(self:IsEnabled() and Settings.minimapShown);
     self:Reposition(Settings.minimapAngle or 195);
 
     local button = self;
@@ -205,3 +205,10 @@ end)
 Internal.OnEvent("LOADOUT_CHANGE_END", function ()
     BtWLoadoutsMinimapButton.ProgressAnim:Stop()
 end)
+
+function Internal.ShowMinimap()
+    BtWLoadoutsMinimapButton:Show()
+end
+function Internal.HideMinimap()
+    BtWLoadoutsMinimapButton:Hide()
+end

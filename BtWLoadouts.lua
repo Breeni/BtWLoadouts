@@ -126,19 +126,23 @@ local function SettingsCreate(options)
 	return result;
 end
 local Settings = SettingsCreate({
-	{
-		name = L["Show minimap icon"],
-		key = "minimapShown",
-		onChange = function (id, value)
-			BtWLoadoutsMinimapButton:SetShown(value);
-		end,
-		default = true,
-	},
-	{
-		name = L["Limit condition suggestions"],
-		key = "limitConditions",
-		default = false,
-	},
+    {
+        name = L["Show minimap icon"],
+        key = "minimapShown",
+        onChange = function (id, value)
+			if value then
+				Internal.ShowMinimap()
+			else
+				Internal.HideMinimap()
+			end
+        end,
+        default = true,
+    },
+    {
+        name = L["Limit condition suggestions"],
+        key = "limitConditions",
+        default = false,
+    },
 });
 Internal.Settings = Settings;
 
