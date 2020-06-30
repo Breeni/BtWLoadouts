@@ -110,6 +110,10 @@ do
             id = macroNameMap[id]
         end
 
+        if id == nil then -- Probably means someone is using EditMacro to make a new macro
+            return BuildMacroMap()
+        end
+
         local macro = macros[id]
         local changed = (name ~= nil and name ~= macro.name) or (body ~= nil and body ~= macro.body)
 
