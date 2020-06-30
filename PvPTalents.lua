@@ -205,6 +205,19 @@ Internal.ActivatePvPTalentSet = ActivatePvPTalentSet
 Internal.IsPvPTalentSetActive = IsPvPTalentSetActive
 Internal.CombinePvPTalentSets = CombinePvPTalentSets
 
+BtWLoadoutsPvPTalentsMixin = {}
+function BtWLoadoutsPvPTalentsMixin:OnLoad()
+	self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
+end
+function BtWLoadoutsPvPTalentsMixin:OnShow()
+    if not self.initialized then
+        UIDropDownMenu_SetWidth(self.SpecDropDown, 170);
+        UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+
+        self.initialized = true;
+    end
+end
+
 local MAX_PVP_TALENTS = 15;
 function Internal.PvPTalentsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["PvP Talents"]);

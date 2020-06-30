@@ -57,41 +57,6 @@ BTWLOADOUTS_LOG = L["Log"]
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
 
-local dungeonDifficultiesAll = Internal.dungeonDifficultiesAll;
-local raidDifficultiesAll = Internal.raidDifficultiesAll;
-local instanceDifficulties = Internal.instanceDifficulties;
-local dungeonInfo = Internal.dungeonInfo;
-local raidInfo = Internal.raidInfo;
-local scenarioInfo = Internal.scenarioInfo;
-local instanceBosses = Internal.instanceBosses;
-local npcIDToBossID = Internal.npcIDToBossID;
-local InstanceAreaIDToBossID = Internal.InstanceAreaIDToBossID;
-local uiMapIDToBossID = Internal.uiMapIDToBossID;
-
-local CONDITION_TYPE_WORLD = "none";
-local CONDITION_TYPE_DUNGEONS = "party";
-local CONDITION_TYPE_RAIDS = "raid";
-local CONDITION_TYPE_ARENA = "arena";
-local CONDITION_TYPE_BATTLEGROUND = "pvp";
-local CONDITION_TYPE_SCENARIO = "scenario";
-local CONDITION_TYPES = {
-	CONDITION_TYPE_WORLD,
-	CONDITION_TYPE_DUNGEONS,
-	CONDITION_TYPE_RAIDS,
-	CONDITION_TYPE_ARENA,
-	CONDITION_TYPE_BATTLEGROUND,
-	CONDITION_TYPE_SCENARIO
-}
-local CONDITION_TYPE_NAMES = {
-	[CONDITION_TYPE_WORLD] = L["World"],
-	[CONDITION_TYPE_DUNGEONS] = L["Dungeons"],
-	[CONDITION_TYPE_RAIDS] = L["Raids"],
-	[CONDITION_TYPE_ARENA] = L["Arena"],
-	[CONDITION_TYPE_BATTLEGROUND] = L["Battlegrounds"],
-	[CONDITION_TYPE_SCENARIO] = L["Scenarios"]
-}
-Internal.CONDITION_TYPES = CONDITION_TYPES;
-Internal.CONDITION_TYPE_NAMES = CONDITION_TYPE_NAMES;
 
 local function SettingsCreate(options)
 	local optionsByKey = {};
@@ -374,59 +339,6 @@ function Internal.DropDownSetOnChange(self, func)
 	self.OnChange = func;
 end
 
-local function RoleDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	if selectedTab == TAB_ESSENCES then
-		local temp = tab.temp;
-		-- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
-		-- the temp table instead of copying the talentIDs around
-
-		-- We are going to copy the currently selected talents for the currently selected spec into
-		-- a temporary table incase the user switches specs back
-		local role = set.role;
-		if temp[role] then
-			wipe(temp[role]);
-		else
-			temp[role] = {};
-		end
-		for milestoneID, essenceID in pairs(set.essences) do
-			temp[role][milestoneID] = essenceID;
-		end
-
-		-- Clear the current talents and copy back the previously selected talents if they exist
-		role = arg1;
-		set.role = role;
-		wipe(set.essences);
-		if temp[role] then
-			for milestoneID, essenceID in pairs(temp[role]) do
-				set.essences[milestoneID] = essenceID;
-			end
-		end
-	end
-	BtWLoadoutsFrame:Update();
-end
-local function RoleDropDownInit(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo();
-
-	local set = self:GetParent().set;
-	local selected = set and set.role;
-
-	if (level or 1) == 1 then
-		for _,role in Internal.Roles() do
-			info.text = _G[role];
-			info.arg1 = role;
-			info.func = RoleDropDown_OnClick;
-			info.checked = selected == role;
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
 local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
 	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
@@ -506,6 +418,7 @@ BtWLoadoutsSpecDropDownMixin = {}
 function BtWLoadoutsSpecDropDownMixin:OnShow()
 	if not self.initialized then
 		UIDropDownMenu_Initialize(self, SpecDropDownInit);
+		self.initialized = true
 	end
 end
 
@@ -1199,537 +1112,6 @@ local function ActionBarDropDownInit(self, level, menuList, index)
 		info.notCheckable = true;
 		info.checked = false;
 		UIDropDownMenu_AddButton(info, level);
-	end
-end
-
-local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	if set.profileSet then
-		local subset = Internal.GetProfile(set.profileSet);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	set.profileSet = arg1;
-
-	if set.profileSet then
-		local subset = Internal.GetProfile(set.profileSet);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function ProfilesDropDown_NewOnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	if set.profileSet then
-		local subset = Internal.GetProfile(set.profileSet);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddProfile();
-	set.profileSet = newSet.setID;
-
-	if set.profileSet then
-		local subset = Internal.GetProfile(set.profileSet);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.Profiles.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_PROFILES);
-
-	BtWLoadoutsFrame:Update();
-end
-local function ProfilesDropDownInit(self, level, menuList)
-	if not BtWLoadoutsSets or not BtWLoadoutsSets.profiles then
-		return;
-	end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local frame = BtWLoadoutsFrame -- self:GetParent():GetParent();
-	local selectedTab = PanelTemplates_GetSelectedTab(frame) or 1;
-	local tab = GetTabFrame(frame, selectedTab);
-
-	local set = tab.set;
-	local selected = set and set.profileSet;
-
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = ProfilesDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.profiles;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.specID or 0] = true;
-			end
-		end
-
-		local className, classFile, classID = UnitClass("player");
-		local classColor = C_ClassColor.GetClassColor(classFile);
-		className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-		for specIndex=1,GetNumSpecializationsForClassID(classID) do
-			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-			if setsFiltered[specID] then
-				info.text = format("%s: %s", className, specName);
-				info.hasArrow, info.menuList = true, specID;
-				info.keepShownOnClick = true;
-				info.notCheckable = true;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-
-		local playerClassID = classID;
-		for classID=1,GetNumClasses() do
-			if classID ~= playerClassID then
-				local className, classFile = GetClassInfo(classID);
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					if setsFiltered[specID] then
-						info.text = format("%s: %s", className, specName);
-						info.hasArrow, info.menuList = true, specID;
-						info.keepShownOnClick = true;
-						info.notCheckable = true;
-						UIDropDownMenu_AddButton(info, level);
-					end
-				end
-			end
-		end
-
-		local specID = 0;
-		if setsFiltered[specID] then
-			info.text = L["Other"];
-			info.hasArrow, info.menuList = true, nil;
-			info.keepShownOnClick = true;
-			info.notCheckable = true;
-			UIDropDownMenu_AddButton(info, level);
-		end
-
-		info.text = L["New Set"];
-		info.func = ProfilesDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local specID = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.profiles;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.specID == specID then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-		for _,setID in ipairs(setsFiltered) do
-			info.text = sets[setID].name;
-			info.arg1 = setID;
-			info.func = ProfilesDropDown_OnClick;
-			info.checked = selected == setID;
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
-local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	set.type = arg1;
-	set.instanceID = nil;
-	set.difficultyID = nil;
-	set.bossID = nil;
-	set.affixesID = nil;
-
-	BtWLoadoutsFrame:Update();
-end
-local function ConditionTypeDropDownInit(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo();
-
-	local set = self:GetParent().set;
-	local selected = set and set.type;
-
-	if (level or 1) == 1 then
-		for _,conditionType in ipairs(Internal.CONDITION_TYPES) do
-			info.text = Internal.CONDITION_TYPE_NAMES[conditionType];
-			info.arg1 = conditionType;
-			info.func = ConditionTypeDropDown_OnClick;
-			info.checked = selected == conditionType;
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
-
-local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	set.instanceID = arg1;
-	set.bossID = nil;
-	if set.difficultyID ~= nil then
-		local supportsDifficulty = (set.instanceID == nil);
-		if not supportsDifficulty then
-			for _,difficultyID in ipairs(instanceDifficulties[set.instanceID]) do
-				if difficultyID == set.difficultyID then
-					supportsDifficulty = true;
-					break;
-				end
-			end
-		end
-
-		if not supportsDifficulty then
-			set.difficultyID = nil;
-		end
-
-		if set.difficultyID ~= 8 then
-			set.affixesID = nil;
-		end
-	else
-		set.affixesID = nil;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function InstanceDropDownInit(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo();
-
-	local set = self:GetParent().set;
-	local dungeonType = set and set.type;
-	local selected = set and set.instanceID;
-
-	if dungeonType == CONDITION_TYPE_DUNGEONS then
-		if (level or 1) == 1 then
-			info.text = L["Any"];
-			info.func = InstanceDropDown_OnClick;
-			info.checked = selected == nil;
-			UIDropDownMenu_AddButton(info, level);
-
-		-- 	for expansion,expansionData in ipairs(dungeonInfo) do
-		-- 		info.text = expansionData.name;
-		-- 		info.hasArrow, info.menuList = true, expansion;
-		-- 		info.keepShownOnClick = true;
-		-- 		info.notCheckable = true;
-		-- 		UIDropDownMenu_AddButton(info, level);
-		-- 	end
-		-- else
-			local expansion = 8;
-			for _,instanceID in ipairs(dungeonInfo[expansion].instances) do
-				info.text = GetRealZoneText(instanceID);
-				info.arg1 = instanceID;
-				info.func = InstanceDropDown_OnClick;
-				info.checked = selected == instanceID;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-	elseif dungeonType == CONDITION_TYPE_RAIDS then
-		if (level or 1) == 1 then
-			info.text = L["Any"];
-			info.func = InstanceDropDown_OnClick;
-			info.checked = selected == nil;
-			UIDropDownMenu_AddButton(info, level);
-
-		-- 	for expansion,expansionData in ipairs(dungeonInfo) do
-		-- 		info.text = expansionData.name;
-		-- 		info.hasArrow, info.menuList = true, expansion;
-		-- 		info.keepShownOnClick = true;
-		-- 		info.notCheckable = true;
-		-- 		UIDropDownMenu_AddButton(info, level);
-		-- 	end
-		-- else
-			local expansion = 8;
-			for _,instanceID in ipairs(raidInfo[expansion].instances) do
-				info.text = GetRealZoneText(instanceID);
-				info.arg1 = instanceID;
-				info.func = InstanceDropDown_OnClick;
-				info.checked = selected == instanceID;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-	end
-end
-
-
-local function DifficultyDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	set.difficultyID = arg1;
-	if arg1 == 8 then
-		set.bossID = nil;
-	else
-		set.affixesID = nil;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function DifficultyDropDownInit(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo();
-
-	local set = self:GetParent().set;
-	local conditionType = set and set.type;
-	local instanceID = set and set.instanceID;
-	local selected = set and set.difficultyID;
-
-	if instanceID == nil then
-		if conditionType == CONDITION_TYPE_DUNGEONS then
-			info.text = L["Any"];
-			info.func = DifficultyDropDown_OnClick;
-			info.checked = selected == nil;
-			UIDropDownMenu_AddButton(info, level);
-
-			for _,difficultyID in ipairs(Internal.dungeonDifficultiesAll) do
-				info.text = GetDifficultyInfo(difficultyID);
-				info.arg1 = difficultyID;
-				info.func = DifficultyDropDown_OnClick;
-				info.checked = selected == difficultyID;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		elseif conditionType == CONDITION_TYPE_RAIDS then
-			info.text = L["Any"];
-			info.func = DifficultyDropDown_OnClick;
-			info.checked = selected == nil;
-			UIDropDownMenu_AddButton(info, level);
-
-			for _,difficultyID in ipairs(Internal.raidDifficultiesAll) do
-				info.text = GetDifficultyInfo(difficultyID);
-				info.arg1 = difficultyID;
-				info.func = DifficultyDropDown_OnClick;
-				info.checked = selected == difficultyID;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-	else
-		if (level or 1) == 1 then
-			info.text = L["Any"];
-			info.func = DifficultyDropDown_OnClick;
-			info.checked = selected == nil;
-			UIDropDownMenu_AddButton(info, level);
-
-			for _,difficultyID in ipairs(instanceDifficulties[instanceID]) do
-				info.text = GetDifficultyInfo(difficultyID);
-				info.arg1 = difficultyID;
-				info.func = DifficultyDropDown_OnClick;
-				info.checked = selected == difficultyID;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-	end
-end
-
-
-local function BossDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	set.bossID = arg1;
-
-	BtWLoadoutsFrame:Update();
-end
-local function BossDropDownInit(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo();
-
-	local set = self:GetParent().set;
-	local instanceID = set and set.instanceID;
-	local selected = set and set.bossID;
-
-	if (level or 1) == 1 then
-		info.text = L["Any"];
-		info.func = BossDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		if instanceBosses[instanceID] then
-			for _,bossID in ipairs(instanceBosses[instanceID]) do
-				info.text = EJ_GetEncounterInfo(bossID);
-				info.arg1 = bossID;
-				info.func = BossDropDown_OnClick;
-				info.checked = selected == bossID;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-	end
-end
-
-local function AffixesDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	set.affixesID = arg1;
-
-	BtWLoadoutsFrame:Update();
-end
-local function AffixesDropDownInit(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo();
-
-	local set = self:GetParent().set;
-	local selected = set and set.affixesID;
-
-	if (level or 1) == 1 then
-		info.text = L["Any"];
-		info.func = AffixesDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		for _,affixes in Internal.AffixRotation() do
-			info.text = affixes.fullName;
-			info.arg1 = affixes.id;
-			info.func = AffixesDropDown_OnClick;
-			info.checked = selected == affixes.id;
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
-local function ScenarioDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	set.instanceID = arg1;
-	set.difficultyID = arg2;
-
-	BtWLoadoutsFrame:Update();
-end
-
-local function ScenarioDropDownInit(self, level, menuList)
-	local info = UIDropDownMenu_CreateInfo();
-
-	local set = self:GetParent().set;
-	local instanceID = set and set.instanceID;
-	local difficultyID = set and set.difficultyID;
-
-	if (level or 1) == 1 then
-		info.text = L["Any"];
-		info.func = ScenarioDropDown_OnClick;
-		info.checked = (instanceID == nil) and (difficultyID == nil);
-		UIDropDownMenu_AddButton(info, level);
-
-	-- 	for expansion,expansionData in ipairs(dungeonInfo) do
-	-- 		info.text = expansionData.name;
-	-- 		info.hasArrow, info.menuList = true, expansion;
-	-- 		info.keepShownOnClick = true;
-	-- 		info.notCheckable = true;
-	-- 		UIDropDownMenu_AddButton(info, level);
-	-- 	end
-	-- else
-		local expansion = 8;
-		for _,details in ipairs(scenarioInfo[expansion].instances) do
-			info.text = details[3];
-			info.arg1 = details[1];
-			info.arg2 = details[2];
-			info.func = ScenarioDropDown_OnClick;
-			info.checked = (instanceID == details[1]) and (difficultyID == details[2]);
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
-local function AffixDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	if set.affixesID ~= nil and bit.band(set.affixesID, arg2) == arg2 then
-		set.affixesID = bit.band(set.affixesID, arg1);
-	else
-		set.affixesID = bit.bor(bit.band(set.affixesID or 0, arg1), arg2);
-	end
-	if set.affixesID == 0 then
-		set.affixesID = nil
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-
-do
-	BtWLoadoutsConditionsAffixesMixin = {}
-	function BtWLoadoutsConditionsAffixesMixin:OnLoad()
-		self.Buttons = {}
-		for index,level in Internal.AffixesLevels() do
-			local x = ((index - 1) * 90) + 20
-			local y = -17
-			local relativeTo
-			for _,affix in Internal.Affixes(level) do
-				local name = self:GetName() .. "Button" .. affix
-				local button = CreateFrame("Button", name, self, "BtWLoadoutsConditionsAffixesDropDownButton", affix);
-				button:SetWidth(85);
-				if relativeTo then
-					button:SetPoint("TOP", relativeTo, "BOTTOM", 0, -5);
-				else
-					button:SetPoint("TOPLEFT", x, y);
-				end
-
-				local fullname, icons, mask = select(2, Internal.GetAffixesName(affix));
-				_G[name .. "NormalText"]:SetText(icons);
-				button.mask = mask;
-
-				button.keepShownOnClick = true
-				button.notCheckable = true
-				button.arg1 = bit.bxor(0xffffffff, bit.lshift(0xff, 8*(index-1)))
-				button.arg2 = bit.lshift(affix, 8*(index-1))
-				button.func = AffixDropDown_OnClick
-
-				self.Buttons[#self.Buttons+1] = button
-				
-				button:Show();
-				relativeTo = button;
-			end
-		end
-		hooksecurefunc("CloseDropDownMenus", function ()
-			if not MouseIsOver(self) then
-				self:Hide();
-			end
-		end)
-	end
-	-- Changes the buttons based on mask
-	function BtWLoadoutsConditionsAffixesMixin:Update(affixesID)
-		local a, b, c, d = Internal.GetAffixesForID(affixesID)
-		local mask = Internal.GetExclusiveAffixes(affixesID)
-		for _,button in ipairs(self.Buttons) do
-			button:SetEnabled(bit.band(button.mask, mask) == button.mask);
-			local affixID = button:GetID()
-			button.Selection:SetShown(affixID == a or affixID == b or affixID == c or affixID == d);
-		end
 	end
 end
 
@@ -2532,6 +1914,32 @@ end
 
 local SetsScrollFrame_Update
 do
+	function BtWLoadoutsTabFrame_OnLoad(self)
+		local frame = self:GetParent()
+		local Tabs = frame.Tabs
+
+		local previous = Tabs[#Tabs]
+		local tab = frame.TabPool:Acquire()
+		local id = #Tabs
+
+		tab:SetID(id)
+		tab:SetText(self.name)
+
+		if previous then
+			tab:SetPoint("LEFT", previous, "RIGHT", -16, 0)
+		else
+			tab:SetPoint("BOTTOMLEFT", 7, -30)
+		end
+
+		tab:Show()
+
+		PanelTemplates_SetNumTabs(frame, id);
+		if id == 1 then
+			PanelTemplates_SetTab(frame, id);
+		end
+		PanelTemplates_UpdateTabs(frame);
+	end
+
 	local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
 	local SCROLL_ROW_HEIGHT = 21;
 	function Internal.SetsScrollFrame_SpecFilter(selected, sets, collapsed)
@@ -2833,15 +2241,8 @@ do
 		tinsert(UISpecialFrames, self:GetName());
 		self:RegisterForDrag("LeftButton");
 
-		self.Talents.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
-
-		self.PvPTalents.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
-
-		self.Essences.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
-		self.Essences.pending = nil;
-
-		PanelTemplates_SetNumTabs(self, NUM_TABS);
-		PanelTemplates_SetTab(self, TAB_PROFILES);
+		self.Tabs = {}
+		self.TabPool = CreateFramePool("Button", self, "BtWLoadoutsFrameTabTemplate")
 
 		self.TitleText:SetText(PROFILES)
 		self.TitleText:SetHeight(24)
@@ -2853,16 +2254,16 @@ do
 		self:StopMovingOrSizing();
 	end
 	function BtWLoadoutsFrameMixin:OnMouseUp()
-		if self.Essences.pending ~= nil then
-			self.Essences.pending = nil
-			SetCursor(nil);
-			self:Update();
-		end
+		-- if self.Essences.pending ~= nil then
+		-- 	self.Essences.pending = nil
+		-- 	SetCursor(nil);
+		-- 	self:Update();
+		-- end
 	end
 	function BtWLoadoutsFrameMixin:OnEnter()
-		if self.Essences.pending ~= nil then
-			SetCursor("interface/cursor/cast.blp");
-		end
+		-- if self.Essences.pending ~= nil then
+		-- 	SetCursor("interface/cursor/cast.blp");
+		-- end
 	end
 	function BtWLoadoutsFrameMixin:OnLeave()
 		SetCursor(nil);
@@ -3361,80 +2762,18 @@ do
 	end
 	function BtWLoadoutsFrameMixin:OnShow()
 		if not self.initialized then
-			self.Profiles.SpecDropDown.includeNone = true;
-			UIDropDownMenu_SetWidth(self.Profiles.SpecDropDown, 300);
-			UIDropDownMenu_Initialize(self.Profiles.SpecDropDown, SpecDropDownInit);
-			UIDropDownMenu_JustifyText(self.Profiles.SpecDropDown, "LEFT");
+			-- self.Equipment.flyoutSettings = {
+			-- 	onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,
+			-- 	getItemsFunc = PaperDollFrameItemFlyout_GetItems,
+			-- 	-- postGetItemsFunc = PaperDollFrameItemFlyout_PostGetItems,
+			-- 	hasPopouts = true,
+			-- 	parent = self.Equipment,
+			-- 	anchorX = 0,
+			-- 	anchorY = -3,
+			-- 	verticalAnchorX = 0,
+			-- 	verticalAnchorY = 0,
+			-- };
 
-			HybridScrollFrame_CreateButtons(self.Profiles.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
-			self.Profiles.SetsScroll.update = Internal.SetsScrollFrameUpdate;
-
-			UIDropDownMenu_SetWidth(self.Talents.SpecDropDown, 170);
-			UIDropDownMenu_Initialize(self.Talents.SpecDropDown, SpecDropDownInit);
-			UIDropDownMenu_JustifyText(self.Talents.SpecDropDown, "LEFT");
-
-
-			UIDropDownMenu_SetWidth(self.PvPTalents.SpecDropDown, 170);
-			UIDropDownMenu_Initialize(self.PvPTalents.SpecDropDown, SpecDropDownInit);
-			UIDropDownMenu_JustifyText(self.PvPTalents.SpecDropDown, "LEFT");
-
-
-			UIDropDownMenu_SetWidth(self.Essences.RoleDropDown, 170);
-			UIDropDownMenu_Initialize(self.Essences.RoleDropDown, RoleDropDownInit);
-			UIDropDownMenu_JustifyText(self.Essences.RoleDropDown, "LEFT");
-			self.Essences.Slots = {
-				[115] = self.Essences.MajorSlot,
-				[116] = self.Essences.MinorSlot1,
-				[117] = self.Essences.MinorSlot2,
-				[119] = self.Essences.MinorSlot3,
-			};
-
-			HybridScrollFrame_CreateButtons(self.Essences.EssenceList, "BtWLoadoutsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
-			self.Essences.EssenceList.update = Internal.EssenceScrollFrameUpdate;
-
-			self.Equipment.flyoutSettings = {
-				onClickFunc = PaperDollFrameItemFlyoutButton_OnClick,
-				getItemsFunc = PaperDollFrameItemFlyout_GetItems,
-				-- postGetItemsFunc = PaperDollFrameItemFlyout_PostGetItems,
-				hasPopouts = true,
-				parent = self.Equipment,
-				anchorX = 0,
-				anchorY = -3,
-				verticalAnchorX = 0,
-				verticalAnchorY = 0,
-			};
-
-			UIDropDownMenu_SetWidth(self.Conditions.ProfileDropDown, 400);
-			UIDropDownMenu_Initialize(self.Conditions.ProfileDropDown, ProfilesDropDownInit);
-			UIDropDownMenu_JustifyText(self.Conditions.ProfileDropDown, "LEFT");
-
-			UIDropDownMenu_SetWidth(self.Conditions.ConditionTypeDropDown, 400);
-			UIDropDownMenu_Initialize(self.Conditions.ConditionTypeDropDown, ConditionTypeDropDownInit);
-			UIDropDownMenu_JustifyText(self.Conditions.ConditionTypeDropDown, "LEFT");
-
-			UIDropDownMenu_SetWidth(self.Conditions.InstanceDropDown, 175);
-			UIDropDownMenu_Initialize(self.Conditions.InstanceDropDown, InstanceDropDownInit);
-			UIDropDownMenu_JustifyText(self.Conditions.InstanceDropDown, "LEFT");
-
-			UIDropDownMenu_SetWidth(self.Conditions.DifficultyDropDown, 175);
-			UIDropDownMenu_Initialize(self.Conditions.DifficultyDropDown, DifficultyDropDownInit);
-			UIDropDownMenu_JustifyText(self.Conditions.DifficultyDropDown, "LEFT");
-
-			UIDropDownMenu_SetWidth(self.Conditions.BossDropDown, 400);
-			UIDropDownMenu_Initialize(self.Conditions.BossDropDown, BossDropDownInit);
-			UIDropDownMenu_JustifyText(self.Conditions.BossDropDown, "LEFT");
-
-			UIDropDownMenu_SetWidth(self.Conditions.AffixesDropDown, 400);
-			-- UIDropDownMenu_Initialize(self.Conditions.AffixesDropDown, AffixesDropDownInit);
-			UIDropDownMenu_JustifyText(self.Conditions.AffixesDropDown, "LEFT");
-
-			self.Conditions.AffixesDropDown.Button:SetScript("OnClick", function ()
-				BtWLoadoutsConditionsAffixesDropDownList:SetShown(not BtWLoadoutsConditionsAffixesDropDownList:IsShown());
-			end)
-
-			UIDropDownMenu_SetWidth(self.Conditions.ScenarioDropDown, 400);
-			UIDropDownMenu_Initialize(self.Conditions.ScenarioDropDown, ScenarioDropDownInit);
-			UIDropDownMenu_JustifyText(self.Conditions.ScenarioDropDown, "LEFT");
 			self.initialized = true;
 		end
 

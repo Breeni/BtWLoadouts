@@ -18,13 +18,13 @@ Instances.lua
 BtWLoadouts.xml
 
 Sets.lua
-Loadouts.lua
-Talents.lua
-PvPTalents.lua
-Essences.lua
-Equipment.lua
-ActionBars.lua
-Conditions.lua
+Loadouts.xml
+Talents.xml
+PvPTalents.xml
+Essences.xml
+Equipment.xml
+ActionBars.xml
+Conditions.xml
 
 Launcher.lua
 Events.lua

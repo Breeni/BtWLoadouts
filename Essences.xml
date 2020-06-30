@@ -1,0 +1,77 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	<Script file="Essences.lua"/>
+
+    <Frame parentKey="Essences" mixin="BtWLoadoutsEssencesMixin" inherits="BtWLoadoutsTabFrame">
+        <KeyValues>
+            <KeyValue key="name" value="BTWLOADOUTS_ESSENCES" type="global"/>
+        </KeyValues>
+        <Frames>
+            <Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="-4" y="-31"/>
+                    <Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+                </Anchors>
+            </Frame>
+            <Frame name="$parentRoleDropDown" parentKey="RoleDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0"/>
+                </Anchors>
+                <Scripts>
+                </Scripts>
+            </Frame>
+            <EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
+                <Size x="0" y="22"/>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.RoleDropDown" relativePoint="RIGHT" x="10" y="2"/>
+                    <Anchor point="RIGHT" x="0" y="0"/>
+                </Anchors>
+                <Scripts>
+                    <OnTextChanged>
+                        self:GetParent():GetParent():OnNameChanged(self:GetText());
+                    </OnTextChanged>
+                    <OnEnterPressed function="EditBox_ClearFocus"/>
+                </Scripts>
+            </EditBox>
+            <Button inherits="BtWLoadoutsAzeriteMilestoneMajorSlotTemplate" parentKey="MajorSlot">
+                <Anchors>
+                    <Anchor point="CENTER" relativePoint="CENTER" x="-100" y="-30"/>
+                </Anchors>
+            </Button>
+            <Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot1">
+                <Anchors>
+                    <Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="-83" y="-114"/>
+                </Anchors>
+            </Button>
+            <Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot2">
+                <Anchors>
+                    <Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="139" y="-15"/>
+                </Anchors>
+            </Button>
+            <Button inherits="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" parentKey="MinorSlot3" virtual="true">
+                <Anchors>
+                    <Anchor point="CENTER" relativeKey="$parent.MajorSlot" relativePoint="CENTER" x="-59" y="129"/>
+                </Anchors>
+            </Button>
+            <ScrollFrame parentKey="EssenceList" inherits="HybridScrollFrameTemplate">
+                <Size x="185" y="250"/>
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="-18" y="-11"/>
+                    <Anchor point="BOTTOM" x="0" y="0"/>
+                </Anchors>
+                <Frames>
+                    <Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-12"/>
+                            <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="13"/>
+                        </Anchors>
+                    </Slider>
+                </Frames>
+            </ScrollFrame>
+        </Frames>
+        <Scripts>
+            <OnLoad inherit="prepend" method="OnLoad"/>
+            <OnShow inherit="prepend" method="OnShow"/>
+        </Scripts>
+    </Frame>
+</Ui>

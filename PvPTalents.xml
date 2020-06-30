@@ -1,0 +1,52 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	<Script file="PvPTalents.lua"/>
+
+    <Frame parentKey="PvPTalents" mixin="BtWLoadoutsPvPTalentsMixin" inherits="BtWLoadoutsTabFrame">
+        <KeyValues>
+            <KeyValue key="name" value="BTWLOADOUTS_PVP_TALENTS" type="global"/>
+        </KeyValues>
+        <Frames>
+            <Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="-4" y="-31" />
+                    <Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+                </Anchors>
+            </Frame>
+            <Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0"/>
+                </Anchors>
+                <Scripts>
+                </Scripts>
+            </Frame>
+            <EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
+                <Size x="0" y="22"/>
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.SpecDropDown" relativePoint="RIGHT" x="10" y="2"/>
+                    <Anchor point="RIGHT" x="0" y="0"/>
+                </Anchors>
+                <Scripts>
+                    <OnTextChanged>
+                        self:GetParent():GetParent():OnNameChanged(self:GetText());
+                    </OnTextChanged>
+                    <OnEnterPressed function="EditBox_ClearFocus"/>
+                </Scripts>
+            </EditBox>
+            <Frame name="$parentTalentRow" inherits="BtWLoadoutsTalentRowTemplate" parentKey="trinkets">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-38"/>
+                </Anchors>
+            </Frame>
+            <Frame name="$parentTalentGrid" inherits="BtWLoadoutsTalentGridTemplate" parentKey="others">
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="$parentTalentRow" relativePoint="BOTTOM" x="0" y="-9"/>
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad inherit="prepend" method="OnLoad"/>
+            <OnShow inherit="prepend" method="OnShow"/>
+        </Scripts>
+    </Frame>
+</Ui>

@@ -1030,6 +1030,8 @@ Internal.IsEquipmentSetActive = IsEquipmentSetActive
 Internal.CombineEquipmentSets = CombineEquipmentSets
 Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
 
+BtWLoadoutsEquipmentMixin = {}
+
 function Internal.EquipmentTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Equipment"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
