@@ -241,27 +241,43 @@ local function PickupMacroByText(text)
     return false
 end
 
-local ActionCacheA, ActionCacheB = {}, {}
-local function SetActon(slot, tbl)
-    local success, msg = true, "Success"
+-- Pickup an action, when test is true the action wont actually be picked up
+local function PickupActionTable(tbl, test)
+    if tbl == nil or tbl.type == nil then
+        return true, "Success"
+    end
 
-    ClearCursor()
-    if tbl == nil or tbl.type == nil then -- Clear the slot
-        ClearCursor()
-        PickupAction(slot)
-        ClearCursor()
-        return true, true
-    elseif tbl.type == "macro" then
-        if not PickupMacroByText(tbl.macroText) then
-            Internal.LogMessage("Warning: Pickup Macro by name or id (%d, %s, %d)", slot, tbl.name, tbl.id)
-            PickupMacro(GetMacroIndexByName(tbl.name) or tbl.id)
+    local success, msg = true, "Success"
+    if tbl.type == "macro" then
+        local index = GetMacroByText(tbl.macroText)
+
+        if not index or index == 0 then
+            msg = L["Could not find macro by text"]
+            index = GetMacroIndexByName(tbl.name)
         end
+
+        if not index or index == 0 then
+            msg = L["Could not find macro by text or name"]
+            success = false
+            -- if GetMacroInfo(tbl.id) then
+            --     index = tbl.id
+            -- end
+        elseif not test then
+            PickupMacro(index)
+        end
+
+        -- if not index or index == 0 then
+        --     msg = L["Could not find macro by text, name or id"]
+        --     success = false
+        -- elseif not test then
+        --     PickupMacro(index)
+        -- end
     elseif tbl.type == "spell" then
         -- If we use the base version of the spell it should always work
         tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
 
-        local foundSpell = false
         local index
+        success = false
         if tbl.subType == "spell" then
             for tabIndex = 1,min(2,GetNumSpellTabs()) do
                 local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
@@ -287,135 +303,175 @@ local function SetActon(slot, tbl)
             end
         end
         if index then
-            PickupSpellBookItem(index, tbl.subType)
-            foundSpell = true
+            success = true
+            if not test then
+                PickupSpellBookItem(index, tbl.subType)
+            end
         end
 
-        if not foundSpell then
+        if not success then
             -- In cases where we need a pvp talent but they arent active
             -- we have to pickup the talent, not the spell
             local pvptalents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
             for _,talentId in ipairs(pvptalents) do
                 if select(6, GetPvpTalentInfoByID(talentId)) == tbl.id then
-                    PickupPvpTalent(talentId)
-                    foundSpell = true
+                    success = true
+                    if not test then
+                        PickupPvpTalent(talentId)
+                    end
                 end
             end
         end
 
-        if not foundSpell then
+        if not success then
             if tbl.subType == "pet" then
-                if not IsSpellKnown(tbl.id, true) then
-                    return false, true
+                if IsSpellKnown(tbl.id, true) then
+                    success = true
+                    if not test then
+                        PickupPetSpell(tbl.id)
+                    end
                 end
-
-                PickupPetSpell(tbl.id)
             elseif tbl.subType == "spell" then
-                if not IsSpellKnown(tbl.id, false) then
-                    return false, true
+                if IsSpellKnown(tbl.id, false) then
+                    success = true
+                    if not test then
+                        PickupSpell(tbl.id)
+                    end
                 end
-
-                PickupSpell(tbl.id)
             end
+        end
+
+        if not success then
+            msg = L["Spell not found"]
         end
     elseif tbl.type == "item" then
-        PickupItem(tbl.id)
+        if not test then
+            PickupItem(tbl.id)
+        end
     elseif tbl.type == "summonmount" then
         if tbl.id == 0xFFFFFFF then -- Random Favourite
-            C_MountJournal.Pickup(0)
+            if not test then
+                C_MountJournal.Pickup(0)
+            end
         else
             if not select(11, C_MountJournal.GetMountInfoByID(tbl.id)) then
-                return false, true
-            end
-
-            -- We will attempt to pickup the mount using the latest way, if that
-            -- fails because of pet filtering we will pickup the spell instead
-            local index = nil
-            for i=1,C_MountJournal.GetNumDisplayedMounts() do
-                if select(12,C_MountJournal.GetDisplayedMountInfo(i)) == tbl.id then
-                    index = i
-                    break
+                success = false
+                msg = L["Mount is not available"]
+            elseif not test then
+                -- We will attempt to pickup the mount using the latest way, if that
+                -- fails because of filtering we will pickup the spell instead
+                local index = nil
+                for i=1,C_MountJournal.GetNumDisplayedMounts() do
+                    if select(12,C_MountJournal.GetDisplayedMountInfo(i)) == tbl.id then
+                        index = i
+                        break
+                    end
                 end
-            end
-            if index then
-                C_MountJournal.Pickup(index)
-            else
-                PickupSpell((select(2, C_MountJournal.GetMountInfoByID(tbl.id))))
+                if index then
+                    C_MountJournal.Pickup(index)
+                else
+                    PickupSpell((select(2, C_MountJournal.GetMountInfoByID(tbl.id))))
+                end
             end
         end
     elseif tbl.type == "summonpet" then
         if not C_PetJournal.GetPetInfoByPetID(tbl.id) then
-            return false, false
+            success = false
+            msg = L["Pet is not available"]
+        elseif not test then
+            C_PetJournal.PickupPet(tbl.id)
         end
-
-        C_PetJournal.PickupPet(tbl.id)
     elseif tbl.type == "companion" then -- This is the old way of handling mounts and pets
-        if tbl.subType == "MOUNT" then
+        if not test and tbl.subType == "MOUNT" then
             PickupSpell(tbl.id)
         end
     elseif tbl.type == "equipmentset" then
         local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
         if not id then
-            return false, true -- Equipment set missing
+            success = false
+            msg = L["Equipment set is not available"]
+        elseif not test then
+            C_EquipmentSet.PickupEquipmentSet(id)
         end
-        C_EquipmentSet.PickupEquipmentSet(id)
     elseif tbl.type == "flyout" then
         if not GetFlyoutInfo(tbl.id) then
-            return false, true
-        end
-
-        -- Find the spell book index for the flyout
-        local index
-        for tabIndex = 1,min(2,GetNumSpellTabs()) do
-            local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
-            for spellIndex = offset,offset+numEntries do
-                local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
-                if skillType == "FLYOUT" and id == tbl.id then
-                    index = spellIndex
-                    break
+            success = false
+            msg = L["Flyout is not available"]
+        else
+            -- Find the spell book index for the flyout
+            local index
+            for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
+                for spellIndex = offset,offset+numEntries do
+                    local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                    if skillType == "FLYOUT" and id == tbl.id then
+                        index = spellIndex
+                        break
+                    end
                 end
             end
+            if not index then -- Couldn't find the flyout in the spell book
+                success = false
+                msg = L["Flyout is not is spell book"]
+            elseif not test then
+                PickupSpellBookItem(index, "spell")
+            end
         end
-        if not index then -- Couldn't find the flyout in the spell book
-            return false, true
-        end
+    end
+    return success, msg
+end
 
-        PickupSpellBookItem(index, "spell")
-    else
-        -- Unknown type so we cant pick it up but we dont want to fail and keep trying
-        return false, true
+local ActionCacheA, ActionCacheB = {}, {}
+local function SetActon(slot, tbl)
+    local success, done, msg = true, true, "Success"
+
+    ClearCursor()
+    success, msg = PickupActionTable(tbl)
+
+    if success then
+        if tbl == nil or tbl.type == nil then
+            PickupAction(slot)
+            ClearCursor()
+        else
+            if GetCursorInfo() then
+                push(ActionCacheA, GetCursorInfo())
+
+                PlaceAction(slot)
+
+                push(ActionCacheB, GetCursorInfo())
+
+                if compare(ActionCacheA, ActionCacheB) then -- Compare the cursor now to before we placed the action, if they are the same it failed
+                    msg = "Failed to place action"
+                    success, done = false, false
+                end
+            else
+                msg = "Failed to pickup action"
+                success, done = false, false
+            end
+        end
     end
 
-    if GetCursorInfo() then
-        push(ActionCacheA, GetCursorInfo())
-
-        PlaceAction(slot)
-
-        push(ActionCacheB, GetCursorInfo())
-
-        if compare(ActionCacheA, ActionCacheB) then -- Compare the cursor now to before we placed the action, if they are the same it failed
-            msg = "Failed to place action"
-            success = false
-        end
-    else
-        msg = "Failed to pickup action"
-        success = false
-    end
-
-    if tbl.type == "macro" then
+    if tbl == nil or tbl.type == nil then
+        Internal.LogMessage("Emptying action bar slot %d (%s, %s)", slot, success and "true" or "false", msg)
+    elseif tbl.type == "macro" then
         Internal.LogMessage("Switching action bar slot %d to %s:%s:%s (%s, %s)", slot, tbl.type, tbl.id, tbl.macroText:gsub("\n", "\\ "), success and "true" or "false", msg)
     else
         Internal.LogMessage("Switching action bar slot %d to %s:%s (%s, %s)", slot, tbl.type, tbl.id, success and "true" or "false", msg)
     end
 
     ClearCursor()
-    return success, success
+    return success, done
 end
 
 local function IsActionBarSetActive(set)
     for slot=1,120 do
-        if not set.ignored[slot] and not CompareSlot(slot, set.actions[slot]) then
-            return false
+        if not set.ignored[slot] then
+            local action = set.actions[slot]
+            local available = PickupActionTable(action, true)
+
+            if available and not CompareSlot(slot, action) then
+                return false
+            end
         end
     end
 
@@ -424,11 +480,14 @@ end
 local function ActivateActionBarSet(set)
     local complete = true
     for slot=1,120 do
-        local tbl = set.actions[slot]
-        if not set.ignored[slot] and not CompareSlot(slot, tbl) then
-            local success, done = SetActon(slot, tbl)
-            if not done then
-                complete = false
+        if not set.ignored[slot] then
+            local action = set.actions[slot]
+
+            if not CompareSlot(slot, action) then
+                local success, done = SetActon(slot, action)
+                if not done then
+                    complete = false
+                end
             end
         end
     end

@@ -49,9 +49,11 @@ end
 -- Check if the talents in the table talentIDs are selected
 local function IsTalentSetActive(set)
     for talentID in pairs(set.talents) do
-		local _, _, _, selected, available = GetTalentInfoByID(talentID, 1);
+        local _, _, _, selected, _, _, _, tier = GetTalentInfoByID(talentID, 1);
+        local tierAvailable = GetTalentTierInfo(tier, 1)
 
-        if not selected then
+        -- For lower level characters just ignore tiers over their currently available
+        if tierAvailable and not selected then
             return false;
         end
     end

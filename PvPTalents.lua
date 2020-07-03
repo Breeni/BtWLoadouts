@@ -6,8 +6,8 @@ local GetClassColor = C_ClassColor.GetClassColor;
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE;
 
 local LearnPvpTalent = LearnPvpTalent;
-local GetPvpTalentInfoByID = GetPvpTalentInfoByID;
 local GetPvpTalentSlotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo;
+local GetPvpTalentUnlockLevel = C_SpecializationInfo.GetPvpTalentUnlockLevel;
 local GetAllSelectedPvpTalentIDs = C_SpecializationInfo.GetAllSelectedPvpTalentIDs;
 
 local GetSpecialization = GetSpecialization;
@@ -41,13 +41,46 @@ local function PvPTalentSetIsValid(set)
 	return true, (playerClass == specClass), (playerSpecID == set.specID)
 end
 local function IsPvPTalentSetActive(set)
-	for talentID in pairs(set.talents) do
-        local _, _, _, selected, available = GetPvpTalentInfoByID(talentID, 1);
+	local playerLevel = UnitLevel("player")
+	local talents = {};
+	local slots = {}
 
-        if not selected then
-            return false;
-        end
-    end
+	-- Clone the talents list so we can remove things as needed
+	for talentID in pairs(set.talents) do
+		if GetPvpTalentUnlockLevel(talentID) <= playerLevel then
+			talents[talentID] = true;
+		end
+	end
+
+	-- All the talents arent available yet so we are as active as we can get
+	if next(talents) == nil then
+		return true
+	end
+
+	for slot=1,4 do
+		local slotInfo = GetPvpTalentSlotInfo(slot);
+		if slotInfo.enabled then
+			if slotInfo.selectedTalentID and talents[slotInfo.selectedTalentID] then
+				talents[slotInfo.selectedTalentID] = nil
+			else
+				slots[slotInfo] = true
+			end
+		end
+	end
+
+	-- All the talents that are available are currenctly active
+	if next(talents) == nil then
+		return true
+	end
+
+	for slotInfo in pairs(slots) do
+		for _,talentID in ipairs(slotInfo.availableTalentIDs) do
+			-- One of the talents that is available can go in a free slot so we arent active yet
+			if talents[talentID] then
+				return false
+			end
+		end
+	end
 
     return true;
 end
