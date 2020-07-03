@@ -624,16 +624,16 @@ local function ContinueActivateProfile()
 		end
 	end
 
-	-- When we will finish with Conflict as a major there is a chance we wont be able to put all the
-	-- pvp talents in the 4 slots so we need to check other set pvp talents too
-	local conflictAndStrife = false
-	if essencesSet then
-		conflictAndStrife = essencesSet.essences[115] == 32; -- We are trying to equip Conflict
-	else
-		conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped
-	end
-
     if pvpTalentSet then
+		-- When we will finish with Conflict as a major there is a chance we wont be able to put all the
+		-- pvp talents in the 4 slots so we need to check other set pvp talents too
+		local conflictAndStrife = false
+		if essencesSet then
+			conflictAndStrife = essencesSet.essences[115] == 32; -- We are trying to equip Conflict
+		else
+			conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped
+		end
+
 		if not Internal.ActivatePvPTalentSet(pvpTalentSet, conflictAndStrife) then
 			complete = false;
 		end
