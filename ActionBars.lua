@@ -251,7 +251,7 @@ local function PickupActionTable(tbl, test)
     if tbl.type == "macro" then
         local index = GetMacroByText(tbl.macroText)
 
-        if not index or index == 0 then
+        if (not index or index == 0) and tbl.name then
             msg = L["Could not find macro by text"]
             index = GetMacroIndexByName(tbl.name)
         end
@@ -587,6 +587,7 @@ local function DeleteActionBarSet(id)
 	end
 end
 
+Internal.PickupActionTable = PickupActionTable
 Internal.IsActionBarSetActive = IsActionBarSetActive
 Internal.ActivateActionBarSet = ActivateActionBarSet
 Internal.AddActionBarSet = AddActionBarSet
