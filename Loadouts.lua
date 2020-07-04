@@ -382,31 +382,31 @@ local function ActivateProfile(profile)
 		target.specID = specID or profile.specID;
 	end
 
-	if profile.talents then
+	if profile.talents and #profile.talents > 0 then
 		target.talents = target.talents or {};
 		for _,setID in ipairs(profile.talents) do
 			target.talents[#target.talents+1] = setID;
 		end
 	end
-	if profile.pvptalents then
+	if profile.pvptalents and #profile.pvptalents > 0 then
 		target.pvptalents = target.pvptalents or {};
 		for _,setID in ipairs(profile.pvptalents) do
 			target.pvptalents[#target.pvptalents+1] = setID;
 		end
 	end
-	if profile.essences then
+	if profile.essences and #profile.essences > 0 then
 		target.essences = target.essences or {};
 		for _,setID in ipairs(profile.essences) do
 			target.essences[#target.essences+1] = setID;
 		end
 	end
-	if profile.equipment then
+	if profile.equipment and #profile.equipment > 0 then
 		target.equipment = target.equipment or {};
 		for _,setID in ipairs(profile.equipment) do
 			target.equipment[#target.equipment+1] = setID;
 		end
 	end
-	if profile.actionbars then
+	if profile.actionbars and #profile.actionbars > 0 then
 		target.actionbars = target.actionbars or {};
 		for _,setID in ipairs(profile.actionbars) do
 			target.actionbars[#target.actionbars+1] = setID;
