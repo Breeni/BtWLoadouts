@@ -759,6 +759,8 @@
         <Scripts>
             <OnClick method="OnClick"/>
             <OnReceiveDrag method="OnReceiveDrag"/>
+            <OnEnter method="OnEnter"/>
+            <OnLeave method="OnLeave"/>
         </Scripts>
 		<NormalTexture parentKey="NormalTexture" file="Interface\Buttons\UI-Quickslot2">
 			<Anchors>

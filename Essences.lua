@@ -15,38 +15,45 @@ local function GetEssenceSet(id)
 		return BtWLoadoutsSets.essences[id];
 	end
 end
+local function CanActivateEssences()
+	return IsQuestFlaggedCompleted(55618) -- The Heart Forge quest
+end
 -- returns isValid and isValidForPlayer
 local function EssenceSetIsValid(set)
 	local set = GetEssenceSet(set);
 	return true, Internal.IsClassRoleValid(select(2, UnitClass("player")), set.role)
 end
 local function IsEssenceSetActive(set)
-    for milestoneID,essenceID in pairs(set.essences) do
-        local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
-        if info and (info.unlocked or info.canUnlock) and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
-            return false;
-        end
-    end
+	if CanActivateEssences() then
+		for milestoneID,essenceID in pairs(set.essences) do
+			local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
+			if info and (info.unlocked or info.canUnlock) and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+				return false;
+			end
+		end
+	end
 
     return true;
 end
 local function ActivateEssenceSet(set)
 	local success, complete = true, true;
-	for milestoneID,essenceID in pairs(set.essences) do
-		local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
-		local essenceName, essenceRank = info.name, info.rank
-		if info and info.valid and info.unlocked then
-			local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
-			if info.canUnlock then
-				C_AzeriteEssence.UnlockMilestone(milestoneID);
-				complete = false;
-			end
+	if CanActivateEssences() then
+		for milestoneID,essenceID in pairs(set.essences) do
+			local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
+			local essenceName, essenceRank = info.name, info.rank
+			if info and info.valid and info.unlocked then
+				local info = C_AzeriteEssence.GetMilestoneInfo(milestoneID);
+				if info.canUnlock then
+					C_AzeriteEssence.UnlockMilestone(milestoneID);
+					complete = false;
+				end
 
-			if info.unlocked and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
-				C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
-				complete = false;
+				if info.unlocked and C_AzeriteEssence.GetMilestoneEssence(milestoneID) ~= essenceID then
+					C_AzeriteEssence.ActivateEssence(essenceID, milestoneID);
+					complete = false;
 
-				Internal.LogMessage("Switching essence %d to %s", milestoneID, C_AzeriteEssence.GetEssenceHyperlink(essenceID, essenceRank or 4))
+					Internal.LogMessage("Switching essence %d to %s", milestoneID, C_AzeriteEssence.GetEssenceHyperlink(essenceID, essenceRank or 4))
+				end
 			end
 		end
 	end
@@ -113,10 +120,12 @@ local function CombineEssenceSets(result, ...)
 	result = result or {};
 
 	result.essences = {};
-	for i=1,select('#', ...) do
-		local set = select(i, ...);
-		for milestoneID, essenceID in pairs(set.essences) do
-			result.essences[milestoneID] = essenceID;
+	if CanActivateEssences() then
+		for i=1,select('#', ...) do
+			local set = select(i, ...);
+			for milestoneID, essenceID in pairs(set.essences) do
+				result.essences[milestoneID] = essenceID;
+			end
 		end
 	end
 
@@ -160,6 +169,7 @@ local function EssenceSetDelay(set)
 	return false
 end
 
+Internal.CanActivateEssences = CanActivateEssences
 Internal.GetEssenceSet = GetEssenceSet
 Internal.GetEssenceSetsByName = GetEssenceSetsByName
 Internal.GetEssenceSetByName = GetEssenceSetByName

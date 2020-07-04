@@ -3183,6 +3183,11 @@ function BtWLoadoutsActionButtonMixin:Update()
 	local ignored = set.ignored[slot];
 	local tbl = set.actions[slot];
 	if tbl and tbl.type ~= nil then
+		local success, msg = Internal.PickupActionTable(tbl, true)
+		if not success then
+			errors = msg
+		end
+
 		local icon, name = tbl.icon, tbl.name
 		if tbl.type == "item" then
 			icon = select(5, GetItemInfoInstant(tbl.id))
@@ -3229,6 +3234,19 @@ function BtWLoadoutsActionButtonMixin:Update()
 	self.ErrorBorder:SetShown(errors ~= nil)
 	self.ErrorOverlay:SetShown(errors ~= nil)
 	self.ignoreTexture:SetShown(ignored);
+end
+function BtWLoadoutsActionButtonMixin:OnEnter()
+	if self.errors then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(string.format(L["Slot %d"], self:GetID()), 1, 1, 1)
+		GameTooltip:AddLine(format("\n|cffff0000%s|r", self.errors))
+		GameTooltip:Show()
+	end
+end
+function BtWLoadoutsActionButtonMixin:OnLeave()
+	gameTooltipErrorLink = nil
+	gameTooltipErrorText = nil
+	GameTooltip:Hide();
 end
 
 BtWLoadoutsIgnoreActionBarMixin = {}
