@@ -1030,6 +1030,187 @@ Internal.IsEquipmentSetActive = IsEquipmentSetActive
 Internal.CombineEquipmentSets = CombineEquipmentSets
 Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
 
+local gameTooltipErrorLink;
+local gameTooltipErrorText;
+
+BtWLoadoutsItemSlotButtonMixin = {};
+function BtWLoadoutsItemSlotButtonMixin:OnLoad()
+	self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+	-- self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
+
+	local id, textureName, checkRelic = GetInventorySlotInfo(self:GetSlot());
+	self:SetID(id);
+	self.icon:SetTexture(textureName);
+	self.backgroundTextureName = textureName;
+	self.ignoreTexture:Hide();
+
+	local popoutButton = self.popoutButton;
+	if ( popoutButton ) then
+		if ( self.verticalFlyout ) then
+			popoutButton:SetHeight(16);
+			popoutButton:SetWidth(38);
+
+			popoutButton:GetNormalTexture():SetTexCoord(0.15625, 0.84375, 0.5, 0);
+			popoutButton:GetHighlightTexture():SetTexCoord(0.15625, 0.84375, 1, 0.5);
+			popoutButton:ClearAllPoints();
+			popoutButton:SetPoint("TOP", self, "BOTTOM", 0, 4);
+		else
+			popoutButton:SetHeight(38);
+			popoutButton:SetWidth(16);
+
+			popoutButton:GetNormalTexture():SetTexCoord(0.15625, 0.5, 0.84375, 0.5, 0.15625, 0, 0.84375, 0);
+			popoutButton:GetHighlightTexture():SetTexCoord(0.15625, 1, 0.84375, 1, 0.15625, 0.5, 0.84375, 0.5);
+			popoutButton:ClearAllPoints();
+			popoutButton:SetPoint("LEFT", self, "RIGHT", -8, 0);
+		end
+
+		-- popoutButton:Show();
+	end
+end
+function BtWLoadoutsItemSlotButtonMixin:OnClick()
+	local cursorType, _, itemLink = GetCursorInfo();
+	if cursorType == "item" then
+		if self:SetItem(itemLink, GetCursorItemSource()) then
+			ClearCursor();
+		end
+	elseif IsModifiedClick("SHIFT") then
+		local set = self:GetParent().set;
+		self:SetIgnored(not set.ignored[self:GetID()]);
+	else
+		self:SetItem(nil);
+	end
+end
+function BtWLoadoutsItemSlotButtonMixin:OnReceiveDrag()
+	local cursorType, _, itemLink = GetCursorInfo();
+	if self:GetParent().set and cursorType == "item" then
+		if self:SetItem(itemLink, GetCursorItemSource()) then
+			ClearCursor();
+		end
+	end
+end
+function BtWLoadoutsItemSlotButtonMixin:OnEvent(event, itemID, success)
+	if success then
+		local set = self:GetParent().set;
+		local slot = self:GetID();
+		local itemLink = set.equipment[slot];
+
+		if itemLink and itemID == GetItemInfoInstant(itemLink) then
+			self:Update();
+			self:UnregisterEvent("GET_ITEM_INFO_RECEIVED");
+		end
+	end
+end
+function BtWLoadoutsItemSlotButtonMixin:OnEnter()
+	local set = self:GetParent().set;
+	local slot = self:GetID();
+	local itemLink = set.equipment[slot];
+
+	if itemLink then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:SetHyperlink(itemLink);
+		if self.errors then
+			gameTooltipErrorLink = itemLink
+			gameTooltipErrorText = self.errors
+		else
+			gameTooltipErrorLink = nil
+			gameTooltipErrorText = nil
+		end
+	end
+end
+function BtWLoadoutsItemSlotButtonMixin:OnLeave()
+	gameTooltipErrorLink = nil
+	gameTooltipErrorText = nil
+	GameTooltip:Hide();
+end
+function BtWLoadoutsItemSlotButtonMixin:OnUpdate()
+	if GameTooltip:IsOwned(self) then
+		self:OnEnter();
+	end
+end
+function BtWLoadoutsItemSlotButtonMixin:GetSlot()
+	return self.slot;
+end
+function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
+	local set = self:GetParent().set;
+	if itemLink == nil then -- Clearing slot
+		set.equipment[self:GetID()] = nil;
+
+		self:Update();
+		return true;
+	else
+		local _, _, quality, _, _, _, _, _, itemEquipLoc, texture, _, itemClassID, itemSubClassID = GetItemInfo(itemLink);
+		if self.invType == itemEquipLoc then
+			set.equipment[self:GetID()] = itemLink;
+
+			local itemLocation;
+			if bag and slot then
+				itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot);
+			elseif slot then
+				itemLocation = ItemLocation:CreateFromEquipmentSlot(slot);
+			end
+
+			if itemLocation and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+				set.extras[self:GetID()] = set.extras[self:GetID()] or {};
+				local extras = set.extras[self:GetID()];
+				extras.azerite = extras.azerite or {};
+				wipe(extras.azerite);
+
+				local tiers = C_AzeriteEmpoweredItem.GetAllTierInfo(itemLocation);
+				for index,tier in ipairs(tiers) do
+					for _,powerID in ipairs(tier.azeritePowerIDs) do
+						if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
+							extras.azerite[index] = powerID;
+							break;
+						end
+					end
+				end
+			else
+				set.extras[self:GetID()] = nil;
+			end
+
+			BtWLoadoutsFrame:Update(); -- Refresh everything, this'll update the error handling too
+			return true;
+		end
+	end
+	return false;
+end
+function BtWLoadoutsItemSlotButtonMixin:SetIgnored(ignored)
+	local set = self:GetParent().set;
+	set.ignored[self:GetID()] = ignored and true or nil;
+	BtWLoadoutsFrame:Update(); -- Refresh everything, this'll update the error handling too
+end
+function BtWLoadoutsItemSlotButtonMixin:Update()
+	local set = self:GetParent().set;
+	local slot = self:GetID();
+	local ignored = set.ignored[slot];
+	local errors = set.errors[slot];
+	local itemLink = set.equipment[slot];
+	if itemLink then
+		local itemID = GetItemInfoInstant(itemLink);
+		local _, _, quality, _, _, _, _, _, _, texture = GetItemInfo(itemLink);
+		if quality == nil or texture == nil then
+			self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
+		end
+
+		SetItemButtonTexture(self, texture);
+		SetItemButtonQuality(self, quality, itemID);
+	else
+		SetItemButtonTexture(self, self.backgroundTextureName);
+		SetItemButtonQuality(self, nil, nil);
+	end
+
+	self.errors = errors -- For tooltip display
+	self.ErrorBorder:SetShown(errors ~= nil)
+	self.ErrorOverlay:SetShown(errors ~= nil)
+	self.ignoreTexture:SetShown(ignored);
+end
+GameTooltip:HookScript("OnTooltipSetItem", function (self)
+	local name, link = self:GetItem()
+	if gameTooltipErrorLink == link and gameTooltipErrorText then
+		self:AddLine(format("\n|cffff0000%s|r", gameTooltipErrorText))
+	end
+end)
+
 BtWLoadoutsEquipmentMixin = {}
 
 function Internal.EquipmentTabUpdate(self)

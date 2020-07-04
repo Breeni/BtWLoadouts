@@ -182,6 +182,64 @@ Internal.IsEssenceSetActive = IsEssenceSetActive
 Internal.CombineEssenceSets = CombineEssenceSets
 
 
+
+BtWLoadoutsAzeriteMilestoneSlotMixin = {};
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnLoad()
+	self.EmptyGlow.Anim:Play();
+end
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnEnter()
+	if self.id then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:SetAzeriteEssence(self.id, 4);
+		GameTooltip_SetBackdropStyle(GameTooltip, GAME_TOOLTIP_BACKDROP_STYLE_AZERITE_ITEM);
+	end
+
+	if self:GetParent().pending then
+		SetCursor("interface/cursor/cast.blp");
+	end
+end
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnLeave()
+	GameTooltip_Hide();
+end
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnClick()
+	local essences = self:GetParent();
+	local selected = essences.set.essences;
+	local pendingEssenceID = essences.pending;
+	if pendingEssenceID then
+		for milestoneID,essenceID in pairs(selected) do
+			if essenceID == pendingEssenceID then
+				selected[milestoneID] = nil;
+			end
+		end
+
+		selected[self.milestoneID] = pendingEssenceID;
+
+		essences.pending = nil;
+		SetCursor(nil);
+	else
+		selected[self.milestoneID] = nil;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+
+BtWLoadoutsAzeriteEssenceButtonMixin = {};
+function BtWLoadoutsAzeriteEssenceButtonMixin:OnClick()
+	SetCursor("interface/cursor/cast.blp");
+	BtWLoadoutsFrame.Essences.pending = self.id;
+	BtWLoadoutsFrame:Update();
+end
+function BtWLoadoutsAzeriteEssenceButtonMixin:OnEnter()
+	if self.id then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:SetAzeriteEssence(self.id, 4);
+	end
+
+	if BtWLoadoutsFrame.Essences.pending then
+		SetCursor("interface/cursor/cast.blp");
+	end
+end
+
 local function RoleDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Essences;
 

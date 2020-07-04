@@ -2,7 +2,132 @@
 ..\FrameXML\UI.xsd">
 	<Script file="Loadouts.lua"/>
 
-    <Frame parentKey="Profiles" mixin="BtWLoadoutsProfilesMixin" inherits="BtWLoadoutsTabFrame">
+	<Button name="BtWLoadoutsSetsScrollListItemTemplate" mixin="BtWLoadoutsSetsScrollListItemMixin" parentArray="ScrollButtons" virtual="true">
+		<Size x="540" y="21"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture parentKey="ExpandedIcon" inherits="Char-Stat-Minus">
+					<Anchors>
+						<Anchor point="LEFT" x="4" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="CollapsedIcon" inherits="Char-Stat-Plus">
+					<Anchors>
+						<Anchor point="LEFT" x="4" y="0"/>
+					</Anchors>
+				</Texture>
+				<FontString parentKey="Name" inherits="GameFontNormalLeft">
+					<Size x="145" y="22"/>
+					<Anchors>
+						<Anchor point="LEFT" x="15" y="0"/>
+						<Anchor point="RIGHT" x="-5" y="0"/>
+					</Anchors>
+					<Color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				</FontString>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="ErrorBorder" setAllPoints="true" file="Interface\Common\WhiteIconFrame" hidden="true">
+					<Color r="1" g="0" b="0" a="0"/>
+				</Texture>
+				<Texture parentKey="SelectedBar" file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar" alpha="0.4" alphaMode="ADD" hidden="true"/>
+			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="4">
+				<Texture parentKey="ErrorOverlay" setAllPoints="true" hidden="true">
+					<Color r="1" g="0" b="0" a="0.3"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button parentKey="AddButton">
+				<Size x="16" y="16"/>
+				<Anchors>
+					<Anchor point="RIGHT" x="0" y="0"/>
+				</Anchors>
+				<NormalTexture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
+					<TexCoords left="0.2236328125" right="0.2509765625" top="0.884765625" bottom="0.939453125"/>
+				</NormalTexture>
+				<Scripts>
+					<OnClick>
+						self:GetParent():Add(self)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button parentKey="RemoveButton">
+				<Size x="16" y="16"/>
+				<Anchors>
+					<Anchor point="RIGHT" x="0" y="0"/>
+				</Anchors>
+				<NormalTexture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
+					<TexCoords left="0.3037109375" right="0.3271484375" top="0.880859375" bottom="0.927734375"/>
+				</NormalTexture>
+				<Scripts>
+					<OnClick>
+						self:GetParent():Remove(self)
+					</OnClick>
+					<OnLeave>
+						local parent = self:GetParent()
+						if not MouseIsOver(parent) then
+							parent.MoveButton:Hide()
+							parent.RemoveButton:Hide()
+						end
+					</OnLeave>
+				</Scripts>
+			</Button>
+
+			<Button parentKey="MoveButton">
+				<Size x="16" y="16"/>
+				<Anchors>
+					<Anchor point="LEFT" x="0" y="0"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<Texture parentKey="Up" file="Interface\ChatFrame\ChatFrameExpandArrow">
+							<Size x="10" y="10"/>
+							<Anchors>
+								<Anchor point="TOP" x="0" y="1"/>
+							</Anchors>
+						</Texture>
+						<Texture parentKey="Down" file="Interface\ChatFrame\ChatFrameExpandArrow">
+							<Size x="10" y="10"/>
+							<Anchors>
+								<Anchor point="BOTTOM" x="0" y="-1"/>
+							</Anchors>
+						</Texture>
+					</Layer>
+				</Layers>
+
+				<!-- <NormalTexture file="Interface\ChatFrame\ChatFrameExpandArrow"/>
+				<DisabledTexture file="Interface\ChatFrame\ChatFrameExpandArrow" desaturated="true"/> -->
+				<Scripts>
+					<OnLoad>
+						self.Up:SetRotation(math.pi * 0.5)
+						self.Down:SetRotation(-math.pi * 0.5)
+					</OnLoad>
+					<OnMouseDown>
+						self:GetParent():StartDrag(self)
+					</OnMouseDown>
+					<OnLeave>
+						local parent = self:GetParent()
+						if not MouseIsOver(parent) then
+							parent.MoveButton:Hide()
+							parent.RemoveButton:Hide()
+						end
+					</OnLeave>
+				</Scripts>
+			</Button>
+		</Frames>
+		<!-- <NormalTexture parentKey="NormalTexture" atlas="voicechat-channellist-row-background" alphaMode="ADD"/> -->
+		<HighlightTexture parentKey="HighlightTexture" atlas="voicechat-channellist-row-highlight" alphaMode="ADD"/>
+		<!-- <HighlightTexture file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar-Blue" alphaMode="ADD"/> -->
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnClick method="OnClick"/>
+			<OnEnter method="OnEnter"/>
+			<OnLeave method="OnLeave"/>
+		</Scripts>
+	</Button>
+
+    <Frame parentKey="Profiles" mixin="BtWLoadoutsProfilesMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_PROFILES" type="global"/>
         </KeyValues>

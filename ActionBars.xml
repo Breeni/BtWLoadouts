@@ -2,9 +2,83 @@
 ..\FrameXML\UI.xsd">
 	<Script file="ActionBars.lua"/>
 
-    <Frame parentKey="ActionBars" mixin="BtWLoadoutsActionBarsMixin" inherits="BtWLoadoutsTabFrame">
+    <Button name="BtWLoadoutsActionButtonTemplate" parentArray="Slots" mixin="BtWLoadoutsActionButtonMixin" virtual="true">
+		<Size x="33" y="33"/>
+    	<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Icon"/>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent" hidden="true">
+					<Size x="32" y="32"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ErrorBorder" file="Interface\Common\WhiteIconFrame" hidden="true">
+					<Size x="37" y="37"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+					<Color r="1" g="0" b="0" a="1"/>
+				</Texture>
+				<FontString parentKey="Name" inherits="GameFontHighlightSmallOutline">
+					<Size x="32" y="10"/>
+					<Anchors>
+						<Anchor point="BOTTOM" x="0" y="2"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="4">
+				<Texture parentKey="ErrorOverlay" setAllPoints="true" hidden="true">
+					<Color r="1" g="0" b="0" a="0.3"/>
+				</Texture>
+			</Layer>
+		</Layers>
+        <Scripts>
+            <OnClick method="OnClick"/>
+            <OnReceiveDrag method="OnReceiveDrag"/>
+            <OnEnter method="OnEnter"/>
+            <OnLeave method="OnLeave"/>
+        </Scripts>
+		<NormalTexture parentKey="NormalTexture" file="Interface\Buttons\UI-Quickslot2">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="-13" y="13"/>
+				<Anchor point="BOTTOMRIGHT" x="13" y="-13"/>
+			</Anchors>
+		</NormalTexture>
+		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
+		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
+    </Button>
+    <Button name="BtWLoadoutsIgnoreActionBarTemplate" mixin="BtWLoadoutsIgnoreActionBarMixin" virtual="true">
+		<Size x="33" y="33"/>
+    	<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Arrow" file="Interface\Buttons\jumpuparrow">
+					<Size x="33" y="20"/>
+					<Anchors>
+						<Anchor point="CENTER" x="-10" y="0"/>
+					</Anchors>
+    			</Texture>
+			</Layer>
+		</Layers>
+        <Scripts>
+			<OnLoad>
+				self.Arrow:SetRotation(math.pi/2)
+			</OnLoad>
+            <OnClick method="OnClick"/>
+        </Scripts>
+		<NormalTexture parentKey="NormalTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
+			<Anchors>
+				<Anchor point="TOPLEFT" x="3" y="-3"/>
+				<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
+			</Anchors>
+		</NormalTexture>
+    </Button>
+
+    <Frame parentKey="ActionBars" mixin="BtWLoadoutsActionBarsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
-            <KeyValue key="name" value="BTWLOADOUTS_ACTION_BARSz`" type="global"/>
+            <KeyValue key="name" value="BTWLOADOUTS_ACTION_BARS" type="global"/>
         </KeyValues>
 		<Layers>
 			<Layer level="ARTWORK">

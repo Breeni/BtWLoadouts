@@ -2,7 +2,7 @@
 ..\FrameXML\UI.xsd">
 	<Script file="Talents.lua"/>
     
-    <Frame parentKey="Talents" mixin="BtWLoadoutsTalentsMixin" inherits="BtWLoadoutsTabFrame">
+    <Frame parentKey="Talents" mixin="BtWLoadoutsTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_TALENTS" type="global"/>
         </KeyValues>

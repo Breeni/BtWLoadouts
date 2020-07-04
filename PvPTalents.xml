@@ -2,7 +2,7 @@
 ..\FrameXML\UI.xsd">
 	<Script file="PvPTalents.lua"/>
 
-    <Frame parentKey="PvPTalents" mixin="BtWLoadoutsPvPTalentsMixin" inherits="BtWLoadoutsTabFrame">
+    <Frame parentKey="PvPTalents" mixin="BtWLoadoutsPvPTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_PVP_TALENTS" type="global"/>
         </KeyValues>

@@ -598,6 +598,175 @@ Internal.GetActionBarSets = GetActionBarSets
 Internal.CombineActionBarSets = CombineActionBarSets
 Internal.DeleteActionBarSet = DeleteActionBarSet
 
+
+
+BtWLoadoutsActionButtonMixin = {}
+function BtWLoadoutsActionButtonMixin:OnClick()
+	local cursorType = GetCursorInfo()
+	if cursorType then
+		self:SetActionToCursor(GetCursorInfo())
+	elseif IsModifiedClick("SHIFT") then
+		local set = self:GetParent().set;
+		self:SetIgnored(not set.ignored[self:GetID()]);
+	else
+		self:SetAction(nil);
+	end
+end
+function BtWLoadoutsActionButtonMixin:OnReceiveDrag()
+	local cursorType = GetCursorInfo()
+	if self:GetParent().set and cursorType then
+		self:SetActionToCursor(GetCursorInfo())
+	end
+end
+function BtWLoadoutsActionButtonMixin:SetActionToCursor(...)
+	local cursorType = ...
+	if cursorType then
+		if cursorType == "battlepet" then
+			local id = select(2, ...)
+			self:SetAction("summonpet", id)
+		elseif cursorType == "mount" then
+			local id = select(2, ...)
+			self:SetAction("summonmount", id)
+		elseif cursorType == "petaction" then
+			local id = select(2, ...)
+			self:SetAction("spell", id, "pet")
+		elseif cursorType == "spell" then
+			local subType, id = select(3, ...)
+			id = FindBaseSpellByID(id) or id
+			self:SetAction("spell", id, subType)
+		elseif cursorType == "equipmentset" then
+			local id = select(2, ...)
+			local icon, name
+			do
+				local id = C_EquipmentSet.GetEquipmentSetID(id)
+				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
+			end
+			self:SetAction("equipmentset", id, nil, icon, name)
+		elseif cursorType == "macro" then
+			local id = select(2, ...)
+			local macroText = GetMacroBody(id)
+			local name, icon = GetMacroInfo(id)
+			self:SetAction("macro", id, nil, icon, name, macroText)
+		elseif cursorType == "flyout" then
+			local id, icon = select(2, ...)
+			self:SetAction("flyout", id, nil, icon)
+		elseif cursorType == "item" then
+			self:SetAction(cursorType, (select(2, ...)))
+		-- else -- Anything else isnt supported
+		end
+		ClearCursor()
+	end
+end
+function BtWLoadoutsActionButtonMixin:SetAction(actionType, ...)
+	local set = self:GetParent().set;
+	if actionType == nil then -- Clearing slot
+		set.actions[self:GetID()] = nil;
+
+		self:Update();
+		return true;
+	else
+		local tbl = set.actions[self:GetID()] or {}
+
+		tbl.type, tbl.id, tbl.subType, tbl.icon, tbl.name, tbl.macroText = actionType, ...
+
+		set.actions[self:GetID()] = tbl;
+		self:Update()
+	end
+end
+function BtWLoadoutsActionButtonMixin:SetIgnored(ignored)
+	local set = self:GetParent().set;
+	set.ignored[self:GetID()] = ignored and true or nil;
+	self:Update();
+end
+function BtWLoadoutsActionButtonMixin:Update()
+	local set = self:GetParent().set;
+	local slot = self:GetID();
+	local errors = nil
+	local ignored = set.ignored[slot];
+	local tbl = set.actions[slot];
+	if tbl and tbl.type ~= nil then
+		local success, msg = Internal.PickupActionTable(tbl, true)
+		if not success then
+			errors = msg
+		end
+
+		local icon, name = tbl.icon, tbl.name
+		if tbl.type == "item" then
+			icon = select(5, GetItemInfoInstant(tbl.id))
+		elseif tbl.type == "spell" then
+			icon = select(3, GetSpellInfo(tbl.id))
+		elseif tbl.type == "summonmount" then
+			if tbl.id == 0xFFFFFFF then
+				icon = 413588
+			else
+				icon = select(3, C_MountJournal.GetMountInfoByID(tbl.id))
+			end
+		elseif tbl.type == "summonpet" then
+			icon = select(9, C_PetJournal.GetPetInfoByPetID(tbl.id))
+		elseif tbl.type == "macro" then
+			local index = Internal.GetMacroByText(tbl.macroText)
+			if index then
+				name, icon = GetMacroInfo(index)
+			else
+				errors = L["Macro missing"]
+			end
+		elseif tbl.type == "equipmentset" then
+			local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
+			if id then
+				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
+			else
+				errors = L["Equipment set missing"]
+			end
+		else
+			-- print(tbl.type, tbl.id)
+		end
+
+		if not icon then
+			icon = 134400
+		end
+		
+		self.Name:SetText(name)
+		self.Icon:SetTexture(icon)
+	else
+		self.Name:SetText(nil)
+		self.Icon:SetTexture(nil)
+	end
+
+	self.errors = errors -- For tooltip display
+	self.ErrorBorder:SetShown(errors ~= nil)
+	self.ErrorOverlay:SetShown(errors ~= nil)
+	self.ignoreTexture:SetShown(ignored);
+end
+function BtWLoadoutsActionButtonMixin:OnEnter()
+	if self.errors then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(string.format(L["Slot %d"], self:GetID()), 1, 1, 1)
+		GameTooltip:AddLine(format("\n|cffff0000%s|r", self.errors))
+		GameTooltip:Show()
+	end
+end
+function BtWLoadoutsActionButtonMixin:OnLeave()
+	gameTooltipErrorLink = nil
+	gameTooltipErrorText = nil
+	GameTooltip:Hide();
+end
+
+BtWLoadoutsIgnoreActionBarMixin = {}
+function BtWLoadoutsIgnoreActionBarMixin:OnClick()
+	local set = self:GetParent().set;
+	local setIgnored = true
+	for id=self.startID,self.endID do
+		if set.ignored[id] then
+			setIgnored = false
+			break
+		end
+	end
+	for id=self.startID,self.endID do
+		set.ignored[id] = setIgnored
+		self:GetParent().Slots[id]:Update()
+	end
+end
+
 BtWLoadoutsActionBarsMixin = {}
 
 function Internal.ActionBarsTabUpdate(self)

@@ -407,400 +407,9 @@
 		</Frames>
 	</Frame>
 
-	<Button name="BtWLoadoutsAzeriteMilestoneSlotTemplate" mixin="BtWLoadoutsAzeriteMilestoneSlotMixin" virtual="true">
-		<Scripts>
-			<OnLoad method="OnLoad"/>
-			<OnEnter method="OnEnter"/>
-			<OnLeave method="OnLeave"/>
-			<OnClick method="OnClick"/>
-		</Scripts>
-	</Button>
-	<Button name="BtWLoadoutsAzeriteMilestoneMajorSlotTemplate" inherits="BtWLoadoutsAzeriteMilestoneSlotTemplate" virtual="true">
-		<Size x="110" y="82"/>>
-		<Layers>
-			<Layer level="BACKGROUND" textureSubLevel="-1">
-				<Texture parentKey="GlowRings" atlas="heartofazeroth-slot-major-glowrings" alphaMode="ADD" alpha="0.6">
-					<Size x="107" y="107"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="BACKGROUND">
-				<Texture parentKey="Glow" atlas="heartofazeroth-slot-major-glow" useAtlasSize="true" alphaMode="ADD" alpha="0.8">
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="BACKGROUND" textureSubLevel="1">
-				<Texture parentKey="Shadow" atlas="heartofazeroth-slot-major-shadow" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="BORDER">
-				<Texture parentKey="Icon">
-					<Size x="64" y="64"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="EmptyIcon" atlas="heartofazeroth-slot-major-background" setAllPoints="true"/>
-				<MaskTexture parentKey="CircleMask" file="Interface\CharacterFrame\TempPortraitAlphaMask" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" x="2" y="-2"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="-2" y="2"/>
-					</Anchors>
-					<MaskedTextures>
-						<MaskedTexture childKey="Icon"/>
-					</MaskedTextures>
-				</MaskTexture>
-			</Layer>
-			<Layer level="ARTWORK">
-				<Texture parentKey="GlassCover" atlas="heartofazeroth-slot-major-glass" setAllPoints="true" alphaMode="ADD"/>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="1">
-				<Texture parentKey="DragHighlight" atlas="common-roundhighlight" alphaMode="ADD" hidden="true">
-					<Size x="59" y="59"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="2">
-				<Texture parentKey="Ring" atlas="heartofazeroth-slot-major-ring" setAllPoints="true"/>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="3">
-				<Texture parentKey="HighlightRing" atlas="heartofazeroth-slot-major-ring" setAllPoints="true" hidden="true" alpha="0.2" alphaMode="ADD"/>
-				<Texture parentKey="EmptyGlow" atlas="heartofazeroth-slot-yellowglow" useAtlasSize="true" alphaMode="ADD">
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-					<Animations>
-						<AnimationGroup parentKey="Anim" looping="REPEAT">
-							<Alpha fromAlpha="0" toAlpha="0.8" duration="0.8" smoothing="IN_OUT" order="1"/>
-							<Alpha fromAlpha="0.8" toAlpha="0" duration="0.8" smoothing="IN_OUT" order="2"/>
-						</AnimationGroup>
-					</Animations>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Frames>
-			<ModelScene parentKey="BlueGemModelScene" drawLayer="OVERLAY" inherits="NonInteractableModelSceneMixinTemplate" hidden="true" alpha="0.75">
-				<Size x="400" y="400"/>
-				<Anchors>
-					<Anchor point="CENTER" relativePoint="TOP" x="3" y="-5"/>
-				</Anchors>
-			</ModelScene>
-			<ModelScene parentKey="PurpleGemModelScene" drawLayer="OVERLAY" inherits="NonInteractableModelSceneMixinTemplate" hidden="true" alpha="0.75">
-				<Size x="400" y="400"/>
-				<Anchors>
-					<Anchor point="CENTER" relativePoint="BOTTOM" x="3" y="11"/>
-				</Anchors>
-			</ModelScene>
-		</Frames>
-	</Button>
-	<Button name="BtWLoadoutsAzeriteMilestoneMinorSlotTemplate" inherits="BtWLoadoutsAzeriteMilestoneSlotTemplate" virtual="true">
-		<Size x="66" y="66"/>
-		<Layers>
-			<Layer level="BORDER">
-				<Texture parentKey="Icon">
-					<Size x="58" y="58"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="EmptyIcon" atlas="heartofazeroth-slot-minor-background" setAllPoints="true"/>
-				<MaskTexture parentKey="CircleMask" file="Interface\CharacterFrame\TempPortraitAlphaMask" hWrapMode="CLAMPTOBLACKADDITIVE" vWrapMode="CLAMPTOBLACKADDITIVE">
-					<Anchors>
-						<Anchor point="TOPLEFT" relativeKey="$parent.Icon" x="2" y="-2"/>
-						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Icon" x="-2" y="2"/>
-					</Anchors>
-					<MaskedTextures>
-						<MaskedTexture childKey="Icon"/>
-					</MaskedTextures>
-				</MaskTexture>
-			</Layer>
-			<Layer level="ARTWORK">
-				<Texture parentKey="GlassCover" atlas="heartofazeroth-slot-minor-glass" setAllPoints="true" alphaMode="ADD"/>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="1">
-				<Texture parentKey="Ring" atlas="heartofazeroth-slot-minor-ring" setAllPoints="true"/>
-			</Layer>
-			<Layer level="ARTWORK" textureSubLevel="2">
-				<Texture parentKey="HighlightRing" atlas="heartofazeroth-slot-minor-ring" alpha="0.2" setAllPoints="true" hidden="true" alphaMode="ADD"/>
-				<Texture parentKey="EmptyGlow" atlas="heartofazeroth-slot-yellowglow" alphaMode="ADD">
-					<Size x="76" y="76"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-					<Animations>
-						<AnimationGroup parentKey="Anim" looping="REPEAT">
-							<Alpha fromAlpha="0" toAlpha="0.8" duration="0.8" smoothing="IN_OUT" order="1"/>
-							<Alpha fromAlpha="0.8" toAlpha="0" duration="0.8" smoothing="IN_OUT" order="2"/>
-						</AnimationGroup>
-					</Animations>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Frames>
-			<ModelScene parentKey="PurpleGemModelScene" drawLayer="OVERLAY" inherits="NonInteractableModelSceneMixinTemplate" hidden="true" alpha="0.75">
-				<Size x="400" y="400"/>
-				<Anchors>
-					<Anchor point="CENTER" relativePoint="BOTTOM" x="3" y="11"/>
-				</Anchors>
-			</ModelScene>
-		</Frames>
-	</Button>
-
-	<Button name="BtWLoadoutsAzeriteEssenceButtonTemplate" virtual="true" mixin="BtWLoadoutsAzeriteEssenceButtonMixin" registerForClicks="LeftButtonUp, RightButtonUp">
-		<Size x="178" y="41"/>
-		<Layers>
-			<Layer level="OVERLAY" textureSubLevel="-1">
-				<Texture parentKey="PendingGlow" atlas="heartofazeroth-list-item-selected" alphaMode="ADD" hidden="true" setAllPoints="true"/>
-			</Layer>
-			<Layer level="OVERLAY">
-				<Texture parentKey="Icon">
-					<Size x="32" y="32"/>
-					<Anchors>
-						<Anchor point="LEFT" x="5" y="1"/>
-					</Anchors>
-				</Texture>
-				<FontString parentKey="Name" inherits="GameFontNormal" justifyH="LEFT" maxLines="2">
-					<Anchors>
-						<Anchor point="LEFT"  relativeKey="$parent.Icon" relativePoint="RIGHT" x="8" y="0"/>
-						<Anchor point="RIGHT" x="-10"/>
-					</Anchors>
-				</FontString>
-			</Layer>
-		</Layers>
-		<Frames>
-			<Frame parentKey="ActivatedMarkerMain" parentArray="ActivatedMarkers">
-				<Size x="14" y="17"/>
-				<Anchors>
-					<Anchor point="RIGHT" x="4"/>
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture atlas="heartofazeroth-list-selected-major" setAllPoints="true"/>
-					</Layer>
-				</Layers>
-			</Frame>
-			<Frame parentKey="ActivatedMarkerPassive" parentArray="ActivatedMarkers">
-				<Size x="12" y="15"/>
-				<Anchors>
-					<Anchor point="RIGHT" x="4"/>
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture atlas="heartofazeroth-list-selected-minor" setAllPoints="true"/>
-					</Layer>
-				</Layers>
-			</Frame>
-		</Frames>
-		<Scripts>
-			<OnClick method="OnClick"/>
-			<OnEnter method="OnEnter"/>
-			<OnLeave function="GameTooltip_Hide"/>
-		</Scripts>
-		<NormalTexture parentKey="Background" atlas="heartofazeroth-list-item"/>
-		<HighlightTexture atlas="heartofazeroth-list-item-highlight" alphaMode="ADD"/>
-	</Button>
-
-	<Button name="BtWLoadoutsEquipmentFlyoutPopoutButtonTemplate" hidden="true" virtual="true">
-		<Size>
-			<AbsDimension x="16" y="32"/>
-		</Size>
-		<Anchors>
-			<Anchor point="LEFT" relativePoint="RIGHT"/>
-		</Anchors>
-		<Scripts>
-			<OnClick function="EquipmentFlyoutPopoutButton_OnClick"/>
-		</Scripts>
-		<NormalTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
-		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
-	</Button>
-    <ItemButton name="BtWLoadoutsItemSlotButtonTemplate" parentArray="Slots" mixin="BtWLoadoutsItemSlotButtonMixin" virtual="true">
-    	<Layers>
-			<Layer level="OVERLAY">
-				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
-					<Size x="40" y="40"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="ErrorBorder" file="Interface\Common\WhiteIconFrame" hidden="true">
-					<Size x="37" y="37"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-					<Color r="1" g="0" b="0" a="1"/>
-				</Texture>
-			</Layer>
-			<Layer level="OVERLAY" textureSubLevel="4">
-				<Texture parentKey="ErrorOverlay" setAllPoints="true" hidden="true">
-					<Color r="1" g="0" b="0" a="0.3"/>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Frames>
-			<Button name="$parentPopoutButton" parentKey="popoutButton" inherits="BtWLoadoutsEquipmentFlyoutPopoutButtonTemplate"/>
-		</Frames>
-        <Scripts>
-            <OnLoad method="OnLoad"/>
-            <OnClick method="OnClick"/>
-            <OnReceiveDrag method="OnReceiveDrag"/>
-            <OnEvent method="OnEvent"/>
-            <OnEnter method="OnEnter"/>
-            <OnLeave method="OnLeave"/>
-            <OnUpdate method="OnUpdate"/>
-            <!-- <OnEvent>
-				BtWLoadoutsItemSlotButton_OnEvent(self, event, ...);
-			</OnEvent>
-			<OnUpdate>
-				CursorOnUpdate(self);
-				if ( GameTooltip:IsOwned(self) ) then
-					BtWLoadoutsItemSlotButton_OnEnter(self);
-				end
-			</OnUpdate>
-            <OnEnter>
-				BtWLoadoutsItemSlotButton_OnEnter(self, motion);
-			</OnEnter>
-            <OnLeave>
-				GameTooltip:Hide();
-				ResetCursor();
-			</OnLeave> -->
-        </Scripts>
-		<NormalTexture file="Interface\Buttons\UI-Quickslot2">
-			<Size>
-				<AbsDimension x="64" y="64"/>
-			</Size>
-			<Anchors>
-				<Anchor point="CENTER">
-					<Offset>
-						<AbsDimension x="0" y="-1"/>
-					</Offset>
-				</Anchor>
-			</Anchors>
-		</NormalTexture>
-    </ItemButton>
-	<ItemButton name="BtWLoadoutsItemSlotButtonLeftTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
-		<Layers>
-			<Layer level="BACKGROUND" textureSubLevel="-1">
-				<Texture name="$parentFrame" inherits="Char-LeftSlot">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="-4"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
-	</ItemButton>
-	<ItemButton name="BtWLoadoutsItemSlotButtonRightTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
-		<Layers>
-			<Layer level="BACKGROUND" textureSubLevel="-1">
-				<Texture name="$parentFrame" inherits="Char-RightSlot">
-					<Anchors>
-						<Anchor point="TOPRIGHT" x="4"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
-	</ItemButton>
-	<ItemButton name="BtWLoadoutsItemSlotButtonBottomTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
-		<KeyValues>
-			<KeyValue type="boolean" key="verticalFlyout" value="true"/>
-		</KeyValues>
-		<Layers>
-			<Layer level="BACKGROUND" textureSubLevel="-1">
-				<Texture name="$parentFrame" inherits="Char-BottomSlot">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="-4" y="8"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
-	</ItemButton>
-	
-    <Button name="BtWLoadoutsActionButtonTemplate" parentArray="Slots" mixin="BtWLoadoutsActionButtonMixin" virtual="true">
-		<Size x="33" y="33"/>
-    	<Layers>
-			<Layer level="BACKGROUND">
-				<Texture parentKey="Icon"/>
-			</Layer>
-			<Layer level="OVERLAY">
-				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent" hidden="true">
-					<Size x="32" y="32"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="ErrorBorder" file="Interface\Common\WhiteIconFrame" hidden="true">
-					<Size x="37" y="37"/>
-					<Anchors>
-						<Anchor point="CENTER"/>
-					</Anchors>
-					<Color r="1" g="0" b="0" a="1"/>
-				</Texture>
-				<FontString parentKey="Name" inherits="GameFontHighlightSmallOutline">
-					<Size x="32" y="10"/>
-					<Anchors>
-						<Anchor point="BOTTOM" x="0" y="2"/>
-					</Anchors>
-				</FontString>
-			</Layer>
-			<Layer level="OVERLAY" textureSubLevel="4">
-				<Texture parentKey="ErrorOverlay" setAllPoints="true" hidden="true">
-					<Color r="1" g="0" b="0" a="0.3"/>
-				</Texture>
-			</Layer>
-		</Layers>
-        <Scripts>
-            <OnClick method="OnClick"/>
-            <OnReceiveDrag method="OnReceiveDrag"/>
-            <OnEnter method="OnEnter"/>
-            <OnLeave method="OnLeave"/>
-        </Scripts>
-		<NormalTexture parentKey="NormalTexture" file="Interface\Buttons\UI-Quickslot2">
-			<Anchors>
-				<Anchor point="TOPLEFT" x="-13" y="13"/>
-				<Anchor point="BOTTOMRIGHT" x="13" y="-13"/>
-			</Anchors>
-		</NormalTexture>
-		<PushedTexture file="Interface\Buttons\UI-Quickslot-Depress"/>
-		<HighlightTexture alphaMode="ADD" file="Interface\Buttons\ButtonHilight-Square"/>
-    </Button>
-    <Button name="BtWLoadoutsIgnoreActionBarTemplate" mixin="BtWLoadoutsIgnoreActionBarMixin" virtual="true">
-		<Size x="33" y="33"/>
-    	<Layers>
-			<Layer level="BACKGROUND">
-				<Texture parentKey="Arrow" file="Interface\Buttons\jumpuparrow">
-					<Size x="33" y="20"/>
-					<Anchors>
-						<Anchor point="CENTER" x="-10" y="0"/>
-					</Anchors>
-    			</Texture>
-			</Layer>
-		</Layers>
-        <Scripts>
-			<OnLoad>
-				self.Arrow:SetRotation(math.pi/2)
-			</OnLoad>
-            <OnClick method="OnClick"/>
-        </Scripts>
-		<NormalTexture parentKey="NormalTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
-			<Anchors>
-				<Anchor point="TOPLEFT" x="3" y="-3"/>
-				<Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
-			</Anchors>
-		</NormalTexture>
-    </Button>
-
-	<Frame name="BtWLoadoutsScrollListItemButtons" inherits="UIDropDownCustomMenuEntryTemplate" virtual="true">
-
+	<Frame name="BtWLoadoutsSidebarFilterEntryTemplate" inherits="UIDropDownCustomMenuEntryTemplate" virtual="true">
 	</Frame>
-	<Button name="BtWLoadoutsScrollListItem" parentArray="ScrollButtons" virtual="true">
+	<Button name="BtWLoadoutsSidebarScrollItemTemplate" parentArray="ScrollButtons" virtual="true">
 		<Size x="223" y="21"/>
 		<Layers>
 			<Layer level="ARTWORK">
@@ -849,133 +458,79 @@
 			</OnDragStart>
 		</Scripts>
 	</Button>
-
-	<Button name="BtWLoadoutsSetsScrollListItemTemplate" mixin="BtWLoadoutsSetsScrollListItemMixin" parentArray="ScrollButtons" virtual="true">
-		<Size x="540" y="21"/>
-		<Layers>
-			<Layer level="ARTWORK">
-				<Texture parentKey="ExpandedIcon" inherits="Char-Stat-Minus">
-					<Anchors>
-						<Anchor point="LEFT" x="4" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="CollapsedIcon" inherits="Char-Stat-Plus">
-					<Anchors>
-						<Anchor point="LEFT" x="4" y="0"/>
-					</Anchors>
-				</Texture>
-				<FontString parentKey="Name" inherits="GameFontNormalLeft">
-					<Size x="145" y="22"/>
-					<Anchors>
-						<Anchor point="LEFT" x="15" y="0"/>
-						<Anchor point="RIGHT" x="-5" y="0"/>
-					</Anchors>
-					<Color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				</FontString>
-			</Layer>
-			<Layer level="OVERLAY">
-				<Texture parentKey="ErrorBorder" setAllPoints="true" file="Interface\Common\WhiteIconFrame" hidden="true">
-					<Color r="1" g="0" b="0" a="0"/>
-				</Texture>
-				<Texture parentKey="SelectedBar" file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar" alpha="0.4" alphaMode="ADD" hidden="true"/>
-			</Layer>
-			<Layer level="OVERLAY" textureSubLevel="4">
-				<Texture parentKey="ErrorOverlay" setAllPoints="true" hidden="true">
-					<Color r="1" g="0" b="0" a="0.3"/>
-				</Texture>
-			</Layer>
-		</Layers>
+	<Frame name="BtWLoadoutsSidebarTemplate" mixin="BtWLoadoutsSidebarMixin" virtual="true">
 		<Frames>
-			<Button parentKey="AddButton">
-				<Size x="16" y="16"/>
+			<EditBox parentKey="SearchBox" inherits="SearchBoxTemplate" letters="40">
+				<Size x="115" y="20"/>
 				<Anchors>
-					<Anchor point="RIGHT" x="0" y="0"/>
+					<Anchor point="TOPLEFT" x="15" y="-9"/>
 				</Anchors>
-				<NormalTexture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
-					<TexCoords left="0.2236328125" right="0.2509765625" top="0.884765625" bottom="0.939453125"/>
-				</NormalTexture>
 				<Scripts>
-					<OnClick>
-						self:GetParent():Add(self)
-					</OnClick>
+					<OnTextChanged>
+						SearchBoxTemplate_OnTextChanged(self);
+						self:GetParent():OnSearchChanged(self)
+					</OnTextChanged>
 				</Scripts>
-			</Button>
-			<Button parentKey="RemoveButton">
-				<Size x="16" y="16"/>
+			</EditBox>
+			<DropDownToggleButton parentKey="FilterButton" inherits="UIMenuButtonStretchTemplate" text="FILTER">
+				<Size x="93" y="22"/>
 				<Anchors>
-					<Anchor point="RIGHT" x="0" y="0"/>
-				</Anchors>
-				<NormalTexture parentKey="Icon" file="Interface\GUILDFRAME\Communities">
-					<TexCoords left="0.3037109375" right="0.3271484375" top="0.880859375" bottom="0.927734375"/>
-				</NormalTexture>
-				<Scripts>
-					<OnClick>
-						self:GetParent():Remove(self)
-					</OnClick>
-					<OnLeave>
-						local parent = self:GetParent()
-						if not MouseIsOver(parent) then
-							parent.MoveButton:Hide()
-							parent.RemoveButton:Hide()
-						end
-					</OnLeave>
-				</Scripts>
-			</Button>
-
-			<Button parentKey="MoveButton">
-				<Size x="16" y="16"/>
-				<Anchors>
-					<Anchor point="LEFT" x="0" y="0"/>
+					<Anchor point="TOPRIGHT" x="-5" y="-9"/>
 				</Anchors>
 				<Layers>
 					<Layer level="ARTWORK">
-						<Texture parentKey="Up" file="Interface\ChatFrame\ChatFrameExpandArrow">
-							<Size x="10" y="10"/>
+						<Texture parentKey="Icon" file="Interface\ChatFrame\ChatFrameExpandArrow">
+							<Size x="10" y="12"/>
 							<Anchors>
-								<Anchor point="TOP" x="0" y="1"/>
-							</Anchors>
-						</Texture>
-						<Texture parentKey="Down" file="Interface\ChatFrame\ChatFrameExpandArrow">
-							<Size x="10" y="10"/>
-							<Anchors>
-								<Anchor point="BOTTOM" x="0" y="-1"/>
+								<Anchor point="RIGHT" relativeKey="$parent.Right" relativePoint="RIGHT" x="-5"/>
 							</Anchors>
 						</Texture>
 					</Layer>
 				</Layers>
-
-				<!-- <NormalTexture file="Interface\ChatFrame\ChatFrameExpandArrow"/>
-				<DisabledTexture file="Interface\ChatFrame\ChatFrameExpandArrow" desaturated="true"/> -->
 				<Scripts>
-					<OnLoad>
-						self.Up:SetRotation(math.pi * 0.5)
-						self.Down:SetRotation(-math.pi * 0.5)
-					</OnLoad>
 					<OnMouseDown>
-						self:GetParent():StartDrag(self)
+						UIMenuButtonStretchMixin.OnMouseDown(self, button);
+						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
+						ToggleDropDownMenu(1, nil, self:GetParent().FilterDropDown, self, 74, 15);
 					</OnMouseDown>
-					<OnLeave>
-						local parent = self:GetParent()
-						if not MouseIsOver(parent) then
-							parent.MoveButton:Hide()
-							parent.RemoveButton:Hide()
-						end
-					</OnLeave>
 				</Scripts>
-			</Button>
+			</DropDownToggleButton>
+			<Frame parentKey="FilterDropDown" inherits="UIDropDownMenuTemplate"/>
+			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
+				<Size x="225" y="0"/>
+				<Anchors>
+					<Anchor point="TOPLEFT" x="6" y="-39" />
+					<Anchor point="BOTTOM" x="0" y="5"/>
+				</Anchors>
+				<Frames>
+					<!-- <Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-20" y="-12"/>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-20" y="13"/>
+						</Anchors>
+					</Slider> -->
+					<Slider parentKey="ScrollBar" inherits="HybridScrollBarTrimTemplate">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="4" y="20"/>
+							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="4" y="11"/>
+						</Anchors>
+						<Scripts>
+							<OnLoad>
+								self.trackBG:Show();
+								self.trackBG:SetVertexColor(0, 0, 0, 0.75);
+							</OnLoad>
+						</Scripts>
+					</Slider>
+				</Frames>
+			</ScrollFrame>
 		</Frames>
-		<!-- <NormalTexture parentKey="NormalTexture" atlas="voicechat-channellist-row-background" alphaMode="ADD"/> -->
-		<HighlightTexture parentKey="HighlightTexture" atlas="voicechat-channellist-row-highlight" alphaMode="ADD"/>
-		<!-- <HighlightTexture file="Interface\FriendsFrame\UI-FriendsFrame-HighlightBar-Blue" alphaMode="ADD"/> -->
 		<Scripts>
 			<OnLoad method="OnLoad"/>
-			<OnClick method="OnClick"/>
-			<OnEnter method="OnEnter"/>
-			<OnLeave method="OnLeave"/>
+			<OnShow method="OnShow"/>
 		</Scripts>
-	</Button>
+	</Frame>
 
-    <Button name="BtWLoadoutsFrameTabTemplate" parentArray="Tabs" motionScriptsWhileDisabled="true" virtual="true">
+    <Button name="BtWLoadoutsTabTemplate" parentArray="Tabs" motionScriptsWhileDisabled="true" virtual="true">
         <Size>
             <AbsDimension x="10" y="32"/>
         </Size>
@@ -1099,79 +654,7 @@
 			</Anchors>
 		</HighlightTexture>
     </Button>
-	<Frame name="BtWLoadoutsSidebarTemplate" mixin="BtWLoadoutsSidebarMixin" virtual="true">
-		<Frames>
-			<EditBox parentKey="SearchBox" inherits="SearchBoxTemplate" letters="40">
-				<Size x="115" y="20"/>
-				<Anchors>
-					<Anchor point="TOPLEFT" x="15" y="-9"/>
-				</Anchors>
-				<Scripts>
-					<OnTextChanged>
-						SearchBoxTemplate_OnTextChanged(self);
-						self:GetParent():OnSearchChanged(self)
-					</OnTextChanged>
-				</Scripts>
-			</EditBox>
-			<DropDownToggleButton parentKey="FilterButton" inherits="UIMenuButtonStretchTemplate" text="FILTER">
-				<Size x="93" y="22"/>
-				<Anchors>
-					<Anchor point="TOPRIGHT" x="-5" y="-9"/>
-				</Anchors>
-				<Layers>
-					<Layer level="ARTWORK">
-						<Texture parentKey="Icon" file="Interface\ChatFrame\ChatFrameExpandArrow">
-							<Size x="10" y="12"/>
-							<Anchors>
-								<Anchor point="RIGHT" relativeKey="$parent.Right" relativePoint="RIGHT" x="-5"/>
-							</Anchors>
-						</Texture>
-					</Layer>
-				</Layers>
-				<Scripts>
-					<OnMouseDown>
-						UIMenuButtonStretchMixin.OnMouseDown(self, button);
-						PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON);
-						ToggleDropDownMenu(1, nil, self:GetParent().FilterDropDown, self, 74, 15);
-					</OnMouseDown>
-				</Scripts>
-			</DropDownToggleButton>
-			<Frame parentKey="FilterDropDown" inherits="UIDropDownMenuTemplate"/>
-			<ScrollFrame parentKey="Scroll" inherits="HybridScrollFrameTemplate">
-				<Size x="225" y="0"/>
-				<Anchors>
-					<Anchor point="TOPLEFT" x="6" y="-39" />
-					<Anchor point="BOTTOM" x="0" y="5"/>
-				</Anchors>
-				<Frames>
-					<!-- <Slider parentKey="ScrollBar" inherits="HybridScrollBarTemplate">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-20" y="-12"/>
-							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-20" y="13"/>
-						</Anchors>
-					</Slider> -->
-					<Slider parentKey="ScrollBar" inherits="HybridScrollBarTrimTemplate">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="4" y="20"/>
-							<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="4" y="11"/>
-						</Anchors>
-						<Scripts>
-							<OnLoad>
-								self.trackBG:Show();
-								self.trackBG:SetVertexColor(0, 0, 0, 0.75);
-							</OnLoad>
-						</Scripts>
-					</Slider>
-				</Frames>
-			</ScrollFrame>
-		</Frames>
-		<Scripts>
-			<OnLoad method="OnLoad"/>
-			<OnShow method="OnShow"/>
-		</Scripts>
-	</Frame>
-
-	<Frame name="BtWLoadoutsTabFrame" parent="BtWLoadoutsFrame" virtual="true" parentArray="TabFrames" hidden="true">
+	<Frame name="BtWLoadoutsTabFrameTemplate" parent="BtWLoadoutsFrame" parentArray="TabFrames" hidden="true" virtual="true">
         <Anchors>
             <Anchor point="TOPLEFT" x="270" y="-30"/>
             <Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
@@ -1319,17 +802,6 @@
 			<OnHide method="OnHide"/>
 		</Scripts>
 	</Frame>
-
-	<Button name="BtWLoadoutsConditionsAffixesDropDownButton" inherits="UIDropDownMenuButtonTemplate" virtual="true">
-		<Size x="100" y="16"/>
-		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture parentKey="Selection" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD" setAllPoints="true" desaturated="true" hidden="true">
-					<Color r="0.65" g="0.80" b="1"/>
-				</Texture>
-			</Layer>
-		</Layers>
-	</Button>
 	
 	<Frame name="BtWLoadoutsLogFrame" mixin="BtWLoadoutsLogFrameMixin" inherits="DefaultPanelTemplate" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
 		<Size x="829" y="448"/>

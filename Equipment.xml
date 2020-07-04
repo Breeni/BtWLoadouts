@@ -2,7 +2,122 @@
 ..\FrameXML\UI.xsd">
 	<Script file="Equipment.lua"/>
 
-    <Frame parentKey="Equipment" mixin="BtWLoadoutsEquipmentMixin" inherits="BtWLoadoutsTabFrame">
+
+	<Button name="BtWLoadoutsEquipmentFlyoutPopoutButtonTemplate" hidden="true" virtual="true">
+		<Size>
+			<AbsDimension x="16" y="32"/>
+		</Size>
+		<Anchors>
+			<Anchor point="LEFT" relativePoint="RIGHT"/>
+		</Anchors>
+		<Scripts>
+			<OnClick function="EquipmentFlyoutPopoutButton_OnClick"/>
+		</Scripts>
+		<NormalTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
+		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
+	</Button>
+    <ItemButton name="BtWLoadoutsItemSlotButtonTemplate" parentArray="Slots" mixin="BtWLoadoutsItemSlotButtonMixin" virtual="true">
+    	<Layers>
+			<Layer level="OVERLAY">
+				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
+					<Size x="40" y="40"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ErrorBorder" file="Interface\Common\WhiteIconFrame" hidden="true">
+					<Size x="37" y="37"/>
+					<Anchors>
+						<Anchor point="CENTER"/>
+					</Anchors>
+					<Color r="1" g="0" b="0" a="1"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY" textureSubLevel="4">
+				<Texture parentKey="ErrorOverlay" setAllPoints="true" hidden="true">
+					<Color r="1" g="0" b="0" a="0.3"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentPopoutButton" parentKey="popoutButton" inherits="BtWLoadoutsEquipmentFlyoutPopoutButtonTemplate"/>
+		</Frames>
+        <Scripts>
+            <OnLoad method="OnLoad"/>
+            <OnClick method="OnClick"/>
+            <OnReceiveDrag method="OnReceiveDrag"/>
+            <OnEvent method="OnEvent"/>
+            <OnEnter method="OnEnter"/>
+            <OnLeave method="OnLeave"/>
+            <OnUpdate method="OnUpdate"/>
+            <!-- <OnEvent>
+				BtWLoadoutsItemSlotButton_OnEvent(self, event, ...);
+			</OnEvent>
+			<OnUpdate>
+				CursorOnUpdate(self);
+				if ( GameTooltip:IsOwned(self) ) then
+					BtWLoadoutsItemSlotButton_OnEnter(self);
+				end
+			</OnUpdate>
+            <OnEnter>
+				BtWLoadoutsItemSlotButton_OnEnter(self, motion);
+			</OnEnter>
+            <OnLeave>
+				GameTooltip:Hide();
+				ResetCursor();
+			</OnLeave> -->
+        </Scripts>
+		<NormalTexture file="Interface\Buttons\UI-Quickslot2">
+			<Size>
+				<AbsDimension x="64" y="64"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="-1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</NormalTexture>
+    </ItemButton>
+	<ItemButton name="BtWLoadoutsItemSlotButtonLeftTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture name="$parentFrame" inherits="Char-LeftSlot">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-4"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ItemButton>
+	<ItemButton name="BtWLoadoutsItemSlotButtonRightTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture name="$parentFrame" inherits="Char-RightSlot">
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="4"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ItemButton>
+	<ItemButton name="BtWLoadoutsItemSlotButtonBottomTemplate" inherits="BtWLoadoutsItemSlotButtonTemplate" virtual="true">
+		<KeyValues>
+			<KeyValue type="boolean" key="verticalFlyout" value="true"/>
+		</KeyValues>
+		<Layers>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture name="$parentFrame" inherits="Char-BottomSlot">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-4" y="8"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</ItemButton>
+    
+    <Frame parentKey="Equipment" mixin="BtWLoadoutsEquipmentMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_EQUIPMENT" type="global"/>
         </KeyValues>
