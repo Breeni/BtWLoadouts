@@ -181,6 +181,116 @@ Internal.ActivateEssenceSet = ActivateEssenceSet
 Internal.IsEssenceSetActive = IsEssenceSetActive
 Internal.CombineEssenceSets = CombineEssenceSets
 
+
+
+BtWLoadoutsAzeriteMilestoneSlotMixin = {};
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnLoad()
+	self.EmptyGlow.Anim:Play();
+end
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnEnter()
+	if self.id then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:SetAzeriteEssence(self.id, 4);
+		GameTooltip_SetBackdropStyle(GameTooltip, GAME_TOOLTIP_BACKDROP_STYLE_AZERITE_ITEM);
+	end
+
+	if self:GetParent().pending then
+		SetCursor("interface/cursor/cast.blp");
+	end
+end
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnLeave()
+	GameTooltip_Hide();
+end
+function BtWLoadoutsAzeriteMilestoneSlotMixin:OnClick()
+	local essences = self:GetParent();
+	local selected = essences.set.essences;
+	local pendingEssenceID = essences.pending;
+	if pendingEssenceID then
+		for milestoneID,essenceID in pairs(selected) do
+			if essenceID == pendingEssenceID then
+				selected[milestoneID] = nil;
+			end
+		end
+
+		selected[self.milestoneID] = pendingEssenceID;
+
+		essences.pending = nil;
+		SetCursor(nil);
+	else
+		selected[self.milestoneID] = nil;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+
+BtWLoadoutsAzeriteEssenceButtonMixin = {};
+function BtWLoadoutsAzeriteEssenceButtonMixin:OnClick()
+	SetCursor("interface/cursor/cast.blp");
+	BtWLoadoutsFrame.Essences.pending = self.id;
+	BtWLoadoutsFrame:Update();
+end
+function BtWLoadoutsAzeriteEssenceButtonMixin:OnEnter()
+	if self.id then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+		GameTooltip:SetAzeriteEssence(self.id, 4);
+	end
+
+	if BtWLoadoutsFrame.Essences.pending then
+		SetCursor("interface/cursor/cast.blp");
+	end
+end
+
+local function RoleDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Essences;
+
+	CloseDropDownMenus();
+	local set = tab.set;
+
+	local temp = tab.temp;
+	-- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
+	-- the temp table instead of copying the talentIDs around
+
+	-- We are going to copy the currently selected talents for the currently selected spec into
+	-- a temporary table incase the user switches specs back
+	local role = set.role;
+	if temp[role] then
+		wipe(temp[role]);
+	else
+		temp[role] = {};
+	end
+	for milestoneID, essenceID in pairs(set.essences) do
+		temp[role][milestoneID] = essenceID;
+	end
+
+	-- Clear the current talents and copy back the previously selected talents if they exist
+	role = arg1;
+	set.role = role;
+	wipe(set.essences);
+	if temp[role] then
+		for milestoneID, essenceID in pairs(temp[role]) do
+			set.essences[milestoneID] = essenceID;
+		end
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function RoleDropDownInit(self, level, menuList)
+	local info = UIDropDownMenu_CreateInfo();
+
+	local set = self:GetParent().set;
+	local selected = set and set.role;
+
+	if (level or 1) == 1 then
+		for _,role in Internal.Roles() do
+			info.text = _G[role];
+			info.arg1 = role;
+			info.func = RoleDropDown_OnClick;
+			info.checked = selected == role;
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+end
+
 local EssenceScrollFrameUpdate;
 do
 	local MAX_ESSENCES = 14;
@@ -220,7 +330,31 @@ do
 		end
 	end
 end
-Internal.EssenceScrollFrameUpdate = EssenceScrollFrameUpdate
+
+BtWLoadoutsEssencesMixin = {}
+function BtWLoadoutsEssencesMixin:OnLoad()
+	self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
+	self.pending = nil;
+end
+function BtWLoadoutsEssencesMixin:OnShow()
+	if not self.initialized then
+		UIDropDownMenu_SetWidth(self.RoleDropDown, 170);
+		UIDropDownMenu_Initialize(self.RoleDropDown, RoleDropDownInit);
+		UIDropDownMenu_JustifyText(self.RoleDropDown, "LEFT");
+		self.Slots = {
+			[115] = self.MajorSlot,
+			[116] = self.MinorSlot1,
+			[117] = self.MinorSlot2,
+			[119] = self.MinorSlot3,
+		};
+
+		HybridScrollFrame_CreateButtons(self.EssenceList, "BtWLoadoutsAzeriteEssenceButtonTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+		self.EssenceList.update = EssenceScrollFrameUpdate;
+
+		self.initialized = true
+	end
+end
+
 function Internal.EssencesTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Essences"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar

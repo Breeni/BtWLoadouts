@@ -854,6 +854,259 @@ do
 	end
 end
 
+
+BtWLoadoutsSetsScrollListItemMixin = {}
+function BtWLoadoutsSetsScrollListItemMixin:OnLoad()
+	self:RegisterForDrag("LeftButton");
+end
+function BtWLoadoutsSetsScrollListItemMixin:Set(item)
+	self.item = item
+
+	button = self
+	if item and not item.ignore then
+		button.type = item.type
+		button.isAdd = item.isAdd
+		button.isHeader = item.isHeader
+
+		button.name = item.name
+		button.error = item.error
+		button.ErrorBorder:SetShown(item.error ~= nil)
+		button.ErrorOverlay:SetShown(item.error ~= nil)
+
+		if item.isSeparator then
+			button:Hide()
+		else
+			button.index = item.index
+			button.id = item.id
+
+			button:SetEnabled(not item.isHeader)
+			if item.isHeader then
+				button.Name:SetPoint("LEFT", 0, 0)
+				button.Name:SetTextColor(0.75, 0.61, 0)
+				
+				-- if item.isEmpty then
+					button.ExpandedIcon:Hide()
+					button.CollapsedIcon:Hide()
+				-- elseif item.isCollapsed then
+				-- 	button.ExpandedIcon:Hide()
+				-- 	button.CollapsedIcon:Show()
+				-- else
+				-- 	button.ExpandedIcon:Show()
+				-- 	button.CollapsedIcon:Hide()
+				-- end
+
+				button.AddButton:Show()
+
+				button.MoveButton:SetEnabled(false)
+				button.MoveButton:Hide()
+
+				button.RemoveButton:SetEnabled(false)
+				button.RemoveButton:Hide()
+			elseif item.isAdd then
+				button.Name:SetPoint("LEFT", 15, 0)
+				button.Name:SetTextColor(0.973, 0.937, 0.580)
+
+				button.AddButton:Hide()
+
+				button.MoveButton:SetEnabled(false)
+				button.MoveButton:Hide()
+
+				button.RemoveButton:SetEnabled(false)
+				button.RemoveButton:Hide()
+
+				button.ExpandedIcon:Hide()
+				button.CollapsedIcon:Hide()
+			else
+				button.Name:SetPoint("LEFT", 15, 0)
+				button.Name:SetTextColor(1, 1, 1)
+
+				button.AddButton:Hide()
+
+				button.MoveButton:SetEnabled(true)
+				button.MoveButton:Hide()
+
+				button.RemoveButton:SetEnabled(true)
+				button.RemoveButton:Hide()
+
+				-- button.AddButton:Hide()
+				-- button.RemoveButton:Show()
+				-- button.MoveDownButton:Show()
+				-- button.MoveUpButton:Show()
+				
+				-- button.MoveUpButton:SetEnabled(not item.first)
+				-- button.MoveDownButton:SetEnabled(not item.last)
+
+				button.ExpandedIcon:Hide()
+				button.CollapsedIcon:Hide()
+			end
+
+			button.Name:SetText(item.name)
+
+			button:Show();
+		end
+	else
+		button:Hide();
+	end
+end
+function BtWLoadoutsSetsScrollListItemMixin:OnClick()
+	if self.isHeader then
+		local frame = self:GetParent():GetParent():GetParent()
+		frame.Collapsed[self.type] = not frame.Collapsed[self.type]
+		Internal.ProfilesTabUpdate(frame)
+	elseif self.isAdd then
+		self:Add(self)
+	else
+		local DropDown = self:GetParent():GetParent().DropDown
+		local index = self.index
+
+		if self.type == "talents" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+				return TalentsDropDownInit(self, level, menuList, index)
+			end)
+		elseif self.type == "pvptalents" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+				return PvPTalentsDropDownInit(self, level, menuList, index)
+			end)
+		elseif self.type == "essences" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+				return EssencesDropDownInit(self, level, menuList, index)
+			end)
+		elseif self.type == "equipment" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+				return EquipmentDropDownInit(self, level, menuList, index)
+			end)
+		elseif self.type == "actionbars" then
+			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+				return ActionBarDropDownInit(self, level, menuList, index)
+			end)
+		end
+
+		ToggleDropDownMenu(nil, nil, DropDown, self, 0, 0)
+		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+	end
+end
+function BtWLoadoutsSetsScrollListItemMixin:OnEnter()
+	local scrollChild = self:GetParent()
+	local currentDrag = scrollChild.currentDrag
+	if currentDrag and currentDrag ~= self then
+		if self.isHeader or self.isAdd or self.type ~= currentDrag.type then
+			return
+		end
+
+		local frame = scrollChild:GetParent():GetParent()
+		local a, b = self.item, currentDrag.item
+	
+		-- Flip the set ids within the loadout and flip their indexes too
+		frame.set[a.type][a.index], frame.set[a.type][b.index] = frame.set[a.type][b.index], frame.set[a.type][a.index]
+		a.index, b.index = b.index, a.index
+
+		-- Update the buttons with the flipped sets
+		self:Set(b)
+		currentDrag:Set(a)
+
+		self:GetParent().currentDrag = self
+
+		return
+	end
+
+	self.MoveButton:SetShown(self.MoveButton:IsEnabled())
+	self.RemoveButton:SetShown(self.RemoveButton:IsEnabled())
+
+	if self.error then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(self.name, 1, 1, 1)
+		GameTooltip:AddLine(format("\n|cffff0000%s|r", self.error))
+		GameTooltip:Show()
+	end
+end
+function BtWLoadoutsSetsScrollListItemMixin:OnLeave()
+	if not MouseIsOver(self) then
+		self.MoveButton:Hide()
+		self.RemoveButton:Hide()
+	end
+
+	GameTooltip:Hide()
+end
+function BtWLoadoutsSetsScrollListItemMixin:StartDrag()
+	if self.isHeader or self.isAdd then
+		return
+	end
+
+	self:GetParent().currentDrag = self
+end
+function BtWLoadoutsSetsScrollListItemMixin:Add(button)
+	local DropDown = self:GetParent():GetParent().DropDown
+	
+	if self.type == "talents" then
+		UIDropDownMenu_SetInitializeFunction(DropDown, TalentsDropDownInit)
+	elseif self.type == "pvptalents" then
+		UIDropDownMenu_SetInitializeFunction(DropDown, PvPTalentsDropDownInit)
+	elseif self.type == "essences" then
+		UIDropDownMenu_SetInitializeFunction(DropDown, EssencesDropDownInit)
+	elseif self.type == "equipment" then
+		UIDropDownMenu_SetInitializeFunction(DropDown, EquipmentDropDownInit)
+	elseif self.type == "actionbars" then
+		UIDropDownMenu_SetInitializeFunction(DropDown, ActionBarDropDownInit)
+	end
+
+	ToggleDropDownMenu(nil, nil, DropDown, button, 0, 0)
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+end
+function BtWLoadoutsSetsScrollListItemMixin:Remove()
+	local tab = self:GetParent():GetParent():GetParent()
+	local set = tab.set
+
+	local index = self.index
+	assert(type(set[self.type]) == "table" and index ~= nil and index >= 1 and index <= #set[self.type])
+	table.remove(set[self.type], index);
+
+	Internal.ProfilesTabUpdate(tab)
+end
+function BtWLoadoutsSetsScrollListItemMixin:MoveUp()
+	local tab = self:GetParent():GetParent():GetParent()
+	local set = tab.set
+
+	local index = self.index
+	assert(type(set[self.type]) == "table" and index > 1 and index <= #set[self.type])
+	set[self.type][index-1], set[self.type][index] = set[self.type][index], set[self.type][index-1]
+
+	Internal.ProfilesTabUpdate(tab)
+end
+function BtWLoadoutsSetsScrollListItemMixin:MoveDown()
+	local tab = self:GetParent():GetParent():GetParent()
+	local set = tab.set
+
+	local index = self.index
+	assert(type(set[self.type]) == "table" and index >= 1 and index < #set[self.type])
+	set[self.type][index+1], set[self.type][index] = set[self.type][index], set[self.type][index+1]
+
+	Internal.ProfilesTabUpdate(tab)
+end
+
+BtWLoadoutsProfilesMixin = {}
+function BtWLoadoutsProfilesMixin:OnLoad()
+	self:RegisterEvent("GLOBAL_MOUSE_UP")
+	
+	self.SpecDropDown.includeNone = true;
+	UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
+	UIDropDownMenu_Initialize(self.SpecDropDown, SpecDropDownInit);
+	UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+
+	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+	self.SetsScroll.update = Internal.SetsScrollFrameUpdate;
+end
+function BtWLoadoutsProfilesMixin:OnEvent()
+	if self.SetsScroll:GetScrollChild().currentDrag  ~= nil then
+		self:GetParent():Update()
+	end
+end
+function BtWLoadoutsProfilesMixin:OnShow()
+	
+end
+function BtWLoadoutsProfilesMixin:Update()
+
+end
+
 function Internal.SetsScrollFrameUpdate(self)
 	self:GetScrollChild().currentDrag = nil -- Clear current drag
 

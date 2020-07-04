@@ -194,6 +194,19 @@ Internal.ActivateTalentSet = ActivateTalentSet
 Internal.IsTalentSetActive = IsTalentSetActive
 Internal.CombineTalentSets = CombineTalentSets
 
+BtWLoadoutsTalentsMixin = {}
+function BtWLoadoutsTalentsMixin:OnLoad()
+    self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
+end
+function BtWLoadoutsTalentsMixin:OnShow()
+    if not self.initialized then
+        UIDropDownMenu_SetWidth(self.SpecDropDown, 170);
+        UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+
+        self.initialized = true;
+    end
+end
+
 function Internal.TalentsTabUpdate(self)
     self:GetParent().TitleText:SetText(L["Talents"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
