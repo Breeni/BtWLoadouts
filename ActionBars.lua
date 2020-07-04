@@ -38,6 +38,7 @@ end
 
 -- Track changes to macros
 do
+    local mapCreated = false
     local macros = setmetatable({}, {
         __index = function (self, key)
             local result = {}
@@ -67,6 +68,8 @@ do
     }) -- Maps body to macro index
 
     local function BuildMacroMap()
+        mapCreated = true
+
         local global, character = GetNumMacros()
         local macro
 
@@ -99,7 +102,7 @@ do
 
     local frame = CreateFrame("Frame")
     frame:SetScript("OnEvent", BuildMacroMap)
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    frame:RegisterEvent("PLAYER_LOGIN")
     frame:Hide()
 
     hooksecurefunc("CreateMacro", BuildMacroMap)
@@ -110,7 +113,9 @@ do
             id = macroNameMap[id]
         end
 
-        if id == nil then -- Probably means someone is using EditMacro to make a new macro
+        -- Probably means someone is using EditMacro to make a new macro or
+        -- editing a macro very early in the load
+        if id == nil or not mapCreated then
             return BuildMacroMap()
         end
 
