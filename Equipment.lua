@@ -601,7 +601,9 @@ do
 				wipe(freeSlotsCache[i])
 			end
 
-			totalFreeSlots = totalFreeSlots + #GetContainerFreeSlots(i, freeSlotsCache[i])
+			if GetContainerFreeSlots(i, freeSlotsCache[i]) then
+				totalFreeSlots = totalFreeSlots + #freeSlotsCache[i]
+			end
 		end
 
 		-- Loop through and empty slots that should be empty, also store locations for other slots
