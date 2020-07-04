@@ -691,8 +691,8 @@
 			</Frame>
 			<Frame parentKey="BodyInset" useParentLevel="true" inherits="InsetFrameTemplate" hidden="true">
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.SidebarInset" relativePoint="TOPRIGHT" x="6" y="0" />
-					<Anchor point="BOTTOMRIGHT" x="-6" y="26" />
+					<Anchor point="TOPLEFT" x="270" y="-30"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
 				</Anchors>
 			</Frame>
 			<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_NEW_SET">
@@ -730,7 +730,7 @@
 				</KeyValues>
 				<Size x="80" y="22"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.Profiles" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+					<Anchor point="TOPLEFT" relativeKey="$parent.BodyInset" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -744,7 +744,7 @@
 				</KeyValues>
 				<Size x="120" y="22"/>
 				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.Profiles" relativePoint="BOTTOM" x="0" y="-2"/>
+					<Anchor point="TOP" relativeKey="$parent.BodyInset" relativePoint="BOTTOM" x="0" y="-2"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -758,7 +758,7 @@
 				</KeyValues>
 				<Size x="80" y="22"/>
 				<Anchors>
-					<Anchor point="TOPRIGHT" relativeKey="$parent.Profiles" relativePoint="BOTTOMRIGHT" x="0" y="-2"/>
+					<Anchor point="TOPRIGHT" relativeKey="$parent.BodyInset" relativePoint="BOTTOMRIGHT" x="0" y="-2"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
