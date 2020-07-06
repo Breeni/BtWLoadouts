@@ -235,7 +235,7 @@ function frame:PLAYER_LOGIN(...)
                 set.profileSet = nil
             end
 
-			if not set.disabled then
+			if Internal.IsConditionEnabled(set) then
                 Internal.AddConditionToMap(set);
             end
         end

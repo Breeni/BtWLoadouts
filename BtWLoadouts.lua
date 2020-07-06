@@ -53,6 +53,7 @@ BTWLOADOUTS_SPECIALIZATION = L["Specialization"];
 BTWLOADOUTS_ENABLED = L["Enabled"]
 BTWLOADOUTS_UPDATE = L["Update"]
 BTWLOADOUTS_LOG = L["Log"]
+BTWLOADOUTS_CHARACTER_RESTRICTIONS = L["Character Restrictions"]
 
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
@@ -419,6 +420,112 @@ function BtWLoadoutsSpecDropDownMixin:OnShow()
 	if not self.initialized then
 		UIDropDownMenu_Initialize(self, SpecDropDownInit);
 		self.initialized = true
+	end
+end
+
+--[[
+	Character selection drop down menu
+]]
+do
+	BtWLoadoutsCharacterDropDownMixin = {}
+	function BtWLoadoutsCharacterDropDownMixin:OnShow()
+		if not self.initialized then
+			UIDropDownMenu_Initialize(self, self.Init);
+			self.initialized = true
+		end
+	end
+	function BtWLoadoutsCharacterDropDownMixin:Init()
+		if not self.GetValue then
+			return
+		end
+
+		local info = UIDropDownMenu_CreateInfo();
+		local selected = self:GetValue()
+
+		info.keepShownOnClick = true
+		info.func = function (button, arg1, arg2, checked)
+			self:SetValue(button, arg1, arg2, checked)
+		end
+
+		if self.includeNone then
+			info.text = L["None"];
+			info.arg1 = nil
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		local name, realm = UnitFullName("player")
+		local character = realm .. "-" .. name
+		local characterInfo = GetCharacterInfo(character)
+		if characterInfo then
+			local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+			name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+		end
+
+		info.text = name
+		info.arg1 = character
+		if self.multiple then
+			info.checked = selected[character]
+		else
+			info.checked = selected == character;
+		end
+
+		UIDropDownMenu_AddButton(info, level);
+
+		local playerCharacter = character
+		for _,character in Internal.CharacterIterator() do
+			if playerCharacter ~= character then
+				characterInfo = GetCharacterInfo(character)
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+					name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+				end
+
+				info.text = name
+				info.arg1 = character
+				if self.multiple then
+					info.checked = selected[character]
+				else
+					info.checked = selected == character;
+				end
+				
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+	end
+	function BtWLoadoutsCharacterDropDownMixin:UpdateName()
+		if not self.GetValue then
+			return
+		end
+
+		local character = self:GetValue()
+
+		if self.multiple then
+			local first = next(character)
+			if first == nil then
+				UIDropDownMenu_SetText(self, L["None"]);
+			elseif next(character, first) == nil then
+				local characterInfo = Internal.GetCharacterInfo(first);
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+					first = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+				end
+				UIDropDownMenu_SetText(self, first);
+			else
+				UIDropDownMenu_SetText(self, L["Multiple"]);
+			end
+		else
+			if character == nil then
+				UIDropDownMenu_SetText(self, L["None"]);
+			else
+				local characterInfo = Internal.GetCharacterInfo(character);
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+					character = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+				end
+				UIDropDownMenu_SetText(self, character);
+			end
+		end
 	end
 end
 

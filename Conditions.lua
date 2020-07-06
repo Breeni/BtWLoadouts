@@ -142,6 +142,20 @@ local function IsConditionActive(condition)
 
 	return matchCount;
 end
+local function IsConditionEnabled(set)
+	if set.disabled then
+		return false
+	end
+
+	if set.character ~= nil and next(set.character) ~= nil then
+		local name, realm = UnitFullName("player")
+		local character = realm .. "-" .. name
+
+		return set.character[character] ~= nil
+	end
+
+	return true
+end
 -- Update a condition set with current active conditions
 local function RefreshConditionSet(set)
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
@@ -397,6 +411,7 @@ function Internal.TriggerConditions()
 	end
 end
 
+Internal.IsConditionEnabled = IsConditionEnabled
 Internal.AddConditionSet = AddConditionSet
 Internal.RefreshConditionSet = RefreshConditionSet
 Internal.GetConditionSet = GetConditionSet
@@ -549,6 +564,7 @@ local function ProfilesDropDownInit(self, level, menuList)
 		end
 	end
 end
+
 
 local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Conditions
@@ -895,9 +911,33 @@ end
 BtWLoadoutsConditionsMixin = {}
 function BtWLoadoutsConditionsMixin:OnShow()
 	if not self.initialized then
-		UIDropDownMenu_SetWidth(self.ProfileDropDown, 400);
+		UIDropDownMenu_SetWidth(self.ProfileDropDown, 175);
 		UIDropDownMenu_Initialize(self.ProfileDropDown, ProfilesDropDownInit);
 		UIDropDownMenu_JustifyText(self.ProfileDropDown, "LEFT");
+
+		self.CharacterDropDown.GetValue = function (self)
+			local frame = self:GetParent()
+
+			if type(frame.set.character) ~= "table" then
+				frame.set.character = {}
+			end
+
+			return frame.set and frame.set.character
+		end
+		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
+			local frame = self:GetParent()
+			if frame.set then
+				if frame.set.character[arg1] then
+					frame.set.character[arg1] = nil
+				else
+					frame.set.character[arg1] = true
+				end
+
+				BtWLoadoutsFrame:Update()
+			end
+		end
+		UIDropDownMenu_SetWidth(self.CharacterDropDown, 175);
+		UIDropDownMenu_JustifyText(self.CharacterDropDown, "LEFT");
 
 		UIDropDownMenu_SetWidth(self.ConditionTypeDropDown, 400);
 		UIDropDownMenu_Initialize(self.ConditionTypeDropDown, ConditionTypeDropDownInit);
@@ -985,10 +1025,10 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.affixID4 = (affixID4 ~= 0 and affixID4 or nil)
 		end
 
-		if set.disabled then
-			RemoveConditionFromMap(set);
-		else
+		if IsConditionEnabled(set) then
 			AddConditionToMap(set);
+		else
+			RemoveConditionFromMap(set);
 		end
 
 		self.Name:SetEnabled(true);
@@ -1011,6 +1051,8 @@ function Internal.ConditionsTabUpdate(self)
 			local subset = Internal.GetProfile(set.profileSet);
 			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
 		end
+
+		self.CharacterDropDown:UpdateName()
 
 		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[self.set.type]);
 		self.InstanceDropDown:SetShown(set.type == CONDITION_TYPE_DUNGEONS or set.type == CONDITION_TYPE_RAIDS);
