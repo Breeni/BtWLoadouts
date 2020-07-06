@@ -973,7 +973,7 @@ function Internal.ConditionsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Conditions"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters()
+	sidebar:SetSupportedFilters("spec", "class", "role", "character")
 	sidebar:SetSets(BtWLoadoutsSets.conditions)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.conditions)
 	sidebar:SetCategories(BtWLoadoutsCategories.conditions)
@@ -1023,6 +1023,44 @@ function Internal.ConditionsTabUpdate(self)
 			set.map.affixID2 = (affixID2 ~= 0 and affixID2 or nil)
 			set.map.affixID3 = (affixID3 ~= 0 and affixID3 or nil)
 			set.map.affixID4 = (affixID4 ~= 0 and affixID4 or nil)
+		end
+
+		-- Refresh filters
+		do
+			local filters = set.filters or {}
+			local specID
+			if set.profileSet then
+				local profile = Internal.GetProfile(set.profileSet)
+				specID = profile.specID
+			end
+			filters.spec = specID
+			if specID then
+				filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+			else
+				filters.role, filters.class = nil, nil
+			end
+
+			-- Rebuild character list
+			filters.character = filters.character or {}
+			local characters = filters.character
+			wipe(characters)
+
+			if type(set.character) == "table" and next(set.character) ~= nil then
+				for character in pairs(set.character) do
+					characters[#characters+1] = character
+				end
+			else
+				local class = filters.class
+				for _,character in Internal.CharacterIterator() do
+					if class == Internal.GetCharacterInfo(character).class then
+						characters[#characters+1] = character
+					end
+				end
+			end
+
+			set.filters = filters
+
+			sidebar:Update()
 		end
 
 		if IsConditionEnabled(set) then
