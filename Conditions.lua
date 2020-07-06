@@ -1078,6 +1078,7 @@ function Internal.ConditionsTabUpdate(self)
 		self.Enabled:SetChecked(not set.disabled);
 
 		self.ProfileDropDown.Button:SetEnabled(true);
+		self.CharacterDropDown.Button:SetEnabled(true);
 		self.ConditionTypeDropDown.Button:SetEnabled(true);
 		self.InstanceDropDown.Button:SetEnabled(true);
 		self.DifficultyDropDown.Button:SetEnabled(true);
@@ -1167,6 +1168,7 @@ function Internal.ConditionsTabUpdate(self)
 		self.Enabled:SetChecked(false);
 
 		self.ProfileDropDown.Button:SetEnabled(false);
+		self.CharacterDropDown.Button:SetEnabled(false);
 		self.ConditionTypeDropDown.Button:SetEnabled(false);
 		self.InstanceDropDown.Button:SetEnabled(false);
 		self.DifficultyDropDown.Button:SetEnabled(false);
