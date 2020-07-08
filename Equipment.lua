@@ -70,6 +70,13 @@ local itemUniquenessCache = {
     [132378] = {357, 2},
     [132369] = {357, 2},
 }
+local function PackLocation(slot, bag)
+	if bag == nil then -- Inventory slot
+		return slot + ITEM_INVENTORY_LOCATION_PLAYER
+	else
+		error("@TODO")
+	end
+end
 -- Returns the same as GetItemUniqueness except uses the above cache, also converts -1 family to itemID
 local function GetItemUniquenessCached(itemLink)
 	local itemID = GetItemInfoInstant(itemLink)
@@ -1363,6 +1370,71 @@ function Internal.EquipmentTabUpdate(self)
 		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
+		end
+	end
+end
+
+do
+	-- Maps items from location to unique item data table
+	local locationMap = {}
+
+	-- Maps unique item data table to set ids
+	local itemDataMap = {}
+
+	local function GetSetsForLocation(location)
+	end
+end
+
+-- GameTooltip
+do
+	local location
+	local function UpdateTooltip(self, location)
+
+	end
+	-- GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
+	-- 	-- print("OnTooltipSetItem", ...)
+	-- 	if location then
+
+	-- 	end
+	-- end)
+	hooksecurefunc(GameTooltip, "SetInventoryItem", function (self, unit, slot, nameOnly)
+		-- print("SetInventoryItem", ...)
+		if not nameOnly and unit == "player" then
+			location = PackLocation(slot)
+		else
+			location = nil
+		end
+		UpdateTooltip(location)
+	end)
+	hooksecurefunc(GameTooltip, "SetBagItem", function (self, bag, slot)
+		-- print("SetBagItem", ...)
+		-- location = PackLocation(slot, bag)
+	end)
+end
+
+-- Adibags
+if LibStub and LibStub("AceAddon-3.0") then
+	local AdiBags = LibStub("AceAddon-3.0"):GetAddon("AdiBags")
+
+	if AdiBags then
+		local setFilter = AdiBags:RegisterFilter("BtWLoadouts", 90, "ABEvent-1.0")
+		setFilter.uiName = L["BtWLoadouts"]
+		setFilter.uiDesc = L["BtWLoadouts."]
+		
+		function setFilter:Update()
+			self:SendMessage("AdiBags_FiltersChanged")
+		end
+		
+		function setFilter:OnEnable()
+			AdiBags:UpdateFilters()
+		end
+		
+		function setFilter:OnDisable()
+			AdiBags:UpdateFilters()
+		end
+		
+		function setFilter:Filter(slotData)
+
 		end
 	end
 end
