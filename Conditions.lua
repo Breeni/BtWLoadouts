@@ -156,6 +156,42 @@ local function IsConditionEnabled(set)
 
 	return true
 end
+local function RefreshConditionFilters(set)
+	local filters = set.filters or {}
+	local specID
+	if set.profileSet then
+		local profile = Internal.GetProfile(set.profileSet)
+		specID = profile.specID
+	end
+	filters.spec = specID
+	if specID then
+		filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+	else
+		filters.role, filters.class = nil, nil
+	end
+
+	-- Rebuild character list
+	filters.character = filters.character or {}
+	local characters = filters.character
+	wipe(characters)
+
+	if type(set.character) == "table" and next(set.character) ~= nil then
+		for character in pairs(set.character) do
+			characters[#characters+1] = character
+		end
+	else
+		local class = filters.class
+		for _,character in Internal.CharacterIterator() do
+			if class == Internal.GetCharacterInfo(character).class then
+				characters[#characters+1] = character
+			end
+		end
+	end
+
+	filters.instanceType = set.type
+
+	set.filters = filters
+end
 -- Update a condition set with current active conditions
 local function RefreshConditionSet(set)
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
@@ -412,6 +448,7 @@ function Internal.TriggerConditions()
 end
 
 Internal.IsConditionEnabled = IsConditionEnabled
+Internal.RefreshConditionFilters = RefreshConditionFilters
 Internal.AddConditionSet = AddConditionSet
 Internal.RefreshConditionSet = RefreshConditionSet
 Internal.GetConditionSet = GetConditionSet
@@ -973,7 +1010,7 @@ function Internal.ConditionsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["Conditions"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "instanceType")
 	sidebar:SetSets(BtWLoadoutsSets.conditions)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.conditions)
 	sidebar:SetCategories(BtWLoadoutsCategories.conditions)
@@ -1026,42 +1063,8 @@ function Internal.ConditionsTabUpdate(self)
 		end
 
 		-- Refresh filters
-		do
-			local filters = set.filters or {}
-			local specID
-			if set.profileSet then
-				local profile = Internal.GetProfile(set.profileSet)
-				specID = profile.specID
-			end
-			filters.spec = specID
-			if specID then
-				filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
-			else
-				filters.role, filters.class = nil, nil
-			end
-
-			-- Rebuild character list
-			filters.character = filters.character or {}
-			local characters = filters.character
-			wipe(characters)
-
-			if type(set.character) == "table" and next(set.character) ~= nil then
-				for character in pairs(set.character) do
-					characters[#characters+1] = character
-				end
-			else
-				local class = filters.class
-				for _,character in Internal.CharacterIterator() do
-					if class == Internal.GetCharacterInfo(character).class then
-						characters[#characters+1] = character
-					end
-				end
-			end
-
-			set.filters = filters
-
-			sidebar:Update()
-		end
+		RefreshConditionFilters(set)
+		sidebar:Update()
 
 		if IsConditionEnabled(set) then
 			AddConditionToMap(set);

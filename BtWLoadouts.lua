@@ -769,6 +769,42 @@ do
 			return ipairs(charaterEnumertorList)
 		end
 	end
+	local InstanceTypeEnumerator
+	do
+		local instanceTypeEnumeratorList = {
+			{
+				id = "none",
+				name = L["World"],
+			},
+			{
+				id = "party",
+				name = L["Dungeon"],
+			},
+			{
+				id = "raid",
+				name = L["Raid"],
+			},
+			{
+				id = "arena",
+				name = L["Arena"],
+			},
+			{
+				id = "pvp",
+				name = L["Battleground"],
+			},
+			{
+				id = "scenario",
+				name = L["Scenarios"],
+			},
+			{
+				id = 0,
+				name = L["Other"],
+			}
+		}
+		function InstanceTypeEnumerator()
+			return ipairs(instanceTypeEnumeratorList)
+		end
+	end
 	local function FilterEnumerator(filter)
 		if filter == "spec" then
 			return SpecFilterEnumerator()
@@ -778,6 +814,8 @@ do
 			return RoleFilterEnumerator()
 		elseif filter == "character" then
 			return CharacterFilterEnumerator()
+		elseif filter == "instanceType" then
+			return InstanceTypeEnumerator()
 		else -- @TODO Character, role
 			error(format("Unsupported filter type %s", filter))
 		end
@@ -985,6 +1023,7 @@ do
 			["class"] = L["Class"],
 			["role"] = L["Role"],
 			["character"] = L["Character"],
+			["instanceType"] = L["Instance Type"],
 		}
 		self.supportedFilters = {}
 	end
@@ -1798,6 +1837,9 @@ do
 			elseif button.isRefresh then
 				local set = frame.set;
 				Internal.RefreshConditionSet(set)
+				Internal.ConditionsTabUpdate(frame);
+			elseif button.isHeader then
+				BtWLoadoutsCollapsed.conditions[button.id] = not BtWLoadoutsCollapsed.conditions[button.id] and true or nil;
 				Internal.ConditionsTabUpdate(frame);
 			else
 				frame.Name:ClearFocus();

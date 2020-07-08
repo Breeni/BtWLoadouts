@@ -146,40 +146,7 @@ function frame:ADDON_LOADED(...)
                     BtWLoadoutsSets.profiles[set.profileSet].useCount = BtWLoadoutsSets.profiles[set.profileSet].useCount + 1;
                 end
 
-                do
-                    local filters = set.filters or {}
-                    local specID
-                    if set.profileSet then
-                        local profile = Internal.GetProfile(set.profileSet)
-                        specID = profile.specID
-                    end
-                    filters.spec = specID
-                    if specID then
-                        filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
-                    else
-                        filters.role, filters.class = nil, nil
-                    end
-
-                    -- Rebuild character list
-                    filters.character = filters.character or {}
-                    local characters = filters.character
-                    wipe(characters)
-
-                    if type(set.character) == "table" and next(set.character) ~= nil then
-                        for character in pairs(set.character) do
-                            characters[#characters+1] = character
-                        end
-                    else
-                        local class = filters.class
-                        for _,character in Internal.CharacterIterator() do
-                            if class == Internal.GetCharacterInfo(character).class then
-                                characters[#characters+1] = character
-                            end
-                        end
-                    end
-
-                    set.filters = filters
-                end
+                Internal.RefreshConditionFilters(set)
             end
         end
 
