@@ -35,8 +35,6 @@ local GetNextSetID = Internal.GetNextSetID;
 local DeleteSet = Internal.DeleteSet;
 local GetCharacterInfo = Internal.GetCharacterInfo;
 
-local GetCursorItemSource;
-
 BTWLOADOUTS_PROFILE = L["Profile"];
 BTWLOADOUTS_PROFILES = L["Profiles"];
 BTWLOADOUTS_TALENTS = L["Talents"];
@@ -1959,30 +1957,6 @@ function Internal.ClearLog()
 end
 function Internal.LogMessage(...)
 	BtWLoadoutsLogFrame.Scroll.EditBox:Insert(string.format("[%.03f] %s\n", GetTime(), string.format(...):gsub("|", "||")))
-end
-
-do
-	local currentCursorSource = {};
-	local function Hook_PickupContainerItem(bag, slot)
-		if CursorHasItem() then
-			currentCursorSource.bag = bag;
-			currentCursorSource.slot = slot;
-		else
-			wipe(currentCursorSource);
-		end
-	end
-	hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
-	local function Hook_PickupInventoryItem(slot)
-		if CursorHasItem() then
-			currentCursorSource.slot = slot;
-		else
-			wipe(currentCursorSource);
-		end
-	end
-	hooksecurefunc("PickupInventoryItem", Hook_PickupInventoryItem);
-	function GetCursorItemSource()
-		return currentCursorSource.bag or false, currentCursorSource.slot or false;
-	end
 end
 
 local eventHandlers = {}
