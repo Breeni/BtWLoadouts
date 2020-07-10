@@ -197,11 +197,21 @@ function frame:PLAYER_LOGIN(...)
         local name, realm = UnitFullName("player");
         local character = format("%s-%s", realm, name);
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
-            if type(set) == "table" and set.character == character and set.managerID ~= nil then
-                if equipmentSetMap[set.managerID] then
-                    set.managerID = nil;
-                else
-                    equipmentSetMap[set.managerID] = set;
+            if type(set) == "table" and set.character == character then
+                if set.managerID ~= nil then
+                    if equipmentSetMap[set.managerID] then
+                        set.managerID = nil;
+                    else
+                        equipmentSetMap[set.managerID] = set;
+                    end
+                -- else
+                --     for slot,location in pairs(set.locations) do
+                --         if location and not set.ignored[slot] and set.equipment[slot] then
+                --             if not Internal.IsItemInLocation(set.equipment[slot], set.extras[slot], location) then
+                --                 set.locations[slot] = nil
+                --             end
+                --         end
+                --     end
                 end
             end
         end
@@ -241,7 +251,8 @@ function frame:PLAYER_LOGIN(...)
         end
     end
 
-    self:EQUIPMENT_SETS_CHANGED();
+    self:EQUIPMENT_SETS_CHANGED()
+    Internal.BuildEquipmentMap()
 end
 function frame:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
@@ -354,7 +365,8 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
         local ignored = C_EquipmentSet.GetIgnoredSlots(managerID);
         local locations = C_EquipmentSet.GetItemLocations(managerID);
         for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-            set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
+            set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil
+            set.locations[inventorySlotId] = locations[inventorySlotId]
 
             local location = locations[inventorySlotId] or 0;
             if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
@@ -381,6 +393,9 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
 
     BtWLoadoutsFrame:Update();
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
+end
+function frame:BANKFRAME_OPENED(...)
+    -- Internal.BuildEquipmentMap()
 end
 function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     do
@@ -473,6 +488,7 @@ frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");
 frame:RegisterEvent("PLAYER_ENTERING_WORLD");
 frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
+frame:RegisterEvent("BANKFRAME_OPENED");
 frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
 frame:RegisterEvent("UPDATE_INSTANCE_INFO");
 frame:RegisterEvent("ZONE_CHANGED");
