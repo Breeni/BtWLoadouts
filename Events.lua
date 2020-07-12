@@ -366,11 +366,12 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
         local locations = C_EquipmentSet.GetItemLocations(managerID);
         for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
             set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil
-            set.locations[inventorySlotId] = locations[inventorySlotId]
 
             local location = locations[inventorySlotId] or 0;
             if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-                set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location);
+                set.locations[inventorySlotId] = locations[inventorySlotId] -- Only update if the item has a location
+                set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location)
+                set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
             end
         end
 
@@ -395,7 +396,7 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
 function frame:BANKFRAME_OPENED(...)
-    -- Internal.BuildEquipmentMap()
+    Internal.InitializeBankItems()
 end
 function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     do
