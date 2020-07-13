@@ -150,7 +150,6 @@ function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
         local specID
 
         if #items > 0 then
-
             local func = function (self, id)
                 local set = BtWLoadoutsSets.profiles[id]
                 if set then
@@ -162,15 +161,15 @@ function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
                 if set.specID ~= specID then
                     info.isTitle, info.disabled, info.notCheckable = true, true, true;
                     info.text = set.specID and (select(2, GetSpecializationInfoByID(set.specID))) or L["Other"];
-    
+
                     UIDropDownMenu_AddButton(info, level);
 
                     specID = set.specID
-                    
+
                     info.isTitle, info.disabled, info.notCheckable = false, false, false;
                     info.func = func
                 end
-                
+
                 info.text = set.name;
                 info.arg1 = set.setID;
                 info.checked = Internal.IsProfileActive(set)

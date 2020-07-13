@@ -7,6 +7,7 @@ local launcher
 function Internal.CreateLauncher()
     local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
     if LDB then
+        local tempTooltip
         launcher = LDB:NewDataObject(ADDON_NAME, {
             type = "data source",
             label = L["BtWLoadouts"],
@@ -15,6 +16,10 @@ function Internal.CreateLauncher()
                 if button == "LeftButton" then
                     BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
                 elseif button == "RightButton" then
+                    if tempTooltip then
+                        tempTooltip:Hide()
+                    end
+
                     if not BtWLoadoutsMinimapButton.Menu then
                         BtWLoadoutsMinimapButton.Menu = CreateFrame("Frame", BtWLoadoutsMinimapButton:GetName().."Menu", BtWLoadoutsMinimapButton, "UIDropDownMenuTemplate");
                         UIDropDownMenu_Initialize(BtWLoadoutsMinimapButton.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
@@ -24,6 +29,8 @@ function Internal.CreateLauncher()
                 end
             end,
             OnTooltipShow = function(tooltip)
+                tempTooltip = tooltip
+
                 tooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
                 tooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
                 if Internal.IsActivatingLoadout() then
