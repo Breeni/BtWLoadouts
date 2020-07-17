@@ -1,5 +1,6 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
+local Settings = Internal.Settings
 
 local UnitClass = UnitClass;
 local GetClassColor = C_ClassColor.GetClassColor;
@@ -28,6 +29,33 @@ local DeleteSet = Internal.DeleteSet;
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+
+do -- Filter chat spam
+    local filters = {
+        string.gsub(ERR_LEARN_ABILITY_S, "%%s", "(.*)"),
+        string.gsub(ERR_LEARN_SPELL_S, "%%s", "(.*)"),
+        string.gsub(ERR_LEARN_PASSIVE_S, "%%s", "(.*)"),
+        string.gsub(ERR_SPELL_UNLEARNED_S, "%%s", "(.*)"),
+    }
+    local function ChatFrame_FilterTalentChanges(self, event, msg, ...)
+        if Settings.filterChatSpam then
+            for _,pattern in ipairs(filters) do
+                if string.match(msg, pattern) then
+                    return true
+                end
+            end
+        end
+
+        return false, msg, ...
+    end
+
+    Internal.OnEvent("LOADOUT_CHANGE_START", function ()
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", ChatFrame_FilterTalentChanges)
+    end)
+    Internal.OnEvent("LOADOUT_CHANGE_END", function ()
+        ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", ChatFrame_FilterTalentChanges)
+    end)
+end
 
 local function GetTalentSet(id)
     if type(id) == "table" then
@@ -71,7 +99,8 @@ local function ActivateTalentSet(set)
 
             Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
 		end
-	end
+    end
+
 	return complete;
 end
 local function RefreshTalentSet(set)
