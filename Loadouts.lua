@@ -550,6 +550,12 @@ local function ContinueActivateProfile()
         return;
 	end
 
+	if UnitOnTaxi("player") then
+		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+        return;
+	end
+
 	local specID = set.specID;
 	if specID ~= nil then
 		local playerSpecID = GetSpecializationInfo(GetSpecialization());
