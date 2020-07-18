@@ -155,10 +155,18 @@ do
             for i=min,max do
                 macro = macros[i]
 
-                macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+                if GetMacroInfo(i) then
+                    macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
 
-                macroNameMap[macro.name] = i
-                macroBodyMap[macro.body] = i
+                    if macro.name then
+                        macroNameMap[macro.name] = i
+                    end
+                    if macro.body then
+                        macroBodyMap[macro.body] = i
+                    end
+                else
+                    wipe(macro)
+                end
             end
         end
     end
