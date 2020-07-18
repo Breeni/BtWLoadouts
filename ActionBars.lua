@@ -115,7 +115,7 @@ do
 
         -- Probably means someone is using EditMacro to make a new macro or
         -- editing a macro very early in the load
-        if id == nil or not mapCreated then
+        if id == nil or id == 0 or not mapCreated then
             return BuildMacroMap()
         end
 
