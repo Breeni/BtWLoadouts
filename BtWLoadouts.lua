@@ -106,6 +106,11 @@ local Settings = SettingsCreate({
         key = "limitConditions",
         default = false,
     },
+    {
+        name = L["Filter chat spam while changing loadouts"],
+        key = "filterChatSpam",
+        default = false,
+    },
 });
 Internal.Settings = Settings;
 
