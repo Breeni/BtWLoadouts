@@ -127,7 +127,7 @@
 		</Scripts>
 	</Button>
 
-    <Frame parentKey="Profiles" mixin="BtWLoadoutsProfilesMixin" inherits="BtWLoadoutsTabFrameTemplate">
+    <Frame name="$parentProfiles" parentKey="Profiles" mixin="BtWLoadoutsProfilesMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_PROFILES" type="global"/>
         </KeyValues>
@@ -227,7 +227,7 @@
                     <OnEnterPressed function="EditBox_ClearFocus"/>
                 </Scripts>
             </EditBox>
-            <Frame parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+            <Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="BtWLoadoutsSpecDropDownTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
                 </Anchors>

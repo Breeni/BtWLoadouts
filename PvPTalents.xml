@@ -2,7 +2,7 @@
 ..\FrameXML\UI.xsd">
 	<Script file="PvPTalents.lua"/>
 
-    <Frame parentKey="PvPTalents" mixin="BtWLoadoutsPvPTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
+    <Frame name="$parentPvPTalents" parentKey="PvPTalents" mixin="BtWLoadoutsPvPTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_PVP_TALENTS" type="global"/>
         </KeyValues>
@@ -13,12 +13,10 @@
                     <Anchor point="BOTTOMRIGHT" x="4" y="-2" />
                 </Anchors>
             </Frame>
-            <Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+            <Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="BtWLoadoutsSpecDropDownTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0"/>
                 </Anchors>
-                <Scripts>
-                </Scripts>
             </Frame>
             <EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
                 <Size x="0" y="22"/>

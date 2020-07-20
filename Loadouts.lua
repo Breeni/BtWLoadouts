@@ -1769,7 +1769,6 @@ function BtWLoadoutsProfilesMixin:OnLoad()
 	
 	self.SpecDropDown.includeNone = true;
 	UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
-	UIDropDownMenu_Initialize(self.SpecDropDown, SpecDropDownInit);
 	UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
 
 	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
