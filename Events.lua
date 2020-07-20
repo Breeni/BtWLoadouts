@@ -356,9 +356,11 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
         for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
             set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
 
-            local location = locations[inventorySlotId] or 0;
-            if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-                set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location);
+            if locations then -- Seems in some situations the locations table is nil instead
+                local location = locations[inventorySlotId] or 0;
+                if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
+                    set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location);
+                end
             end
         end
 
