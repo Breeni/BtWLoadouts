@@ -339,7 +339,7 @@ local function DeleteProfile(id)
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
 		for _,setID in ipairs(set.essences) do
-			local subSet = Internal.GetEssencetSet(setID);
+			local subSet = Internal.GetEssenceSet(setID);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
 		for _,setID in ipairs(set.equipment) do
