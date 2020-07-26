@@ -678,11 +678,21 @@ do
 			error(format("Unsupported filter type %s", filter))
 		end
 	end
+	local function alphanumsort(o)
+		local function padnum(d)
+			local dec, n = string.match(d, "(%.?)0*(.+)")
+			return #dec > 0 and ("%.12f"):format(d) or ("%s%03d%s"):format(dec, #n, n)
+		end
+		table.sort(o, function(a,b)
+		  	return tostring(a.name):gsub("%.?%d+", padnum)..("%3d"):format(#b.name)
+			     < tostring(b.name):gsub("%.?%d+", padnum)..("%3d"):format(#a.name)
+		end)
+		return o
+	  end
 	local function BuildList(items, depth, selected, filtered, collapsed, ...)
 		if select('#', ...) == 0 then
-			table.sort(filtered, function (a, b)
-				return a.name < b.name
-			end)
+			alphanumsort(filtered)
+
 			for _,set in ipairs(filtered) do
 				selected = selected or set
 				items[#items+1] = {
