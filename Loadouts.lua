@@ -11,7 +11,6 @@ local IsResting = IsResting;
 local UnitAura = UnitAura;
 local UnitClass = UnitClass;
 local UnitLevel = UnitLevel;
-local UnitFullName = UnitFullName;
 local UnitCastingInfo = UnitCastingInfo;
 local GetClassColor = C_ClassColor.GetClassColor;
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE;
@@ -41,6 +40,7 @@ local format = string.format;
 local AddSet = Internal.AddSet;
 local DeleteSet = Internal.DeleteSet;
 local GetCharacterInfo = Internal.GetCharacterInfo;
+local GetCharacterSlug = Internal.GetCharacterSlug
 
 local loadoutSegments = {}
 
@@ -1377,8 +1377,7 @@ local function EquipmentDropDownInit(self, level, menuList, index)
 			return a < b;
 		end)
 
-		local name, realm = UnitFullName("player");
-		local character = realm .. "-" .. name;
+		local character = GetCharacterSlug();
 		if setsFiltered[character] then
 			local name = character;
 			local characterInfo = GetCharacterInfo(character);

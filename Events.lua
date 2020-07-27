@@ -7,6 +7,8 @@ local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 local format = string.format
 local sort = table.sort
 
+local GetCharacterSlug = Internal.GetCharacterSlug
+
 -- A map from the equipment manager ids to our sets
 local equipmentSetMap = {};
 
@@ -193,9 +195,10 @@ function frame:PLAYER_LOGIN(...)
     Internal.CreateLauncher();
     Internal.CreateLauncherMinimapIcon();
 
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE");
+
     do
-        local name, realm = UnitFullName("player");
-        local character = format("%s-%s", realm, name);
+        local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" and set.character == character and set.managerID ~= nil then
                 if equipmentSetMap[set.managerID] then
@@ -481,5 +484,4 @@ frame:RegisterEvent("ZONE_CHANGED");
 frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
 frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
 frame:RegisterEvent("PLAYER_TARGET_CHANGED");
-frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 frame:RegisterEvent("ENCOUNTER_END");

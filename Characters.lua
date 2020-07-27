@@ -42,6 +42,12 @@ function Internal.UpdateClassInfo()
     end
 end
 
+function Internal.GetCharacterSlug()
+	local name, realm = UnitFullName("player");
+	assert(realm ~= nil)
+	return realm .. "-" .. name
+end
+
 local GetTalentInfoForSpecID;
 local GetPvPTrinketTalentInfo;
 local GetPvPTalentInfoForSpecID;

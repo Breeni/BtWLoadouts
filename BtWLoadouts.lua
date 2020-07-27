@@ -31,9 +31,8 @@ local L = Internal.L;
 local External = {}
 _G[ADDON_NAME] = External
 
-local GetNextSetID = Internal.GetNextSetID;
-local DeleteSet = Internal.DeleteSet;
-local GetCharacterInfo = Internal.GetCharacterInfo;
+local GetCharacterInfo = Internal.GetCharacterInfo
+local GetCharacterSlug = Internal.GetCharacterSlug
 
 BTWLOADOUTS_PROFILE = L["Profile"];
 BTWLOADOUTS_PROFILES = L["Profiles"];
@@ -630,8 +629,8 @@ do
 		function CharacterFilterEnumerator()
 			wipe(charaterEnumertorList)
 
-			local name, realm = UnitFullName("player");
-			local character = realm .. "-" .. name;
+			local name = UnitName("player")
+			local character = GetCharacterSlug();
 			local characterInfo = GetCharacterInfo(character);
 			if characterInfo then
 				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
@@ -804,10 +803,6 @@ do
 			end
 		end
 		HybridScrollFrame_Update(self, totalHeight, displayedHeight);
-	end
-	local function GetCharacterSlug()
-		local characterName, characterRealm = UnitFullName("player");
-		return characterRealm .. "-" .. characterName
 	end
 	local function DropDown_Initialize(self, level)
 		local sidebar = self:GetParent()
@@ -1227,8 +1222,7 @@ do
 			return a < b;
 		end)
 
-		local name, realm = UnitFullName("player");
-		local character = realm .. "-" .. name;
+        local character = GetCharacterSlug();
 		if setsFiltered[character] then
 			local isCollapsed = collapsed[character] and true or false;
 			local name = character;
