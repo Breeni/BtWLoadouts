@@ -186,6 +186,12 @@ local function GetActionInfoTable(slot, tbl)
         id = FindBaseSpellByID(id) or id
     end
 
+    -- There are some situations where actions can be "empty" but showing as macros with id 0
+    if actionType == "macro" and id == 0 then
+        actionType = nil
+        id = nil
+    end
+
     tbl.type, tbl.id, tbl.subType, tbl.macroText = actionType, id, subType, nil
     tbl.icon = GetActionTexture(slot)
     tbl.name = GetActionText(slot)
