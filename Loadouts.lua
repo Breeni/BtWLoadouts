@@ -861,6 +861,15 @@ do
 	end
 end
 
+local NUM_TABS = 7;
+local TAB_PROFILES = 1;
+local TAB_TALENTS = 2;
+local TAB_PVP_TALENTS = 3;
+local TAB_ESSENCES = 4;
+local TAB_EQUIPMENT = 5;
+local TAB_ACTION_BARS = 6;
+local TAB_CONDITIONS = 7;
+
 local setsFiltered = {}
 local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Profiles
