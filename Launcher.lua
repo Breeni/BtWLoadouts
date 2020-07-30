@@ -60,19 +60,16 @@ function Internal.CreateLauncherMinimapIcon()
         return
     end
 
-    local icon = LibStub and LibStub("LibDBIcon-1.0", true)
+    local icon = LibStub and LibStub("/tin-1.0", true)
     if icon then
         BtWLoadoutsSettings.LDBIcon = BtWLoadoutsSettings.LDBIcon or {
-            minimapPos = BtWLoadoutsSettings.minimapAngle
+            minimapPos = BtWLoadoutsSettings.minimapAngle,
         }
 
         BtWLoadoutsMinimapButton:SetEnabled(false)
 
         icon:Register(ADDON_NAME, launcher, BtWLoadoutsSettings.LDBIcon)
         icon:Refresh(ADDON_NAME)
-        if not Settings.minimapShown then
-            icon:Hide(ADDON_NAME)
-        end
 
         local button = icon:GetMinimapButton(ADDON_NAME)
 
@@ -99,5 +96,11 @@ function Internal.CreateLauncherMinimapIcon()
         function Internal.HideMinimap()
             icon:Hide(ADDON_NAME)
         end
+
+        C_Timer.After(0, function ()
+            if not Settings.minimapShown then
+                icon:Hide(ADDON_NAME)
+            end
+        end)
     end
 end
