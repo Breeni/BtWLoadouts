@@ -244,7 +244,9 @@ function frame:PLAYER_LOGIN(...)
         end
     end
 
-    self:EQUIPMENT_SETS_CHANGED();
+    if C_EquipmentSet.GetNumEquipmentSets() > 0 then
+        self:EQUIPMENT_SETS_CHANGED();
+    end
 end
 function frame:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
