@@ -699,6 +699,7 @@ do
 					name = (set.name == nil or set.name == "") and L["Unnamed"] or set.name,
 					disabled = set.disabled,
 					selected = set == selected,
+					builtin = set.managerID ~= nil,
 					depth = depth,
 				};
 			end
