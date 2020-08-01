@@ -1435,7 +1435,7 @@ local function EquipmentDropDownInit(self, level, menuList, index)
 		end)
 
         for _,setID in ipairs(setsFiltered) do
-            info.text = sets[setID].name;
+            info.text = sets[setID].name .. (sets[setID].managerID ~= nil and " (*)" or "");
             info.arg1 = setID;
             info.func = EquipmentDropDown_OnClick;
             info.checked = selected == setID;
