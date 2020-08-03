@@ -51,6 +51,7 @@ end
 local GetTalentInfoForSpecID;
 local GetPvPTrinketTalentInfo;
 local GetPvPTalentInfoForSpecID;
+local GetPvpTalentSlotInfoForSpecID;
 do
 	local specInfo = {
 		[62] = {
@@ -2206,9 +2207,25 @@ do
 			return GetPvpTalentInfoByID(specInfo[specID].pvptalents[index]);
 		end
 	end
+	function GetPvpTalentSlotInfoForSpecID(specID, index)
+		local playerSpecID = GetSpecializationInfo(GetSpecialization());
+		if playerSpecID == specID then
+			local slotInfo = GetPvpTalentSlotInfo(index);
+			return slotInfo
+		end
+
+		if BtWLoadoutsSpecInfo[specID] and BtWLoadoutsSpecInfo[specID].pvptalentslots and BtWLoadoutsSpecInfo[specID].pvptalentslots[index] then
+			return BtWLoadoutsSpecInfo[specID].pvptalentslots[index];
+		end
+
+		if specInfo[specID] and specInfo[specID].pvptalentslots and specInfo[specID].pvptalentslots[index] then
+			return specInfo[specID].pvptalentslots[index];
+		end
+	end
 	Internal.GetTalentInfoForSpecID = GetTalentInfoForSpecID
 	Internal.GetPvPTrinketTalentInfo = GetPvPTrinketTalentInfo
 	Internal.GetPvPTalentInfoForSpecID = GetPvPTalentInfoForSpecID
+	Internal.GetPvpTalentSlotInfoForSpecID = GetPvpTalentSlotInfoForSpecID
 end
 local GetEssenceInfoByID, GetEssenceInfoForRole;
 do

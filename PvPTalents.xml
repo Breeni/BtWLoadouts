@@ -1,7 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 	<Script file="PvPTalents.lua"/>
-
+    
     <Frame name="$parentPvPTalents" parentKey="PvPTalents" mixin="BtWLoadoutsPvPTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_PVP_TALENTS" type="global"/>
@@ -31,16 +31,6 @@
                     <OnEnterPressed function="EditBox_ClearFocus"/>
                 </Scripts>
             </EditBox>
-            <Frame name="$parentTalentRow" inherits="BtWLoadoutsTalentRowTemplate" parentKey="trinkets">
-                <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-38"/>
-                </Anchors>
-            </Frame>
-            <Frame name="$parentTalentGrid" inherits="BtWLoadoutsTalentGridTemplate" parentKey="others">
-                <Anchors>
-                    <Anchor point="TOP" relativeTo="$parentTalentRow" relativePoint="BOTTOM" x="0" y="-9"/>
-                </Anchors>
-            </Frame>
         </Frames>
         <Scripts>
             <OnLoad inherit="prepend" method="OnLoad"/>

@@ -1886,31 +1886,68 @@ BtWLoadoutsTalentButtonMixin = {};
 function BtWLoadoutsTalentButtonMixin:OnLoad()
 	self:RegisterForClicks("LeftButtonUp");
 end
-function BtWLoadoutsTalentButtonMixin:OnClick()
-	local row = self:GetParent();
-	local talents = row:GetParent();
-	local talentID = self.id;
+function BtWLoadoutsTalentButtonMixin:SetTalent(id, isPvP)
+	self.id, self.isPvP = id, isPvP
+end
+function BtWLoadoutsTalentButtonMixin:Update()
+	local id, isPvP = self.id, self.isPvP
 
-	if talents.set.talents[talentID] then
-		talents.set.talents[talentID] = nil;
+	self:SetShown(id ~= nil)
+	if not id then
+		return 
+	end
 
-		self.knownSelection:Hide();
-		self.icon:SetDesaturated(true);
+	local grid = self:GetParent();
+	local frame = grid:GetParent();
+	local set = frame.set
+
+	local func = isPvP and GetPvpTalentInfoByID or GetTalentInfoByID
+	local _, name, texture = func(id)
+	
+	self.Name:SetText(name);
+	self.Icon:SetTexture(texture);
+
+	if set and set.talents[id] then
+		self.KnownSelection:Show();
+		self.Icon:SetDesaturated(false);
+		self.Cover:Hide()
+		self:SetEnabled(true)
 	else
-		talents.set.talents[talentID] = true;
+		self.KnownSelection:Hide();
+		self.Icon:SetDesaturated(true);
 
-		self.knownSelection:Show();
-		self.icon:SetDesaturated(false);
-
-		for _,item in ipairs(row.talents) do
-			if item ~= self then
-				talents.set.talents[item.id] = nil;
-
-				item.knownSelection:Hide();
-				item.icon:SetDesaturated(true);
-			end
+		if grid:GetMaxSelections() == 1 then
+			self.Cover:Hide()
+			self:SetEnabled(true)
+		else
+			self.Cover:SetShown(grid:IsMaxSelections())
+			self:SetEnabled(not grid:IsMaxSelections())
 		end
 	end
+end
+function BtWLoadoutsTalentButtonMixin:OnClick()
+	local grid = self:GetParent();
+	local frame = grid:GetParent();
+	local selected = frame.set and frame.set.talents
+	local talentID = self.id;
+
+	if not selected then
+		return
+	end
+
+	if selected[talentID] then
+		selected[talentID] = nil;
+	else
+		if grid:GetMaxSelections() == 1 then
+			for _,talentID in ipairs(grid.talents) do
+				selected[talentID] = nil;
+			end
+		end
+
+		selected[talentID] = true;
+	end
+
+	grid:Update()
 end
 function BtWLoadoutsTalentButtonMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
@@ -1924,25 +1961,134 @@ function BtWLoadoutsTalentButtonMixin:OnLeave()
 	GameTooltip_Hide();
 end
 
-BtWLoadoutsTalentGridButtonMixin = CreateFromMixins(BtWLoadoutsTalentButtonMixin);
-function BtWLoadoutsTalentGridButtonMixin:OnClick()
-	local grid = self:GetParent();
-	local talents = grid:GetParent();
-	local talentID = self.id;
+local TALENT_ROW_HEIGHT = 51
+BtWLoadoutsTalentSelectionMixin = {}
+function BtWLoadoutsTalentSelectionMixin:OnLoad()
+	self.talents = {}
+	self.maxSelection = 1
+	self.Buttons = {}
 
-	if talents.set.talents[talentID] then
-		talents.set.talents[talentID] = nil;
+	self.BackgroundPool = CreateTexturePool(self, "BACKGROUND", 0, "BtWLoadoutsTalentRowBackgroundTemplate")
+	self.SeparatorPool = CreateTexturePool(self, "BORDER", 0, "BtWLoadoutsTalentRowSeparatorTemplate")
+	self.ButtonPool = CreateFramePool("BUTTON", self, "BtWLoadoutsTalentButtonTemplate")
+end
+function BtWLoadoutsTalentSelectionMixin:OnShow()
+	self:Update()
+end
+function BtWLoadoutsTalentSelectionMixin:Update()
+	local rows = math.ceil(#self.talents / 3)
+	if self.BackgroundPool:GetNumActive() ~= rows then
+		self.BackgroundPool:ReleaseAll()
+		self.SeparatorPool:ReleaseAll()
+		self.ButtonPool:ReleaseAll()
 
-		self.knownSelection:Hide();
-		self.icon:SetDesaturated(true);
-	else
-		talents.set.talents[talentID] = true;
+		table.wipe(self.Buttons)
 
-		self.knownSelection:Show();
-		self.icon:SetDesaturated(false);
+		local index = 1
+		local previous = nil
+		for i=1,rows do
+			local background = self.BackgroundPool:Acquire()
+			background:SetPoint("TOPLEFT", 0, -51 * (i - 1))
+			background:SetPoint("TOPRIGHT", 0, -51 * (i - 1))
+			background:Show()
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetSize(34, 50)
+				separator:SetTexCoord(0.5, 1, 0, 1)
+				separator:SetPoint("LEFT", background, "LEFT", 0, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetSize(34, 50)
+				separator:SetTexCoord(0, 0.5, 0, 1)
+				separator:SetPoint("RIGHT", background, "RIGHT", 0, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetPoint("CENTER", background, "LEFT", 190, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetPoint("CENTER", background, "RIGHT", -190, 0)
+				separator:Show()
+			end
+
+			
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 0, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 190, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 190 * 2, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+		end
+
+		self:SetHeight(rows * TALENT_ROW_HEIGHT)
 	end
 
-	talents:GetParent():Update();
+	for index,button in ipairs(self.Buttons) do
+		button:SetTalent(self.talents[index], self.isPvP)
+		button:Update()
+	end
+end
+function BtWLoadoutsTalentSelectionMixin:SetMaxSelections(value)
+	self.maxSelection = value
+	self:Update()
+end
+function BtWLoadoutsTalentSelectionMixin:GetMaxSelections()
+	return self.maxSelection
+end
+function BtWLoadoutsTalentSelectionMixin:IsMaxSelections()
+	local frame = self:GetParent()
+	local selected = frame.set and frame.set.talents
+	if not selected then
+		return false
+	end
+
+	local count = 0
+	for _,talentID in ipairs(self.talents) do
+		if selected[talentID] then
+			count = count + 1
+			if count == self.maxSelection then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+function BtWLoadoutsTalentSelectionMixin:SetTalents(tbl, isPvP)
+	self.talents, self.isPvP = tbl, (isPvP and true or false)
+	self:Update()
 end
 
 

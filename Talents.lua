@@ -226,6 +226,10 @@ Internal.CombineTalentSets = CombineTalentSets
 BtWLoadoutsTalentsMixin = {}
 function BtWLoadoutsTalentsMixin:OnLoad()
     self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
+    self.talentIDs = {}
+    for tier=1,MAX_TALENT_TIERS do
+        self.talentIDs[tier] = {}
+    end
 end
 function BtWLoadoutsTalentsMixin:OnShow()
     if not self.initialized then
@@ -307,22 +311,13 @@ function Internal.TalentsTabUpdate(self)
         end
 
         for tier=1,MAX_TALENT_TIERS do
+            local row = self.talentIDs[tier]
+            wipe(row)
             for column=1,3 do
-                local item = self.rows[tier].talents[column];
-                local talentID, name, texture, _, _, spellID = GetTalentInfoForSpecID(specID, tier, column);
-
-                item.id = talentID;
-                item.name:SetText(name);
-                item.icon:SetTexture(texture);
-
-                if selected[talentID] then
-                    item.knownSelection:Show();
-                    item.icon:SetDesaturated(false);
-                else
-                    item.knownSelection:Hide();
-                    item.icon:SetDesaturated(true);
-                end
+                row[column] = GetTalentInfoForSpecID(specID, tier, column)
             end
+
+            self.rows[tier]:SetTalents(row);
         end
 
         local playerSpecIndex = GetSpecialization()

@@ -291,6 +291,19 @@ function frame:PLAYER_ENTERING_WORLD()
             end
         end
 
+        spec.pvptalentslots = spec.pvptalentslots or {};
+        wipe(spec.pvptalentslots);
+        do
+            local index = 1
+            local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
+            while slotInfo do
+                spec.pvptalentslots[index] = slotInfo
+
+                index = index + 1
+                slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
+            end
+        end
+
         BtWLoadoutsSpecInfo[specID] = spec;
     end
 

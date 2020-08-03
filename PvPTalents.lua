@@ -9,6 +9,7 @@ local LearnPvpTalent = LearnPvpTalent;
 local GetPvpTalentSlotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo;
 local GetPvpTalentUnlockLevel = C_SpecializationInfo.GetPvpTalentUnlockLevel;
 local GetAllSelectedPvpTalentIDs = C_SpecializationInfo.GetAllSelectedPvpTalentIDs;
+local GetPvpTalentSlotInfoForSpecID = Internal.GetPvpTalentSlotInfoForSpecID;
 
 local GetSpecialization = GetSpecialization;
 local GetSpecializationInfo = GetSpecializationInfo;
@@ -241,6 +242,7 @@ Internal.CombinePvPTalentSets = CombinePvPTalentSets
 BtWLoadoutsPvPTalentsMixin = {}
 function BtWLoadoutsPvPTalentsMixin:OnLoad()
 	self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
+	self.GridPool = CreateFramePool("FRAME", self, "BtWLoadoutsTalentSelectionTemplate")
 end
 function BtWLoadoutsPvPTalentsMixin:OnShow()
     if not self.initialized then
@@ -251,6 +253,21 @@ function BtWLoadoutsPvPTalentsMixin:OnShow()
     end
 end
 
+local function CompareTalentList(a, b)
+	if #a ~= #b then
+		return false
+	end
+
+	for i=1,#a do
+		if a[i] ~= b[i] then
+			return false
+		end
+	end
+
+	return true
+end
+
+local GetPvpTalentSlotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo
 local MAX_PVP_TALENTS = 15;
 function Internal.PvPTalentsTabUpdate(self)
 	self:GetParent().TitleText:SetText(L["PvP Talents"]);
@@ -270,8 +287,8 @@ function Internal.PvPTalentsTabUpdate(self)
 	if self.set ~= nil then
 		self.Name:SetEnabled(true);
 		self.SpecDropDown.Button:SetEnabled(true);
-		self.trinkets:SetShown(true);
-		self.others:SetShown(true);
+		-- self.trinkets:SetShown(true);
+		-- self.others:SetShown(true);
 
 		local specID = self.set.specID;
 
@@ -303,7 +320,6 @@ function Internal.PvPTalentsTabUpdate(self)
 			sidebar:Update()
 		end
 
-
 		local selected = self.set.talents;
 
 		if not self.Name:HasFocus() then
@@ -321,61 +337,39 @@ function Internal.PvPTalentsTabUpdate(self)
 			UIDropDownMenu_EnableDropDown(self.SpecDropDown);
 		end
 
-		local trinkets = self.trinkets;
-		for column=1,3 do
-			local item = trinkets.talents[column];
-			local talentID, name, texture, _, _, spellID = Internal.GetPvPTrinketTalentInfo(specID, column);
+		do
+			self.GridPool:ReleaseAll()
 
-			item.isPvP = true;
-			item.id = talentID;
-			item.name:SetText(name);
-			item.icon:SetTexture(texture);
+			local previous
+			local index = 1
+			local slotInfo = GetPvpTalentSlotInfoForSpecID(specID, index)
+			while slotInfo do
+				local slotGrid
 
-			if selected[talentID] then
-				item.knownSelection:Show();
-				item.icon:SetDesaturated(false);
-			else
-				item.knownSelection:Hide();
-				item.icon:SetDesaturated(true);
-			end
-		end
-
-		local count = 0;
-		for index=1,MAX_PVP_TALENTS do
-			local talentID, name, texture, _, _, spellID = Internal.GetPvPTalentInfoForSpecID(specID, index);
-			if talentID and selected[talentID] then
-				count = count + 1;
-			end
-		end
-
-		local others = self.others;
-		for index=1,MAX_PVP_TALENTS do
-			local item = others.talents[index];
-			local talentID, name, texture, _, _, spellID = Internal.GetPvPTalentInfoForSpecID(specID, index);
-
-			if talentID then
-				item.isPvP = true;
-				item.id = talentID;
-				item.name:SetText(name);
-				item.icon:SetTexture(texture);
-
-				if selected[talentID] then
-					item.Cover:SetShown(false);
-					item:SetEnabled(true);
-
-					item.knownSelection:Show();
-					item.icon:SetDesaturated(false);
-				else
-					item.Cover:SetShown(count >= 3);
-					item:SetEnabled(count < 3);
-
-					item.knownSelection:Hide();
-					item.icon:SetDesaturated(true);
+				for grid in self.GridPool:EnumerateActive() do
+					if CompareTalentList(grid.talents, slotInfo.availableTalentIDs) then
+						grid:SetMaxSelections(grid:GetMaxSelections() + 1)
+						slotGrid = grid
+					end
 				end
 
-				item:Show();
-			else
-				item:Hide();
+				if not slotGrid then
+					slotGrid = self.GridPool:Acquire()
+					slotGrid:SetTalents(slotInfo.availableTalentIDs, true)
+					slotGrid:SetMaxSelections(1)
+
+					if previous then
+						slotGrid:SetPoint("TOP", previous, "BOTTOM")
+					else
+						slotGrid:SetPoint("TOPLEFT", 0, -38)
+					end
+					slotGrid:Show()
+
+					previous = slotGrid
+				end
+
+				index = index + 1
+				slotInfo = GetPvpTalentSlotInfoForSpecID(specID, index)
 			end
 		end
 
