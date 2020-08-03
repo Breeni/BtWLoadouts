@@ -57,6 +57,19 @@ do -- Filter chat spam
     end)
 end
 
+do -- Prevent new spells from flying to the action bar
+    local WasEventRegistered
+    Internal.OnEvent("LOADOUT_CHANGE_START", function ()
+        WasEventRegistered = IconIntroTracker:IsEventRegistered("SPELL_PUSHED_TO_ACTIONBAR")
+        IconIntroTracker:UnregisterEvent("SPELL_PUSHED_TO_ACTIONBAR")
+    end)
+    Internal.OnEvent("LOADOUT_CHANGE_END", function ()
+        if WasEventRegistered then
+            IconIntroTracker:RegisterEvent("SPELL_PUSHED_TO_ACTIONBAR")
+        end
+    end)
+end
+
 local function GetTalentSet(id)
     if type(id) == "table" then
 		return id;
