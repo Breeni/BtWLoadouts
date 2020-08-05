@@ -60,7 +60,7 @@ function Internal.CreateLauncherMinimapIcon()
         return
     end
 
-    local icon = LibStub and LibStub("/tin-1.0", true)
+    local icon = LibStub and LibStub("LibDBIcon-1.0", true)
     if icon then
         BtWLoadoutsSettings.LDBIcon = BtWLoadoutsSettings.LDBIcon or {
             minimapPos = BtWLoadoutsSettings.minimapAngle,
