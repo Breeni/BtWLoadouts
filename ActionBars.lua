@@ -351,7 +351,7 @@ local function CompareSlot(slot, tbl, settings)
     if tbl == nil then
         return actionType == nil
     elseif actionType == "macro" and tbl.type == "macro" then
-        local macroText = trim(GetMacroBody(id))
+        local macroText = trim(GetMacroBody(id) or "")
         -- Macro in the action slot has the same text as the macro we want
         if macroText == trim(tbl.macroText) then
             return true
@@ -751,10 +751,21 @@ Internal.DeleteActionBarSet = DeleteActionBarSet
 
 
 BtWLoadoutsActionButtonMixin = {}
-function BtWLoadoutsActionButtonMixin:OnClick()
+function BtWLoadoutsActionButtonMixin:OnClick(...)
 	local cursorType = GetCursorInfo()
 	if cursorType then
 		self:SetActionToCursor(GetCursorInfo())
+    elseif IsModifiedClick("CTRL") then
+        local set = self:GetParent().set;
+        local slot = self:GetID();
+        local tbl = set.actions[slot];
+        if tbl.type == "macro" then
+			local index = Internal.GetMacroByText(tbl.macroText)
+            if not index then
+                CreateMacro(tbl.name, "INV_Misc_QuestionMark", tbl.macroText, IsModifiedClick("SHIFT"));
+            end
+        end
+        BtWLoadoutsFrame:Update()
 	elseif IsModifiedClick("SHIFT") then
 		local set = self:GetParent().set;
 		self:SetIgnored(not set.ignored[self:GetID()]);
@@ -865,7 +876,7 @@ function BtWLoadoutsActionButtonMixin:Update()
 			if index then
 				name, icon = GetMacroInfo(index)
 			else
-				errors = L["Macro missing"]
+				errors = L["Macro missing\n|rCtrl+Left Click to create macro\nCtrl+Shift+Left Click to create character macro"]
 			end
 		elseif tbl.type == "equipmentset" then
 			local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
