@@ -271,25 +271,6 @@ function frame:PLAYER_ENTERING_WORLD()
     do
         local specID = GetSpecializationInfo(GetSpecialization());
         local spec = BtWLoadoutsSpecInfo[specID] or {};
-        spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-        wipe(spec.pvptalenttrinkets);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalenttrinkets[index] = talentID;
-            end
-        end
-
-        spec.pvptalents = spec.pvptalents or {};
-        wipe(spec.pvptalents);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalents[index] = talentID;
-            end
-        end
 
         spec.pvptalentslots = spec.pvptalentslots or {};
         wipe(spec.pvptalentslots);
@@ -407,23 +388,16 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
         local specID = GetSpecializationInfo(GetSpecialization());
         local spec = BtWLoadoutsSpecInfo[specID] or {};
 
-        spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-        wipe(spec.pvptalenttrinkets);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalenttrinkets[index] = talentID;
-            end
-        end
+        spec.pvptalentslots = spec.pvptalentslots or {};
+        wipe(spec.pvptalentslots);
+        do
+            local index = 1
+            local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
+            while slotInfo do
+                spec.pvptalentslots[index] = slotInfo
 
-        spec.pvptalents = spec.pvptalents or {};
-        wipe(spec.pvptalents);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalents[index] = talentID;
+                index = index + 1
+                slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
             end
         end
 
