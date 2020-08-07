@@ -934,7 +934,7 @@ end
 local function GetEquipmentSetByName(name)
 	return Internal.GetSetByName("equipment", name, EquipmentSetIsValid)
 end
-function Internal.GetEquipmentSets(id, ...)
+local function GetEquipmentSets(id, ...)
 	if id ~= nil then
 		return BtWLoadoutsSets.equipment[id], Internal.GetEquipmentSets(...);
 	end
@@ -951,7 +951,7 @@ function Internal.GetEquipmentSetIfNeeded(id)
 
     return set;
 end
-local function CombineEquipmentSets(result, ...)
+local function CombineEquipmentSets(result, state, ...)
 	result = result or {};
 
 	local playerCharacter = GetCharacterSlug()
@@ -1028,6 +1028,17 @@ Internal.ActivateEquipmentSet = ActivateEquipmentSet
 Internal.IsEquipmentSetActive = IsEquipmentSetActive
 Internal.CombineEquipmentSets = CombineEquipmentSets
 Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
+Internal.GetEquipmentSets = GetEquipmentSets
+
+Internal.AddLoadoutSegment({
+    id = "equipment",
+    name = L["Equipment"],
+    events = "PLAYER_EQUIPMENT_CHANGED",
+    get = GetEquipmentSets,
+    combine = CombineEquipmentSets,
+    isActive = IsEquipmentSetActive,
+    activate = ActivateEquipmentSet,
+})
 
 local GetCursorItemSource
 do

@@ -689,7 +689,7 @@ local function GetActionBarSets(id, ...)
 	end
 end
 -- Do not change the results action tables, that'll mess with the original sets
-local function CombineActionBarSets(result, ...)
+local function CombineActionBarSets(result, state, ...)
     result = result or {};
     result.actions = result.actions or {}
     result.ignored = result.ignored or {}
@@ -709,6 +709,11 @@ local function CombineActionBarSets(result, ...)
                 end
             end
 		end
+    end
+    
+    if state then
+        state.combatSwap = false
+        state.taxiSwap = false -- Maybe check for rested area or tomb first?
     end
 
 	return result;
@@ -748,7 +753,16 @@ Internal.GetActionBarSets = GetActionBarSets
 Internal.CombineActionBarSets = CombineActionBarSets
 Internal.DeleteActionBarSet = DeleteActionBarSet
 
-
+Internal.AddLoadoutSegment({
+    id = "actionbars",
+    name = L["Action Bars"],
+    after = "talents,pvptalents,essences,soulbinds,equipment",
+    events = "ACTIONBAR_SLOT_CHANGED",
+    get = GetActionBarSets,
+    combine = CombineActionBarSets,
+    isActive = IsActionBarSetActive,
+    activate = ActivateActionBarSet,
+})
 
 BtWLoadoutsActionButtonMixin = {}
 function BtWLoadoutsActionButtonMixin:OnClick(...)

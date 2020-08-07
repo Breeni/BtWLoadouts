@@ -148,6 +148,7 @@ end
 -- Activating a set can take multiple passes, things maybe delayed
 -- by switching spec or waiting for the player to use a tome
 local target = {};
+local targetstate = {};
 _G['BtWLoadoutsTarget'] = target; -- @TODO REMOVE
 
 -- Handles events during loadout changing
@@ -165,6 +166,7 @@ local function CancelActivateProfile()
 	end)
 
 	wipe(target);
+	wipe(targetstate);
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
@@ -376,42 +378,57 @@ local function ActivateProfile(profile)
 		return;
 	end
 
+	targetstate.combatSwap = true
+	targetstate.taxiSwap = true
+	targetstate.movingSwap = true
+
 	target.name = profile.name
+	target.state = targetstate
 
 	if specID then
 		target.specID = specID or profile.specID;
 	end
 
-	if profile.talents and #profile.talents > 0 then
-		target.talents = target.talents or {};
-		for _,setID in ipairs(profile.talents) do
-			target.talents[#target.talents+1] = setID;
+	for _,segment in ipairs(loadoutSegments) do
+		local id = segment.id
+		if profile[id] and #profile[id] > 0 then
+			target[id] = target[id] or {};
+			for _,setID in ipairs(profile[id]) do
+				target[id][#target[id]+1] = setID;
+			end
 		end
 	end
-	if profile.pvptalents and #profile.pvptalents > 0 then
-		target.pvptalents = target.pvptalents or {};
-		for _,setID in ipairs(profile.pvptalents) do
-			target.pvptalents[#target.pvptalents+1] = setID;
-		end
-	end
-	if profile.essences and #profile.essences > 0 then
-		target.essences = target.essences or {};
-		for _,setID in ipairs(profile.essences) do
-			target.essences[#target.essences+1] = setID;
-		end
-	end
-	if profile.equipment and #profile.equipment > 0 then
-		target.equipment = target.equipment or {};
-		for _,setID in ipairs(profile.equipment) do
-			target.equipment[#target.equipment+1] = setID;
-		end
-	end
-	if profile.actionbars and #profile.actionbars > 0 then
-		target.actionbars = target.actionbars or {};
-		for _,setID in ipairs(profile.actionbars) do
-			target.actionbars[#target.actionbars+1] = setID;
-		end
-	end
+
+	-- if profile.talents and #profile.talents > 0 then
+	-- 	target.talents = target.talents or {};
+	-- 	for _,setID in ipairs(profile.talents) do
+	-- 		target.talents[#target.talents+1] = setID;
+	-- 	end
+	-- end
+	-- if profile.pvptalents and #profile.pvptalents > 0 then
+	-- 	target.pvptalents = target.pvptalents or {};
+	-- 	for _,setID in ipairs(profile.pvptalents) do
+	-- 		target.pvptalents[#target.pvptalents+1] = setID;
+	-- 	end
+	-- end
+	-- if profile.essences and #profile.essences > 0 then
+	-- 	target.essences = target.essences or {};
+	-- 	for _,setID in ipairs(profile.essences) do
+	-- 		target.essences[#target.essences+1] = setID;
+	-- 	end
+	-- end
+	-- if profile.equipment and #profile.equipment > 0 then
+	-- 	target.equipment = target.equipment or {};
+	-- 	for _,setID in ipairs(profile.equipment) do
+	-- 		target.equipment[#target.equipment+1] = setID;
+	-- 	end
+	-- end
+	-- if profile.actionbars and #profile.actionbars > 0 then
+	-- 	target.actionbars = target.actionbars or {};
+	-- 	for _,setID in ipairs(profile.actionbars) do
+	-- 		target.actionbars[#target.actionbars+1] = setID;
+	-- 	end
+	-- end
 
 	if not target.active then
 		Internal.Call("LOADOUT_CHANGE_START")
@@ -445,63 +462,61 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
 	eventHandler:Show();
 end
-local temp = {}
-local function IsProfileActive(set)
-	if set.specID then
-		local playerSpecID = GetSpecializationInfo(GetSpecialization());
-		if set.specID ~= playerSpecID then
-			return false;
+local IsProfileActive, AddWipeCacheEvents
+do
+	local temp = {}
+	local function IsActive(set)
+		if set.specID then
+			local playerSpecID = GetSpecializationInfo(GetSpecialization());
+			if set.specID ~= playerSpecID then
+				return false;
+			end
 		end
-    end
 
-    -- for _,segment in ipairs(loadoutSegments) do
-    --     local ids = set[segment.id]
-    --     if ids then
-    --         wipe(temp);
-    --         segment.combine(temp, unpack(ids));
-    --         if not set.isActive(temp) then
-    --             return false;
-    --         end
-    --     end
-    -- end
+		for _,segment in ipairs(loadoutSegments) do
+			local ids = set[segment.id]
+			if ids and #ids > 0 then
+				wipe(temp);
 
-    if set.talents then
-		local subset = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talents)));
-		if not Internal.IsTalentSetActive(subset) then
-			return false;
+				segment.combine(temp, nil, segment.get(unpack(ids)));
+				if not segment.isActive(temp) then
+					return false;
+				end
+			end
+		end
+
+		return true;
+	end
+	local activeLoadoutCache = setmetatable({}, {
+		__index = function(self, key)
+			if type(key) == "number" then
+				local result = activeLoadoutCache[GetProfile(key)]
+				self[key] = result
+				return result
+			elseif type(key) == "table" then
+				local result = IsActive(key)
+				self[key] = result
+				return result
+			end
+		end,
+	});
+	function IsProfileActive(set)
+		return activeLoadoutCache[set]
+	end
+	local wipeEventHandler = CreateFrame("Frame");
+	wipeEventHandler:Hide();
+	wipeEventHandler:SetScript("OnEvent", function ()
+		wipe(activeLoadoutCache);
+	end);
+
+	function AddWipeCacheEvents(...)
+		for i=1,select('#', ...) do
+			local event = select(i, ...)
+			wipeEventHandler:RegisterEvent(event)
 		end
 	end
-
-    if set.pvptalents then
-		local subset = Internal.CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvptalents)));
-		if not Internal.IsPvPTalentSetActive(subset) then
-			return false;
-		end
-	end
-
-    if set.essences then
-		local subset = Internal.CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essences)));
-		if not Internal.IsEssenceSetActive(subset) then
-			return false;
-		end
-	end
-
-    if set.equipment then
-		local subset = Internal.CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipment)));
-		if not Internal.IsEquipmentSetActive(subset) then
-			return false;
-		end
-	end
-
-    if set.actionbars then
-		local subset = Internal.CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionbars)));
-		if not Internal.IsActionBarSetActive(subset) then
-			return false;
-		end
-	end
-
-	return true;
 end
+
 local function GetActiveProfiles()
 	if target.active then
 		if target.name then
@@ -524,8 +539,10 @@ local function GetActiveProfiles()
 	table.sort(activeProfiles)
 	return table.concat(activeProfiles, "/");
 end
+local combinedSets = {}
 local function ContinueActivateProfile()
-    local set = target
+	local set = target
+	local state = target.state
 	set.dirty = false
 
 	if Internal.CheckTimeout() then
@@ -535,20 +552,62 @@ local function ContinueActivateProfile()
 	end
 
 	Internal.SetWaitReason() -- Clear wait reason
-
 	Internal.UpdateLauncher(GetActiveProfiles());
-
-	if InCombatLockdown() then
-		Internal.SetWaitReason(L["Waiting for combat to end"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-        return;
-    end
 
 	if IsChangingSpec() then
 		Internal.SetWaitReason(L["Waiting for specialization change"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
 	end
+
+	local specID = set.specID;
+	local playerSpecID = GetSpecializationInfo(GetSpecialization());
+	if specID ~= nil and specID ~= playerSpecID then
+		-- Need to change spec
+		state.combatSwap = false
+		state.taxiSwap = false
+		state.movingSwap = false
+	end
+
+	wipe(combinedSets)
+	for _,segment in ipairs(loadoutSegments) do
+		segment.combine(combinedSets[segment.id], state, segment.get(unpack(target[segment.id])))
+	end
+	
+	if not state.combatSwap and InCombatLockdown() then
+		Internal.SetWaitReason(L["Waiting for combat to end"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		return;
+	end
+
+	if not state.taxiSwap and UnitOnTaxi("player") then
+		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+        return;
+	end
+
+	if not state.movingSwap and IsPlayerMoving() then
+		Internal.SetWaitReason(L["Waiting to change specialization"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		return;
+	end
+
+	if specID ~= nil and specID ~= playerSpecID then
+		for specIndex=1,GetNumSpecializations() do
+			if GetSpecializationInfo(specIndex) == specID then
+				Internal.LogMessage("Switching specialization to %s", (select(2, GetSpecializationInfo(specIndex))))
+				SetSpecialization(specIndex);
+				target.dirty = false;
+				return;
+			end
+		end
+	end
+--[[
+	if InCombatLockdown() then
+		Internal.SetWaitReason(L["Waiting for combat to end"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+        return;
+    end
 
 	if UnitOnTaxi("player") then
 		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
@@ -576,7 +635,7 @@ local function ContinueActivateProfile()
 			end
 		end
 	end
-
+]]
 	local talentSet;
 	if set.talents then
 		talentSet = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talents)));
@@ -770,8 +829,31 @@ end)
 
 -- [[ Internal API ]]
 -- Loadouts are split into segments, ... @TODO
-function Internal.AddLoadoutSegment(details)
-    loadoutSegments[#loadoutSegments+1] = details;
+do
+	local function MustBeBefore(a, b)
+		if b.after then
+			for after in string.gmatch(b.after, "[^,]+") do
+				if after == a.id then
+					return true
+				end
+			end
+		end
+
+		return false
+	end
+	function Internal.AddLoadoutSegment(details)
+		if details.events then
+			AddWipeCacheEvents(strsplit(",", details.events))
+		end
+
+		for index,segment in ipairs(loadoutSegments) do
+			if MustBeBefore(details, segment) then
+				table.insert(loadoutSegments, index, details)
+				return
+			end
+		end
+		loadoutSegments[#loadoutSegments+1] = details;
+	end
 end
 function Internal.IsActivatingLoadout()
     return target.active

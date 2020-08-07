@@ -173,7 +173,7 @@ end
 local function GetPvPTalentSetByName(name)
 	return Internal.GetSetByName("pvptalents", name, PvPTalentSetIsValid)
 end
-function Internal.GetPvPTalentSets(id, ...)
+local function GetPvPTalentSets(id, ...)
 	if id ~= nil then
 		return BtWLoadoutsSets.pvptalents[id], Internal.GetPvPTalentSets(...);
 	end
@@ -190,7 +190,7 @@ function Internal.GetPvPTalentSetIfNeeded(id)
 
     return set;
 end
-local function CombinePvPTalentSets(result, ...)
+local function CombinePvPTalentSets(result, state, ...)
 	result = result or {};
 	result.talents = {};
 
@@ -238,6 +238,18 @@ Internal.DeletePvPTalentSet = DeletePvPTalentSet
 Internal.ActivatePvPTalentSet = ActivatePvPTalentSet
 Internal.IsPvPTalentSetActive = IsPvPTalentSetActive
 Internal.CombinePvPTalentSets = CombinePvPTalentSets
+Internal.GetPvPTalentSets = GetPvPTalentSets
+
+Internal.AddLoadoutSegment({
+    id = "pvptalents",
+    name = L["PvP Talents"],
+    after = "essences", -- Essences can give pvp talents
+    events = "PLAYER_PVP_TALENT_UPDATE",
+    get = GetPvPTalentSets,
+    combine = CombinePvPTalentSets,
+    isActive = IsPvPTalentSetActive,
+    activate = ActivatePvPTalentSet,
+})
 
 BtWLoadoutsPvPTalentsMixin = {}
 function BtWLoadoutsPvPTalentsMixin:OnLoad()

@@ -99,7 +99,7 @@ end
 local function GetEssenceSetByName(name)
 	return Internal.GetSetByName("essences", name, EssenceSetIsValid)
 end
-function Internal.GetEssenceSets(id, ...)
+local function GetEssenceSets(id, ...)
 	if id ~= nil then
 		return BtWLoadoutsSets.essences[id], Internal.GetEssenceSets(...);
 	end
@@ -116,7 +116,7 @@ function Internal.GetEssenceSetIfNeeded(id)
 
     return set;
 end
-local function CombineEssenceSets(result, ...)
+local function CombineEssenceSets(result, state, ...)
 	result = result or {};
 
 	result.essences = {};
@@ -180,8 +180,18 @@ Internal.DeleteEssenceSet = DeleteEssenceSet
 Internal.ActivateEssenceSet = ActivateEssenceSet
 Internal.IsEssenceSetActive = IsEssenceSetActive
 Internal.CombineEssenceSets = CombineEssenceSets
+Internal.GetEssenceSets = GetEssenceSets
 
-
+Internal.AddLoadoutSegment({
+    id = "essences",
+    name = L["Essences"],
+    after = "equipment",
+    events = "AZERITE_ESSENCE_UPDATE",
+    get = GetEssenceSets,
+    combine = CombineEssenceSets,
+    isActive = IsEssenceSetActive,
+    activate = ActivateEssenceSet,
+})
 
 BtWLoadoutsAzeriteMilestoneSlotMixin = {};
 function BtWLoadoutsAzeriteMilestoneSlotMixin:OnLoad()

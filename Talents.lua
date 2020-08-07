@@ -161,7 +161,7 @@ end
 local function GetTalentSetByName(name)
 	return Internal.GetSetByName("talents", name, TalentSetIsValid)
 end
-function Internal.GetTalentSets(id, ...)
+local function GetTalentSets(id, ...)
 	if id ~= nil then
 		return Internal.GetTalentSet(id), Internal.GetTalentSets(...);
 	end
@@ -179,7 +179,7 @@ function Internal.GetTalentSetIfNeeded(id)
     return set;
 end
 local talentSetsByTier = {};
-local function CombineTalentSets(result, ...)
+local function CombineTalentSets(result, state, ...)
 	result = result or {};
 	result.talents = {};
 
@@ -197,7 +197,12 @@ local function CombineTalentSets(result, ...)
 				talentSetsByTier[tier] = talentID;
 			end
 		end
-	end
+    end
+    
+    if state then
+        state.combatSwap = false
+        state.taxiSwap = false -- Maybe check for rested area or tomb first?
+    end
 
 	return result;
 end
@@ -235,6 +240,17 @@ Internal.DeleteTalentSet = DeleteTalentSet
 Internal.ActivateTalentSet = ActivateTalentSet
 Internal.IsTalentSetActive = IsTalentSetActive
 Internal.CombineTalentSets = CombineTalentSets
+Internal.GetTalentSets = GetTalentSets
+
+Internal.AddLoadoutSegment({
+    id = "talents",
+    name = L["Talents"],
+    events = "PLAYER_TALENT_UPDATE",
+    get = GetTalentSets,
+    combine = CombineTalentSets,
+    isActive = IsTalentSetActive,
+    activate = ActivateTalentSet,
+})
 
 BtWLoadoutsTalentsMixin = {}
 function BtWLoadoutsTalentsMixin:OnLoad()
