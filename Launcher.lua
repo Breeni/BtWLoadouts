@@ -38,6 +38,7 @@ function Internal.CreateLauncher()
                     tooltip:AddLine(L["Activating Loadout"], 1, 1, 1);
                     tooltip:AddLine(Internal.GetWaitReason())
                 end
+                tooltip:Show()
             end,
         })
     end
