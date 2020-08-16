@@ -43,6 +43,7 @@ local GetCharacterInfo = Internal.GetCharacterInfo;
 local GetCharacterSlug = Internal.GetCharacterSlug
 
 local loadoutSegments = {}
+_G['BtWLoadoutsLoadoutSegments'] = loadoutSegments; -- @TODO REMOVE
 
 local PlayerNeedsTome;
 do
@@ -571,9 +572,11 @@ local function ContinueActivateProfile()
 
 	wipe(combinedSets)
 	for _,segment in ipairs(loadoutSegments) do
-		segment.combine(combinedSets[segment.id], state, segment.get(unpack(target[segment.id])))
+		if target[segment.id] then
+			combinedSets[segment.id] = segment.combine(combinedSets[segment.id], state, segment.get(unpack(target[segment.id])))
+		end
 	end
-	
+
 	if not state.combatSwap and InCombatLockdown() then
 		Internal.SetWaitReason(L["Waiting for combat to end"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
@@ -596,12 +599,26 @@ local function ContinueActivateProfile()
 		for specIndex=1,GetNumSpecializations() do
 			if GetSpecializationInfo(specIndex) == specID then
 				Internal.LogMessage("Switching specialization to %s", (select(2, GetSpecializationInfo(specIndex))))
+				Internal.SetWaitReason(L["Waiting for specialization change"])
 				SetSpecialization(specIndex);
 				target.dirty = false;
 				return;
 			end
 		end
 	end
+
+	if state.customWait then
+		Internal.SetWaitReason(state.customWait)
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		return
+	end
+
+	if state.needTome and PlayerNeedsTome() then
+		Internal.SetWaitReason(L["Waiting for tome"])
+		RequestTome();
+		return;
+	end
+
 --[[
 	if InCombatLockdown() then
 		Internal.SetWaitReason(L["Waiting for combat to end"])
@@ -636,6 +653,8 @@ local function ContinueActivateProfile()
 		end
 	end
 ]]
+
+--[[
 	local talentSet;
 	if set.talents then
 		talentSet = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talents)));
@@ -674,6 +693,7 @@ local function ContinueActivateProfile()
 		RequestTome();
 		return;
 	end
+]]
 
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
@@ -684,6 +704,19 @@ local function ContinueActivateProfile()
 	end
 
 	local complete = true;
+	for _,segment in ipairs(loadoutSegments) do
+		if combinedSets[segment.id] then
+			local segmentComplete, segmentDirty = segment.activate(combinedSets[segment.id], state)
+			if not segmentComplete then
+				complete = false
+			end
+			if segmentDirty then
+				set.dirty = true
+			end
+		end
+	end
+
+--[[
     if talentSet then
 		if not Internal.ActivateTalentSet(talentSet) then
 			complete = false;
@@ -736,6 +769,7 @@ local function ContinueActivateProfile()
 			end
 		end
 	end
+]]
 
 	-- Done
 	if complete then

@@ -85,7 +85,7 @@ local function IsPvPTalentSetActive(set)
 
     return true;
 end
-local function ActivatePvPTalentSet(set, checkExtraTalents)
+local function ActivatePvPTalentSet(set, state)
 	local success, complete = true, true;
 	local talents = {};
 	local usedSlots = {};
@@ -103,7 +103,7 @@ local function ActivatePvPTalentSet(set, checkExtraTalents)
 		end
 	end
 
-	if checkExtraTalents then
+	if state.conflictAndStrife then
 		local talentIDs = GetAllSelectedPvpTalentIDs()
 		for _,talentID in pairs(talentIDs) do
 			if talents[talentID] then
@@ -132,7 +132,7 @@ local function ActivatePvPTalentSet(set, checkExtraTalents)
 		end
 	end
 
-	return complete
+	return complete, false
 end
 local function RefreshPvPTalentSet(set)
     local talents = set.talents or {}
@@ -201,6 +201,10 @@ local function CombinePvPTalentSets(result, state, ...)
 				result.talents[talentID] = true;
 			end
 		end
+	end
+
+	if state then
+		state.combatSwap = false
 	end
 
 	return result;

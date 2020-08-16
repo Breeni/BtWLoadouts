@@ -81,6 +81,31 @@ function frame:ADDON_LOADED(...)
                 end
             end
         end
+        if BtWLoadoutsSets.talents.version ~= Internal.GetSpecInfoVersion() then
+            local changed = false
+            local FixTalentSet = Internal.FixTalentSet
+            for _,set in pairs(BtWLoadoutsSets.talents) do
+                if type(set) == "table" then
+                    local setChanged = FixTalentSet(set)
+                    
+                    changed = setChanged or changed
+                end
+            end
+
+            BtWLoadoutsSets.talents.version = Internal.GetSpecInfoVersion()
+            if changed then
+                print(L["BtWLoadouts: Some talents sets were updated to account for talent changes"])
+            end
+        end
+        -- for setID,set in pairs(BtWLoadoutsSets.talents) do
+        --     if type(set) == "table" then
+        --         for talentID in pairs(set.talents) do
+        --             if GetPvPTalentInfoByID(talentID) == nil then
+        --                 set.talents[talentID] = nil
+        --             end
+        --         end
+        --     end
+        -- end
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" then
                 set.extras = set.extras or {};

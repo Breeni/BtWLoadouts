@@ -48,6 +48,8 @@ function Internal.GetCharacterSlug()
 	return realm .. "-" .. name
 end
 
+local GetSpecInfoVersion;
+local VerifyTalentForSpec;
 local GetTalentInfoForSpecID;
 local GetPvPTrinketTalentInfo;
 local GetPvPTalentInfoForSpecID;
@@ -56,6 +58,8 @@ do
 	local specInfo
 	if select(4, GetBuildInfo()) < 90000 then
 		specInfo = {
+			version = 1,
+
 			-- Warrior
 			[71] = { -- Arms
 				talents = {
@@ -1736,6 +1740,8 @@ do
 		}
 	else
 		specInfo = {
+			version = 2,
+
 			-- Warrior
 			[71] = { -- Arms
 				talents = {
@@ -3193,6 +3199,20 @@ do
 			},
 		}
 	end
+	function GetSpecInfoVersion()
+		return specInfo.version
+	end
+	function VerifyTalentForSpec(specID, talentID)
+		if specInfo[specID] then
+			for tier,talents in ipairs(specInfo[specID].talents) do
+				for column,talent in ipairs(talents) do
+					if talent == talentID then
+						return tier, column
+					end
+				end
+			end
+		end
+	end
 	function GetTalentInfoForSpecID(specID, tier, column)
 		for specIndex=1,GetNumSpecializations() do
 			local playerSpecID = GetSpecializationInfo(specIndex);
@@ -3224,6 +3244,8 @@ do
 			return specInfo[specID].pvptalentslots[index];
 		end
 	end
+	Internal.GetSpecInfoVersion = GetSpecInfoVersion
+	Internal.VerifyTalentForSpec = VerifyTalentForSpec
 	Internal.GetTalentInfoForSpecID = GetTalentInfoForSpecID
 	Internal.GetPvpTalentSlotInfoForSpecID = GetPvpTalentSlotInfoForSpecID
 end

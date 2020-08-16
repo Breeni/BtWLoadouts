@@ -485,7 +485,7 @@ do
 			if not ignored[inventorySlotId] and expected[inventorySlotId] then
 				local itemLink = expected[inventorySlotId]
 				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
-		
+
 				if uniqueFamily ~= nil then
 					uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 
@@ -500,7 +500,7 @@ do
 				local gemName, gemLink = GetItemGem(itemLink, index)
 				while gemName do
 					uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
-		
+
 					if uniqueFamily ~= nil then
 						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 
@@ -666,14 +666,14 @@ do
 					end
 				end
 			end
-			
+
 			-- If we arent swapping an item out and its in some way unique we may need to skip swapping another unique item in
 			if ignored[inventorySlotId] then
 				local itemLink = GetInventoryItemLink("player", inventorySlotId)
 				if itemLink then
 					local itemID = GetItemInfoInstant(itemLink)
 					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
-			
+
 					if uniqueFamily ~= nil then
 						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 					end
@@ -683,7 +683,7 @@ do
 					while gemName do
 						itemID = GetItemInfoInstant(gemLink)
 						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
-			
+
 						if uniqueFamily ~= nil then
 							uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 						end
@@ -815,7 +815,7 @@ do
 			end
 		end
 
-		return complete;
+		return complete, false;
 	end
 end
 local function GetEquipmentSet(id)
@@ -843,7 +843,7 @@ local function AddEquipmentSet()
 
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
-		
+
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
 		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			local slotExtras = {azerite = {}};
@@ -899,7 +899,7 @@ local function RefreshEquipmentSet(set)
 
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
-		
+
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
 		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			set.extras[inventorySlotId] = set.extras[inventorySlotId] or {};
@@ -977,6 +977,9 @@ local function CombineEquipmentSets(result, state, ...)
 						set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
 					end
 					set.locations[inventorySlotId] = location;
+					if set.extras[inventorySlotId] then
+						wipe(set.extras[inventorySlotId])
+					end
 				end
 			end
 			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
@@ -989,6 +992,20 @@ local function CombineEquipmentSets(result, state, ...)
 			end
 		end
 	end
+
+	CheckEquipmentSetForIssues(result)
+
+    if state then
+		state.combatSwap = false
+
+		if result.ignored[INVSLOT_NECK] then
+			state.heartEquipped = GetInventoryItemID("player", INVSLOT_NECK) == 158075
+		elseif result.equipment[INVSLOT_NECK] then
+			state.heartEquipped = GetItemInfoInstant(result.equipment[INVSLOT_NECK]) == 158075
+		else
+			state.heartEquipped = false
+		end
+    end
 
 	return result;
 end

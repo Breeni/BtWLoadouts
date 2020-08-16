@@ -35,9 +35,9 @@ local function IsEssenceSetActive(set)
 
     return true;
 end
-local function ActivateEssenceSet(set)
+local function ActivateEssenceSet(set, state)
 	local success, complete = true, true;
-	if CanActivateEssences() then
+	if CanActivateEssences() and state.heartEquipped then
 		for milestoneID,essenceID in pairs(set.essences) do
 			local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
 			local essenceName, essenceRank = info.name, info.rank
@@ -58,7 +58,7 @@ local function ActivateEssenceSet(set)
 		end
 	end
 
-	return complete;
+	return complete, not complete;
 end
 local function RefreshEssenceSet(set)
     local essences = set.essences or {}
@@ -116,15 +116,79 @@ function Internal.GetEssenceSetIfNeeded(id)
 
     return set;
 end
+--[[
+    Check what is needed to activate this talent set
+    return isActive, waitForCooldown
+]]
+local function EssenceSetRequirements(set)
+    local isActive, waitForCooldown = true, false
+
+	for milestoneID,essenceID in pairs(set.essences) do
+		if essenceID ~= C_AzeriteEssence.GetMilestoneEssence(milestoneID) then
+			isActive = false
+
+			local spellID = C_AzeriteEssence.GetMilestoneSpell(milestoneID)
+			if spellID then
+				spellID = FindSpellOverrideByID(spellID)
+				local start, duration = GetSpellCooldown(spellID)
+				if start ~= 0 then -- Milestone spell on cooldown, we need to wait before switching
+					Internal.DirtyAfter((start + duration) - GetTime() + 1)
+					waitForCooldown = true
+					break
+				end
+			end
+		end
+	end
+
+    -- for talentID in pairs(set.talents) do
+    --     local row = select(8, GetTalentInfoByID(talentID, 1))
+    --     local column = select(2, GetTalentTierInfo(row, 1))
+    --     local selectedTalentID, _, _, _, _, spellID = GetTalentInfo(row, column, 1)
+
+    --     if selectedTalentID ~= talentID then
+    --         isActive = false
+
+    --         if spellID then
+    --             spellID = FindSpellOverrideByID(spellID)
+    --             local start, duration = GetSpellCooldown(spellID)
+    --             if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+    --                 Internal.DirtyAfter((start + duration) - GetTime() + 1)
+    --                 waitForCooldown = true
+    --                 break -- We dont actually need to check anything more
+    --             end
+    --         end
+    --     end
+    -- end
+
+    return isActive, waitForCooldown
+end
 local function CombineEssenceSets(result, state, ...)
 	result = result or {};
 
 	result.essences = {};
-	if CanActivateEssences() then
+	if CanActivateEssences() then -- Check if essences have been unlocked
 		for i=1,select('#', ...) do
 			local set = select(i, ...);
 			for milestoneID, essenceID in pairs(set.essences) do
 				result.essences[milestoneID] = essenceID;
+			end
+		end
+
+		if state then
+			state.combatSwap = false
+			state.taxiSwap = false -- Maybe check for rested area or tomb first?
+
+			if result.essences[115] == nil then
+				state.conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped
+			else
+				state.conflictAndStrife = result.essences[115] == 32
+			end
+
+			if not state.customWait or not state.needTome then
+				local isActive, waitForCooldown = EssenceSetRequirements(result)
+
+				state.needTome = state.needTome or (not isActive)
+				state.customWait = state.customWait or (waitForCooldown and L["Waiting for essence cooldown"])
 			end
 		end
 	end

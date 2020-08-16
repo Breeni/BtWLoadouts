@@ -70,6 +70,21 @@ do -- Prevent new spells from flying to the action bar
     end)
 end
 
+-- Make sure talent sets dont have incorrect id, call from GetTalentSet and the UI?
+local function FixTalentSet(set)
+    local temp = {}
+    local changed = false
+    for talentID in pairs(set.talents) do
+        local tier, column = Internal.VerifyTalentForSpec(set.specID, talentID)
+        if tier == nil or temp[tier] then
+            set[talentID] = nil
+            changed = true
+        else
+            temp[tier] = talentID
+        end
+    end
+    return changed
+end
 local function GetTalentSet(id)
     if type(id) == "table" then
 		return id;
@@ -101,6 +116,10 @@ local function IsTalentSetActive(set)
 
     return true;
 end
+--[[
+    Activate a talent set
+    return complete, dirty
+]]
 local function ActivateTalentSet(set)
 	local success, complete = true, true;
 	for talentID in pairs(set.talents) do
@@ -114,7 +133,7 @@ local function ActivateTalentSet(set)
 		end
     end
 
-	return complete;
+	return complete, false;
 end
 local function RefreshTalentSet(set)
     local talents = set.talents or {}
@@ -155,6 +174,35 @@ local function TalentSetDelay(set)
     end
     return false
 end
+--[[
+    Check what is needed to activate this talent set
+    return isActive, waitForCooldown
+]]
+local function TalentSetRequirements(set)
+    local isActive, waitForCooldown = true, false
+
+    for talentID in pairs(set.talents) do
+        local row = select(8, GetTalentInfoByID(talentID, 1))
+        local column = select(2, GetTalentTierInfo(row, 1))
+        local selectedTalentID, _, _, _, _, spellID = GetTalentInfo(row, column, 1)
+
+        if selectedTalentID ~= talentID then
+            isActive = false
+
+            if spellID then
+                spellID = FindSpellOverrideByID(spellID)
+                local start, duration = GetSpellCooldown(spellID)
+                if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+                    Internal.DirtyAfter((start + duration) - GetTime() + 1)
+                    waitForCooldown = true
+                    break -- We dont actually need to check anything more
+                end
+            end
+        end
+    end
+
+    return isActive, waitForCooldown
+end
 local function GetTalentSetsByName(name)
 	return Internal.GetSetsByName("talents", name)
 end
@@ -163,7 +211,7 @@ local function GetTalentSetByName(name)
 end
 local function GetTalentSets(id, ...)
 	if id ~= nil then
-		return Internal.GetTalentSet(id), Internal.GetTalentSets(...);
+		return GetTalentSet(id), GetTalentSets(...);
 	end
 end
 function Internal.GetTalentSetIfNeeded(id)
@@ -198,10 +246,17 @@ local function CombineTalentSets(result, state, ...)
 			end
 		end
     end
-    
+
     if state then
         state.combatSwap = false
         state.taxiSwap = false -- Maybe check for rested area or tomb first?
+
+        if not state.customWait or not state.needTome then
+            local isActive, waitForCooldown = TalentSetRequirements(result)
+
+            state.needTome = state.needTome or (not isActive)
+            state.customWait = state.customWait or (waitForCooldown and L["Waiting for talent cooldown"])
+        end
     end
 
 	return result;
@@ -230,6 +285,7 @@ local function DeleteTalentSet(id)
 	end
 end
 
+Internal.FixTalentSet = FixTalentSet
 Internal.GetTalentSet = GetTalentSet
 Internal.GetTalentSetsByName = GetTalentSetsByName
 Internal.GetTalentSetByName = GetTalentSetByName

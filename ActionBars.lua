@@ -625,7 +625,7 @@ local function IsActionBarSetActive(set)
 
     return true;
 end
-local function ActivateActionBarSet(set)
+local function ActivateActionBarSet(set, state)
     local complete = true
     for slot=1,120 do
         if not set.ignored[slot] then
@@ -639,7 +639,7 @@ local function ActivateActionBarSet(set)
             end
         end
     end
-    return complete
+    return complete, not complete
 end
 local function RefreshActionBarSet(set)
     local actions = set.actions or {}
@@ -713,7 +713,6 @@ local function CombineActionBarSets(result, state, ...)
     
     if state then
         state.combatSwap = false
-        state.taxiSwap = false -- Maybe check for rested area or tomb first?
     end
 
 	return result;
