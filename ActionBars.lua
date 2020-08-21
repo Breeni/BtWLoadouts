@@ -763,6 +763,9 @@ function BtWLoadoutsActionButtonMixin:OnClick(...)
 			local index = Internal.GetMacroByText(tbl.macroText)
             if not index then
                 CreateMacro(tbl.name, "INV_Misc_QuestionMark", tbl.macroText, IsModifiedClick("SHIFT"));
+                if MacroFrame_Update then
+                    MacroFrame_Update()
+                end
             end
         end
         BtWLoadoutsFrame:Update()
