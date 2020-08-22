@@ -141,7 +141,9 @@ do
         if name == nil then
             macro.icon = icon or macro.icon
             if body ~= nil then -- Only the body has changed so macros wont have reordered
-                macroBodyMap[macro.body] = nil -- Setting to nil will cause the index metamethod to run if needed later
+                if macro.body then
+                    macroBodyMap[macro.body] = nil -- Setting to nil will cause the index metamethod to run if needed later
+                end
                 macro.body = body
                 macroBodyMap[body] = id
             end
