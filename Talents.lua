@@ -70,6 +70,32 @@ do -- Prevent new spells from flying to the action bar
     end)
 end
 
+local function UpdateTalentSetFilters(set)
+    local specID = set.specID;
+
+    local filters = set.filters or {}
+    filters.spec = specID
+    if specID then
+        filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+    else
+        filters.role, filters.class = nil, nil
+    end
+
+    -- Rebuild character list
+    filters.character = filters.character or {}
+    local characters = filters.character
+    table.wipe(characters)
+    local class = filters.class
+    for _,character in Internal.CharacterIterator() do
+        if class == Internal.GetCharacterInfo(character).class then
+            characters[#characters+1] = character
+        end
+    end
+
+    set.filters = filters
+
+    return set
+end
 local function GetTalentSet(id)
     if type(id) == "table" then
 		return id;
@@ -128,7 +154,7 @@ local function RefreshTalentSet(set)
     end
     set.talents = talents
 
-    return set
+    return UpdateTalentSetFilters(set)
 end
 local function AddTalentSet()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
@@ -161,12 +187,12 @@ end
 local function GetTalentSetByName(name)
 	return Internal.GetSetByName("talents", name, TalentSetIsValid)
 end
-function Internal.GetTalentSets(id, ...)
+local function GetTalentSets(id, ...)
 	if id ~= nil then
 		return Internal.GetTalentSet(id), Internal.GetTalentSets(...);
 	end
 end
-function Internal.GetTalentSetIfNeeded(id)
+local function GetTalentSetIfNeeded(id)
 	if id == nil then
 		return;
 	end
@@ -226,6 +252,8 @@ local function DeleteTalentSet(id)
 end
 
 Internal.GetTalentSet = GetTalentSet
+Internal.GetTalentSets = GetTalentSets
+Internal.GetTalentSetIfNeeded = GetTalentSetIfNeeded
 Internal.GetTalentSetsByName = GetTalentSetsByName
 Internal.GetTalentSetByName = GetTalentSetByName
 Internal.TalentSetDelay = TalentSetDelay
@@ -279,31 +307,8 @@ function Internal.TalentsTabUpdate(self)
 
 		local set = self.set
 
-		-- Update filters
-		do
-			local filters = set.filters or {}
-			filters.spec = specID
-			if specID then
-				filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
-			else
-				filters.role, filters.class = nil, nil
-			end
-
-			-- Rebuild character list
-			filters.character = filters.character or {}
-			local characters = filters.character
-			wipe(characters)
-			local class = filters.class
-			for _,character in Internal.CharacterIterator() do
-				if class == Internal.GetCharacterInfo(character).class then
-					characters[#characters+1] = character
-				end
-            end
-
-			set.filters = filters
-
-			sidebar:Update()
-		end
+		UpdateTalentSetFilters(set)
+        sidebar:Update()
 
         local selected = self.set.talents;
 
