@@ -11,7 +11,6 @@ local IsResting = IsResting;
 local UnitAura = UnitAura;
 local UnitClass = UnitClass;
 local UnitLevel = UnitLevel;
-local UnitFullName = UnitFullName;
 local UnitCastingInfo = UnitCastingInfo;
 local GetClassColor = C_ClassColor.GetClassColor;
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE;
@@ -41,6 +40,7 @@ local format = string.format;
 local AddSet = Internal.AddSet;
 local DeleteSet = Internal.DeleteSet;
 local GetCharacterInfo = Internal.GetCharacterInfo;
+local GetCharacterSlug = Internal.GetCharacterSlug
 
 local loadoutSegments = {}
 
@@ -339,7 +339,7 @@ local function DeleteProfile(id)
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
 		for _,setID in ipairs(set.essences) do
-			local subSet = Internal.GetEssencetSet(setID);
+			local subSet = Internal.GetEssenceSet(setID);
 			subSet.useCount = (subSet.useCount or 1) - 1;
 		end
 		for _,setID in ipairs(set.equipment) do
@@ -546,6 +546,12 @@ local function ContinueActivateProfile()
 
 	if IsChangingSpec() then
 		Internal.SetWaitReason(L["Waiting for specialization change"])
+		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+        return;
+	end
+
+	if UnitOnTaxi("player") then
+		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
 	end
@@ -854,6 +860,15 @@ do
 		return unpack(loadouts);
 	end
 end
+
+local NUM_TABS = 7;
+local TAB_PROFILES = 1;
+local TAB_TALENTS = 2;
+local TAB_PVP_TALENTS = 3;
+local TAB_ESSENCES = 4;
+local TAB_EQUIPMENT = 5;
+local TAB_ACTION_BARS = 6;
+local TAB_CONDITIONS = 7;
 
 local setsFiltered = {}
 local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
@@ -1362,8 +1377,7 @@ local function EquipmentDropDownInit(self, level, menuList, index)
 			return a < b;
 		end)
 
-		local name, realm = UnitFullName("player");
-		local character = realm .. "-" .. name;
+		local character = GetCharacterSlug();
 		if setsFiltered[character] then
 			local name = character;
 			local characterInfo = GetCharacterInfo(character);
@@ -1421,7 +1435,7 @@ local function EquipmentDropDownInit(self, level, menuList, index)
 		end)
 
         for _,setID in ipairs(setsFiltered) do
-            info.text = sets[setID].name;
+            info.text = sets[setID].name .. (sets[setID].managerID ~= nil and " (*)" or "");
             info.arg1 = setID;
             info.func = EquipmentDropDown_OnClick;
             info.checked = selected == setID;
@@ -1763,7 +1777,6 @@ function BtWLoadoutsProfilesMixin:OnLoad()
 	
 	self.SpecDropDown.includeNone = true;
 	UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
-	UIDropDownMenu_Initialize(self.SpecDropDown, SpecDropDownInit);
 	UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
 
 	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");

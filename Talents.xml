@@ -2,7 +2,7 @@
 ..\FrameXML\UI.xsd">
 	<Script file="Talents.lua"/>
     
-    <Frame parentKey="Talents" mixin="BtWLoadoutsTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
+    <Frame name="$parentTalents" parentKey="Talents" mixin="BtWLoadoutsTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
             <KeyValue key="name" value="BTWLOADOUTS_TALENTS" type="global"/>
         </KeyValues>
@@ -31,39 +31,39 @@
                     <OnEnterPressed function="EditBox_ClearFocus"/>
                 </Scripts>
             </EditBox>
-            <Frame name="$parentTalentRow1" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
+            <Frame name="$parentTalentRow1" inherits="BtWLoadoutsTalentSelectionTemplate" parentArray="rows">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-38"/>
                 </Anchors>
             </Frame>
-            <Frame name="$parentTalentRow2" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
+            <Frame name="$parentTalentRow2" inherits="BtWLoadoutsTalentSelectionTemplate" parentArray="rows">
                 <Anchors>
-                    <Anchor point="TOP" relativeTo="$parentTalentRow1" relativePoint="BOTTOM" x="0" y="-9"/>
+                    <Anchor point="TOP" relativeTo="$parentTalentRow1" relativePoint="BOTTOM" x="0" y="0"/>
                 </Anchors>
             </Frame>
-            <Frame name="$parentTalentRow3" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
+            <Frame name="$parentTalentRow3" inherits="BtWLoadoutsTalentSelectionTemplate" parentArray="rows">
                 <Anchors>
-                    <Anchor point="TOP" relativeTo="$parentTalentRow2" relativePoint="BOTTOM" x="0" y="-9"/>
+                    <Anchor point="TOP" relativeTo="$parentTalentRow2" relativePoint="BOTTOM" x="0" y="0"/>
                 </Anchors>
             </Frame>
-            <Frame name="$parentTalentRow4" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
+            <Frame name="$parentTalentRow4" inherits="BtWLoadoutsTalentSelectionTemplate" parentArray="rows">
                 <Anchors>
-                    <Anchor point="TOP" relativeTo="$parentTalentRow3" relativePoint="BOTTOM" x="0" y="-9"/>
+                    <Anchor point="TOP" relativeTo="$parentTalentRow3" relativePoint="BOTTOM" x="0" y="0"/>
                 </Anchors>
             </Frame>
-            <Frame name="$parentTalentRow5" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
+            <Frame name="$parentTalentRow5" inherits="BtWLoadoutsTalentSelectionTemplate" parentArray="rows">
                 <Anchors>
-                    <Anchor point="TOP" relativeTo="$parentTalentRow4" relativePoint="BOTTOM" x="0" y="-9"/>
+                    <Anchor point="TOP" relativeTo="$parentTalentRow4" relativePoint="BOTTOM" x="0" y="0"/>
                 </Anchors>
             </Frame>
-            <Frame name="$parentTalentRow6" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
+            <Frame name="$parentTalentRow6" inherits="BtWLoadoutsTalentSelectionTemplate" parentArray="rows">
                 <Anchors>
-                    <Anchor point="TOP" relativeTo="$parentTalentRow5" relativePoint="BOTTOM" x="0" y="-9"/>
+                    <Anchor point="TOP" relativeTo="$parentTalentRow5" relativePoint="BOTTOM" x="0" y="0"/>
                 </Anchors>
             </Frame>
-            <Frame name="$parentTalentRow7" inherits="BtWLoadoutsTalentRowTemplate" parentArray="rows">
+            <Frame name="$parentTalentRow7" inherits="BtWLoadoutsTalentSelectionTemplate" parentArray="rows">
                 <Anchors>
-                    <Anchor point="TOP" relativeTo="$parentTalentRow6" relativePoint="BOTTOM" x="0" y="-9"/>
+                    <Anchor point="TOP" relativeTo="$parentTalentRow6" relativePoint="BOTTOM" x="0" y="0"/>
                 </Anchors>
             </Frame>
         </Frames>

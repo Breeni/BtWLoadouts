@@ -17,6 +17,8 @@ local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 local sort = table.sort
 local format = string.format
 
+local GetCharacterSlug = Internal.GetCharacterSlug
+
 --[[
     GetItemUniqueness will sometimes return Unique-Equipped info instead of Legion Legendary info,
     this is a cache of items with that or similar issues
@@ -816,10 +818,6 @@ do
 		return complete;
 	end
 end
-local function GetCharacterSlug()
-	local characterName, characterRealm = UnitFullName("player");
-	return characterRealm .. "-" .. characterName
-end
 local function GetEquipmentSet(id)
     if type(id) == "table" then
 		return id;
@@ -956,8 +954,7 @@ end
 local function CombineEquipmentSets(result, ...)
 	result = result or {};
 
-	local name, realm = UnitFullName("player");
-	local playerCharacter = format("%s-%s", realm, name);
+	local playerCharacter = GetCharacterSlug()
 
 	result.equipment = {};
 	result.extras = {};
@@ -1031,6 +1028,31 @@ Internal.ActivateEquipmentSet = ActivateEquipmentSet
 Internal.IsEquipmentSetActive = IsEquipmentSetActive
 Internal.CombineEquipmentSets = CombineEquipmentSets
 Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
+
+local GetCursorItemSource
+do
+	local currentCursorSource = {};
+	local function Hook_PickupContainerItem(bag, slot)
+		if CursorHasItem() then
+			currentCursorSource.bag = bag;
+			currentCursorSource.slot = slot;
+		else
+			wipe(currentCursorSource);
+		end
+	end
+	hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
+	local function Hook_PickupInventoryItem(slot)
+		if CursorHasItem() then
+			currentCursorSource.slot = slot;
+		else
+			wipe(currentCursorSource);
+		end
+	end
+	hooksecurefunc("PickupInventoryItem", Hook_PickupInventoryItem);
+	function GetCursorItemSource()
+		return currentCursorSource.bag or false, currentCursorSource.slot or false;
+	end
+end
 
 local gameTooltipErrorLink;
 local gameTooltipErrorText;

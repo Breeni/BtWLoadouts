@@ -14,11 +14,11 @@
 		</Scripts>
 	</Frame>
 
-	<Button name="BtWLoadoutsTalentButtonTemplate" mixin="BtWLoadoutsTalentButtonMixin" virtual="true">
+	<Button name="BtWLoadoutsTalentButtonTemplate" mixin="BtWLoadoutsTalentButtonMixin" motionScriptsWhileDisabled="true" virtual="true">
 		<Size x="190" y="42"/>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="$parentIconTexture" parentKey="icon">
+				<Texture parentKey="Icon">
 					<Size x="36" y="36"/>
 					<Anchors>
 						<Anchor point="LEFT" x="35" y="0"/>
@@ -26,16 +26,16 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK" textureSubLevel="1">
-				<Texture name="$parentSlot" inherits="Talent-SingleBorder" parentKey="Slot">
+				<Texture inherits="Talent-SingleBorder" parentKey="Slot">
 					<Size x="37" y="36"/>
 					<Anchors>
-						<Anchor point="CENTER" relativeTo="$parentIconTexture" x="-1" y="0"/>
+						<Anchor point="CENTER" relativeKey="$parent.Icon" x="-1" y="0"/>
 					</Anchors>
 				</Texture>
-				<FontString name="$parentName" inherits="GameFontNormalSmall" justifyH="LEFT" parentKey="name">
+				<FontString inherits="GameFontNormalSmall" justifyH="LEFT" parentKey="Name">
 					<Size x="90" y="35"/>
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parentIconTexture" relativePoint="RIGHT" x="10" y="0"/>
+						<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="10" y="0"/>
 					</Anchors>
 					<Color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				</FontString>
@@ -46,21 +46,18 @@
 				</Texture>
 			</Layer>
 			<Layer level="OVERLAY">
-				<Texture name="$parentSelection" atlas="Talent-Selection" useAtlasSize="true" alphaMode="ADD" parentKey="knownSelection" hidden="true">
+				<Texture atlas="Talent-Selection" useAtlasSize="true" alphaMode="ADD" parentKey="KnownSelection" hidden="true">
 					<Anchors>
 						<Anchor point="CENTER"/>
 					</Anchors>
 				</Texture>
 			</Layer>
 		</Layers>
-		<HighlightTexture atlas="Talent-Highlight" useAtlasSize="true" alphaMode="ADD" parentKey="highlight">
+		<HighlightTexture atlas="Talent-Highlight" useAtlasSize="true" alphaMode="ADD" parentKey="Highlight">
 			<Anchors>
 				<Anchor point="CENTER"/>
 			</Anchors>
 		</HighlightTexture>
-		<!-- <Frames>
-			<Frame parentKey="GlowFrame" inherits="TalentRowGlowFrameTemplate" setAllPoints="true"/>
-		</Frames> -->
 		<Scripts>
 			<OnLoad method="OnLoad"/>
 			<OnClick method="OnClick"/>
@@ -68,349 +65,14 @@
 			<OnLeave method="OnLeave"/>
 		</Scripts>
 	</Button>
-	<Button name="BtWLoadoutsTalentGridButtonTemplate" inherits="BtWLoadoutsTalentButtonTemplate" mixin="BtWLoadoutsTalentGridButtonMixin" virtual="true">
-	</Button>
-
-	<Frame name="BtWLoadoutsTalentRowTemplate" virtual="true">
+	<Texture name="BtWLoadoutsTalentRowBackgroundTemplate" atlas="Talent-Background" useAtlasSize="true" virtual="true"/>
+	<Texture name="BtWLoadoutsTalentRowSeparatorTemplate" atlas="Talent-Separator" useAtlasSize="true" virtual="true"/>
+	<Frame name="BtWLoadoutsTalentSelectionTemplate" mixin="BtWLoadoutsTalentSelectionMixin" virtual="true">
 		<Size x="570" y="42"/>
-		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture name="$parentBg" atlas="Talent-Background" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="BOTTOMLEFT" x="0" y="-1"/>
-						<Anchor point="BOTTOMRIGHT" x="0" y="-1"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="BORDER">
-				<Texture name="$parentLeftCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="LEFT" x="0" y="0"/>
-					</Anchors>
-					<TexCoords left="0.5" right="1" top="0" bottom="1"/>
-				</Texture>
-				<Texture name="$parentRightCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="RIGHT" x="0" y="0"/>
-					</Anchors>
-					<TexCoords left="0" right="0.5" top="0" bottom="1"/>
-				</Texture>
-				<Texture name="$parentSeparator1" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeTo="$parentLeftCap" relativePoint="LEFT" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture name="$parentSeparator2" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parentSeparator1" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="ARTWORK">
-				<Texture parentKey="TopLine" file="Interface\Common\talent-blue-glow" horizTile="true" hidden="true">
-					<Size x="570" y="14"/>
-					<Anchors>
-						<Anchor point="TOP" x="0" y="14"/>
-					</Anchors>
-					<Color r="1" g="1" b="1" a="0.5"/>
-				</Texture>
-				<Texture parentKey="BottomLine" file="Interface\Common\talent-blue-glow" horizTile="true" hidden="true">
-					<Size x="570" y="14"/>
-					<Anchors>
-						<Anchor point="BOTTOM" x="0" y="-14"/>
-					</Anchors>
-					<TexCoords left="0" right="1" top="1" bottom="0"/>
-					<Color r="1" g="1" b="1" a="0.5"/>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Frames>
-			<Button name="$parentTalent1" inherits="BtWLoadoutsTalentButtonTemplate" parentKey="talent1" id="1" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent2" inherits="BtWLoadoutsTalentButtonTemplate" parentKey="talent2" id="2" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeTo="$parentSeparator1" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent3" inherits="BtWLoadoutsTalentButtonTemplate" parentKey="talent3" id="3" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeTo="$parentSeparator2" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<!-- <Frame parentKey="GlowFrame" inherits="TalentRowGlowFrameTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT"/>
-					<Anchor point="BOTTOMRIGHT" relativeKey="$parent.talent1" relativePoint="BOTTOMLEFT"/>
-				</Anchors>
-			</Frame> -->
-		</Frames>
 		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnShow method="OnShow"/>
 		</Scripts>
-	</Frame>
-	<Frame name="BtWLoadoutsTalentGridTemplate" virtual="true">
-		<Size x="570" y="210"/>
-		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture parentKey="Row1" atlas="Talent-Background" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="TOPLEFT" x="0" y="0"/>
-						<Anchor point="TOPRIGHT" x="0" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row2" atlas="Talent-Background" useAtlasSize="true">
-					<Anchors>
-						<!-- <Anchor point="TOP" relativeKey="$parent.Row1" relativePoint="BOTTOM" x="0" y="-8"/>
-						<Anchor point="LEFT" x="0" y="0"/>
-						<Anchor point="RIGHT" x="0" y="0"/> -->
-						<Anchor point="TOPLEFT" x="0" y="-51"/>
-						<Anchor point="TOPRIGHT" x="0" y="-51"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row3" atlas="Talent-Background" useAtlasSize="true">
-					<Anchors>
-						<!-- <Anchor point="TOP" relativeKey="$parent.Row2" relativePoint="BOTTOM" x="0" y="-8"/>
-						<Anchor point="LEFT" x="0" y="0"/>
-						<Anchor point="RIGHT" x="0" y="0"/> -->
-						<Anchor point="TOPLEFT" x="0" y="-102"/>
-						<Anchor point="TOPRIGHT" x="0" y="-102"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row4" atlas="Talent-Background" useAtlasSize="true">
-					<Anchors>
-						<!-- <Anchor point="TOP" relativeKey="$parent.Row3" relativePoint="BOTTOM" x="0" y="-8"/>
-						<Anchor point="LEFT" x="0" y="0"/>
-						<Anchor point="RIGHT" x="0" y="0"/> -->
-						<Anchor point="TOPLEFT" x="0" y="-153"/>
-						<Anchor point="TOPRIGHT" x="0" y="-153"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row5" atlas="Talent-Background" useAtlasSize="true">
-					<Anchors>
-						<!-- <Anchor point="TOP" relativeKey="$parent.Row4" relativePoint="BOTTOM" x="0" y="-8"/>
-						<Anchor point="LEFT" x="0" y="0"/>
-						<Anchor point="RIGHT" x="0" y="0"/> -->
-						<Anchor point="TOPLEFT" x="0" y="-204"/>
-						<Anchor point="TOPRIGHT" x="0" y="-204"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="BORDER">
-				<Texture parentKey="Row1LeftCap" name="$parentLeftCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row1" relativePoint="LEFT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0.5" right="1" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row1RightCap" name="$parentRightCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="RIGHT" relativeKey="$parent.Row1" relativePoint="RIGHT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0" right="0.5" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row1Separator1" name="$parentSeparator1" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Row1LeftCap" relativePoint="LEFT" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row1Separator2" name="$parentSeparator2" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row1Separator1" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-
-
-				<Texture parentKey="Row2LeftCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row2" relativePoint="LEFT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0.5" right="1" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row2RightCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="RIGHT" relativeKey="$parent.Row2" relativePoint="RIGHT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0" right="0.5" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row2Separator1" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Row2LeftCap" relativePoint="LEFT" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row2Separator2" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row2Separator1" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-
-
-				<Texture parentKey="Row3LeftCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row3" relativePoint="LEFT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0.5" right="1" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row3RightCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="RIGHT" relativeKey="$parent.Row3" relativePoint="RIGHT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0" right="0.5" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row3Separator1" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Row3LeftCap" relativePoint="LEFT" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row3Separator2" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row3Separator1" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-
-
-				<Texture parentKey="Row4LeftCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row4" relativePoint="LEFT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0.5" right="1" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row4RightCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="RIGHT" relativeKey="$parent.Row4" relativePoint="RIGHT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0" right="0.5" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row4Separator1" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Row4LeftCap" relativePoint="LEFT" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row4Separator2" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row4Separator1" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-
-
-				<Texture parentKey="Row5LeftCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row5" relativePoint="LEFT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0.5" right="1" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row5RightCap" atlas="Talent-Separator">
-					<Size x="34" y="50"/>
-					<Anchors>
-						<Anchor point="RIGHT" relativeKey="$parent.Row5" relativePoint="RIGHT" x="0" y="1"/>
-					</Anchors>
-					<TexCoords left="0" right="0.5" top="0" bottom="1"/>
-				</Texture>
-				<Texture parentKey="Row5Separator1" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="CENTER" relativeKey="$parent.Row5LeftCap" relativePoint="LEFT" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-				<Texture parentKey="Row5Separator2" atlas="Talent-Separator" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.Row5Separator1" x="190" y="0"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Frames>
-			<Button name="$parentTalent1" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent1" id="1" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row1LeftCap" relativePoint="LEFT" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent2" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent2" id="2" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row1Separator1" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent3" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent3" id="3" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row1Separator2" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-
-			<Button name="$parentTalent4" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent4" id="4" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row2LeftCap" relativePoint="LEFT" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent5" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent5" id="5" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row2Separator1" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent6" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent6" id="6" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row2Separator2" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-
-			<Button name="$parentTalent7" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent7" id="7" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row3LeftCap" relativePoint="LEFT" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent8" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent8" id="8" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row3Separator1" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent9" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent9" id="9" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row3Separator2" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-
-			<Button name="$parentTalent10" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent10" id="10" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row4LeftCap" relativePoint="LEFT" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent11" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent11" id="11" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row4Separator1" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent12" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent12" id="12" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row4Separator2" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-
-			<Button name="$parentTalent13" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent13" id="13" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row5LeftCap" relativePoint="LEFT" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent14" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent14" id="14" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row5Separator1" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-			<Button name="$parentTalent15" inherits="BtWLoadoutsTalentGridButtonTemplate" parentKey="talent15" id="15" parentArray="talents">
-				<Anchors>
-					<Anchor point="LEFT" relativeKey="$parent.Row5Separator2" relativePoint="CENTER" x="0" y="0"/>
-				</Anchors>
-			</Button>
-		</Frames>
 	</Frame>
 
 	<Frame name="BtWLoadoutsSidebarFilterEntryTemplate" inherits="UIDropDownCustomMenuEntryTemplate" virtual="true">

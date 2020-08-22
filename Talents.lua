@@ -1,5 +1,6 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
+local Settings = Internal.Settings
 
 local UnitClass = UnitClass;
 local GetClassColor = C_ClassColor.GetClassColor;
@@ -28,6 +29,46 @@ local DeleteSet = Internal.DeleteSet;
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+
+do -- Filter chat spam
+    local filters = {
+        string.gsub(ERR_LEARN_ABILITY_S, "%%s", "(.*)"),
+        string.gsub(ERR_LEARN_SPELL_S, "%%s", "(.*)"),
+        string.gsub(ERR_LEARN_PASSIVE_S, "%%s", "(.*)"),
+        string.gsub(ERR_SPELL_UNLEARNED_S, "%%s", "(.*)"),
+    }
+    local function ChatFrame_FilterTalentChanges(self, event, msg, ...)
+        if Settings.filterChatSpam then
+            for _,pattern in ipairs(filters) do
+                if string.match(msg, pattern) then
+                    return true
+                end
+            end
+        end
+
+        return false, msg, ...
+    end
+
+    Internal.OnEvent("LOADOUT_CHANGE_START", function ()
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", ChatFrame_FilterTalentChanges)
+    end)
+    Internal.OnEvent("LOADOUT_CHANGE_END", function ()
+        ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", ChatFrame_FilterTalentChanges)
+    end)
+end
+
+do -- Prevent new spells from flying to the action bar
+    local WasEventRegistered
+    Internal.OnEvent("LOADOUT_CHANGE_START", function ()
+        WasEventRegistered = IconIntroTracker:IsEventRegistered("SPELL_PUSHED_TO_ACTIONBAR")
+        IconIntroTracker:UnregisterEvent("SPELL_PUSHED_TO_ACTIONBAR")
+    end)
+    Internal.OnEvent("LOADOUT_CHANGE_END", function ()
+        if WasEventRegistered then
+            IconIntroTracker:RegisterEvent("SPELL_PUSHED_TO_ACTIONBAR")
+        end
+    end)
+end
 
 local function GetTalentSet(id)
     if type(id) == "table" then
@@ -71,7 +112,8 @@ local function ActivateTalentSet(set)
 
             Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
 		end
-	end
+    end
+
 	return complete;
 end
 local function RefreshTalentSet(set)
@@ -197,6 +239,10 @@ Internal.CombineTalentSets = CombineTalentSets
 BtWLoadoutsTalentsMixin = {}
 function BtWLoadoutsTalentsMixin:OnLoad()
     self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
+    self.talentIDs = {}
+    for tier=1,MAX_TALENT_TIERS do
+        self.talentIDs[tier] = {}
+    end
 end
 function BtWLoadoutsTalentsMixin:OnShow()
     if not self.initialized then
@@ -278,22 +324,13 @@ function Internal.TalentsTabUpdate(self)
         end
 
         for tier=1,MAX_TALENT_TIERS do
+            local row = self.talentIDs[tier]
+            wipe(row)
             for column=1,3 do
-                local item = self.rows[tier].talents[column];
-                local talentID, name, texture, _, _, spellID = GetTalentInfoForSpecID(specID, tier, column);
-
-                item.id = talentID;
-                item.name:SetText(name);
-                item.icon:SetTexture(texture);
-
-                if selected[talentID] then
-                    item.knownSelection:Show();
-                    item.icon:SetDesaturated(false);
-                else
-                    item.knownSelection:Hide();
-                    item.icon:SetDesaturated(true);
-                end
+                row[column] = GetTalentInfoForSpecID(specID, tier, column)
             end
+
+            self.rows[tier]:SetTalents(row);
         end
 
         local playerSpecIndex = GetSpecialization()

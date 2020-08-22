@@ -7,6 +7,8 @@ local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 local format = string.format
 local sort = table.sort
 
+local GetCharacterSlug = Internal.GetCharacterSlug
+
 -- A map from the equipment manager ids to our sets
 local equipmentSetMap = {};
 
@@ -195,9 +197,10 @@ function frame:PLAYER_LOGIN(...)
     Internal.CreateLauncher();
     Internal.CreateLauncherMinimapIcon();
 
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE");
+
     do
-        local name, realm = UnitFullName("player");
-        local character = format("%s-%s", realm, name);
+        local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" and set.character == character and set.managerID ~= nil then
                 if equipmentSetMap[set.managerID] then
@@ -243,7 +246,9 @@ function frame:PLAYER_LOGIN(...)
         end
     end
 
-    self:EQUIPMENT_SETS_CHANGED();
+    if C_EquipmentSet.GetNumEquipmentSets() > 0 then
+        self:EQUIPMENT_SETS_CHANGED();
+    end
 end
 function frame:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
@@ -268,23 +273,17 @@ function frame:PLAYER_ENTERING_WORLD()
     do
         local specID = GetSpecializationInfo(GetSpecialization());
         local spec = BtWLoadoutsSpecInfo[specID] or {};
-        spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-        wipe(spec.pvptalenttrinkets);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalenttrinkets[index] = talentID;
-            end
-        end
 
-        spec.pvptalents = spec.pvptalents or {};
-        wipe(spec.pvptalents);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalents[index] = talentID;
+        spec.pvptalentslots = spec.pvptalentslots or {};
+        wipe(spec.pvptalentslots);
+        do
+            local index = 1
+            local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
+            while slotInfo do
+                spec.pvptalentslots[index] = slotInfo
+
+                index = index + 1
+                slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
             end
         end
 
@@ -358,9 +357,11 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
         for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
             set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
 
-            local location = locations[inventorySlotId] or 0;
-            if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-                set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location);
+            if locations then -- Seems in some situations the locations table is nil instead
+                local location = locations[inventorySlotId] or 0;
+                if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
+                    set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location);
+                end
             end
         end
 
@@ -389,23 +390,16 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
         local specID = GetSpecializationInfo(GetSpecialization());
         local spec = BtWLoadoutsSpecInfo[specID] or {};
 
-        spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-        wipe(spec.pvptalenttrinkets);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalenttrinkets[index] = talentID;
-            end
-        end
+        spec.pvptalentslots = spec.pvptalentslots or {};
+        wipe(spec.pvptalentslots);
+        do
+            local index = 1
+            local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
+            while slotInfo do
+                spec.pvptalentslots[index] = slotInfo
 
-        spec.pvptalents = spec.pvptalents or {};
-        wipe(spec.pvptalents);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalents[index] = talentID;
+                index = index + 1
+                slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
             end
         end
 
@@ -481,5 +475,4 @@ frame:RegisterEvent("ZONE_CHANGED");
 frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
 frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
 frame:RegisterEvent("PLAYER_TARGET_CHANGED");
-frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 frame:RegisterEvent("ENCOUNTER_END");

@@ -1,15 +1,18 @@
--- Russian translations. Thanks to Yllelder7 on Curse
+-- Spanish translations. Thanks to Yllelder7 on Curse
 
-if GetLocale() ~= "ruRU" then return; end
+if GetLocale() ~= "esES" then return; end
 
 local _, Internal = ...
 local L = Internal.L
 
 L["A tome is needed to continue equiping your set."] = "Se necesita un tomo para seguir habilitando tu conjunto."
 L["Activate profile %s?"] = "¿Activar el perfil %s?"
-L["Activate spec %s?\nThis set will require a tome or rested to activate"] = "¿Activar especialización %s? Para activar este conjunto se necesito un tomo o estar en una zona de descanso"
-L["Activate spec %s?\nThis will use a Tome"] = "¿Activar especialización %s? Se usará un tomo"
-L["Activate the following profile?\n"] = "¿Activar el siguiente perfil?"
+L[ [=[Activate spec %s?
+This set will require a tome or rested to activate]=] ] = "¿Activar especialización %s? Para activar este conjunto se necesito un tomo o estar en una zona de descanso"
+L[ [=[Activate spec %s?
+This will use a Tome]=] ] = "¿Activar especialización %s? Se usará un tomo"
+L[ [=[Activate the following profile?
+]=] ] = "¿Activar el siguiente perfil?"
 L["Activate your profile."] = "Activar tu perfil."
 L["Any"] = "Cualquiera"
 L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."] = "¿Estás seguro de que quieres eliminar el conjunto \"%s\"? Este conjunto está siendo utilizado por uno o más perfiles. Esta acción no se puede deshacer."
@@ -19,7 +22,8 @@ L["Can not equip sets for other characters."] = "No puedes equipar conjuntos de 
 L["Cannot create any more macros"] = "No se pueden crear más macros"
 L["Cannot create macros while in combat"] = "No puedes crear macros mientras estás en combate"
 L["Change the name of your new profile."] = "Cambiar el nombre de tu nuevo perfil."
-L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."] = "Clic para abrir BtWLoadouts. Clic derecho para activar y desactivar la configuración."
+L[ [=[Click to open BtWLoadouts.
+Right Click to enable and disable settings.]=] ] = "Clic para abrir BtWLoadouts. Clic derecho para activar y desactivar la configuración."
 L["Conditions"] = "Condiciones"
 L["Could not find a valid set"] = "No se ha podido encontrar un conjunto válido"
 L["Create a talent set for your new profile."] = "Crea un conjunto de talentos para tu nuevo perfil."

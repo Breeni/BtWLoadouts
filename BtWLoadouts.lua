@@ -31,11 +31,8 @@ local L = Internal.L;
 local External = {}
 _G[ADDON_NAME] = External
 
-local GetNextSetID = Internal.GetNextSetID;
-local DeleteSet = Internal.DeleteSet;
-local GetCharacterInfo = Internal.GetCharacterInfo;
-
-local GetCursorItemSource;
+local GetCharacterInfo = Internal.GetCharacterInfo
+local GetCharacterSlug = Internal.GetCharacterSlug
 
 BTWLOADOUTS_PROFILE = L["Profile"];
 BTWLOADOUTS_PROFILES = L["Profiles"];
@@ -107,6 +104,11 @@ local Settings = SettingsCreate({
     {
         name = L["Limit condition suggestions"],
         key = "limitConditions",
+        default = false,
+    },
+    {
+        name = L["Filter chat spam while changing loadouts"],
+        key = "filterChatSpam",
         default = false,
     },
 });
@@ -734,8 +736,8 @@ do
 		function CharacterFilterEnumerator()
 			wipe(charaterEnumertorList)
 
-			local name, realm = UnitFullName("player");
-			local character = realm .. "-" .. name;
+			local name = UnitName("player")
+			local character = GetCharacterSlug();
 			local characterInfo = GetCharacterInfo(character);
 			if characterInfo then
 				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
@@ -820,11 +822,21 @@ do
 			error(format("Unsupported filter type %s", filter))
 		end
 	end
+	local function alphanumsort(o)
+		local function padnum(d)
+			local dec, n = string.match(d, "(%.?)0*(.+)")
+			return #dec > 0 and ("%.12f"):format(d) or ("%s%03d%s"):format(dec, #n, n)
+		end
+		table.sort(o, function(a,b)
+		  	return tostring(a.name):gsub("%.?%d+", padnum)..("%3d"):format(#b.name)
+			     < tostring(b.name):gsub("%.?%d+", padnum)..("%3d"):format(#a.name)
+		end)
+		return o
+	  end
 	local function BuildList(items, depth, selected, filtered, collapsed, ...)
 		if select('#', ...) == 0 then
-			table.sort(filtered, function (a, b)
-				return a.name < b.name
-			end)
+			alphanumsort(filtered)
+
 			for _,set in ipairs(filtered) do
 				selected = selected or set
 				items[#items+1] = {
@@ -832,6 +844,7 @@ do
 					name = (set.name == nil or set.name == "") and L["Unnamed"] or set.name,
 					disabled = set.disabled,
 					selected = set == selected,
+					builtin = set.managerID ~= nil,
 					depth = depth,
 				};
 			end
@@ -936,10 +949,6 @@ do
 			end
 		end
 		HybridScrollFrame_Update(self, totalHeight, displayedHeight);
-	end
-	local function GetCharacterSlug()
-		local characterName, characterRealm = UnitFullName("player");
-		return characterRealm .. "-" .. characterName
 	end
 	local function DropDown_Initialize(self, level)
 		local sidebar = self:GetParent()
@@ -1360,8 +1369,7 @@ do
 			return a < b;
 		end)
 
-		local name, realm = UnitFullName("player");
-		local character = realm .. "-" .. name;
+        local character = GetCharacterSlug();
 		if setsFiltered[character] then
 			local isCollapsed = collapsed[character] and true or false;
 			local name = character;
@@ -2027,31 +2035,68 @@ BtWLoadoutsTalentButtonMixin = {};
 function BtWLoadoutsTalentButtonMixin:OnLoad()
 	self:RegisterForClicks("LeftButtonUp");
 end
-function BtWLoadoutsTalentButtonMixin:OnClick()
-	local row = self:GetParent();
-	local talents = row:GetParent();
-	local talentID = self.id;
+function BtWLoadoutsTalentButtonMixin:SetTalent(id, isPvP)
+	self.id, self.isPvP = id, isPvP
+end
+function BtWLoadoutsTalentButtonMixin:Update()
+	local id, isPvP = self.id, self.isPvP
 
-	if talents.set.talents[talentID] then
-		talents.set.talents[talentID] = nil;
+	self:SetShown(id ~= nil)
+	if not id then
+		return 
+	end
 
-		self.knownSelection:Hide();
-		self.icon:SetDesaturated(true);
+	local grid = self:GetParent();
+	local frame = grid:GetParent();
+	local set = frame.set
+
+	local func = isPvP and GetPvpTalentInfoByID or GetTalentInfoByID
+	local _, name, texture = func(id)
+	
+	self.Name:SetText(name);
+	self.Icon:SetTexture(texture);
+
+	if set and set.talents[id] then
+		self.KnownSelection:Show();
+		self.Icon:SetDesaturated(false);
+		self.Cover:Hide()
+		self:SetEnabled(true)
 	else
-		talents.set.talents[talentID] = true;
+		self.KnownSelection:Hide();
+		self.Icon:SetDesaturated(true);
 
-		self.knownSelection:Show();
-		self.icon:SetDesaturated(false);
-
-		for _,item in ipairs(row.talents) do
-			if item ~= self then
-				talents.set.talents[item.id] = nil;
-
-				item.knownSelection:Hide();
-				item.icon:SetDesaturated(true);
-			end
+		if grid:GetMaxSelections() == 1 then
+			self.Cover:Hide()
+			self:SetEnabled(true)
+		else
+			self.Cover:SetShown(grid:IsMaxSelections())
+			self:SetEnabled(not grid:IsMaxSelections())
 		end
 	end
+end
+function BtWLoadoutsTalentButtonMixin:OnClick()
+	local grid = self:GetParent();
+	local frame = grid:GetParent();
+	local selected = frame.set and frame.set.talents
+	local talentID = self.id;
+
+	if not selected then
+		return
+	end
+
+	if selected[talentID] then
+		selected[talentID] = nil;
+	else
+		if grid:GetMaxSelections() == 1 then
+			for _,talentID in ipairs(grid.talents) do
+				selected[talentID] = nil;
+			end
+		end
+
+		selected[talentID] = true;
+	end
+
+	grid:Update()
 end
 function BtWLoadoutsTalentButtonMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
@@ -2065,25 +2110,134 @@ function BtWLoadoutsTalentButtonMixin:OnLeave()
 	GameTooltip_Hide();
 end
 
-BtWLoadoutsTalentGridButtonMixin = CreateFromMixins(BtWLoadoutsTalentButtonMixin);
-function BtWLoadoutsTalentGridButtonMixin:OnClick()
-	local grid = self:GetParent();
-	local talents = grid:GetParent();
-	local talentID = self.id;
+local TALENT_ROW_HEIGHT = 51
+BtWLoadoutsTalentSelectionMixin = {}
+function BtWLoadoutsTalentSelectionMixin:OnLoad()
+	self.talents = {}
+	self.maxSelection = 1
+	self.Buttons = {}
 
-	if talents.set.talents[talentID] then
-		talents.set.talents[talentID] = nil;
+	self.BackgroundPool = CreateTexturePool(self, "BACKGROUND", 0, "BtWLoadoutsTalentRowBackgroundTemplate")
+	self.SeparatorPool = CreateTexturePool(self, "BORDER", 0, "BtWLoadoutsTalentRowSeparatorTemplate")
+	self.ButtonPool = CreateFramePool("BUTTON", self, "BtWLoadoutsTalentButtonTemplate")
+end
+function BtWLoadoutsTalentSelectionMixin:OnShow()
+	self:Update()
+end
+function BtWLoadoutsTalentSelectionMixin:Update()
+	local rows = math.ceil(#self.talents / 3)
+	if self.BackgroundPool:GetNumActive() ~= rows then
+		self.BackgroundPool:ReleaseAll()
+		self.SeparatorPool:ReleaseAll()
+		self.ButtonPool:ReleaseAll()
 
-		self.knownSelection:Hide();
-		self.icon:SetDesaturated(true);
-	else
-		talents.set.talents[talentID] = true;
+		table.wipe(self.Buttons)
 
-		self.knownSelection:Show();
-		self.icon:SetDesaturated(false);
+		local index = 1
+		local previous = nil
+		for i=1,rows do
+			local background = self.BackgroundPool:Acquire()
+			background:SetPoint("TOPLEFT", 0, -51 * (i - 1))
+			background:SetPoint("TOPRIGHT", 0, -51 * (i - 1))
+			background:Show()
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetSize(34, 50)
+				separator:SetTexCoord(0.5, 1, 0, 1)
+				separator:SetPoint("LEFT", background, "LEFT", 0, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetSize(34, 50)
+				separator:SetTexCoord(0, 0.5, 0, 1)
+				separator:SetPoint("RIGHT", background, "RIGHT", 0, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetPoint("CENTER", background, "LEFT", 190, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetPoint("CENTER", background, "RIGHT", -190, 0)
+				separator:Show()
+			end
+
+			
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 0, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 190, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 190 * 2, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+		end
+
+		self:SetHeight(rows * TALENT_ROW_HEIGHT)
 	end
 
-	talents:GetParent():Update();
+	for index,button in ipairs(self.Buttons) do
+		button:SetTalent(self.talents[index], self.isPvP)
+		button:Update()
+	end
+end
+function BtWLoadoutsTalentSelectionMixin:SetMaxSelections(value)
+	self.maxSelection = value
+	self:Update()
+end
+function BtWLoadoutsTalentSelectionMixin:GetMaxSelections()
+	return self.maxSelection
+end
+function BtWLoadoutsTalentSelectionMixin:IsMaxSelections()
+	local frame = self:GetParent()
+	local selected = frame.set and frame.set.talents
+	if not selected then
+		return false
+	end
+
+	local count = 0
+	for _,talentID in ipairs(self.talents) do
+		if selected[talentID] then
+			count = count + 1
+			if count == self.maxSelection then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+function BtWLoadoutsTalentSelectionMixin:SetTalents(tbl, isPvP)
+	self.talents, self.isPvP = tbl, (isPvP and true or false)
+	self:Update()
 end
 
 
@@ -2108,30 +2262,6 @@ function Internal.ClearLog()
 end
 function Internal.LogMessage(...)
 	BtWLoadoutsLogFrame.Scroll.EditBox:Insert(string.format("[%.03f] %s\n", GetTime(), string.format(...):gsub("|", "||")))
-end
-
-do
-	local currentCursorSource = {};
-	local function Hook_PickupContainerItem(bag, slot)
-		if CursorHasItem() then
-			currentCursorSource.bag = bag;
-			currentCursorSource.slot = slot;
-		else
-			wipe(currentCursorSource);
-		end
-	end
-	hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
-	local function Hook_PickupInventoryItem(slot)
-		if CursorHasItem() then
-			currentCursorSource.slot = slot;
-		else
-			wipe(currentCursorSource);
-		end
-	end
-	hooksecurefunc("PickupInventoryItem", Hook_PickupInventoryItem);
-	function GetCursorItemSource()
-		return currentCursorSource.bag or false, currentCursorSource.slot or false;
-	end
 end
 
 local eventHandlers = {}
