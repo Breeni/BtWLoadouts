@@ -1244,8 +1244,125 @@ GameTooltip:HookScript("OnTooltipSetItem", function (self)
 end)
 
 BtWLoadoutsEquipmentMixin = {}
+function BtWLoadoutsEquipmentMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsEquipmentMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsEquipmentMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+		self.Name:ClearFocus();
+		self:ChangeSet(AddEquipmentSet())
+		C_Timer.After(0, function ()
+			self.Name:HighlightText();
+			self.Name:SetFocus();
+		end);
+	elseif button.isDelete then
+		local set = self.set;
+		if set.useCount > 0 then
+			StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+				set = set,
+				func = Internal.DeleteEquipmentSet,
+			});
+		else
+			StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+				set = set,
+				func = Internal.DeleteEquipmentSet,
+			});
+		end
+	elseif button.isRefresh then
+		local set = self.set;
+		RefreshEquipmentSet(set)
+		self:Update()
+	elseif button.isActivate then
+		Internal.ActivateProfile({
+			equipment = {self.set.setID}
+		});
+	end
+end
+function BtWLoadoutsEquipmentMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		if IsModifiedClick("SHIFT") then
+			Internal.ActivateProfile({
+				equipment = {button.id}
+			});
+		else
+			self.Name:ClearFocus();
+			self:ChangeSet(GetEquipmentSet(button.id))
+		end
+	end
+end
+function BtWLoadoutsEquipmentMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
 
-function Internal.EquipmentTabUpdate(self)
+	Internal.ActivateProfile({
+		equipment = {button.id}
+	});
+end
+function BtWLoadoutsEquipmentMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetEquipmentSet(button.id);
+	local command = format("/btwloadouts activate equipment %d", button.id);
+	if set.managerID then
+		icon = select(2, C_EquipmentSet.GetEquipmentSetInfo(set.managerID))
+	end
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+			if MacroFrame_Update then
+				MacroFrame_Update()
+			end
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsEquipmentMixin:Update()
 	self:GetParent().TitleText:SetText(L["Equipment"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -1258,7 +1375,6 @@ function Internal.EquipmentTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_CharacterFilter(self.set, BtWLoadoutsSets.equipment, BtWLoadoutsCollapsed.equipment);
 
 	if self.set ~= nil then
 		local set = self.set

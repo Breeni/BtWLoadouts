@@ -26,7 +26,7 @@
                 </Anchors>
                 <Scripts>
                     <OnTextChanged>
-                        self:GetParent():GetParent():OnNameChanged(self:GetText());
+                        self:GetParent():UpdateSetName(self:GetText())
                     </OnTextChanged>
                     <OnEnterPressed function="EditBox_ClearFocus"/>
                 </Scripts>

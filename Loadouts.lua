@@ -1915,29 +1915,6 @@ function BtWLoadoutsSetsScrollListItemMixin:MoveDown()
 	Internal.ProfilesTabUpdate(tab)
 end
 
-BtWLoadoutsProfilesMixin = {}
-function BtWLoadoutsProfilesMixin:OnLoad()
-	self:RegisterEvent("GLOBAL_MOUSE_UP")
-	
-	self.SpecDropDown.includeNone = true;
-	UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
-	UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
-
-	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
-	self.SetsScroll.update = Internal.SetsScrollFrameUpdate;
-end
-function BtWLoadoutsProfilesMixin:OnEvent()
-	if self.SetsScroll:GetScrollChild().currentDrag  ~= nil then
-		self:GetParent():Update()
-	end
-end
-function BtWLoadoutsProfilesMixin:OnShow()
-	
-end
-function BtWLoadoutsProfilesMixin:Update()
-
-end
-
 function Internal.SetsScrollFrameUpdate(self)
 	self:GetScrollChild().currentDrag = nil -- Clear current drag
 
@@ -2054,7 +2031,149 @@ local errors = {
 	actionbars = {},
 }
 _G['BtWLoadoutsErrors'] = errors
-function Internal.ProfilesTabUpdate(self)
+
+BtWLoadoutsProfilesMixin = {}
+function BtWLoadoutsProfilesMixin:OnLoad()
+	self:RegisterEvent("GLOBAL_MOUSE_UP")
+	
+	self.SpecDropDown.includeNone = true;
+	UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
+	UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+
+	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
+	self.SetsScroll.update = Internal.SetsScrollFrameUpdate;
+end
+function BtWLoadoutsProfilesMixin:OnEvent()
+	if self.SetsScroll:GetScrollChild().currentDrag  ~= nil then
+		self:GetParent():Update()
+	end
+end
+function BtWLoadoutsProfilesMixin:OnShow()
+	
+end
+function BtWLoadoutsProfilesMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsProfilesMixin:UpdateSetEnabled(value)
+	if self.set and self.set.disabled ~= not value then
+		self.set.disabled = not value;
+		self:Update();
+	end
+end
+function BtWLoadoutsProfilesMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsProfilesMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+		BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] = true;
+
+		self.Name:ClearFocus()
+		self:ChangeSet(AddProfile())
+		
+		C_Timer.After(0, function ()
+			self.Name:HighlightText()
+			self.Name:SetFocus()
+		end)
+	elseif button.isDelete then
+		local set = self.set
+		if set.useCount > 0 then
+			StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+				set = set,
+				func = DeleteProfile,
+			})
+		else
+			StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+				set = set,
+				func = DeleteProfile,
+			})
+		end
+	elseif button.isRefresh then
+		-- Do nothing
+	elseif button.isActivate then
+		BtWLoadoutsHelpTipFlags["TUTORIAL_ACTIVATE_SET"] = true
+
+		ActivateProfile(self.set)
+		self:Update()
+	end
+end
+function BtWLoadoutsProfilesMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		if IsModifiedClick("SHIFT") then
+			ActivateProfile(GetProfile(button.id));
+		else
+			self.Name:ClearFocus();
+			self:ChangeSet(GetProfile(button.id));
+		end
+	end
+end
+function BtWLoadoutsProfilesMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	ActivateProfile(GetProfile(button.id));
+end
+function BtWLoadoutsProfilesMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetProfile(button.id);
+	local command = format("/btwloadouts activate profile %d", button.id);
+	if set.specID then
+		icon = select(4, GetSpecializationInfoByID(set.specID));
+	end
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+			if MacroFrame_Update then
+				MacroFrame_Update()
+			end
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsProfilesMixin:Update()
 	self:GetParent().TitleText:SetText(L["Profiles"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -2067,9 +2186,6 @@ function Internal.ProfilesTabUpdate(self)
 	
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsCollapsed.profiles);
-	-- self.set = Internal.SetsScrollFrame_Display(self.set, BtWLoadoutsSets.profiles, BtWLoadoutsFrame.SearchBox:GetText():lower(), BtWLoadoutsCollapsed.profiles, "character", "spec");
-	-- if true then return end
 
 	self.Name:SetEnabled(self.set ~= nil);
 	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);

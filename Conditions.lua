@@ -894,6 +894,8 @@ do
 end
 
 BtWLoadoutsConditionsMixin = {}
+function BtWLoadoutsConditionsMixin:OnLoad()
+end
 function BtWLoadoutsConditionsMixin:OnShow()
 	if not self.initialized then
 		UIDropDownMenu_SetWidth(self.ProfileDropDown, 400);
@@ -929,8 +931,57 @@ function BtWLoadoutsConditionsMixin:OnShow()
 		self.initialized = true;
 	end
 end
-
-function Internal.ConditionsTabUpdate(self)
+function BtWLoadoutsConditionsMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsConditionsMixin:UpdateSetEnabled(value)
+	if self.set and self.set.disabled ~= value then
+		self.set.disabled = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsConditionsMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsConditionsMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+		self.Name:ClearFocus();
+		self:ChangeSet(AddConditionSet())
+		C_Timer.After(0, function ()
+			self.Name:HighlightText();
+			self.Name:SetFocus();
+		end);
+	elseif button.isDelete then
+		local set = self.set;
+		StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+			set = set,
+			func = DeleteConditionSet,
+		});
+	elseif button.isRefresh then
+		RefreshConditionSet(self.set)
+		self:Update();
+	end
+end
+function BtWLoadoutsConditionsMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		self.Name:ClearFocus();
+		self:ChangeSet(GetConditionSet(button.id))
+	end
+end
+function BtWLoadoutsConditionsMixin:OnSidebarItemDoubleClick(button)
+end
+function BtWLoadoutsConditionsMixin:OnSidebarItemDragStart(button)
+end
+function BtWLoadoutsConditionsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Conditions"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -943,7 +994,6 @@ function Internal.ConditionsTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.conditions);
 
 	if self.set ~= nil then
 		local set = self.set;

@@ -979,8 +979,122 @@ function BtWLoadoutsActionBarsMixin:OnShow()
         self.initialized = true
     end
 end
+function BtWLoadoutsActionBarsMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsActionBarsMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsActionBarsMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+        self.Name:ClearFocus();
+		self:ChangeSet(AddActionBarSet())
+        C_Timer.After(0, function ()
+            self.Name:HighlightText();
+            self.Name:SetFocus();
+        end);
+    elseif button.isDelete then
+        local set = self.set;
+        if set.useCount > 0 then
+            StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+                set = set,
+                func = DeleteActionBarSet,
+            });
+        else
+            StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+                set = set,
+                func = DeleteActionBarSet,
+            });
+        end
+    elseif button.isRefresh then
+        local set = self.set;
+        RefreshActionBarSet(set)
+        self:Update()
+    elseif button.isActivate then
+        Internal.ActivateProfile({
+            actionbars = {self.set.setID}
+        });
+	end
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		if IsModifiedClick("SHIFT") then
+			Internal.ActivateProfile({
+				actionbars = {button.id}
+			});
+		else
+			self.Name:ClearFocus();
+            self:ChangeSet(GetActionBarSet(button.id))
+		end
+	end
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
 
-function Internal.ActionBarsTabUpdate(self)
+	Internal.ActivateProfile({
+		actionbars = {button.id}
+	});
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetActionBarSet(button.id);
+	local command = format("/btwloadouts activate actionbars %d", button.id);
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+			if MacroFrame_Update then
+				MacroFrame_Update()
+			end
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsActionBarsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -993,7 +1107,6 @@ function Internal.ActionBarsTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.actionbars, BtWLoadoutsCollapsed.actionbars);
 
 	if self.set ~= nil then
 		local set = self.set;

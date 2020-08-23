@@ -352,8 +352,136 @@ function BtWLoadoutsTalentsMixin:OnShow()
         self.initialized = true;
     end
 end
+function BtWLoadoutsTalentsMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsTalentsMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsTalentsMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+		BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] = true;
 
-function Internal.TalentsTabUpdate(self)
+		self.Name:ClearFocus()
+        self:ChangeSet(AddTalentSet())
+		C_Timer.After(0, function ()
+			self.Name:HighlightText()
+			self.Name:SetFocus()
+		end)
+	elseif button.isDelete then
+		local set = self.set
+		if set.useCount > 0 then
+			StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+				set = set,
+				func = DeleteTalentSet,
+			})
+		else
+			StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+				set = set,
+				func = DeleteTalentSet,
+			})
+		end
+	elseif button.isRefresh then
+        local set = self.set;
+        RefreshTalentSet(set)
+        self:Update()
+	elseif button.isActivate then
+        local set = self.set;
+        if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+            Internal.ActivateProfile({
+                talents = {set.setID}
+            });
+        end
+	end
+end
+function BtWLoadoutsTalentsMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+        if IsModifiedClick("SHIFT") then
+            local set = GetTalentSet(button.id);
+            if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+                Internal.ActivateProfile({
+                    talents = {button.id}
+                });
+            end
+        else
+            self.Name:ClearFocus();
+            self:ChangeSet(GetTalentSet(button.id))
+        end
+	end
+end
+function BtWLoadoutsTalentsMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+    local set = GetTalentSet(button.id);
+    if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+        Internal.ActivateProfile({
+            talents = {button.id}
+        });
+    end
+end
+function BtWLoadoutsTalentsMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetTalentSet(button.id);
+	local command = format("/btwloadouts activate talents %d", button.id);
+	if set.specID then
+		icon = select(4, GetSpecializationInfoByID(set.specID));
+	end
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+			if MacroFrame_Update then
+				MacroFrame_Update()
+			end
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsTalentsMixin:Update()
     self:GetParent().TitleText:SetText(L["Talents"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -366,7 +494,6 @@ function Internal.TalentsTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-    -- self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.talents, BtWLoadoutsCollapsed.talents);
 
     if self.set ~= nil then
         self.Name:SetEnabled(true);
