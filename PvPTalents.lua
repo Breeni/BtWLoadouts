@@ -20,11 +20,39 @@ local UIDropDownMenu_EnableDropDown = UIDropDownMenu_EnableDropDown;
 local UIDropDownMenu_DisableDropDown = UIDropDownMenu_DisableDropDown;
 local UIDropDownMenu_SetSelectedValue = UIDropDownMenu_SetSelectedValue;
 
+local AddSet = Internal.AddSet;
+
 local format = string.format;
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local function UpdatePvPTalentSetFilters(set)
+    local specID = set.specID;
+
+	local filters = set.filters or {}
+	filters.spec = specID
+	if specID then
+		filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+	else
+		filters.role, filters.class = nil, nil
+	end
+
+	-- Rebuild character list
+	filters.character = filters.character or {}
+	local characters = filters.character
+	table.wipe(characters)
+	local class = filters.class
+	for _,character in Internal.CharacterIterator() do
+		if class == Internal.GetCharacterInfo(character).class then
+			characters[#characters+1] = character
+		end
+	end
+
+	set.filters = filters
+
+    return set
+end
 local function GetPvPTalentSet(id)
     if type(id) == "table" then
 		return id;
@@ -145,27 +173,16 @@ local function RefreshPvPTalentSet(set)
 
     set.talents = talents
 
-    return set
+    return UpdatePvPTalentSetFilters(set)
 end
 local function AddPvPTalentSet()
     local specID, specName = GetSpecializationInfo(GetSpecialization());
-    local name = format(L["New %s Set"], specName);
-	local talents = {};
-
-    local talentIDs = GetAllSelectedPvpTalentIDs();
-    for _,talentID in ipairs(talentIDs) do
-		talents[talentID] = true;
-    end
-
-    local set = {
-		setID = Internal.GetNextSetID(BtWLoadoutsSets.pvptalents),
+    return AddSet("pvptalents", RefreshPvPTalentSet({
         specID = specID,
-        name = name,
-        talents = talents,
+		name = format(L["New %s Set"], specName),
 		useCount = 0,
-    };
-    BtWLoadoutsSets.pvptalents[set.setID] = set;
-    return set;
+        talents = {},
+	}))
 end
 local function GetPvPTalentSetsByName(name)
 	return Internal.GetSetsByName("pvptalents", name)
@@ -310,31 +327,8 @@ function Internal.PvPTalentsTabUpdate(self)
 
 		local set = self.set
 
-		-- Update filters
-		do
-			local filters = set.filters or {}
-			filters.spec = specID
-			if specID then
-				filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
-			else
-				filters.role, filters.class = nil, nil
-			end
-
-			-- Rebuild character list
-			filters.character = filters.character or {}
-			local characters = filters.character
-			wipe(characters)
-			local class = filters.class
-			for _,character in Internal.CharacterIterator() do
-				if class == Internal.GetCharacterInfo(character).class then
-					characters[#characters+1] = character
-				end
-			end
-
-			set.filters = filters
-
-			sidebar:Update()
-		end
+		UpdatePvPTalentSetFilters(set)
+		sidebar:Update()
 
 		local selected = self.set.talents;
 

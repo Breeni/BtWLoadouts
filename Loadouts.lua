@@ -296,8 +296,36 @@ local function IsLoadoutActivatable(set)
 	return true
 end
 
+local function UpdateLoadoutFilters(set)
+	local specID = set.specID
+
+	local filters = set.filters or {}
+	filters.spec = specID
+	if specID then
+		filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+	else
+		filters.role, filters.class = nil, nil
+	end
+
+	-- Rebuild character list
+	if type(filters.character) ~= "table" then
+		filters.character = {}
+	end
+	local characters = filters.character
+	wipe(characters)
+	local class = filters.class
+	for _,character in Internal.CharacterIterator() do
+		if class == Internal.GetCharacterInfo(character).class or specID == nil then
+			characters[#characters+1] = character
+		end
+	end
+
+	set.filters = filters
+
+    return set
+end
 local function AddProfile()
-    return AddSet("profiles", {
+    return AddSet("profiles", UpdateLoadoutFilters({
 		name = L["New Profile"],
 		talents = {},
 		pvptalents = {},
@@ -306,7 +334,7 @@ local function AddProfile()
 		actionbars = {},
 		version = 2,
 		useCount = 0,
-    })
+    }))
 end
 local function GetProfile(id)
     return BtWLoadoutsSets.profiles[id];
@@ -2060,34 +2088,9 @@ function Internal.ProfilesTabUpdate(self)
 
 		local set = self.set
 
-		-- Update filters
-		do
-			local filters = set.filters or {}
-			filters.spec = specID
-			if specID then
-				filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
-			else
-				filters.role, filters.class = nil, nil
-			end
-
-			-- Rebuild character list
-			if type(filters.character) ~= "table" then
-				filters.character = {}
-			end
-			local characters = filters.character
-			wipe(characters)
-			local class = filters.class
-			for _,character in Internal.CharacterIterator() do
-				if class == Internal.GetCharacterInfo(character).class then
-					characters[#characters+1] = character
-				end
-			end
-
-			set.filters = filters
-
-			sidebar:Update()
-		end
-
+		UpdateLoadoutFilters(set)
+		sidebar:Update()
+		
 		if specID == nil or specID == 0 then
 			UIDropDownMenu_SetText(self.SpecDropDown, L["None"]);
 		else

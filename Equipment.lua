@@ -14,6 +14,8 @@ local GetItemUniqueness = GetItemUniqueness
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local AddSet = Internal.AddSet
+
 local sort = table.sort
 local format = string.format
 
@@ -818,6 +820,13 @@ do
 		return complete, false;
 	end
 end
+local function UpdateEquipmentSetFilters(set)
+	local filters = set.filters or {}
+	filters.character = set.character
+	set.filters = filters
+
+    return set
+end
 local function GetEquipmentSet(id)
     if type(id) == "table" then
 		return id;
@@ -830,50 +839,6 @@ local function EquipmentSetIsValid(set)
 	local set = GetEquipmentSet(set);
 	local isValidForPlayer = (set.character == GetCharacterSlug())
 	return true, isValidForPlayer
-end
-local function AddEquipmentSet()
-    local characterName, characterRealm = UnitFullName("player");
-    local name = format(L["New %s Equipment Set"], characterName);
-	local equipment = {};
-	local ignored = {};
-	local extras = {};
-
-	ignored[INVSLOT_BODY] = true;
-	ignored[INVSLOT_TABARD] = true;
-
-	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-		equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
-
-		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
-		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
-			local slotExtras = {azerite = {}};
-
-			local tiers = C_AzeriteEmpoweredItem.GetAllTierInfo(itemLocation);
-			for index,tier in ipairs(tiers) do
-				for _,powerID in ipairs(tier.azeritePowerIDs) do
-					if C_AzeriteEmpoweredItem.IsPowerSelected(itemLocation, powerID) then
-						slotExtras.azerite[index] = powerID;
-						break;
-					end
-				end
-			end
-
-			extras[inventorySlotId] = slotExtras;
-		end
-	end
-
-    local set = {
-		setID = Internal.GetNextSetID(BtWLoadoutsSets.equipment),
-        character = characterRealm .. "-" .. characterName,
-        name = name,
-		equipment = equipment,
-		extras = extras,
-		locations = {},
-		ignored = ignored,
-		useCount = 0,
-    };
-    BtWLoadoutsSets.equipment[set.setID] = set;
-    return set;
 end
 -- Adds a blank equipment set for the current character
 local function AddBlankEquipmentSet()
@@ -926,7 +891,22 @@ local function RefreshEquipmentSet(set)
 		C_EquipmentSet.SaveEquipmentSet(set.managerID)
 	end
 
-	return set
+	return UpdateEquipmentSetFilters(set)
+end
+local function AddEquipmentSet()
+    local characterName, characterRealm = UnitFullName("player");
+    return AddSet("equipment", RefreshEquipmentSet({
+		character = characterRealm .. "-" .. characterName,
+		name = format(L["New %s Equipment Set"], characterName),
+		useCount = 0,
+        equipment = {},
+        ignored = {
+			[INVSLOT_BODY] = true,
+			[INVSLOT_TABARD] = true,
+		},
+		extras = {},
+		locations = {},
+	}))
 end
 local function GetEquipmentSetsByName(name)
 	return Internal.GetSetsByName("equipment", name)
@@ -1283,14 +1263,8 @@ function Internal.EquipmentTabUpdate(self)
 	if self.set ~= nil then
 		local set = self.set
 
-		-- Update filters
-		do
-			local filters = set.filters or {}
-			filters.character = set.character
-			set.filters = filters
-
-			sidebar:Update()
-		end
+		UpdateEquipmentSetFilters(set)
+		sidebar:Update()
 
 		local errors = CheckEquipmentSetForIssues(set)
 

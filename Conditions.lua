@@ -614,6 +614,10 @@ local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
 
 	BtWLoadoutsFrame:Update();
 end
+local CURRENT_EXPANSION = 9
+if select(4, GetBuildInfo()) < 90000 then
+	CURRENT_EXPANSION = 8
+end
 local function InstanceDropDownInit(self, level, menuList)
 	local info = UIDropDownMenu_CreateInfo();
 
@@ -636,8 +640,7 @@ local function InstanceDropDownInit(self, level, menuList)
 		-- 		UIDropDownMenu_AddButton(info, level);
 		-- 	end
 		-- else
-			local expansion = 8;
-			for _,instanceID in ipairs(dungeonInfo[expansion].instances) do
+			for _,instanceID in ipairs(dungeonInfo[CURRENT_EXPANSION].instances) do
 				info.text = GetRealZoneText(instanceID);
 				info.arg1 = instanceID;
 				info.func = InstanceDropDown_OnClick;
@@ -660,8 +663,7 @@ local function InstanceDropDownInit(self, level, menuList)
 		-- 		UIDropDownMenu_AddButton(info, level);
 		-- 	end
 		-- else
-			local expansion = 8;
-			for _,instanceID in ipairs(raidInfo[expansion].instances) do
+			for _,instanceID in ipairs(raidInfo[CURRENT_EXPANSION].instances) do
 				info.text = GetRealZoneText(instanceID);
 				info.arg1 = instanceID;
 				info.func = InstanceDropDown_OnClick;
@@ -810,8 +812,7 @@ local function ScenarioDropDownInit(self, level, menuList)
 	-- 		UIDropDownMenu_AddButton(info, level);
 	-- 	end
 	-- else
-		local expansion = 8;
-		for _,details in ipairs(scenarioInfo[expansion].instances) do
+		for _,details in ipairs(scenarioInfo[CURRENT_EXPANSION].instances) do
 			info.text = details[3];
 			info.arg1 = details[1];
 			info.arg2 = details[2];
@@ -1057,8 +1058,7 @@ function Internal.ConditionsTabUpdate(self)
 			UIDropDownMenu_SetText(self.ScenarioDropDown, L["Any"]);
 		else
 			-- This isnt a good way to do this, but it'll work
-			local expansion = 8;
-			for _,details in ipairs(scenarioInfo[expansion].instances) do
+			for _,details in ipairs(scenarioInfo[CURRENT_EXPANSION].instances) do
 				if (set.instanceID == details[1]) and (set.difficultyID == details[2]) then
 					UIDropDownMenu_SetText(self.ScenarioDropDown, details[3]);
 				end

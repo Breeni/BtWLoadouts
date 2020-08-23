@@ -141,7 +141,9 @@ do
         if name == nil then
             macro.icon = icon or macro.icon
             if body ~= nil then -- Only the body has changed so macros wont have reordered
-                macroBodyMap[macro.body] = nil -- Setting to nil will cause the index metamethod to run if needed later
+                if macro.body then
+                    macroBodyMap[macro.body] = nil -- Setting to nil will cause the index metamethod to run if needed later
+                end
                 macro.body = body
                 macroBodyMap[body] = id
             end
@@ -776,6 +778,9 @@ function BtWLoadoutsActionButtonMixin:OnClick(...)
 			local index = Internal.GetMacroByText(tbl.macroText)
             if not index then
                 CreateMacro(tbl.name, "INV_Misc_QuestionMark", tbl.macroText, IsModifiedClick("SHIFT"));
+                if MacroFrame_Update then
+                    MacroFrame_Update()
+                end
             end
         end
         BtWLoadoutsFrame:Update()
@@ -866,10 +871,12 @@ function BtWLoadoutsActionButtonMixin:Update()
 	local ignored = set.ignored[slot];
 	local tbl = set.actions[slot];
 	if tbl and tbl.type ~= nil then
-		local success, msg = Internal.PickupActionTable(tbl, true, set.settings)
-		if not success then
-			errors = msg
-		end
+        if not ignored then
+            local success, msg = Internal.PickupActionTable(tbl, true, set.settings)
+            if not success then
+                errors = msg
+            end
+        end
 
         local icon, name = tbl.icon, tbl.name
         if tbl.type == "item" then
@@ -888,14 +895,14 @@ function BtWLoadoutsActionButtonMixin:Update()
 			local index = Internal.GetMacroByText(tbl.macroText)
 			if index then
 				name, icon = GetMacroInfo(index)
-			else
+            elseif not ignored then
 				errors = L["Macro missing\n|rCtrl+Left Click to create macro\nCtrl+Shift+Left Click to create character macro"]
 			end
 		elseif tbl.type == "equipmentset" then
 			local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
 			if id then
 				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
-			else
+            elseif not ignored then
 				errors = L["Equipment set missing"]
 			end
 		else
@@ -908,10 +915,12 @@ function BtWLoadoutsActionButtonMixin:Update()
 		
 		self.Name:SetText(name)
 		self.Icon:SetTexture(icon)
+        self.Icon:SetDesaturated(ignored)
+        self.Icon:SetAlpha(ignored and 0.8 or 1)
 	else
 		self.Name:SetText(nil)
 		self.Icon:SetTexture(nil)
-	end
+    end
 
 	self.errors = errors -- For tooltip display
 	self.ErrorBorder:SetShown(errors ~= nil)

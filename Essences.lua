@@ -6,8 +6,29 @@ local GetMilestoneEssence = C_AzeriteEssence.GetMilestoneEssence;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local AddSet = Internal.AddSet
+
 local format = string.format
 
+local function UpdateEssenceSetFilters(set)
+	local filters = set.filters or {}
+	filters.role = set.role
+
+	-- Rebuild character list
+	filters.character = filters.character or {}
+	local characters = filters.character
+	table.wipe(characters)
+	local role = filters.role
+	for _,character in Internal.CharacterIterator() do
+		if Internal.IsClassRoleValid(Internal.GetCharacterInfo(character).class, role) then
+			characters[#characters+1] = character
+		end
+	end
+
+	set.filters = filters
+
+    return set
+end
 local function GetEssenceSet(id)
     if type(id) == "table" then
 		return id;
@@ -71,27 +92,16 @@ local function RefreshEssenceSet(set)
 
     set.essences = essences
 
-    return set
+    return UpdateEssenceSetFilters(set)
 end
 local function AddEssenceSet()
     local role = select(5,GetSpecializationInfo(GetSpecialization()));
-    local name = format(L["New %s Set"], _G[role]);
-	local selected = {};
-
-    selected[115] = C_AzeriteEssence.GetMilestoneEssence(115);
-    selected[116] = C_AzeriteEssence.GetMilestoneEssence(116);
-    selected[117] = C_AzeriteEssence.GetMilestoneEssence(117);
-    selected[119] = C_AzeriteEssence.GetMilestoneEssence(119);
-
-    local set = {
-		setID = Internal.GetNextSetID(BtWLoadoutsSets.essences),
-        role = role,
-        name = name,
-        essences = selected,
+    return AddSet("essences", RefreshEssenceSet({
+		role = role,
+		name = format(L["New %s Set"], _G[role]);
 		useCount = 0,
-    };
-    BtWLoadoutsSets.essences[set.setID] = set;
-    return set;
+        essences = {},
+	}))
 end
 local function GetEssenceSetsByName(name)
 	return Internal.GetSetsByName("essences", name)
@@ -104,7 +114,7 @@ local function GetEssenceSets(id, ...)
 		return BtWLoadoutsSets.essences[id], Internal.GetEssenceSets(...);
 	end
 end
-function Internal.GetEssenceSetIfNeeded(id)
+local function GetEssenceSetIfNeeded(id)
 	if id == nil then
 		return;
 	end
@@ -233,6 +243,8 @@ local function EssenceSetDelay(set)
 	return false
 end
 
+Internal.GetEssenceSets = GetEssenceSets
+Internal.GetEssenceSetIfNeeded = GetEssenceSetIfNeeded
 Internal.CanActivateEssences = CanActivateEssences
 Internal.GetEssenceSet = GetEssenceSet
 Internal.GetEssenceSetsByName = GetEssenceSetsByName
@@ -447,26 +459,8 @@ function Internal.EssencesTabUpdate(self)
 	if self.set ~= nil then
 		local set = self.set
 
-		-- Update filters
-		do
-			local filters = set.filters or {}
-			filters.role = set.role
-
-			-- Rebuild character list
-			filters.character = filters.character or {}
-			local characters = filters.character
-			wipe(characters)
-			local role = filters.role
-			for _,character in Internal.CharacterIterator() do
-				if Internal.IsClassRoleValid(Internal.GetCharacterInfo(character).class, role) then
-					characters[#characters+1] = character
-				end
-			end
-
-			set.filters = filters
-
-			sidebar:Update()
-		end
+		UpdateEssenceSetFilters(set)
+		sidebar:Update()
 
 		self.Name:SetEnabled(true);
 		self.RoleDropDown.Button:SetEnabled(true);
