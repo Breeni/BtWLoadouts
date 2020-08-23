@@ -258,6 +258,138 @@ Internal.IsEssenceSetActive = IsEssenceSetActive
 Internal.CombineEssenceSets = CombineEssenceSets
 Internal.GetEssenceSets = GetEssenceSets
 
+local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+    CloseDropDownMenus();
+    local set = tab.set;
+	local index = arg2 or (#set.essences + 1)
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	if arg1 == nil then
+		table.remove(set.essences, index);
+	else
+		set.essences[index] = arg1;
+	end
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.essences + 1)
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = Internal.AddEssenceSet();
+	set.essences[index] = newSet.setID;
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+
+	BtWLoadoutsFrame.Essences.set = newSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_ESSENCES);
+
+	BtWLoadoutsFrame:Update();
+end
+local function EssencesDropDownInit(self, level, menuList, index)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.essences then
+        return;
+    end
+
+	local info = UIDropDownMenu_CreateInfo();
+
+	local tab = BtWLoadoutsFrame.Profiles
+
+	local set = tab.set;
+	local selected = set and set.essences and set.essences[index];
+
+	info.arg2 = index
+
+	if (level or 1) == 1 then
+		info.text = NONE;
+		info.func = EssencesDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.essences;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.role] = true;
+			end
+		end
+
+		local role = select(5, GetSpecializationInfo(GetSpecialization()));
+		if setsFiltered[role] then
+			info.text = _G[role];
+			info.hasArrow, info.menuList = true, role;
+			info.keepShownOnClick = true;
+			info.notCheckable = true;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		local playerRole = role;
+		for _,role in Internal.Roles() do
+			if role ~= playerRole then
+				if setsFiltered[role] then
+					info.text = _G[role];
+					info.hasArrow, info.menuList = true, role;
+					info.keepShownOnClick = true;
+					info.notCheckable = true;
+					UIDropDownMenu_AddButton(info, level);
+				end
+			end
+		end
+
+		info.text = L["New Set"];
+		info.func = EssencesDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+		info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	else
+		local role = menuList;
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.essences;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.role == role then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+		sort(setsFiltered, function (a,b)
+			return sets[a].name < sets[b].name;
+		end)
+
+		for _,setID in ipairs(setsFiltered) do
+			info.text = sets[setID].name;
+			info.arg1 = setID;
+			info.func = EssencesDropDown_OnClick;
+			info.checked = selected == setID;
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+end
+
 Internal.AddLoadoutSegment({
     id = "essences",
     name = L["Essences"],
@@ -266,7 +398,8 @@ Internal.AddLoadoutSegment({
     get = GetEssenceSets,
     combine = CombineEssenceSets,
     isActive = IsEssenceSetActive,
-    activate = ActivateEssenceSet,
+	activate = ActivateEssenceSet,
+	dropdowninit = EssencesDropDownInit,
 })
 
 BtWLoadoutsAzeriteMilestoneSlotMixin = {};

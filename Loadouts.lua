@@ -43,6 +43,7 @@ local GetCharacterInfo = Internal.GetCharacterInfo;
 local GetCharacterSlug = Internal.GetCharacterSlug
 
 local loadoutSegments = {}
+local loadoutSegmentsByID = {}
 _G['BtWLoadoutsLoadoutSegments'] = loadoutSegments; -- @TODO REMOVE
 
 local PlayerNeedsTome;
@@ -325,16 +326,17 @@ local function UpdateLoadoutFilters(set)
     return set
 end
 local function AddProfile()
-    return AddSet("profiles", UpdateLoadoutFilters({
+	local set = {
 		name = L["New Profile"],
-		talents = {},
-		pvptalents = {},
-		essences = {},
-		equipment = {},
-		actionbars = {},
 		version = 2,
 		useCount = 0,
-    }))
+	}
+
+	for _,segment in Internal.EnumerateLoadoutSegments() do
+		set[segment.id] = {}
+	end
+	
+    return AddSet("profiles", UpdateLoadoutFilters(set))
 end
 local function GetProfile(id)
     return BtWLoadoutsSets.profiles[id];
@@ -351,36 +353,15 @@ local function DeleteProfile(id)
 	do
         local set = type(id) == "table" and id or GetProfile(id);
 
-        -- for _,segment in ipairs(loadoutSegments) do
-        --     local ids = set[segment.id]
-        --     if ids then
-        --         for _,id in ipairs(ids) do
-        --             local subSet = segment.get(id)
-        --             subSet.useCount = (subSet.useCount or 1) - 1;
-        --         end
-        --     end
-        -- end
-
-		for _,setID in ipairs(set.talents) do
-			local subSet = Internal.GetTalentSet(setID);
-			subSet.useCount = (subSet.useCount or 1) - 1;
-		end
-		for _,setID in ipairs(set.pvptalents) do
-			local subSet = Internal.GetPvPTalentSet(setID);
-			subSet.useCount = (subSet.useCount or 1) - 1;
-		end
-		for _,setID in ipairs(set.essences) do
-			local subSet = Internal.GetEssenceSet(setID);
-			subSet.useCount = (subSet.useCount or 1) - 1;
-		end
-		for _,setID in ipairs(set.equipment) do
-			local subSet = Internal.GetEquipmentSet(setID);
-			subSet.useCount = (subSet.useCount or 1) - 1;
-		end
-		for _,setID in ipairs(set.actionbars) do
-			local subSet = Internal.GetActionBarSet(setID);
-			subSet.useCount = (subSet.useCount or 1) - 1;
-		end
+        for _,segment in ipairs(loadoutSegments) do
+            local ids = set[segment.id]
+            if ids then
+                for _,id in ipairs(ids) do
+                    local subSet = segment.get(id)
+                    subSet.useCount = (subSet.useCount or 1) - 1;
+                end
+            end
+        end
 
 		-- Disconnect conditions for the deleted loadout
 		for _,superset in pairs(BtWLoadoutsSets.conditions) do
@@ -427,37 +408,6 @@ local function ActivateProfile(profile)
 			end
 		end
 	end
-
-	-- if profile.talents and #profile.talents > 0 then
-	-- 	target.talents = target.talents or {};
-	-- 	for _,setID in ipairs(profile.talents) do
-	-- 		target.talents[#target.talents+1] = setID;
-	-- 	end
-	-- end
-	-- if profile.pvptalents and #profile.pvptalents > 0 then
-	-- 	target.pvptalents = target.pvptalents or {};
-	-- 	for _,setID in ipairs(profile.pvptalents) do
-	-- 		target.pvptalents[#target.pvptalents+1] = setID;
-	-- 	end
-	-- end
-	-- if profile.essences and #profile.essences > 0 then
-	-- 	target.essences = target.essences or {};
-	-- 	for _,setID in ipairs(profile.essences) do
-	-- 		target.essences[#target.essences+1] = setID;
-	-- 	end
-	-- end
-	-- if profile.equipment and #profile.equipment > 0 then
-	-- 	target.equipment = target.equipment or {};
-	-- 	for _,setID in ipairs(profile.equipment) do
-	-- 		target.equipment[#target.equipment+1] = setID;
-	-- 	end
-	-- end
-	-- if profile.actionbars and #profile.actionbars > 0 then
-	-- 	target.actionbars = target.actionbars or {};
-	-- 	for _,setID in ipairs(profile.actionbars) do
-	-- 		target.actionbars[#target.actionbars+1] = setID;
-	-- 	end
-	-- end
 
 	if not target.active then
 		Internal.Call("LOADOUT_CHANGE_START")
@@ -647,82 +597,6 @@ local function ContinueActivateProfile()
 		return;
 	end
 
---[[
-	if InCombatLockdown() then
-		Internal.SetWaitReason(L["Waiting for combat to end"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-        return;
-    end
-
-	if UnitOnTaxi("player") then
-		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-        return;
-	end
-
-	local specID = set.specID;
-	if specID ~= nil then
-		local playerSpecID = GetSpecializationInfo(GetSpecialization());
-		if specID ~= playerSpecID then
-			if IsPlayerMoving() then -- Cannot change spec while moving
-				Internal.SetWaitReason(L["Waiting to change specialization"])
-				StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-				return;
-			end
-
-			for specIndex=1,GetNumSpecializations() do
-				if GetSpecializationInfo(specIndex) == specID then
-					Internal.LogMessage("Switching specialization to %s", (select(2, GetSpecializationInfo(specIndex))))
-					SetSpecialization(specIndex);
-					target.dirty = false;
-					return;
-				end
-			end
-		end
-	end
-]]
-
---[[
-	local talentSet;
-	if set.talents then
-		talentSet = Internal.CombineTalentSets({}, Internal.GetTalentSets(unpack(set.talents)));
-	end
-
-	if talentSet and Internal.TalentSetDelay(talentSet) then
-		Internal.SetWaitReason(L["Waiting for talent cooldown"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-        return;
-	end
-
-	local pvpTalentSet;
-	if set.pvptalents then
-		pvpTalentSet = Internal.CombinePvPTalentSets({}, Internal.GetPvPTalentSets(unpack(set.pvptalents)));
-	end
-
-	local essencesSet;
-	if set.essences then
-		essencesSet = Internal.CombineEssenceSets({}, Internal.GetEssenceSets(unpack(set.essences)));
-	end
-
-	if essencesSet and Internal.EssenceSetDelay(essencesSet) then
-		Internal.SetWaitReason(L["Waiting for essence cooldown"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-        return;
-	end
-
-	if talentSet and not Internal.IsTalentSetActive(talentSet) and PlayerNeedsTome() then
-		Internal.SetWaitReason(L["Waiting for tome"])
-		RequestTome();
-		return;
-	end
-
-	if essencesSet and not Internal.IsEssenceSetActive(essencesSet) and PlayerNeedsTome() then
-		Internal.SetWaitReason(L["Waiting for tome"])
-		RequestTome();
-		return;
-	end
-]]
-
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
 
@@ -743,61 +617,6 @@ local function ContinueActivateProfile()
 			end
 		end
 	end
-
---[[
-    if talentSet then
-		if not Internal.ActivateTalentSet(talentSet) then
-			complete = false;
-		end
-	end
-
-    if pvpTalentSet then
-		-- When we will finish with Conflict as a major there is a chance we wont be able to put all the
-		-- pvp talents in the 4 slots so we need to check other set pvp talents too
-		local conflictAndStrife = false
-		if essencesSet then
-			conflictAndStrife = essencesSet.essences[115] == 32; -- We are trying to equip Conflict
-		else
-			conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped
-		end
-
-		if not Internal.ActivatePvPTalentSet(pvpTalentSet, conflictAndStrife) then
-			complete = false;
-		end
-    end
-
-    if essencesSet and C_AzeriteEmpoweredItem.IsHeartOfAzerothEquipped() then
-		if not Internal.ActivateEssenceSet(essencesSet) then
-			complete = false;
-			set.dirty = true; -- Just run next frame
-		end
-    end
-
-	local equipmentSet;
-	if set.equipment then
-		equipmentSet = Internal.CombineEquipmentSets({}, Internal.GetEquipmentSets(unpack(set.equipment)));
-
-		if equipmentSet then
-			Internal.CheckEquipmentSetForIssues(equipmentSet) -- This will "solve" any unique-equipped issues
-
-			if not Internal.ActivateEquipmentSet(equipmentSet) then
-				complete = false;
-			end
-		end
-	end
-
-	local actionBarSet;
-	if set.actionbars then
-		actionBarSet = Internal.CombineActionBarSets({}, Internal.GetActionBarSets(unpack(set.actionbars)));
-
-		if actionBarSet then
-			if not Internal.ActivateActionBarSet(actionBarSet) then
-				complete = false;
-				set.dirty = true; -- Just run next frame
-			end
-		end
-	end
-]]
 
 	-- Done
 	if complete then
@@ -914,7 +733,14 @@ do
 				return
 			end
 		end
-		loadoutSegments[#loadoutSegments+1] = details;
+		loadoutSegments[#loadoutSegments+1] = details
+		loadoutSegmentsByID[details.id] = details
+	end
+	function Internal.EnumerateLoadoutSegments()
+		return ipairs(loadoutSegments)
+	end
+	function Internal.GetLoadoutSegment(id)
+		return loadoutSegmentsByID[id]
 	end
 end
 function Internal.IsActivatingLoadout()
@@ -1014,679 +840,6 @@ local TAB_EQUIPMENT = 5;
 local TAB_ACTION_BARS = 6;
 local TAB_CONDITIONS = 7;
 
-local setsFiltered = {}
-local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.talents + 1)
-
-	if set.talents[index] then
-		local subset = Internal.GetTalentSet(set.talents[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.talents, index);
-	else
-		set.talents[index] = arg1;
-	end
-
-	if set.talents[index] then
-		local subset = Internal.GetTalentSet(set.talents[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.talents + 1)
-
-	if set.talents[index] then
-		local subset = Internal.GetTalentSet(set.talents[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local talentSet = Internal.AddTalentSet();
-	set.talents[index] = talentSet.setID;
-
-	if set.talents[index] then
-		local subset = Internal.GetTalentSet(set.talents[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.Talents.set = talentSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_TALENTS);
-
-	BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] = true;
-	BtWLoadoutsFrame:Update();
-end
-local function TalentsDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.talents then
-        return;
-	end
-    local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.talents and set.talents[index];
-
-	info.arg2 = index
-
-	if (level or 1) == 1 then
-		info.text = L["None"];
-		info.func = TalentsDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.talents;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.specID] = true;
-			end
-		end
-
-		local className, classFile, classID = UnitClass("player");
-		local classColor = C_ClassColor.GetClassColor(classFile);
-		className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-		for specIndex=1,GetNumSpecializationsForClassID(classID) do
-			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-			if setsFiltered[specID] then
-				info.text = format("%s: %s", className, specName);
-				info.hasArrow, info.menuList = true, specID;
-				info.keepShownOnClick = true;
-				info.notCheckable = true;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-
-		local playerClassID = classID;
-		for classID=1,GetNumClasses() do
-			if classID ~= playerClassID then
-				local className, classFile = GetClassInfo(classID);
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					if setsFiltered[specID] then
-						info.text = format("%s: %s", className, specName);
-						info.hasArrow, info.menuList = true, specID;
-						info.keepShownOnClick = true;
-						info.notCheckable = true;
-						UIDropDownMenu_AddButton(info, level);
-					end
-				end
-			end
-		end
-
-		info.text = L["New Set"];
-		info.func = TalentsDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local specID = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.talents;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.specID == specID then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-        for _,setID in ipairs(setsFiltered) do
-            info.text = sets[setID].name;
-			info.arg1 = setID;
-            info.func = TalentsDropDown_OnClick;
-            info.checked = selected == setID;
-            UIDropDownMenu_AddButton(info, level);
-        end
-    end
-end
-
-local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.pvptalents + 1)
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.pvptalents, index);
-	else
-		set.pvptalents[index] = arg1;
-	end
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.pvptalents + 1)
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddPvPTalentSet();
-	set.pvptalents[index] = newSet.setID;
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.PvPTalents.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_PVP_TALENTS);
-
-	BtWLoadoutsFrame:Update();
-end
-local function PvPTalentsDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.pvptalents then
-        return;
-	end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.pvptalents and set.pvptalents[index];
-
-	info.arg2 = index
-
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = PvPTalentsDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.pvptalents;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.specID] = true;
-			end
-		end
-
-		local className, classFile, classID = UnitClass("player");
-		local classColor = C_ClassColor.GetClassColor(classFile);
-		className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-		for specIndex=1,GetNumSpecializationsForClassID(classID) do
-			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-			if setsFiltered[specID] then
-				info.text = format("%s: %s", className, specName);
-				info.hasArrow, info.menuList = true, specID;
-				info.keepShownOnClick = true;
-				info.notCheckable = true;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-
-		local playerClassID = classID;
-		for classID=1,GetNumClasses() do
-			if classID ~= playerClassID then
-				local className, classFile = GetClassInfo(classID);
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					if setsFiltered[specID] then
-						info.text = format("%s: %s", className, specName);
-						info.hasArrow, info.menuList = true, specID;
-						info.keepShownOnClick = true;
-						info.notCheckable = true;
-						UIDropDownMenu_AddButton(info, level);
-					end
-				end
-			end
-		end
-
-		info.text = L["New Set"];
-		info.func = PvPTalentsDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local specID = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.pvptalents;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.specID == specID then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-		for _,setID in ipairs(setsFiltered) do
-			info.text = sets[setID].name;
-			info.arg1 = setID;
-			info.func = PvPTalentsDropDown_OnClick;
-			info.checked = selected == setID;
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
-local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-    CloseDropDownMenus();
-    local set = tab.set;
-	local index = arg2 or (#set.essences + 1)
-
-	if set.essences[index] then
-		local subset = Internal.GetEssenceSet(set.essences[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.essences, index);
-	else
-		set.essences[index] = arg1;
-	end
-
-	if set.essences[index] then
-		local subset = Internal.GetEssenceSet(set.essences[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.essences + 1)
-
-	if set.essences[index] then
-		local subset = Internal.GetEssenceSet(set.essences[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddEssenceSet();
-	set.essences[index] = newSet.setID;
-
-	if set.essences[index] then
-		local subset = Internal.GetEssenceSet(set.essences[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-
-	BtWLoadoutsFrame.Essences.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_ESSENCES);
-
-	BtWLoadoutsFrame:Update();
-end
-local function EssencesDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.essences then
-        return;
-    end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.essences and set.essences[index];
-
-	info.arg2 = index
-
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = EssencesDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.essences;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.role] = true;
-			end
-		end
-
-		local role = select(5, GetSpecializationInfo(GetSpecialization()));
-		if setsFiltered[role] then
-			info.text = _G[role];
-			info.hasArrow, info.menuList = true, role;
-			info.keepShownOnClick = true;
-			info.notCheckable = true;
-			UIDropDownMenu_AddButton(info, level);
-		end
-
-		local playerRole = role;
-		for _,role in Internal.Roles() do
-			if role ~= playerRole then
-				if setsFiltered[role] then
-					info.text = _G[role];
-					info.hasArrow, info.menuList = true, role;
-					info.keepShownOnClick = true;
-					info.notCheckable = true;
-					UIDropDownMenu_AddButton(info, level);
-				end
-			end
-		end
-
-		info.text = L["New Set"];
-		info.func = EssencesDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local role = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.essences;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.role == role then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-		for _,setID in ipairs(setsFiltered) do
-			info.text = sets[setID].name;
-			info.arg1 = setID;
-			info.func = EssencesDropDown_OnClick;
-			info.checked = selected == setID;
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
-local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-    CloseDropDownMenus();
-    local set = tab.set;
-	local index = arg2 or (#set.equipment + 1)
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.equipment, index);
-	else
-		set.equipment[index] = arg1;
-	end
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.equipment + 1)
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddEquipmentSet();
-	set.equipment[index] = newSet.setID;
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.Equipment.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_EQUIPMENT);
-
-	BtWLoadoutsFrame:Update();
-end
-local function EquipmentDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.equipment then
-        return;
-    end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.equipment and set.equipment[index];
-
-	info.arg2 = index
-
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = EquipmentDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.equipment;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.character] = true;
-			end
-		end
-
-		local characters = {};
-		for character in pairs(setsFiltered) do
-			characters[#characters+1] = character;
-		end
-		sort(characters, function (a,b)
-			return a < b;
-		end)
-
-		local character = GetCharacterSlug();
-		if setsFiltered[character] then
-			local name = character;
-			local characterInfo = GetCharacterInfo(character);
-			if characterInfo then
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-			end
-
-			info.text = name;
-			info.hasArrow, info.menuList = true, character;
-			info.keepShownOnClick = true;
-			info.notCheckable = true;
-			UIDropDownMenu_AddButton(info, level);
-		end
-
-		local playerCharacter = character;
-		for _,character in ipairs(characters) do
-			if character ~= playerCharacter then
-				if setsFiltered[character] then
-					local name = character;
-					local characterInfo = GetCharacterInfo(character);
-					if characterInfo then
-						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					end
-
-					info.text = name;
-					info.hasArrow, info.menuList = true, character;
-					info.keepShownOnClick = true;
-					info.notCheckable = true;
-					UIDropDownMenu_AddButton(info, level);
-				end
-			end
-		end
-
-		info.text = L["New Set"];
-		info.func = EquipmentDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local character = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.equipment;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.character == character then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-        for _,setID in ipairs(setsFiltered) do
-            info.text = sets[setID].name .. (sets[setID].managerID ~= nil and " (*)" or "");
-            info.arg1 = setID;
-            info.func = EquipmentDropDown_OnClick;
-            info.checked = selected == setID;
-            UIDropDownMenu_AddButton(info, level);
-		end
-	end
-end
-
-local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-    CloseDropDownMenus();
-    local set = tab.set;
-	local index = arg2 or (#set.actionbars + 1)
-
-	if set.actionbars[index] then
-		local subset = Internal.GetActionBarSet(set.actionbars[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.actionbars, index);
-	else
-		set.actionbars[index] = arg1;
-	end
-
-	if set.actionbars[index] then
-		local subset = Internal.GetActionBarSet(set.actionbars[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.actionbars + 1)
-
-	if set.actionbars[index] then
-		local subset = Internal.GetActionBarSet(set.actionbars[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddActionBarSet();
-	set.actionbars[index] = newSet.setID;
-
-	if set.actionbars[index] then
-		local subset = Internal.GetActionBarSet(set.actionbars[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.ActionBars.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_ACTION_BARS);
-
-	BtWLoadoutsFrame:Update();
-end
-local function ActionBarDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.actionbars then
-        return;
-    end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.actionbars and set.actionbars[index];
-
-	info.arg2 = index
-	
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = ActionBarDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.actionbars;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-		for _,setID in ipairs(setsFiltered) do
-			info.text = sets[setID].name;
-			info.arg1 = setID;
-			info.func = ActionBarDropDown_OnClick;
-			info.checked = selected == setID;
-			UIDropDownMenu_AddButton(info, level);
-		end
-
-		info.text = L["New Set"];
-		info.func = ActionBarDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	end
-end
-
 BtWLoadoutsSetsScrollListItemMixin = {}
 function BtWLoadoutsSetsScrollListItemMixin:OnLoad()
 	self:RegisterForDrag("LeftButton");
@@ -1784,34 +937,16 @@ function BtWLoadoutsSetsScrollListItemMixin:OnClick()
 	if self.isHeader then
 		local frame = self:GetParent():GetParent():GetParent()
 		frame.Collapsed[self.type] = not frame.Collapsed[self.type]
-		Internal.ProfilesTabUpdate(frame)
+		frame:Update()
 	elseif self.isAdd then
 		self:Add(self)
 	else
 		local DropDown = self:GetParent():GetParent().DropDown
 		local index = self.index
 
-		if self.type == "talents" then
-			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-				return TalentsDropDownInit(self, level, menuList, index)
-			end)
-		elseif self.type == "pvptalents" then
-			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-				return PvPTalentsDropDownInit(self, level, menuList, index)
-			end)
-		elseif self.type == "essences" then
-			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-				return EssencesDropDownInit(self, level, menuList, index)
-			end)
-		elseif self.type == "equipment" then
-			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-				return EquipmentDropDownInit(self, level, menuList, index)
-			end)
-		elseif self.type == "actionbars" then
-			UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-				return ActionBarDropDownInit(self, level, menuList, index)
-			end)
-		end
+		UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+			return Internal.GetLoadoutSegment(self.type).dropdowninit(self, level, menuList, index)
+		end)
 
 		ToggleDropDownMenu(nil, nil, DropDown, self, 0, 0)
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
@@ -1869,17 +1004,7 @@ end
 function BtWLoadoutsSetsScrollListItemMixin:Add(button)
 	local DropDown = self:GetParent():GetParent().DropDown
 	
-	if self.type == "talents" then
-		UIDropDownMenu_SetInitializeFunction(DropDown, TalentsDropDownInit)
-	elseif self.type == "pvptalents" then
-		UIDropDownMenu_SetInitializeFunction(DropDown, PvPTalentsDropDownInit)
-	elseif self.type == "essences" then
-		UIDropDownMenu_SetInitializeFunction(DropDown, EssencesDropDownInit)
-	elseif self.type == "equipment" then
-		UIDropDownMenu_SetInitializeFunction(DropDown, EquipmentDropDownInit)
-	elseif self.type == "actionbars" then
-		UIDropDownMenu_SetInitializeFunction(DropDown, ActionBarDropDownInit)
-	end
+	UIDropDownMenu_SetInitializeFunction(DropDown, Internal.GetLoadoutSegment(self.type).dropdowninit)
 
 	ToggleDropDownMenu(nil, nil, DropDown, button, 0, 0)
 	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
@@ -1892,7 +1017,7 @@ function BtWLoadoutsSetsScrollListItemMixin:Remove()
 	assert(type(set[self.type]) == "table" and index ~= nil and index >= 1 and index <= #set[self.type])
 	table.remove(set[self.type], index);
 
-	Internal.ProfilesTabUpdate(tab)
+	tab:Update()
 end
 function BtWLoadoutsSetsScrollListItemMixin:MoveUp()
 	local tab = self:GetParent():GetParent():GetParent()
@@ -1902,7 +1027,7 @@ function BtWLoadoutsSetsScrollListItemMixin:MoveUp()
 	assert(type(set[self.type]) == "table" and index > 1 and index <= #set[self.type])
 	set[self.type][index-1], set[self.type][index] = set[self.type][index], set[self.type][index-1]
 
-	Internal.ProfilesTabUpdate(tab)
+	tab:Update()
 end
 function BtWLoadoutsSetsScrollListItemMixin:MoveDown()
 	local tab = self:GetParent():GetParent():GetParent()
@@ -1912,10 +1037,10 @@ function BtWLoadoutsSetsScrollListItemMixin:MoveDown()
 	assert(type(set[self.type]) == "table" and index >= 1 and index < #set[self.type])
 	set[self.type][index+1], set[self.type][index] = set[self.type][index], set[self.type][index+1]
 
-	Internal.ProfilesTabUpdate(tab)
+	tab:Update()
 end
 
-function Internal.SetsScrollFrameUpdate(self)
+local function SetsScrollFrameUpdate(self)
 	self:GetScrollChild().currentDrag = nil -- Clear current drag
 
 	local buttons = self.buttons
@@ -2041,7 +1166,7 @@ function BtWLoadoutsProfilesMixin:OnLoad()
 	UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
 
 	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
-	self.SetsScroll.update = Internal.SetsScrollFrameUpdate;
+	self.SetsScroll.update = SetsScrollFrameUpdate;
 end
 function BtWLoadoutsProfilesMixin:OnEvent()
 	if self.SetsScroll:GetScrollChild().currentDrag  ~= nil then
@@ -2220,7 +1345,7 @@ function BtWLoadoutsProfilesMixin:Update()
 		self.Enabled:SetChecked(not self.set.disabled);
 
 		self.SetsScroll.items = BuildSetItems(self.set, self.SetsScroll.items or {}, self.Collapsed, errors)
-		Internal.SetsScrollFrameUpdate(self.SetsScroll)
+		SetsScrollFrameUpdate(self.SetsScroll)
 		
 		if not self.Name:HasFocus() then
 			self.Name:SetText(self.set.name or "");
@@ -2268,7 +1393,7 @@ function BtWLoadoutsProfilesMixin:Update()
 
 		self.SetsScroll.items = self.SetsScroll.items or {}
 		wipe(self.SetsScroll.items)
-		Internal.SetsScrollFrameUpdate(self.SetsScroll)
+		SetsScrollFrameUpdate(self.SetsScroll)
 
 		local activateButton = self:GetParent().ActivateButton;
 		activateButton:SetEnabled(false);

@@ -326,6 +326,151 @@ Internal.IsTalentSetActive = IsTalentSetActive
 Internal.CombineTalentSets = CombineTalentSets
 Internal.GetTalentSets = GetTalentSets
 
+local setsFiltered = {}
+local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.talents + 1)
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	if arg1 == nil then
+		table.remove(set.talents, index);
+	else
+		set.talents[index] = arg1;
+	end
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.talents + 1)
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local talentSet = Internal.AddTalentSet();
+	set.talents[index] = talentSet.setID;
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame.Talents.set = talentSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_TALENTS);
+
+	BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] = true;
+	BtWLoadoutsFrame:Update();
+end
+local function TalentsDropDownInit(self, level, menuList, index)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.talents then
+        return;
+	end
+    local info = UIDropDownMenu_CreateInfo();
+
+	local tab = BtWLoadoutsFrame.Profiles
+
+	local set = tab.set;
+	local selected = set and set.talents and set.talents[index];
+
+	info.arg2 = index
+
+	if (level or 1) == 1 then
+		info.text = L["None"];
+		info.func = TalentsDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.talents;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.specID] = true;
+			end
+		end
+
+		local className, classFile, classID = UnitClass("player");
+		local classColor = C_ClassColor.GetClassColor(classFile);
+		className = classColor and classColor:WrapTextInColorCode(className) or className;
+
+		for specIndex=1,GetNumSpecializationsForClassID(classID) do
+			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
+			if setsFiltered[specID] then
+				info.text = format("%s: %s", className, specName);
+				info.hasArrow, info.menuList = true, specID;
+				info.keepShownOnClick = true;
+				info.notCheckable = true;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+
+		local playerClassID = classID;
+		for classID=1,GetNumClasses() do
+			if classID ~= playerClassID then
+				local className, classFile = GetClassInfo(classID);
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				className = classColor and classColor:WrapTextInColorCode(className) or className;
+
+				for specIndex=1,GetNumSpecializationsForClassID(classID) do
+					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
+					if setsFiltered[specID] then
+						info.text = format("%s: %s", className, specName);
+						info.hasArrow, info.menuList = true, specID;
+						info.keepShownOnClick = true;
+						info.notCheckable = true;
+						UIDropDownMenu_AddButton(info, level);
+					end
+				end
+			end
+		end
+
+		info.text = L["New Set"];
+		info.func = TalentsDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+		info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	else
+		local specID = menuList;
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.talents;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.specID == specID then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+		sort(setsFiltered, function (a,b)
+			return sets[a].name < sets[b].name;
+		end)
+
+        for _,setID in ipairs(setsFiltered) do
+            info.text = sets[setID].name;
+			info.arg1 = setID;
+            info.func = TalentsDropDown_OnClick;
+            info.checked = selected == setID;
+            UIDropDownMenu_AddButton(info, level);
+        end
+    end
+end
+
 Internal.AddLoadoutSegment({
     id = "talents",
     name = L["Talents"],
@@ -334,6 +479,7 @@ Internal.AddLoadoutSegment({
     combine = CombineTalentSets,
     isActive = IsTalentSetActive,
     activate = ActivateTalentSet,
+    dropdowninit = TalentsDropDownInit,
 })
 
 BtWLoadoutsTalentsMixin = {}
