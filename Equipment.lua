@@ -20,6 +20,7 @@ local sort = table.sort
 local format = string.format
 
 local GetCharacterSlug = Internal.GetCharacterSlug
+local GetCharacterInfo = Internal.GetCharacterInfo
 
 --[[
     GetItemUniqueness will sometimes return Unique-Equipped info instead of Legion Legendary info,
@@ -1013,6 +1014,20 @@ local function DeleteEquipmentSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+local function CheckErrors(errorState, set)
+    set = GetEquipmentSet(set)
+
+	if errorState.specID then
+		errorState.role, errorState.class = select(5, GetSpecializationInfoByID(errorState.specID))
+	end
+
+	local characterInfo = GetCharacterInfo(set.character);
+	errorState.class = errorState.class or characterInfo.class;
+
+	if errorState.class ~= characterInfo.class then
+        return L["Incompatible Class"]
+    end
+end
 
 Internal.GetEquipmentSet = GetEquipmentSet
 Internal.GetEquipmentSetsByName = GetEquipmentSetsByName
@@ -1027,6 +1042,7 @@ Internal.CombineEquipmentSets = CombineEquipmentSets
 Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
 Internal.GetEquipmentSets = GetEquipmentSets
 
+local setsFiltered = {};
 local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Profiles
 
@@ -1189,6 +1205,7 @@ Internal.AddLoadoutSegment({
     isActive = IsEquipmentSetActive,
 	activate = ActivateEquipmentSet,
 	dropdowninit = EquipmentDropDownInit,
+	checkerrors = CheckErrors,
 })
 
 local GetCursorItemSource

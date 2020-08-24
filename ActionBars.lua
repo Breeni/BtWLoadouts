@@ -754,6 +754,7 @@ Internal.GetActionBarSets = GetActionBarSets
 Internal.CombineActionBarSets = CombineActionBarSets
 Internal.DeleteActionBarSet = DeleteActionBarSet
 
+local setsFiltered = {}
 local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Profiles
 

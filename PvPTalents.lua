@@ -249,6 +249,14 @@ local function DeletePvPTalentSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+local function CheckErrors(errorState, set)
+    set = GetPvPTalentSet(set)
+    errorState.specID = errorState.specID or set.specID
+
+    if errorState.specID ~= set.specID then
+        return L["Incompatible Specialization"]
+    end
+end
 
 Internal.GetPvPTalentSet = GetPvPTalentSet
 Internal.GetPvPTalentSetsByName = GetPvPTalentSetsByName
@@ -261,6 +269,7 @@ Internal.IsPvPTalentSetActive = IsPvPTalentSetActive
 Internal.CombinePvPTalentSets = CombinePvPTalentSets
 Internal.GetPvPTalentSets = GetPvPTalentSets
 
+local setsFiltered = {};
 local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Profiles
 
@@ -415,6 +424,7 @@ Internal.AddLoadoutSegment({
     isActive = IsPvPTalentSetActive,
 	activate = ActivatePvPTalentSet,
 	dropdowninit = PvPTalentsDropDownInit,
+    checkerrors = CheckErrors,
 })
 
 local function CompareTalentList(a, b)

@@ -242,6 +242,18 @@ local function EssenceSetDelay(set)
 	end
 	return false
 end
+local function CheckErrors(errorState, set)
+    set = GetEssenceSet(set)
+
+	if errorState.specID then
+		errorState.role, errorState.class = select(5, GetSpecializationInfoByID(errorState.specID))
+	end
+	errorState.role = errorState.role or set.role
+
+    if errorState.role ~= set.role then
+        return L["Incompatible Role"]
+    end
+end
 
 Internal.GetEssenceSets = GetEssenceSets
 Internal.GetEssenceSetIfNeeded = GetEssenceSetIfNeeded
@@ -258,6 +270,7 @@ Internal.IsEssenceSetActive = IsEssenceSetActive
 Internal.CombineEssenceSets = CombineEssenceSets
 Internal.GetEssenceSets = GetEssenceSets
 
+local setsFiltered = {};
 local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Profiles
 
@@ -400,6 +413,7 @@ Internal.AddLoadoutSegment({
     isActive = IsEssenceSetActive,
 	activate = ActivateEssenceSet,
 	dropdowninit = EssencesDropDownInit,
+    checkerrors = CheckErrors,
 })
 
 BtWLoadoutsAzeriteMilestoneSlotMixin = {};

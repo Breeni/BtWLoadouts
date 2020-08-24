@@ -310,6 +310,14 @@ local function DeleteTalentSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+local function CheckErrors(errorState, set)
+    set = GetTalentSet(set)
+    errorState.specID = errorState.specID or set.specID
+
+    if errorState.specID ~= set.specID then
+        return L["Incompatible Specialization"]
+    end
+end
 
 Internal.FixTalentSet = FixTalentSet
 Internal.GetTalentSet = GetTalentSet
@@ -480,6 +488,7 @@ Internal.AddLoadoutSegment({
     isActive = IsTalentSetActive,
     activate = ActivateTalentSet,
     dropdowninit = TalentsDropDownInit,
+    checkerrors = CheckErrors,
 })
 
 BtWLoadoutsTalentsMixin = {}

@@ -24,8 +24,6 @@ local GetNumSpecializations = GetNumSpecializations;
 local GetSpecializationInfo = GetSpecializationInfo;
 local GetSpecializationInfoByID = GetSpecializationInfoByID;
 
-local GetMilestoneEssence = C_AzeriteEssence.GetMilestoneEssence
-
 local StaticPopup_Show = StaticPopup_Show;
 local StaticPopup_Hide = StaticPopup_Hide;
 local StaticPopup_Visible = StaticPopup_Visible;
@@ -44,6 +42,7 @@ local GetCharacterSlug = Internal.GetCharacterSlug
 
 local loadoutSegments = {}
 local loadoutSegmentsByID = {}
+local loadoutSegmentsUIOrder = {}
 _G['BtWLoadoutsLoadoutSegments'] = loadoutSegments; -- @TODO REMOVE
 
 local PlayerNeedsTome;
@@ -177,114 +176,51 @@ local function CancelActivateProfile()
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
 
+local errorState = {} -- Reusable state for checking loadouts for errors
 local function LoadoutHasErrors(set)
-	local specID, role, class = set.specID
+	wipe(errorState)
 
-	if set.talents then
-		for _,subsetID in ipairs(set.talents) do
-			local subset = Internal.GetTalentSet(subsetID)
-			specID = specID or subset.specID
-
-			if specID ~= subset.specID then
-				return true, specID
+	errorState.specID = set.specID
+	for _,segment in ipairs(loadoutSegments) do
+		for index,subsetID in ipairs(set[segment.id]) do
+			if segment.checkerrors then
+				local error = segment.checkerrors(errorState, subsetID)
+				if error then
+					return true, errorState.specID
+				end
 			end
 		end
 	end
 
-	if set.pvptalents then
-		for _,subsetID in ipairs(set.pvptalents) do
-			local subset = Internal.GetPvPTalentSet(subsetID)
-			specID = specID or subset.specID
-
-			if specID ~= subset.specID then
-				return true, specID
-			end
-		end
-	end
-
-	if specID then
-		role, class = select(5, GetSpecializationInfoByID(specID))
-	end
-
-	if set.essences then
-		for _,subsetID in ipairs(set.essences) do
-			local subset = Internal.GetEssenceSet(subsetID)
-			role = role or subset.role
-
-			if role ~= subset.role then
-				return true, specID
-			end
-		end
-	end
-
-	if set.equipment then
-		for _,subsetID in ipairs(set.equipment) do
-			local subset = Internal.GetEquipmentSet(subsetID)
-			local characterInfo = Internal.GetCharacterInfo(subset.character);
-			class = class or characterInfo.class;
-
-			if class ~= characterInfo.class then
-				return true, specID
-			end
-		end
-	end
-
-	return false, specID
+	return false, errorState.specID
 end
-
 local function GetLoadoutErrors(errors, set)
-	local specID, hasError, role, class = set.specID, false
+	wipe(errorState)
 
-	wipe(errors["talents"])
-	for index,subsetID in ipairs(set.talents) do
-		local subset = Internal.GetTalentSet(subsetID)
-		specID = specID or subset.specID
+	errorState.specID = set.specID
+	local hasError = false
 
-		if specID ~= subset.specID then
-			hasError = true
-			errors["talents"][index] = L["Incompatible Specialization"]
+	for _,segment in ipairs(loadoutSegments) do
+		local segmenterrors = errors[segment.id]
+		if not segmenterrors then
+			segmenterrors = {}
+			errors[segment.id] = segmenterrors
+		else
+			wipe(errors[segment.id])
+		end
+
+		for index,subsetID in ipairs(set[segment.id]) do
+			if segment.checkerrors then
+				local error = segment.checkerrors(errorState, subsetID)
+				if error then
+					hasError = true
+					errors[segment.id][index] = error
+				end
+			end
 		end
 	end
 
-	wipe(errors["pvptalents"])
-	for index,subsetID in ipairs(set.pvptalents) do
-		local subset = Internal.GetPvPTalentSet(subsetID)
-		specID = specID or subset.specID
-
-		if specID ~= subset.specID then
-			hasError = true
-			errors["pvptalents"][index] = L["Incompatible Specialization"]
-		end
-	end
-
-	if specID then
-		role, class = select(5, GetSpecializationInfoByID(specID))
-	end
-
-	wipe(errors["essences"])
-	for index,subsetID in ipairs(set.essences) do
-		local subset = Internal.GetEssenceSet(subsetID)
-		role = role or subset.role
-
-		if role ~= subset.role then
-			hasError = true
-			errors["essences"][index] = L["Incompatible Role"]
-		end
-	end
-
-	wipe(errors["equipment"])
-	for index,subsetID in ipairs(set.equipment) do
-		local subset = Internal.GetEquipmentSet(subsetID)
-		local characterInfo = Internal.GetCharacterInfo(subset.character);
-		class = class or characterInfo.class;
-
-		if class ~= characterInfo.class then
-			hasError = true
-			errors["equipment"][index] = L["Incompatible Class"]
-		end
-	end
-
-	return hasError, errors, specID
+	return hasError, errors, errorState.specID
 end
 -- Checks of a loadout is activatable
 local function IsLoadoutActivatable(set)
@@ -332,7 +268,7 @@ local function AddProfile()
 		useCount = 0,
 	}
 
-	for _,segment in Internal.EnumerateLoadoutSegments() do
+	for _,segment in ipairs(loadoutSegments) do
 		set[segment.id] = {}
 	end
 	
@@ -723,6 +659,9 @@ do
 		return false
 	end
 	function Internal.AddLoadoutSegment(details)
+		loadoutSegmentsUIOrder[#loadoutSegmentsUIOrder+1] = details
+		loadoutSegmentsByID[details.id] = details
+
 		if details.events then
 			AddWipeCacheEvents(strsplit(",", details.events))
 		end
@@ -734,10 +673,9 @@ do
 			end
 		end
 		loadoutSegments[#loadoutSegments+1] = details
-		loadoutSegmentsByID[details.id] = details
 	end
 	function Internal.EnumerateLoadoutSegments()
-		return ipairs(loadoutSegments)
+		return ipairs(loadoutSegmentsUIOrder)
 	end
 	function Internal.GetLoadoutSegment(id)
 		return loadoutSegmentsByID[id]
@@ -830,15 +768,6 @@ do
 		return unpack(loadouts);
 	end
 end
-
-local NUM_TABS = 7;
-local TAB_PROFILES = 1;
-local TAB_TALENTS = 2;
-local TAB_PVP_TALENTS = 3;
-local TAB_ESSENCES = 4;
-local TAB_EQUIPMENT = 5;
-local TAB_ACTION_BARS = 6;
-local TAB_CONDITIONS = 7;
 
 BtWLoadoutsSetsScrollListItemMixin = {}
 function BtWLoadoutsSetsScrollListItemMixin:OnLoad()
@@ -1126,19 +1055,12 @@ end
 local function BuildSetItems(set, items, collapsed, errors)
 	local index = 1
 
-	index = BuildSubSetItems("talents", L["Talents"], Internal.GetTalentSet, set.talents, items, index, collapsed["talents"], errors["talents"])
-	index = AddSeparator(items, index)
-
-	index = BuildSubSetItems("pvptalents", L["PvP Talents"], Internal.GetPvPTalentSet, set.pvptalents, items, index, collapsed["pvptalents"], errors["pvptalents"])
-	index = AddSeparator(items, index)
-
-	index = BuildSubSetItems("essences", L["Essences"], Internal.GetEssenceSet, set.essences, items, index, collapsed["essences"], errors["essences"])
-	index = AddSeparator(items, index)
-
-	index = BuildSubSetItems("equipment", L["Equipment"], Internal.GetEquipmentSet, set.equipment, items, index, collapsed["equipment"], errors["equipment"])
-	index = AddSeparator(items, index)
-
-	index = BuildSubSetItems("actionbars", L["Action Bars"], Internal.GetActionBarSet, set.actionbars, items, index, collapsed["actionbars"], errors["actionbars"])
+	for i,segment in Internal.EnumerateLoadoutSegments() do
+		if i ~= 1 then
+			index = AddSeparator(items, index)
+		end
+		index = BuildSubSetItems(segment.id, segment.name, segment.get, set[segment.id], items, index, collapsed[segment.id], errors[segment.id])
+	end
 
 	while items[index] do
 		table.remove(items, index)
@@ -1148,13 +1070,7 @@ local function BuildSetItems(set, items, collapsed, errors)
 end
 
 -- Stores errors for currently viewed set
-local errors = {
-	talents = {},
-	pvptalents = {},
-	essences = {},
-	equipment = {},
-	actionbars = {},
-}
+local errors = {}
 _G['BtWLoadoutsErrors'] = errors
 
 BtWLoadoutsProfilesMixin = {}

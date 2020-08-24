@@ -153,8 +153,6 @@ tomeButton:HookScript("OnClick", function (self, ...)
 	self.button:GetScript("OnClick")(self.button, ...);
 end);
 
-local setsFiltered = {};
-
 StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATE"] = {
 	text = L["Activate profile %s?"],
 	button1 = YES,

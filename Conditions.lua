@@ -403,7 +403,6 @@ Internal.GetConditionSet = GetConditionSet
 Internal.DeleteConditionSet = DeleteConditionSet
 
 local setsFiltered = {} -- Used to filter sets in various parts of the file
-
 local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Conditions
 
