@@ -1813,8 +1813,8 @@ local uiMapIDToBossID = {
     [ 239] =  404, -- Lethtendris
     [ 237] =  408, -- Magister Kalendris
     -- Gnomeregan
-    [ 228] =  418, -- Crowd Pummeler 9-60
     [ 226] =  419, -- Grubbis
+    [ 228] =  418, -- Crowd Pummeler 9-60
     [ 229] =  422, -- Mekgineer Thermaplugg
     -- Uldaman
     [ 231] =  473, -- Archaedas
@@ -1892,21 +1892,21 @@ local uiMapIDToBossID = {
     -- Halls of Origination
     [ 298] =  125, -- Earthrager Ptah
     -- End Time
-    [ 405] =  283, -- Echo of Tyrande
-    [ 402] =  285, -- Echo of Jaina
-    [ 406] =  289, -- Murozond
-    [ 403] =  323, -- Echo of Sylvanas
     [ 404] =  340, -- Echo of Baine
+    [ 402] =  285, -- Echo of Jaina
+    [ 403] =  323, -- Echo of Sylvanas
+    [ 405] =  283, -- Echo of Tyrande
+    [ 406] =  289, -- Murozond
     -- Hour of Twilight
     [ 400] =  341, -- Archbishop Benedictus
     -- The Bastion of Twilight
     [ 296] =  168, -- Sinestra
     -- Dragon Soul
-    [ 412] =  317, -- Hagara the Stormbinder
-    [ 414] =  318, -- Spine of Deathwing
     [ 410] =  324, -- Warlord Zon'ozz
     [ 411] =  325, -- Yor'sahj the Unsleeping
+    [ 412] =  317, -- Hagara the Stormbinder
     [ 413] =  332, -- Warmaster Blackhorn
+    [ 414] =  318, -- Spine of Deathwing
     [ 415] =  333, -- Madness of Deathwing
 
     -- Mists of Pandaria
@@ -1915,9 +1915,9 @@ local uiMapIDToBossID = {
     [ 441] =  669, -- Hoptallus
     [ 442] =  670, -- Yan-Zhu the Uncasked
     -- Mogu'shan Palace
+    [ 453] =  708, -- Trial of the King
     [ 454] =  690, -- Gekkan
     [ 455] =  698, -- Xin the Weaponmaster
-    [ 453] =  708, -- Trial of the King
     -- Gate of the Setting Sun
     [ 438] =  675, -- Striker Ga'dok
     -- Siege of Niuzao Temple
@@ -1925,16 +1925,16 @@ local uiMapIDToBossID = {
     -- Throne of Thunder
     [ 508] =  827, -- Jin'rokh the Breaker
     [ 511] =  828, -- Ji-Kun
-    [ 515] =  831, -- Ra-den
     [ 514] =  832, -- Lei Shen
+    [ 515] =  831, -- Ra-den
     -- Siege of Orgrimmar
-    [ 563] =  846, -- Malkorok
-    [ 556] =  849, -- The Fallen Protectors
-    [ 562] =  850, -- General Nazgrim
     [ 557] =  852, -- Immerseus
-    [ 566] =  853, -- Paragons of the Klaxxi
+    [ 556] =  849, -- The Fallen Protectors
     [ 560] =  856, -- Kor'kron Dark Shaman
+    [ 562] =  850, -- General Nazgrim
+    [ 563] =  846, -- Malkorok
     [ 565] =  865, -- Siegecrafter Blackfuse
+    [ 566] =  853, -- Paragons of the Klaxxi
     [ 567] =  869, -- Garrosh Hellscream
 
     -- Warlords of Draenor
@@ -1956,11 +1956,11 @@ local uiMapIDToBossID = {
     [ 542] = 1262, -- Rukhmar
     [ 534] = 1452, -- Supreme Lord Kazzak
     -- Hellfire Citadel
-    [ 662] = 1372, -- Gorefiend
     [ 664] = 1392, -- Kormrok
+    [ 662] = 1372, -- Gorefiend
+    [ 667] = 1447, -- Xhul'horac
     [ 669] = 1395, -- Mannoroth
     [ 670] = 1438, -- Archimonde
-    [ 667] = 1447, -- Xhul'horac
 
     -- Legion
     -- Vault of the Wardens
@@ -1978,51 +1978,51 @@ local uiMapIDToBossID = {
     -- Court of Stars
     [ 763] = 1720, -- Advisor Melandrus
     -- Return to Karazhan
-    [ 818] = 1817, -- Shade of Medivh
-    [ 819] = 1818, -- Mana Devourer
+    [ 811] = 1837, -- Moroes
     [ 809] = 1835, -- Attumen the Huntsman
     [ 817] = 1836, -- The Curator
-    [ 811] = 1837, -- Moroes
+    [ 818] = 1817, -- Shade of Medivh
+    [ 819] = 1818, -- Mana Devourer
     [ 822] = 1838, -- Viz'aduum the Watcher
     -- Cathedral of Eternal Night
     [ 846] = 1905, -- Agronox
     [ 847] = 1906, -- Thrashbite the Scornful
     -- The Emerald Nightmare
-    [ 786] = 1667, -- Ursoc
     [ 777] = 1703, -- Nythendra
-    [ 781] = 1704, -- Dragons of Nightmare
-    [ 788] = 1726, -- Xavius
     [ 780] = 1738, -- Il'gynoth, Heart of Corruption
     [ 779] = 1744, -- Elerethe Renferal
+    [ 786] = 1667, -- Ursoc
+    [ 781] = 1704, -- Dragons of Nightmare
     [ 787] = 1750, -- Cenarius
+    [ 788] = 1726, -- Xavius
     -- The Nighthold
+    [ 768] = 1762, -- Tichondrius
+    [ 767] = 1761, -- High Botanist Tel'arn
     [ 769] = 1732, -- Star Augur Etraeus
     [ 772] = 1737, -- Gul'dan
-    [ 767] = 1761, -- High Botanist Tel'arn
-    [ 768] = 1762, -- Tichondrius
     -- Trial of Valor
     [ 807] = 1819, -- Odyn
     -- Tomb of Sargeras
-    [ 854] = 1873, -- Fallen Avatar
     [ 853] = 1897, -- Maiden of Vigilance
+    [ 854] = 1873, -- Fallen Avatar
     [ 856] = 1898, -- Kil'jaeden
     -- Antorus, the Burning Throne
-    [ 916] = 1983, -- Varimathras
-    [ 917] = 1984, -- Aggramar
-    [ 911] = 1985, -- Portal Keeper Hasabel
-    [ 915] = 1986, -- The Coven of Shivarra
     [ 910] = 1997, -- Antoran High Command
+    [ 911] = 1985, -- Portal Keeper Hasabel
     [ 913] = 2025, -- Eonar the Life-Binder
+    [ 916] = 1983, -- Varimathras
+    [ 915] = 1986, -- The Coven of Shivarra
+    [ 917] = 1984, -- Aggramar
     [ 918] = 2031, -- Argus the Unmaker
 
     -- Battle for Azeroth
     -- Atal'Dazar
     [ 935] = 2083, -- Rezan
     -- Tol Dagor
-    [ 980] = 2096, -- Overseer Korgus
     [ 974] = 2097, -- The Sand Queen
     [ 977] = 2098, -- Jes Howlis
     [ 979] = 2099, -- Knight Captain Valyri
+    [ 980] = 2096, -- Overseer Korgus
     -- Waycrest Manor
     [1018] = 2128, -- Lord and Lady Waycrest
     [1029] = 2129, -- Gorak Tul
@@ -2034,36 +2034,36 @@ local uiMapIDToBossID = {
     [1491] = 2336, -- Tussle Tonks
     [1494] = 2339, -- K.U.-J.0.
     -- Uldir
+    [1148] = 2168, -- Taloc
+    [1149] = 2167, -- MOTHER
+    [1151] = 2169, -- Zek'voz, Herald of N'Zoth
     [1153] = 2146, -- Fetid Devourer
     [1152] = 2166, -- Vectis
-    [1149] = 2167, -- MOTHER
-    [1148] = 2168, -- Taloc
-    [1151] = 2169, -- Zek'voz, Herald of N'Zoth
     [1154] = 2195, -- Zul, Reborn
     -- Battle of Dazar'alor
+    [1353] = 2342, -- Opulence
     [1354] = 2330, -- Conclave of the Chosen
     [1357] = 2335, -- King Rastakhan
-    [1353] = 2342, -- Opulence
     [1364] = 2343, -- Lady Jaina Proudmoore
     -- Crucible of Storms
     [1345] = 2328, -- The Restless Cabal
     [1346] = 2332, -- Uu'nat, Harbinger of the Void
     -- The Eternal Palace
-    [1514] = 2347, -- Blackwater Behemoth
-    [1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
-    [1517] = 2351, -- Orgozoa
     [1512] = 2352, -- Abyssal Commander Sivara
+    [1514] = 2347, -- Blackwater Behemoth
+    [1517] = 2351, -- Orgozoa
     [1518] = 2359, -- The Queen's Court
+    [1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
     [1520] = 2361, -- Queen Azshara
     -- Ny'alotha, the Waking City
-    [1591] = 2364, -- Ra-den the Despoiled
-    [1594] = 2367, -- Shad'har the Insatiable
     [1580] = 2368, -- Wrathion, the Black Emperor
-    [1593] = 2370, -- Vexiona
+    [1592] = 2377, -- Dark Inquisitor Xanesh
     [1590] = 2372, -- The Hivemind
+    [1594] = 2367, -- Shad'har the Insatiable
     [1595] = 2373, -- Drest'agath
     [1596] = 2374, -- Il'gynoth, Corruption Reborn
-    [1592] = 2377, -- Dark Inquisitor Xanesh
+    [1593] = 2370, -- Vexiona
+    [1591] = 2364, -- Ra-den the Despoiled
 
     -- Shadowlands
     -- The Necrotic Wake
@@ -2075,17 +2075,23 @@ local uiMapIDToBossID = {
     [1664] = 2411, -- High Adjudicator Aleez
     [1665] = 2413, -- Lord Chamberlain
     -- Spires of Ascension
-    [1695] = 2412, -- Devos, Paragon of Doubt
     [1694] = 2414, -- Oryphrion
+    [1695] = 2412, -- Devos, Paragon of Doubt
     -- Theater of Pain
-    [1685] = 2389, -- Kul'tharok
-    [1684] = 2390, -- Xav the Unfallen
     [1687] = 2401, -- Gorechop
+    [1684] = 2390, -- Xav the Unfallen
+    [1685] = 2389, -- Kul'tharok
     -- De Other Side
-    [1677] = 2398, -- Dealer Xy'exa
     [1679] = 2408, -- Hakkar the Soulflayer
     [1678] = 2409, -- The Manastorms
+    [1677] = 2398, -- Dealer Xy'exa
     [1680] = 2410, -- Mueh'zala
+    -- Castle Nathria
+    [1746] = 2422, -- Sun King's Salvation
+    [1745] = 2418, -- Artificer Xy'mox
+    [1744] = 2420, -- Lady Inerva Darkvein
+    [1750] = 2426, -- The Council of Blood
+    [1748] = 2424, -- Sire Denathrius
 }
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
