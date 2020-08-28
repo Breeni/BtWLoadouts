@@ -182,11 +182,13 @@ local function LoadoutHasErrors(set)
 
 	errorState.specID = set.specID
 	for _,segment in ipairs(loadoutSegments) do
-		for index,subsetID in ipairs(set[segment.id]) do
-			if segment.checkerrors then
-				local error = segment.checkerrors(errorState, subsetID)
-				if error then
-					return true, errorState.specID
+		if set[segment.id] then
+			for index,subsetID in ipairs(set[segment.id]) do
+				if segment.checkerrors then
+					local error = segment.checkerrors(errorState, subsetID)
+					if error then
+						return true, errorState.specID
+					end
 				end
 			end
 		end
@@ -201,20 +203,22 @@ local function GetLoadoutErrors(errors, set)
 	local hasError = false
 
 	for _,segment in ipairs(loadoutSegments) do
-		local segmenterrors = errors[segment.id]
-		if not segmenterrors then
-			segmenterrors = {}
-			errors[segment.id] = segmenterrors
-		else
-			wipe(errors[segment.id])
-		end
+		if set[segment.id] then
+			local segmenterrors = errors[segment.id]
+			if not segmenterrors then
+				segmenterrors = {}
+				errors[segment.id] = segmenterrors
+			else
+				wipe(errors[segment.id])
+			end
 
-		for index,subsetID in ipairs(set[segment.id]) do
-			if segment.checkerrors then
-				local error = segment.checkerrors(errorState, subsetID)
-				if error then
-					hasError = true
-					errors[segment.id][index] = error
+			for index,subsetID in ipairs(set[segment.id]) do
+				if segment.checkerrors then
+					local error = segment.checkerrors(errorState, subsetID)
+					if error then
+						hasError = true
+						errors[segment.id][index] = error
+					end
 				end
 			end
 		end
