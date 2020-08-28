@@ -876,9 +876,9 @@ function BtWLoadoutsSetsScrollListItemMixin:OnClick()
 	else
 		local DropDown = self:GetParent():GetParent().DropDown
 		local index = self.index
-
+		local segment = self.type
 		UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-			return Internal.GetLoadoutSegment(self.type).dropdowninit(self, level, menuList, index)
+			return Internal.GetLoadoutSegment(segment).dropdowninit(self, level, menuList, index)
 		end)
 
 		ToggleDropDownMenu(nil, nil, DropDown, self, 0, 0)
