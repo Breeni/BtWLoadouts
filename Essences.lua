@@ -36,6 +36,7 @@ local function GetEssenceSet(id)
 		return BtWLoadoutsSets.essences[id];
 	end
 end
+local IsQuestFlaggedCompleted = IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted or IsQuestFlaggedCompleted
 local function CanActivateEssences()
 	return IsQuestFlaggedCompleted(55618) -- The Heart Forge quest
 end
