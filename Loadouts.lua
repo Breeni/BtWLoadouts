@@ -377,6 +377,7 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("PLAYER_LEARN_TALENT_FAILED");
 	eventHandler:RegisterEvent("PLAYER_PVP_TALENT_UPDATE");
 	eventHandler:RegisterEvent("PLAYER_LEARN_PVP_TALENT_FAILED");
+	eventHandler:RegisterEvent("SOULBIND_ACTIVATED");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_START", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
 	eventHandler:Show();
@@ -620,6 +621,9 @@ function eventHandler:PLAYER_PVP_TALENT_UPDATE(...)
 	target.dirty = true;
 end
 function eventHandler:PLAYER_LEARN_PVP_TALENT_FAILED(...)
+	target.dirty = true;
+end
+function eventHandler:SOULBIND_ACTIVATED(...)
 	target.dirty = true;
 end
 function eventHandler:SPELL_UPDATE_COOLDOWN()
@@ -1017,7 +1021,7 @@ local function BuildSubSetItems(type, header, getcallback, sets, items, index, i
 	end
 	
 	if not isCollapsed then
-		if #sets > 0 then
+		if sets and #sets > 0 then
 			for i,setID in ipairs(sets) do
 				local subset = getcallback(setID)
 				item, index = AddItem(items, index)
