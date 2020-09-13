@@ -479,6 +479,7 @@ local function ContinueActivateProfile()
         return;
 	end
 
+	wipe(state)
 	local specID = set.specID;
 	local playerSpecID = GetSpecializationInfo(GetSpecialization());
 	if specID ~= nil and specID ~= playerSpecID then
