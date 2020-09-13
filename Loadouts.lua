@@ -377,7 +377,9 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("PLAYER_LEARN_TALENT_FAILED");
 	eventHandler:RegisterEvent("PLAYER_PVP_TALENT_UPDATE");
 	eventHandler:RegisterEvent("PLAYER_LEARN_PVP_TALENT_FAILED");
-	eventHandler:RegisterEvent("SOULBIND_ACTIVATED");
+	if C_Covenants then -- Skip for pre-Shadowlands
+		eventHandler:RegisterEvent("SOULBIND_ACTIVATED");
+	end
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_START", "player");
 	eventHandler:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player");
 	eventHandler:Show();
