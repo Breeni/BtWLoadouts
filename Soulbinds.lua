@@ -1,3 +1,7 @@
+if not C_Covenants then -- Skip for pre-Shadowlands
+    return
+end
+
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
@@ -40,7 +44,7 @@ local function CombineSets(result, state, ...)
         end
 
         local soulbindID = GetActiveSoulbindID()
-        if state and (result.ID ~= soulbindID) then
+        if state and (result.ID ~= nil and result.ID ~= soulbindID) then
             state.combatSwap = false
             state.taxiSwap = false -- Maybe check for rested area or tomb first?
             state.needTome = true
