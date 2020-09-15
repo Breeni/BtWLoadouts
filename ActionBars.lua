@@ -801,7 +801,7 @@ local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
 	end
 
 	BtWLoadoutsFrame.ActionBars.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_ACTION_BARS);
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.ActionBars:GetID());
 
 	BtWLoadoutsFrame:Update();
 end

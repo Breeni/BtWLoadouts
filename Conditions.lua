@@ -443,7 +443,7 @@ local function ProfilesDropDown_NewOnClick(self, arg1, arg2, checked)
 	end
 
 	BtWLoadoutsFrame.Profiles.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_PROFILES);
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Profiles:GetID());
 
 	BtWLoadoutsFrame:Update();
 end

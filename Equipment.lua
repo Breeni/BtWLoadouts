@@ -1089,7 +1089,7 @@ local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
 	end
 
 	BtWLoadoutsFrame.Equipment.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_EQUIPMENT);
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Equipment:GetID());
 
 	BtWLoadoutsFrame:Update();
 end

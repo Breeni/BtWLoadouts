@@ -381,7 +381,7 @@ local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 	end
 
 	BtWLoadoutsFrame.Talents.set = talentSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_TALENTS);
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Talents:GetID());
 
 	BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] = true;
 	BtWLoadoutsFrame:Update();

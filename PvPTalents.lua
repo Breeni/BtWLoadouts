@@ -320,7 +320,7 @@ local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
 	end
 
 	BtWLoadoutsFrame.PvPTalents.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_PVP_TALENTS);
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.PvPTalents:GetID());
 
 	BtWLoadoutsFrame:Update();
 end

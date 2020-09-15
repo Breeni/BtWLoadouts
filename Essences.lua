@@ -319,7 +319,7 @@ local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
 
 
 	BtWLoadoutsFrame.Essences.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, TAB_ESSENCES);
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Essences:GetID());
 
 	BtWLoadoutsFrame:Update();
 end
