@@ -683,8 +683,8 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 	else
 		self.Name:SetEnabled(false);
 		self.SpecDropDown.Button:SetEnabled(false);
-		self.trinkets:SetShown(false);
-		self.others:SetShown(false);
+		-- self.trinkets:SetShown(false);
+		-- self.others:SetShown(false);
 
 		self.Name:SetText("");
 
