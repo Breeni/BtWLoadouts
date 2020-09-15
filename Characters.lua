@@ -56,7 +56,7 @@ local GetPvPTalentInfoForSpecID;
 local GetPvpTalentSlotInfoForSpecID;
 do
 	local specInfo
-	if select(4, GetBuildInfo()) < 90000 then
+	if select(4, GetBuildInfo()) < 90001 then
 		specInfo = {
 			version = 1,
 

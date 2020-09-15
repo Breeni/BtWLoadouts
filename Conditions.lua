@@ -614,7 +614,7 @@ local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
 	BtWLoadoutsFrame:Update();
 end
 local CURRENT_EXPANSION = 9
-if select(4, GetBuildInfo()) < 90000 then
+if select(4, GetBuildInfo()) < 90002 then
 	CURRENT_EXPANSION = 8
 end
 local function InstanceDropDownInit(self, level, menuList)
