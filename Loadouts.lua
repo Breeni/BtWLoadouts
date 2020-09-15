@@ -275,7 +275,7 @@ local function AddProfile()
 	for _,segment in ipairs(loadoutSegments) do
 		set[segment.id] = {}
 	end
-	
+
     return AddSet("profiles", UpdateLoadoutFilters(set))
 end
 local function GetProfile(id)

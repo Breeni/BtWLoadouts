@@ -13,7 +13,6 @@ local GetClassInfo = GetClassInfo
 local GetNumClasses = GetNumClasses
 local GetTalentInfoByID = GetTalentInfoByID
 local GetSpecialization = GetSpecialization
-local GetPvpTalentInfoByID = GetPvpTalentInfoByID
 local GetPvpTalentSlotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo;
 local GetNumSpecializations = GetNumSpecializations
 local GetSpecializationInfo = GetSpecializationInfo
@@ -51,8 +50,6 @@ end
 local GetSpecInfoVersion;
 local VerifyTalentForSpec;
 local GetTalentInfoForSpecID;
-local GetPvPTrinketTalentInfo;
-local GetPvPTalentInfoForSpecID;
 local GetPvpTalentSlotInfoForSpecID;
 do
 	local specInfo
