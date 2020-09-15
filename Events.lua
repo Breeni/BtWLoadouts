@@ -18,22 +18,47 @@ frame:SetScript("OnEvent", function (self, event, ...)
 end);
 function frame:ADDON_LOADED(...)
     if ... == ADDON_NAME then
-        BtWLoadoutsSettings = BtWLoadoutsSettings or {};
-        Internal.Settings(BtWLoadoutsSettings);
+        BtWLoadoutsSettings = BtWLoadoutsSettings or {}
+        Internal.Settings(BtWLoadoutsSettings)
 
-        Internal.UpdateClassInfo();
+        Internal.UpdateClassInfo()
 
-        BtWLoadoutsSets = BtWLoadoutsSets or {
-            profiles = {},
-            talents = {},
-            pvptalents = {},
-            essences = {},
-            equipment = {},
-            actionbars = {},
-            conditions = {},
-        };
-        BtWLoadoutsSets.actionbars = BtWLoadoutsSets.actionbars or {}
+        BtWLoadoutsSets = setmetatable(BtWLoadoutsSets or {}, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
+        BtWLoadoutsCollapsed = setmetatable(BtWLoadoutsCollapsed or {}, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
+        BtWLoadoutsCategories = setmetatable(BtWLoadoutsCategories or {
+            profiles = {"spec"},
+            talents = {"spec"},
+            pvptalents = {"spec"},
+            essences = {"role"},
+            equipment = {"character"}
+        }, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
+        BtWLoadoutsFilters = setmetatable(BtWLoadoutsFilters or {}, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
 
+        -- Clean up filters
         for _,sets in pairs(BtWLoadoutsSets) do
             for setID,set in pairs(sets) do
                 if type(set) == "table" then
@@ -81,13 +106,13 @@ function frame:ADDON_LOADED(...)
                 end
             end
         end
+        -- Update talent sets for spec changes
         if BtWLoadoutsSets.talents.version ~= Internal.GetSpecInfoVersion() then
             local changed = false
             local FixTalentSet = Internal.FixTalentSet
             for _,set in pairs(BtWLoadoutsSets.talents) do
                 if type(set) == "table" then
                     local setChanged = FixTalentSet(set)
-                    
                     changed = setChanged or changed
                 end
             end
@@ -97,21 +122,14 @@ function frame:ADDON_LOADED(...)
                 print(L["BtWLoadouts: Some talents sets were updated to account for talent changes"])
             end
         end
-        -- for setID,set in pairs(BtWLoadoutsSets.talents) do
-        --     if type(set) == "table" then
-        --         for talentID in pairs(set.talents) do
-        --             if GetPvPTalentInfoByID(talentID) == nil then
-        --                 set.talents[talentID] = nil
-        --             end
-        --         end
-        --     end
-        -- end
+        -- Make sure equipment sets have all the tables needed
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" then
                 set.extras = set.extras or {};
                 set.locations = set.locations or {};
             end
         end
+        -- Update loadouts, converting to version 2 and fixing use counts
         for setID,set in pairs(BtWLoadoutsSets.profiles) do
             if type(set) == "table" then
                 -- Convert from version 1 to version 2 loadouts
@@ -136,37 +154,18 @@ function frame:ADDON_LOADED(...)
 
                 set.character = nil -- Loadouts are no longer character restricted
 
-                for _,subsetID in ipairs(set.talents) do
-                    if BtWLoadoutsSets.talents[subsetID] then
-                        BtWLoadoutsSets.talents[subsetID].useCount = BtWLoadoutsSets.talents[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.pvptalents) do
-                    if BtWLoadoutsSets.pvptalents[subsetID] then
-                        BtWLoadoutsSets.pvptalents[subsetID].useCount = BtWLoadoutsSets.pvptalents[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.essences) do
-                    if BtWLoadoutsSets.essences[subsetID] then
-                        BtWLoadoutsSets.essences[subsetID].useCount = BtWLoadoutsSets.essences[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.equipment) do
-                    if BtWLoadoutsSets.equipment[subsetID] then
-                        BtWLoadoutsSets.equipment[subsetID].useCount = BtWLoadoutsSets.equipment[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.actionbars) do
-                    if BtWLoadoutsSets.actionbars[subsetID] then
-                        BtWLoadoutsSets.actionbars[subsetID].useCount = BtWLoadoutsSets.actionbars[subsetID].useCount + 1;
+                for _,segment in Internal.EnumerateLoadoutSegments() do
+                    local id = segment.id
+                    set[id] = set[id] or {}
+                    for _,subsetID in ipairs(set[id]) do
+                        if BtWLoadoutsSets[id][subsetID] then
+                            BtWLoadoutsSets[id][subsetID].useCount = BtWLoadoutsSets[id][subsetID].useCount + 1;
+                        end
                     end
                 end
             end
         end
+        -- Update condition use counts
         for setID,set in pairs(BtWLoadoutsSets.conditions) do
             if type(set) == "table" then
                 if set.profileSet and BtWLoadoutsSets.profiles[set.profileSet] then
@@ -175,39 +174,10 @@ function frame:ADDON_LOADED(...)
             end
         end
 
-        BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {};
-        BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {};
-        BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {};
-        BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {};
-        BtWLoadoutsCollapsed = BtWLoadoutsCollapsed or {
-            profiles = {},
-            talents = {},
-            pvptalents = {},
-            essences = {},
-            equipment = {},
-            actionbars = {},
-            conditions = {},
-        };
-        BtWLoadoutsCollapsed.actionbars = BtWLoadoutsCollapsed.actionbars or {}
-        BtWLoadoutsCollapsed.conditions = BtWLoadoutsCollapsed.conditions or {}
-        BtWLoadoutsCategories = BtWLoadoutsCategories or {
-            profiles = {"spec"},
-            talents = {"spec"},
-            pvptalents = {"spec"},
-            essences = {"role"},
-            equipment = {"character"},
-            actionbars = {},
-            conditions = {},
-        };
-        BtWLoadoutsFilters = BtWLoadoutsFilters or {
-            profiles = {},
-            talents = {},
-            pvptalents = {},
-            essences = {},
-            equipment = {},
-            actionbars = {},
-            conditions = {},
-        };
+        BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {}
+        BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {}
+        BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {}
+        BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {}
 
         BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
 
