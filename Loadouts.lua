@@ -328,10 +328,6 @@ local function ActivateProfile(profile)
 		return;
 	end
 
-	targetstate.combatSwap = true
-	targetstate.taxiSwap = true
-	targetstate.movingSwap = true
-
 	target.name = profile.name
 	target.state = targetstate
 
@@ -484,9 +480,9 @@ local function ContinueActivateProfile()
 	local playerSpecID = GetSpecializationInfo(GetSpecialization());
 	if specID ~= nil and specID ~= playerSpecID then
 		-- Need to change spec
-		state.combatSwap = false
-		state.taxiSwap = false
-		state.movingSwap = false
+		state.noCombatSwap = true
+		state.noTaxiSwap = true
+		state.noMovingSwap = true
 	end
 
 	wipe(combinedSets)
@@ -496,19 +492,19 @@ local function ContinueActivateProfile()
 		end
 	end
 
-	if not state.combatSwap and InCombatLockdown() then
+	if state.noCombatSwap and InCombatLockdown() then
 		Internal.SetWaitReason(L["Waiting for combat to end"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 		return;
 	end
 
-	if not state.taxiSwap and UnitOnTaxi("player") then
+	if state.noTaxiSwap and UnitOnTaxi("player") then
 		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
         return;
 	end
 
-	if not state.movingSwap and IsPlayerMoving() then
+	if state.noMovingSwap and IsPlayerMoving() then
 		Internal.SetWaitReason(L["Waiting to change specialization"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 		return;

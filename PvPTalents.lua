@@ -221,7 +221,7 @@ local function CombinePvPTalentSets(result, state, ...)
 	end
 
 	if state then
-		state.combatSwap = false
+		state.noCombatSwap = true
 	end
 
 	return result;

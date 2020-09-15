@@ -186,8 +186,8 @@ local function CombineEssenceSets(result, state, ...)
 		end
 
 		if state then
-			state.combatSwap = false
-			state.taxiSwap = false -- Maybe check for rested area or tomb first?
+			state.noCombatSwap = true
+			state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
 
 			if result.essences[115] == nil then
 				state.conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped

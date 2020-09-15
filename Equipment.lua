@@ -977,7 +977,7 @@ local function CombineEquipmentSets(result, state, ...)
 	CheckEquipmentSetForIssues(result)
 
     if state then
-		state.combatSwap = false
+		state.noCombatSwap = true
 
 		if result.ignored[INVSLOT_NECK] then
 			state.heartEquipped = GetInventoryItemID("player", INVSLOT_NECK) == 158075

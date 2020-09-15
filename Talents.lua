@@ -274,8 +274,8 @@ local function CombineTalentSets(result, state, ...)
     end
 
     if state then
-        state.combatSwap = false
-        state.taxiSwap = false -- Maybe check for rested area or tomb first?
+        state.noCombatSwap = true
+        state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
 
         if not state.customWait or not state.needTome then
             local isActive, waitForCooldown = TalentSetRequirements(result)
