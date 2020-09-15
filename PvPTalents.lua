@@ -86,8 +86,9 @@ local function IsPvPTalentSetActive(set)
 		return true
 	end
 
-	for slot=1,4 do
-		local slotInfo = GetPvpTalentSlotInfo(slot);
+	local index = 1
+	local slotInfo = GetPvpTalentSlotInfo(index)
+	while slotInfo do
 		if slotInfo.enabled then
 			if slotInfo.selectedTalentID and talents[slotInfo.selectedTalentID] then
 				talents[slotInfo.selectedTalentID] = nil
@@ -95,6 +96,9 @@ local function IsPvPTalentSetActive(set)
 				slots[slotInfo] = true
 			end
 		end
+
+		index = index + 1
+		slotInfo = GetPvpTalentSlotInfo(index)
 	end
 
 	-- All the talents that are available are currenctly active
