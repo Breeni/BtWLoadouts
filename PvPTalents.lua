@@ -126,13 +126,17 @@ local function ActivatePvPTalentSet(set, state)
 		talents[talentID] = true;
 	end
 
-	for slot=1,4 do
-		local slotInfo = GetPvpTalentSlotInfo(slot);
+	local index = 1
+	local slotInfo = GetPvpTalentSlotInfo(index)
+	while slotInfo do
 		local talentID = slotInfo.selectedTalentID;
 		if talentID and talents[talentID] then
-			usedSlots[slot] = true;
+			usedSlots[index] = true;
 			talents[talentID] = nil;
 		end
+
+		index = index + 1
+		slotInfo = GetPvpTalentSlotInfo(index)
 	end
 
 	if state.conflictAndStrife then
@@ -144,24 +148,28 @@ local function ActivatePvPTalentSet(set, state)
 		end
 	end
 
-	for slot=1,4 do
-		local slotInfo = GetPvpTalentSlotInfo(slot);
-		if not usedSlots[slot] and slotInfo.enabled then
+	local index = 1
+	local slotInfo = GetPvpTalentSlotInfo(index)
+	while slotInfo do
+		if not usedSlots[index] and slotInfo.enabled then
 			for _,talentID in ipairs(slotInfo.availableTalentIDs) do
 				if talents[talentID] then
-					local slotSuccess = LearnPvpTalent(talentID, slot)
+					local slotSuccess = LearnPvpTalent(talentID, index)
 					success = slotSuccess and success;
 					complete = false
 
 					usedSlots[slot] = true;
 					talents[talentID] = nil;
 
-					Internal.LogMessage("Switching pvp talent %d to %s (%s)", slot, GetPvpTalentLink(talentID), slotSuccess and "true" or "false")
+					Internal.LogMessage("Switching pvp talent %d to %s (%s)", index, GetPvpTalentLink(talentID), slotSuccess and "true" or "false")
 
 					break;
 				end
 			end
 		end
+
+		index = index + 1
+		slotInfo = GetPvpTalentSlotInfo(index)
 	end
 
 	return complete, false
