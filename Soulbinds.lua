@@ -5,11 +5,6 @@ end
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
-local AddSet = Internal.AddSet
-local DeleteSet = Internal.DeleteSet
-
-local format = string.format
-
 local GetActiveCovenantID = C_Covenants.GetActiveCovenantID
 local GetCovenantIDs = C_Covenants.GetCovenantIDs
 local GetCovenantData = C_Covenants.GetCovenantData
@@ -21,12 +16,12 @@ local function GetSet(id)
     if type(id) == "table" then
 		return id;
     else
-        return GetSoulbindData(id)
+        return GetSoulbindData(math.abs(id))
 	end
 end
 local function GetSets(id, ...)
 	if id ~= nil then
-		return GetSoulbindData(id), GetSets(...);
+		return GetSet(id), GetSets(...);
 	end
 end
 local function CombineSets(result, state, ...)
@@ -44,7 +39,7 @@ local function CombineSets(result, state, ...)
         end
 
         local soulbindID = GetActiveSoulbindID()
-        if state and (result.ID ~= nil and result.ID ~= soulbindID) then
+        if state and (result.ID ~= nil and math.abs(result.ID) ~= soulbindID) then
             state.combatSwap = false
             state.taxiSwap = false -- Maybe check for rested area or tomb first?
             state.needTome = true
@@ -59,7 +54,7 @@ local function IsSetActive(set)
         local soulbindID = GetActiveSoulbindID()
         -- The target soulbind is unlocked, is for the players covenant, so is valid for the character
         if set.unlocked and set.covenantID == covenantID then
-            return set.ID == soulbindID
+            return math.abs(set.ID) == soulbindID
         end
     end
 
@@ -69,10 +64,11 @@ local function ActivateSet(set)
     local complete = true;
 
     if not IsSetActive(set) then
-        ActivateSoulbind(set.ID)
+        local soulbindID = math.abs(set.ID)
+        ActivateSoulbind(soulbindID)
         complete = false
 
-        local soulbindData = GetSoulbindData(set.ID)
+        local soulbindData = GetSoulbindData(soulbindID)
         Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
     end
 
@@ -127,9 +123,9 @@ local function DropDownInit(self, level, menuList, index)
             local soulbindData = GetSoulbindData(soulbindID)
 
             info.text = soulbindData.name;
-			info.arg1 = soulbindData.ID;
+			info.arg1 = -soulbindData.ID;
             info.func = DropDown_OnClick;
-            info.checked = selected == soulbindData.ID;
+            info.checked = selected == -soulbindData.ID;
             UIDropDownMenu_AddButton(info, level);
         end
     end
