@@ -15,8 +15,14 @@ local GetSoulbindData = C_Soulbinds.GetSoulbindData
 local function GetSet(id)
     if type(id) == "table" then
 		return id;
+    elseif id < 0 then -- Fake a soulbind set
+        local set = GetSoulbindData(math.abs(id))
+        set.soulbindID = set.ID
+        set.setID = -set.ID
+        set.ID = nil
+        return set
     else
-        return GetSoulbindData(math.abs(id))
+        error("Invalid soulbind set id " .. id)
 	end
 end
 local function GetSets(id, ...)
@@ -30,16 +36,17 @@ local function CombineSets(result, state, ...)
     local covenantID = GetActiveCovenantID()
     if covenantID then
         for i=1,select('#', ...) do
-            local soulbind = select(i, ...);
-            if soulbind.covenantID == covenantID and soulbind.unlocked then
-                result.ID = soulbind.ID
-                result.unlocked = soulbind.unlocked
-                result.covenantID = soulbind.covenantID
+            local set = select(i, ...);
+            if set.covenantID == covenantID and set.unlocked then
+                result.soulbindID = set.soulbindID
+                result.unlocked = set.unlocked
+                result.covenantID = set.covenantID
+                result.name = set.name
             end
         end
 
         local soulbindID = GetActiveSoulbindID()
-        if state and (result.ID ~= nil and math.abs(result.ID) ~= soulbindID) then
+        if state and (result.soulbindID ~= nil and result.soulbindID ~= soulbindID) then
             state.combatSwap = false
             state.taxiSwap = false -- Maybe check for rested area or tomb first?
             state.needTome = true
@@ -54,7 +61,7 @@ local function IsSetActive(set)
         local soulbindID = GetActiveSoulbindID()
         -- The target soulbind is unlocked, is for the players covenant, so is valid for the character
         if set.unlocked and set.covenantID == covenantID then
-            return math.abs(set.ID) == soulbindID
+            return set.soulbindID == soulbindID
         end
     end
 
@@ -64,11 +71,10 @@ local function ActivateSet(set)
     local complete = true;
 
     if not IsSetActive(set) then
-        local soulbindID = math.abs(set.ID)
-        ActivateSoulbind(soulbindID)
+        ActivateSoulbind(set.soulbindID)
         complete = false
 
-        local soulbindData = GetSoulbindData(soulbindID)
+        local soulbindData = GetSoulbindData(set.soulbindID)
         Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
     end
 
