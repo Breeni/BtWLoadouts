@@ -61,6 +61,8 @@ do
 		[256229] = true,
 		[256230] = true,
 		[256231] = true,
+		[321923] = true,
+		[324028] = true,
 	};
 	function PlayerNeedsTome()
 		if IsResting() then
@@ -84,6 +86,7 @@ end
 local RequestTome;
 do
 	local tomes = {
+		321923, -- Tome of the Still Mind
 		143780, -- Tome of the Tranquil Mind
 		143785, -- Tome of the Tranquil Mind
 		141446, -- Tome of the Tranquil Mind
