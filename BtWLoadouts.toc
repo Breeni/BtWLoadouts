@@ -23,6 +23,7 @@ Loadouts.xml
 Talents.xml
 PvPTalents.xml
 Essences.xml
+Soulbinds.lua
 Equipment.xml
 ActionBars.xml
 Conditions.xml
