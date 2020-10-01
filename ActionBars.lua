@@ -69,6 +69,9 @@ do
 
     local function BuildMacroMap()
         mapCreated = true
+        if MacroFrame and MacroFrame:IsShown() then
+            MacroFrame_Update()
+        end
 
         local global, character = GetNumMacros()
         local macro
@@ -105,10 +108,17 @@ do
     frame:RegisterEvent("PLAYER_LOGIN")
     frame:Hide()
 
-    hooksecurefunc("CreateMacro", BuildMacroMap)
-    hooksecurefunc("DeleteMacro", BuildMacroMap)
+    hooksecurefunc("CreateMacro", function ()
+        print("CreateMacroHook")
+        BuildMacroMap()
+    end)
+    hooksecurefunc("DeleteMacro", function ()
+        print("DeleteMacroHook")
+        BuildMacroMap()
+    end)
 
     local function EditMacroHook(id, name, icon, body)
+        print("EditMacroHook")
         if type(id) == "string" then
             id = macroNameMap[id]
         end
@@ -384,7 +394,7 @@ local function PickupMacroByText(text)
 end
 
 -- Pickup an action, when test is true the action wont actually be picked up
-local function PickupActionTable(tbl, test, settings)
+local function PickupActionTable(tbl, test, settings, activating)
     if tbl == nil or tbl.type == nil then
         return true, "Success"
     end
@@ -392,28 +402,33 @@ local function PickupActionTable(tbl, test, settings)
     local success, msg = true, "Success"
     if tbl.type == "macro" then
         local index = GetMacroByText(tbl.macroText)
-
-        if (not index or index == 0) and tbl.name then
-            msg = L["Could not find macro by text"]
-            index = GetMacroIndexByName(tbl.name)
+        if not index or index == 0 then
+            if settings and settings.createMissingMacros then
+                msg = L["Could not find macro by text, creating as account macro"]
+                if activating then
+                    index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText)
+                else
+                    index = -1
+                end
+            elseif settings and settings.createMissingMacrosCharacter then
+                msg = L["Could not find macro by text, creating as character macro"]
+                if activating then
+                    index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText, true)
+                else
+                    index = -1
+                end
+            elseif tbl.name then
+                msg = L["Could not find macro by text"]
+                index = GetMacroIndexByName(tbl.name)
+            end
         end
 
         if not index or index == 0 then
             msg = L["Could not find macro by text or name"]
             success = false
-            -- if GetMacroInfo(tbl.id) then
-            --     index = tbl.id
-            -- end
         elseif not test then
             PickupMacro(index)
         end
-
-        -- if not index or index == 0 then
-        --     msg = L["Could not find macro by text, name or id"]
-        --     success = false
-        -- elseif not test then
-        --     PickupMacro(index)
-        -- end
     elseif tbl.type == "spell" then
         -- If we use the base version of the spell it should always work
         tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
@@ -706,7 +721,7 @@ local function CombineActionBarSets(result, state, ...)
 		for slot=1,120 do
             if not set.ignored[slot] then
                 result.ignored[slot] = false
-                if PickupActionTable(set.actions[slot], true, set.settings) or result.actions[slot] == nil then
+                if PickupActionTable(set.actions[slot], true, set.settings, state ~= nil) or result.actions[slot] == nil then
                     result.actions[slot] = set.actions[slot]
                 end
             end
@@ -879,9 +894,6 @@ function BtWLoadoutsActionButtonMixin:OnClick(...)
 			local index = Internal.GetMacroByText(tbl.macroText)
             if not index then
                 CreateMacro(tbl.name, "INV_Misc_QuestionMark", tbl.macroText, IsModifiedClick("SHIFT"));
-                if MacroFrame_Update then
-                    MacroFrame_Update()
-                end
             end
         end
         BtWLoadoutsFrame:Update()
@@ -1071,6 +1083,30 @@ local function DropDown_Initialize(self, level, menuList)
         info.checked = set.settings and set.settings.adjustCovenant
         info.text = L["Adjust Covenant Abilities"]
         UIDropDownMenu_AddButton(info, level)
+
+        
+        info.func = function (self, arg1, arg2, checked)
+            set.settings = set.settings or {}
+            set.settings.createMissingMacros = not checked
+            set.settings.createMissingMacrosCharacter = false
+
+            BtWLoadoutsFrame:Update()
+        end
+        info.checked = set.settings and set.settings.createMissingMacros
+        info.text = L["Create Missing Macros"]
+        UIDropDownMenu_AddButton(info, level)
+
+        
+        info.func = function (self, arg1, arg2, checked)
+            set.settings = set.settings or {}
+            set.settings.createMissingMacrosCharacter = not checked
+            set.settings.createMissingMacros = false
+
+            BtWLoadoutsFrame:Update()
+        end
+        info.checked = set.settings and set.settings.createMissingMacrosCharacter
+        info.text = L["Create Missing Macros (Character Only)"]
+        UIDropDownMenu_AddButton(info, level)
     end
 end
 BtWLoadoutsActionBarsMixin = {}
@@ -1179,9 +1215,6 @@ function BtWLoadoutsActionBarsMixin:OnSidebarItemDragStart(button)
 			end
 
 			macroId = CreateMacro(set.name, icon, command, false);
-			if MacroFrame_Update then
-				MacroFrame_Update()
-			end
 		else
 			-- Rename the macro while not in combat
 			if not InCombatLockdown() then

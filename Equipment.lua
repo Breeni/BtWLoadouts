@@ -1517,9 +1517,6 @@ function BtWLoadoutsEquipmentMixin:OnSidebarItemDragStart(button)
 			end
 
 			macroId = CreateMacro(set.name, icon, command, false);
-			if MacroFrame_Update then
-				MacroFrame_Update()
-			end
 		else
 			-- Rename the macro while not in combat
 			if not InCombatLockdown() then
