@@ -108,17 +108,10 @@ do
     frame:RegisterEvent("PLAYER_LOGIN")
     frame:Hide()
 
-    hooksecurefunc("CreateMacro", function ()
-        print("CreateMacroHook")
-        BuildMacroMap()
-    end)
-    hooksecurefunc("DeleteMacro", function ()
-        print("DeleteMacroHook")
-        BuildMacroMap()
-    end)
+    hooksecurefunc("CreateMacro", BuildMacroMap)
+    hooksecurefunc("DeleteMacro", BuildMacroMap)
 
     local function EditMacroHook(id, name, icon, body)
-        print("EditMacroHook")
         if type(id) == "string" then
             id = macroNameMap[id]
         end
