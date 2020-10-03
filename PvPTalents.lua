@@ -158,7 +158,7 @@ local function ActivatePvPTalentSet(set, state)
 					success = slotSuccess and success;
 					complete = false
 
-					usedSlots[slot] = true;
+					usedSlots[index] = true;
 					talents[talentID] = nil;
 
 					Internal.LogMessage("Switching pvp talent %d to %s (%s)", index, GetPvpTalentLink(talentID), slotSuccess and "true" or "false")
