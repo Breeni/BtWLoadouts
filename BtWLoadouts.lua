@@ -1004,6 +1004,7 @@ do
 		local tab = frame.TabPool:Acquire()
 		local id = #Tabs
 
+		self:SetID(id)
 		tab:SetID(id)
 		tab:SetText(self.name)
 
