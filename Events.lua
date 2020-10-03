@@ -23,14 +23,30 @@ function frame:ADDON_LOADED(...)
 
         Internal.UpdateClassInfo()
 
-        BtWLoadoutsSets = setmetatable(BtWLoadoutsSets or {}, {
+        BtWLoadoutsSets = setmetatable(BtWLoadoutsSets or {
+            profiles = {},
+            talents = {},
+            pvptalents = {},
+            essences = {},
+            equipment = {},
+            actionbars = {},
+            conditions = {},
+        }, {
             __index = function (self, key)
                 local result = {}
                 self[key] = result
                 return result
             end
         })
-        BtWLoadoutsCollapsed = setmetatable(BtWLoadoutsCollapsed or {}, {
+        BtWLoadoutsCollapsed = setmetatable(BtWLoadoutsCollapsed or {
+            profiles = {},
+            talents = {},
+            pvptalents = {},
+            essences = {},
+            equipment = {},
+            actionbars = {},
+            conditions = {},
+        }, {
             __index = function (self, key)
                 local result = {}
                 self[key] = result
@@ -42,7 +58,9 @@ function frame:ADDON_LOADED(...)
             talents = {"spec"},
             pvptalents = {"spec"},
             essences = {"role"},
-            equipment = {"character"}
+            equipment = {"character"},
+            actionbars = {},
+            conditions = {},
         }, {
             __index = function (self, key)
                 local result = {}
@@ -50,7 +68,15 @@ function frame:ADDON_LOADED(...)
                 return result
             end
         })
-        BtWLoadoutsFilters = setmetatable(BtWLoadoutsFilters or {}, {
+        BtWLoadoutsFilters = setmetatable(BtWLoadoutsFilters or {
+            profiles = {},
+            talents = {},
+            pvptalents = {},
+            essences = {},
+            equipment = {},
+            actionbars = {},
+            conditions = {},
+        }, {
             __index = function (self, key)
                 local result = {}
                 self[key] = result
