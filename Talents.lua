@@ -70,6 +70,21 @@ do -- Prevent new spells from flying to the action bar
     end)
 end
 
+-- Make sure talent sets dont have incorrect id, call from GetTalentSet and the UI?
+local function FixTalentSet(set)
+    local temp = {}
+    local changed = false
+    for talentID in pairs(set.talents) do
+        local tier, column = Internal.VerifyTalentForSpec(set.specID, talentID)
+        if tier == nil or temp[tier] then
+            set[talentID] = nil
+            changed = true
+        else
+            temp[tier] = talentID
+        end
+    end
+    return changed
+end
 local function UpdateTalentSetFilters(set)
     local specID = set.specID;
 
@@ -127,6 +142,10 @@ local function IsTalentSetActive(set)
 
     return true;
 end
+--[[
+    Activate a talent set
+    return complete, dirty
+]]
 local function ActivateTalentSet(set)
 	local success, complete = true, true;
 	for talentID in pairs(set.talents) do
@@ -140,7 +159,7 @@ local function ActivateTalentSet(set)
 		end
     end
 
-	return complete;
+	return complete, false;
 end
 local function RefreshTalentSet(set)
     local talents = set.talents or {}
@@ -181,6 +200,35 @@ local function TalentSetDelay(set)
     end
     return false
 end
+--[[
+    Check what is needed to activate this talent set
+    return isActive, waitForCooldown
+]]
+local function TalentSetRequirements(set)
+    local isActive, waitForCooldown = true, false
+
+    for talentID in pairs(set.talents) do
+        local row = select(8, GetTalentInfoByID(talentID, 1))
+        local column = select(2, GetTalentTierInfo(row, 1))
+        local selectedTalentID, _, _, _, _, spellID = GetTalentInfo(row, column, 1)
+
+        if selectedTalentID ~= talentID then
+            isActive = false
+
+            if spellID then
+                spellID = FindSpellOverrideByID(spellID)
+                local start, duration = GetSpellCooldown(spellID)
+                if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+                    Internal.DirtyAfter((start + duration) - GetTime() + 1)
+                    waitForCooldown = true
+                    break -- We dont actually need to check anything more
+                end
+            end
+        end
+    end
+
+    return isActive, waitForCooldown
+end
 local function GetTalentSetsByName(name)
 	return Internal.GetSetsByName("talents", name)
 end
@@ -189,7 +237,7 @@ local function GetTalentSetByName(name)
 end
 local function GetTalentSets(id, ...)
 	if id ~= nil then
-		return Internal.GetTalentSet(id), Internal.GetTalentSets(...);
+		return GetTalentSet(id), GetTalentSets(...);
 	end
 end
 local function GetTalentSetIfNeeded(id)
@@ -205,7 +253,7 @@ local function GetTalentSetIfNeeded(id)
     return set;
 end
 local talentSetsByTier = {};
-local function CombineTalentSets(result, ...)
+local function CombineTalentSets(result, state, ...)
 	result = result or {};
 	result.talents = {};
 
@@ -223,7 +271,19 @@ local function CombineTalentSets(result, ...)
 				talentSetsByTier[tier] = talentID;
 			end
 		end
-	end
+    end
+
+    if state then
+        state.noCombatSwap = true
+        state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
+
+        if not state.customWait or not state.needTome then
+            local isActive, waitForCooldown = TalentSetRequirements(result)
+
+            state.needTome = state.needTome or (not isActive)
+            state.customWait = state.customWait or (waitForCooldown and L["Waiting for talent cooldown"])
+        end
+    end
 
 	return result;
 end
@@ -250,7 +310,16 @@ local function DeleteTalentSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+local function CheckErrors(errorState, set)
+    set = GetTalentSet(set)
+    errorState.specID = errorState.specID or set.specID
 
+    if errorState.specID ~= set.specID then
+        return L["Incompatible Specialization"]
+    end
+end
+
+Internal.FixTalentSet = FixTalentSet
 Internal.GetTalentSet = GetTalentSet
 Internal.GetTalentSets = GetTalentSets
 Internal.GetTalentSetIfNeeded = GetTalentSetIfNeeded
@@ -263,6 +332,164 @@ Internal.DeleteTalentSet = DeleteTalentSet
 Internal.ActivateTalentSet = ActivateTalentSet
 Internal.IsTalentSetActive = IsTalentSetActive
 Internal.CombineTalentSets = CombineTalentSets
+Internal.GetTalentSets = GetTalentSets
+
+local setsFiltered = {}
+local function TalentsDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.talents + 1)
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	if arg1 == nil then
+		table.remove(set.talents, index);
+	else
+		set.talents[index] = arg1;
+	end
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function TalentsDropDown_NewOnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.talents + 1)
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local talentSet = Internal.AddTalentSet();
+	set.talents[index] = talentSet.setID;
+
+	if set.talents[index] then
+		local subset = Internal.GetTalentSet(set.talents[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame.Talents.set = talentSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Talents:GetID());
+
+	BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] = true;
+	BtWLoadoutsFrame:Update();
+end
+local function TalentsDropDownInit(self, level, menuList, index)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.talents then
+        return;
+	end
+    local info = UIDropDownMenu_CreateInfo();
+
+	local tab = BtWLoadoutsFrame.Profiles
+
+	local set = tab.set;
+	local selected = set and set.talents and set.talents[index];
+
+	info.arg2 = index
+
+	if (level or 1) == 1 then
+		info.text = L["None"];
+		info.func = TalentsDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.talents;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.specID] = true;
+			end
+		end
+
+		local className, classFile, classID = UnitClass("player");
+		local classColor = C_ClassColor.GetClassColor(classFile);
+		className = classColor and classColor:WrapTextInColorCode(className) or className;
+
+		for specIndex=1,GetNumSpecializationsForClassID(classID) do
+			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
+			if setsFiltered[specID] then
+				info.text = format("%s: %s", className, specName);
+				info.hasArrow, info.menuList = true, specID;
+				info.keepShownOnClick = true;
+				info.notCheckable = true;
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+
+		local playerClassID = classID;
+		for classID=1,GetNumClasses() do
+			if classID ~= playerClassID then
+				local className, classFile = GetClassInfo(classID);
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				className = classColor and classColor:WrapTextInColorCode(className) or className;
+
+				for specIndex=1,GetNumSpecializationsForClassID(classID) do
+					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
+					if setsFiltered[specID] then
+						info.text = format("%s: %s", className, specName);
+						info.hasArrow, info.menuList = true, specID;
+						info.keepShownOnClick = true;
+						info.notCheckable = true;
+						UIDropDownMenu_AddButton(info, level);
+					end
+				end
+			end
+		end
+
+		info.text = L["New Set"];
+		info.func = TalentsDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+		info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	else
+		local specID = menuList;
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.talents;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.specID == specID then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+		sort(setsFiltered, function (a,b)
+			return sets[a].name < sets[b].name;
+		end)
+
+        for _,setID in ipairs(setsFiltered) do
+            info.text = sets[setID].name;
+			info.arg1 = setID;
+            info.func = TalentsDropDown_OnClick;
+            info.checked = selected == setID;
+            UIDropDownMenu_AddButton(info, level);
+        end
+    end
+end
+
+Internal.AddLoadoutSegment({
+    id = "talents",
+    name = L["Talents"],
+    events = "PLAYER_TALENT_UPDATE",
+    get = GetTalentSets,
+    combine = CombineTalentSets,
+    isActive = IsTalentSetActive,
+    activate = ActivateTalentSet,
+    dropdowninit = TalentsDropDownInit,
+    checkerrors = CheckErrors,
+})
 
 BtWLoadoutsTalentsMixin = {}
 function BtWLoadoutsTalentsMixin:OnLoad()
@@ -280,8 +507,133 @@ function BtWLoadoutsTalentsMixin:OnShow()
         self.initialized = true;
     end
 end
+function BtWLoadoutsTalentsMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsTalentsMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsTalentsMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+		BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] = true;
 
-function Internal.TalentsTabUpdate(self)
+		self.Name:ClearFocus()
+        self:ChangeSet(AddTalentSet())
+		C_Timer.After(0, function ()
+			self.Name:HighlightText()
+			self.Name:SetFocus()
+		end)
+	elseif button.isDelete then
+		local set = self.set
+		if set.useCount > 0 then
+			StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+				set = set,
+				func = DeleteTalentSet,
+			})
+		else
+			StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+				set = set,
+				func = DeleteTalentSet,
+			})
+		end
+	elseif button.isRefresh then
+        local set = self.set;
+        RefreshTalentSet(set)
+        self:Update()
+	elseif button.isActivate then
+        local set = self.set;
+        if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+            Internal.ActivateProfile({
+                talents = {set.setID}
+            });
+        end
+	end
+end
+function BtWLoadoutsTalentsMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+        if IsModifiedClick("SHIFT") then
+            local set = GetTalentSet(button.id);
+            if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+                Internal.ActivateProfile({
+                    talents = {button.id}
+                });
+            end
+        else
+            self.Name:ClearFocus();
+            self:ChangeSet(GetTalentSet(button.id))
+        end
+	end
+end
+function BtWLoadoutsTalentsMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+    local set = GetTalentSet(button.id);
+    if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
+        Internal.ActivateProfile({
+            talents = {button.id}
+        });
+    end
+end
+function BtWLoadoutsTalentsMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetTalentSet(button.id);
+	local command = format("/btwloadouts activate talents %d", button.id);
+	if set.specID then
+		icon = select(4, GetSpecializationInfoByID(set.specID));
+	end
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsTalentsMixin:Update()
     self:GetParent().TitleText:SetText(L["Talents"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -294,7 +646,6 @@ function Internal.TalentsTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-    -- self.set = Internal.SetsScrollFrame_SpecFilter(self.set, BtWLoadoutsSets.talents, BtWLoadoutsCollapsed.talents);
 
     if self.set ~= nil then
         self.Name:SetEnabled(true);

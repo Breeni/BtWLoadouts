@@ -36,6 +36,7 @@ local function GetEssenceSet(id)
 		return BtWLoadoutsSets.essences[id];
 	end
 end
+local IsQuestFlaggedCompleted = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted or IsQuestFlaggedCompleted
 local function CanActivateEssences()
 	return IsQuestFlaggedCompleted(55618) -- The Heart Forge quest
 end
@@ -56,9 +57,9 @@ local function IsEssenceSetActive(set)
 
     return true;
 end
-local function ActivateEssenceSet(set)
+local function ActivateEssenceSet(set, state)
 	local success, complete = true, true;
-	if CanActivateEssences() then
+	if CanActivateEssences() and state.heartEquipped then
 		for milestoneID,essenceID in pairs(set.essences) do
 			local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
 			local essenceName, essenceRank = info.name, info.rank
@@ -79,7 +80,7 @@ local function ActivateEssenceSet(set)
 		end
 	end
 
-	return complete;
+	return complete, not complete;
 end
 local function RefreshEssenceSet(set)
     local essences = set.essences or {}
@@ -126,15 +127,79 @@ local function GetEssenceSetIfNeeded(id)
 
     return set;
 end
-local function CombineEssenceSets(result, ...)
+--[[
+    Check what is needed to activate this talent set
+    return isActive, waitForCooldown
+]]
+local function EssenceSetRequirements(set)
+    local isActive, waitForCooldown = true, false
+
+	for milestoneID,essenceID in pairs(set.essences) do
+		if essenceID ~= C_AzeriteEssence.GetMilestoneEssence(milestoneID) then
+			isActive = false
+
+			local spellID = C_AzeriteEssence.GetMilestoneSpell(milestoneID)
+			if spellID then
+				spellID = FindSpellOverrideByID(spellID)
+				local start, duration = GetSpellCooldown(spellID)
+				if start ~= 0 then -- Milestone spell on cooldown, we need to wait before switching
+					Internal.DirtyAfter((start + duration) - GetTime() + 1)
+					waitForCooldown = true
+					break
+				end
+			end
+		end
+	end
+
+    -- for talentID in pairs(set.talents) do
+    --     local row = select(8, GetTalentInfoByID(talentID, 1))
+    --     local column = select(2, GetTalentTierInfo(row, 1))
+    --     local selectedTalentID, _, _, _, _, spellID = GetTalentInfo(row, column, 1)
+
+    --     if selectedTalentID ~= talentID then
+    --         isActive = false
+
+    --         if spellID then
+    --             spellID = FindSpellOverrideByID(spellID)
+    --             local start, duration = GetSpellCooldown(spellID)
+    --             if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+    --                 Internal.DirtyAfter((start + duration) - GetTime() + 1)
+    --                 waitForCooldown = true
+    --                 break -- We dont actually need to check anything more
+    --             end
+    --         end
+    --     end
+    -- end
+
+    return isActive, waitForCooldown
+end
+local function CombineEssenceSets(result, state, ...)
 	result = result or {};
 
 	result.essences = {};
-	if CanActivateEssences() then
+	if CanActivateEssences() then -- Check if essences have been unlocked
 		for i=1,select('#', ...) do
 			local set = select(i, ...);
 			for milestoneID, essenceID in pairs(set.essences) do
 				result.essences[milestoneID] = essenceID;
+			end
+		end
+
+		if state then
+			state.noCombatSwap = true
+			state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
+
+			if result.essences[115] == nil then
+				state.conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped
+			else
+				state.conflictAndStrife = result.essences[115] == 32
+			end
+
+			if not state.customWait or not state.needTome then
+				local isActive, waitForCooldown = EssenceSetRequirements(result)
+
+				state.needTome = state.needTome or (not isActive)
+				state.customWait = state.customWait or (waitForCooldown and L["Waiting for essence cooldown"])
 			end
 		end
 	end
@@ -178,6 +243,18 @@ local function EssenceSetDelay(set)
 	end
 	return false
 end
+local function CheckErrors(errorState, set)
+    set = GetEssenceSet(set)
+
+	if errorState.specID then
+		errorState.role, errorState.class = select(5, GetSpecializationInfoByID(errorState.specID))
+	end
+	errorState.role = errorState.role or set.role
+
+    if errorState.role ~= set.role then
+        return L["Incompatible Role"]
+    end
+end
 
 Internal.GetEssenceSets = GetEssenceSets
 Internal.GetEssenceSetIfNeeded = GetEssenceSetIfNeeded
@@ -192,8 +269,153 @@ Internal.DeleteEssenceSet = DeleteEssenceSet
 Internal.ActivateEssenceSet = ActivateEssenceSet
 Internal.IsEssenceSetActive = IsEssenceSetActive
 Internal.CombineEssenceSets = CombineEssenceSets
+Internal.GetEssenceSets = GetEssenceSets
+
+local setsFiltered = {};
+local function EssencesDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+    CloseDropDownMenus();
+    local set = tab.set;
+	local index = arg2 or (#set.essences + 1)
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	if arg1 == nil then
+		table.remove(set.essences, index);
+	else
+		set.essences[index] = arg1;
+	end
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function EssencesDropDown_NewOnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.essences + 1)
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = Internal.AddEssenceSet();
+	set.essences[index] = newSet.setID;
+
+	if set.essences[index] then
+		local subset = Internal.GetEssenceSet(set.essences[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
 
 
+	BtWLoadoutsFrame.Essences.set = newSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Essences:GetID());
+
+	BtWLoadoutsFrame:Update();
+end
+local function EssencesDropDownInit(self, level, menuList, index)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.essences then
+        return;
+    end
+
+	local info = UIDropDownMenu_CreateInfo();
+
+	local tab = BtWLoadoutsFrame.Profiles
+
+	local set = tab.set;
+	local selected = set and set.essences and set.essences[index];
+
+	info.arg2 = index
+
+	if (level or 1) == 1 then
+		info.text = NONE;
+		info.func = EssencesDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.essences;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.role] = true;
+			end
+		end
+
+		local role = select(5, GetSpecializationInfo(GetSpecialization()));
+		if setsFiltered[role] then
+			info.text = _G[role];
+			info.hasArrow, info.menuList = true, role;
+			info.keepShownOnClick = true;
+			info.notCheckable = true;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		local playerRole = role;
+		for _,role in Internal.Roles() do
+			if role ~= playerRole then
+				if setsFiltered[role] then
+					info.text = _G[role];
+					info.hasArrow, info.menuList = true, role;
+					info.keepShownOnClick = true;
+					info.notCheckable = true;
+					UIDropDownMenu_AddButton(info, level);
+				end
+			end
+		end
+
+		info.text = L["New Set"];
+		info.func = EssencesDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+		info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	else
+		local role = menuList;
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.essences;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.role == role then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+		sort(setsFiltered, function (a,b)
+			return sets[a].name < sets[b].name;
+		end)
+
+		for _,setID in ipairs(setsFiltered) do
+			info.text = sets[setID].name;
+			info.arg1 = setID;
+			info.func = EssencesDropDown_OnClick;
+			info.checked = selected == setID;
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+end
+
+Internal.AddLoadoutSegment({
+    id = "essences",
+    name = L["Essences"],
+    after = "equipment",
+    events = "AZERITE_ESSENCE_UPDATE",
+    get = GetEssenceSets,
+    combine = CombineEssenceSets,
+    isActive = IsEssenceSetActive,
+	activate = ActivateEssenceSet,
+	dropdowninit = EssencesDropDownInit,
+    checkerrors = CheckErrors,
+})
 
 BtWLoadoutsAzeriteMilestoneSlotMixin = {};
 function BtWLoadoutsAzeriteMilestoneSlotMixin:OnLoad()
@@ -366,8 +588,119 @@ function BtWLoadoutsEssencesMixin:OnShow()
 		self.initialized = true
 	end
 end
+function BtWLoadoutsEssencesMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsEssencesMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsEssencesMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+		self.Name:ClearFocus();
+		self:ChangeSet(AddEssenceSet())
+		C_Timer.After(0, function ()
+			self.Name:HighlightText();
+			self.Name:SetFocus();
+		end)
+	elseif button.isDelete then
+		local set = self.set;
+		if set.useCount > 0 then
+			StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+				set = set,
+				func = DeleteEssenceSet,
+			});
+		else
+			StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+				set = set,
+				func = DeleteEssenceSet,
+			});
+		end
+	elseif button.isRefresh then
+		local set = self.set;
+		RefreshEssenceSet(set)
+		self:Update()
+	elseif button.isActivate then
+		Internal.ActivateProfile({
+			essences = {self.set.setID}
+		});
+	end
+end
+function BtWLoadoutsEssencesMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		if IsModifiedClick("SHIFT") then
+			Internal.ActivateProfile({
+				essences = {button.id}
+			});
+		else
+			self.Name:ClearFocus();
+			self:ChangeSet(GetEssenceSet(button.id))
+		end
+	end
+end
+function BtWLoadoutsEssencesMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
 
-function Internal.EssencesTabUpdate(self)
+	Internal.ActivateProfile({
+		essences = {button.id}
+	});
+end
+function BtWLoadoutsEssencesMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetEssenceSet(button.id);
+	local command = format("/btwloadouts activate essences %d", button.id);
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsEssencesMixin:Update()
 	self:GetParent().TitleText:SetText(L["Essences"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -380,7 +713,6 @@ function Internal.EssencesTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_RoleFilter(self.set, BtWLoadoutsSets.essences, BtWLoadoutsCollapsed.essences);
 
 	if self.set ~= nil then
 		local set = self.set

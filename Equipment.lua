@@ -20,6 +20,7 @@ local sort = table.sort
 local format = string.format
 
 local GetCharacterSlug = Internal.GetCharacterSlug
+local GetCharacterInfo = Internal.GetCharacterInfo
 
 --[[
     GetItemUniqueness will sometimes return Unique-Equipped info instead of Legion Legendary info,
@@ -487,7 +488,7 @@ do
 			if not ignored[inventorySlotId] and expected[inventorySlotId] then
 				local itemLink = expected[inventorySlotId]
 				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
-		
+
 				if uniqueFamily ~= nil then
 					uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 
@@ -502,7 +503,7 @@ do
 				local gemName, gemLink = GetItemGem(itemLink, index)
 				while gemName do
 					uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
-		
+
 					if uniqueFamily ~= nil then
 						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 
@@ -668,14 +669,14 @@ do
 					end
 				end
 			end
-			
+
 			-- If we arent swapping an item out and its in some way unique we may need to skip swapping another unique item in
 			if ignored[inventorySlotId] then
 				local itemLink = GetInventoryItemLink("player", inventorySlotId)
 				if itemLink then
 					local itemID = GetItemInfoInstant(itemLink)
 					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
-			
+
 					if uniqueFamily ~= nil then
 						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 					end
@@ -685,7 +686,7 @@ do
 					while gemName do
 						itemID = GetItemInfoInstant(gemLink)
 						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
-			
+
 						if uniqueFamily ~= nil then
 							uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 						end
@@ -817,7 +818,7 @@ do
 			end
 		end
 
-		return complete;
+		return complete, false;
 	end
 end
 local function UpdateEquipmentSetFilters(set)
@@ -864,7 +865,7 @@ local function RefreshEquipmentSet(set)
 
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
-		
+
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
 		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 			set.extras[inventorySlotId] = set.extras[inventorySlotId] or {};
@@ -914,7 +915,7 @@ end
 local function GetEquipmentSetByName(name)
 	return Internal.GetSetByName("equipment", name, EquipmentSetIsValid)
 end
-function Internal.GetEquipmentSets(id, ...)
+local function GetEquipmentSets(id, ...)
 	if id ~= nil then
 		return BtWLoadoutsSets.equipment[id], Internal.GetEquipmentSets(...);
 	end
@@ -931,7 +932,7 @@ function Internal.GetEquipmentSetIfNeeded(id)
 
     return set;
 end
-local function CombineEquipmentSets(result, ...)
+local function CombineEquipmentSets(result, state, ...)
 	result = result or {};
 
 	local playerCharacter = GetCharacterSlug()
@@ -957,6 +958,9 @@ local function CombineEquipmentSets(result, ...)
 						set.equipment[inventorySlotId] = GetItemLinkByLocation(location);
 					end
 					set.locations[inventorySlotId] = location;
+					if set.extras[inventorySlotId] then
+						wipe(set.extras[inventorySlotId])
+					end
 				end
 			end
 			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
@@ -969,6 +973,20 @@ local function CombineEquipmentSets(result, ...)
 			end
 		end
 	end
+
+	CheckEquipmentSetForIssues(result)
+
+    if state then
+		state.noCombatSwap = true
+
+		if result.ignored[INVSLOT_NECK] then
+			state.heartEquipped = GetInventoryItemID("player", INVSLOT_NECK) == 158075
+		elseif result.equipment[INVSLOT_NECK] then
+			state.heartEquipped = GetItemInfoInstant(result.equipment[INVSLOT_NECK]) == 158075
+		else
+			state.heartEquipped = false
+		end
+    end
 
 	return result;
 end
@@ -996,6 +1014,20 @@ local function DeleteEquipmentSet(id)
 		BtWLoadoutsFrame:Update();
 	end
 end
+local function CheckErrors(errorState, set)
+    set = GetEquipmentSet(set)
+
+	if errorState.specID then
+		errorState.role, errorState.class = select(5, GetSpecializationInfoByID(errorState.specID))
+	end
+
+	local characterInfo = GetCharacterInfo(set.character);
+	errorState.class = errorState.class or characterInfo.class;
+
+	if errorState.class ~= characterInfo.class then
+        return L["Incompatible Class"]
+    end
+end
 
 Internal.GetEquipmentSet = GetEquipmentSet
 Internal.GetEquipmentSetsByName = GetEquipmentSetsByName
@@ -1008,6 +1040,173 @@ Internal.ActivateEquipmentSet = ActivateEquipmentSet
 Internal.IsEquipmentSetActive = IsEquipmentSetActive
 Internal.CombineEquipmentSets = CombineEquipmentSets
 Internal.CheckEquipmentSetForIssues = CheckEquipmentSetForIssues
+Internal.GetEquipmentSets = GetEquipmentSets
+
+local setsFiltered = {};
+local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+    CloseDropDownMenus();
+    local set = tab.set;
+	local index = arg2 or (#set.equipment + 1)
+
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	if arg1 == nil then
+		table.remove(set.equipment, index);
+	else
+		set.equipment[index] = arg1;
+	end
+
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.equipment + 1)
+
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = Internal.AddEquipmentSet();
+	set.equipment[index] = newSet.setID;
+
+	if set.equipment[index] then
+		local subset = Internal.GetEquipmentSet(set.equipment[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame.Equipment.set = newSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Equipment:GetID());
+
+	BtWLoadoutsFrame:Update();
+end
+local function EquipmentDropDownInit(self, level, menuList, index)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.equipment then
+        return;
+    end
+
+	local info = UIDropDownMenu_CreateInfo();
+
+	local tab = BtWLoadoutsFrame.Profiles
+
+	local set = tab.set;
+	local selected = set and set.equipment and set.equipment[index];
+
+	info.arg2 = index
+
+	if (level or 1) == 1 then
+		info.text = NONE;
+		info.func = EquipmentDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.equipment;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[subset.character] = true;
+			end
+		end
+
+		local characters = {};
+		for character in pairs(setsFiltered) do
+			characters[#characters+1] = character;
+		end
+		sort(characters, function (a,b)
+			return a < b;
+		end)
+
+		local character = GetCharacterSlug();
+		if setsFiltered[character] then
+			local name = character;
+			local characterInfo = GetCharacterInfo(character);
+			if characterInfo then
+				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+			end
+
+			info.text = name;
+			info.hasArrow, info.menuList = true, character;
+			info.keepShownOnClick = true;
+			info.notCheckable = true;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		local playerCharacter = character;
+		for _,character in ipairs(characters) do
+			if character ~= playerCharacter then
+				if setsFiltered[character] then
+					local name = character;
+					local characterInfo = GetCharacterInfo(character);
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+					end
+
+					info.text = name;
+					info.hasArrow, info.menuList = true, character;
+					info.keepShownOnClick = true;
+					info.notCheckable = true;
+					UIDropDownMenu_AddButton(info, level);
+				end
+			end
+		end
+
+		info.text = L["New Set"];
+		info.func = EquipmentDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+		info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	else
+		local character = menuList;
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.equipment;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" and subset.character == character then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+		sort(setsFiltered, function (a,b)
+			return sets[a].name < sets[b].name;
+		end)
+
+        for _,setID in ipairs(setsFiltered) do
+            info.text = sets[setID].name .. (sets[setID].managerID ~= nil and " (*)" or "");
+            info.arg1 = setID;
+            info.func = EquipmentDropDown_OnClick;
+            info.checked = selected == setID;
+            UIDropDownMenu_AddButton(info, level);
+		end
+	end
+end
+
+Internal.AddLoadoutSegment({
+    id = "equipment",
+    name = L["Equipment"],
+    events = "PLAYER_EQUIPMENT_CHANGED",
+    get = GetEquipmentSets,
+    combine = CombineEquipmentSets,
+    isActive = IsEquipmentSetActive,
+	activate = ActivateEquipmentSet,
+	dropdowninit = EquipmentDropDownInit,
+	checkerrors = CheckErrors,
+})
 
 local GetCursorItemSource
 do
@@ -1216,8 +1415,122 @@ GameTooltip:HookScript("OnTooltipSetItem", function (self)
 end)
 
 BtWLoadoutsEquipmentMixin = {}
+function BtWLoadoutsEquipmentMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsEquipmentMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsEquipmentMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+		self.Name:ClearFocus();
+		self:ChangeSet(AddEquipmentSet())
+		C_Timer.After(0, function ()
+			self.Name:HighlightText();
+			self.Name:SetFocus();
+		end);
+	elseif button.isDelete then
+		local set = self.set;
+		if set.useCount > 0 then
+			StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+				set = set,
+				func = Internal.DeleteEquipmentSet,
+			});
+		else
+			StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+				set = set,
+				func = Internal.DeleteEquipmentSet,
+			});
+		end
+	elseif button.isRefresh then
+		local set = self.set;
+		RefreshEquipmentSet(set)
+		self:Update()
+	elseif button.isActivate then
+		Internal.ActivateProfile({
+			equipment = {self.set.setID}
+		});
+	end
+end
+function BtWLoadoutsEquipmentMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		if IsModifiedClick("SHIFT") then
+			Internal.ActivateProfile({
+				equipment = {button.id}
+			});
+		else
+			self.Name:ClearFocus();
+			self:ChangeSet(GetEquipmentSet(button.id))
+		end
+	end
+end
+function BtWLoadoutsEquipmentMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
 
-function Internal.EquipmentTabUpdate(self)
+	Internal.ActivateProfile({
+		equipment = {button.id}
+	});
+end
+function BtWLoadoutsEquipmentMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetEquipmentSet(button.id);
+	local command = format("/btwloadouts activate equipment %d", button.id);
+	if set.managerID then
+		icon = select(2, C_EquipmentSet.GetEquipmentSetInfo(set.managerID))
+	end
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsEquipmentMixin:Update()
 	self:GetParent().TitleText:SetText(L["Equipment"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -1230,7 +1543,6 @@ function Internal.EquipmentTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_CharacterFilter(self.set, BtWLoadoutsSets.equipment, BtWLoadoutsCollapsed.equipment);
 
 	if self.set ~= nil then
 		local set = self.set

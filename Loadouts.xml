@@ -147,41 +147,6 @@
                     </Anchors>
                     <Color r="0.75" g="0.61" b="0"/>
                 </FontString>
-                <!-- <FontString parentKey="TalentsTitle" text="BTWLOADOUTS_TALENTS" inherits="GameFontNormalLeft">
-                    <Size x="175" y="0"/>
-                    <Anchors>
-                        <Anchor point="TOPLEFT" x="10" y="-110"/>
-                    </Anchors>
-                    <Color r="0.75" g="0.61" b="0"/>
-                </FontString>
-                <FontString parentKey="PvPTalentsTitle" text="BTWLOADOUTS_PVP_TALENTS" inherits="GameFontNormalLeft">
-                    <Size x="175" y="0"/>
-                    <Anchors>
-                        <Anchor point="TOPLEFT" x="10" y="-160"/>
-                    </Anchors>
-                    <Color r="0.75" g="0.61" b="0"/>
-                </FontString>
-                <FontString parentKey="EssencesTitle" text="BTWLOADOUTS_ESSENCES" inherits="GameFontNormalLeft">
-                    <Size x="175" y="0"/>
-                    <Anchors>
-                        <Anchor point="TOPLEFT" x="10" y="-210"/>
-                    </Anchors>
-                    <Color r="0.75" g="0.61" b="0"/>
-                </FontString>
-                <FontString parentKey="EquipmentTitle" text="BTWLOADOUTS_EQUIPMENT" inherits="GameFontNormalLeft">
-                    <Size x="175" y="0"/>
-                    <Anchors>
-                        <Anchor point="TOPLEFT" x="10" y="-260"/>
-                    </Anchors>
-                    <Color r="0.75" g="0.61" b="0"/>
-                </FontString>
-                <FontString parentKey="ActionBarTitle" text="BTWLOADOUTS_ACTION_BARS" inherits="GameFontNormalLeft">
-                    <Size x="175" y="0"/>
-                    <Anchors>
-                        <Anchor point="TOPLEFT" x="10" y="-310"/>
-                    </Anchors>
-                    <Color r="0.75" g="0.61" b="0"/>
-                </FontString> -->
             </Layer>
         </Layers>
         <Frames>
@@ -210,7 +175,7 @@
                 </HitRectInsets>
                 <Scripts>
                     <OnClick>
-                        self:GetParent():GetParent():SetEnabled(self:GetChecked())
+                        self:GetParent():UpdateSetEnabled(self:GetChecked())
                     </OnClick>
                 </Scripts>
             </CheckButton>
@@ -222,7 +187,7 @@
                 </Anchors>
                 <Scripts>
                     <OnTextChanged>
-                        self:GetParent():GetParent():OnNameChanged(self:GetText());
+                        self:GetParent():UpdateSetName(self:GetText())
                     </OnTextChanged>
                     <OnEnterPressed function="EditBox_ClearFocus"/>
                 </Scripts>
