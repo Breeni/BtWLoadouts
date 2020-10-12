@@ -502,7 +502,7 @@ local scenarioInfo = {
 		},
 	},
 	{
-		name = L["Battle For Azeroth"],
+		name = L["Battle for Azeroth"],
 		instances = {
 			{nil, 38, (function () return string.format("%s %s", GetDifficultyInfo(38), L["Island Expedition"]) end)()}, -- Normal Island
 			{nil, 39, (function () return string.format("%s %s", GetDifficultyInfo(39), L["Island Expedition"]) end)()}, -- Heroic Island
