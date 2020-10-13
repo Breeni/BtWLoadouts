@@ -77,7 +77,7 @@ local function FixTalentSet(set)
     for talentID in pairs(set.talents) do
         local tier, column = Internal.VerifyTalentForSpec(set.specID, talentID)
         if tier == nil or temp[tier] then
-            set[talentID] = nil
+            set.talents[talentID] = nil
             changed = true
         else
             temp[tier] = talentID

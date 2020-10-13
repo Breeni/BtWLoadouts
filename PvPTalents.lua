@@ -27,6 +27,18 @@ local format = string.format;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+-- Make sure talent sets dont have incorrect id, call from GetTalentSet and the UI?
+local function FixPvPTalentSet(set)
+    local changed = false
+    for talentID in pairs(set.talents) do
+        local available = Internal.VerifyPvPTalentForSpec(set.specID, talentID)
+        if not available then
+            set.talents[talentID] = nil
+            changed = true
+        end
+    end
+    return changed
+end
 local function UpdatePvPTalentSetFilters(set)
     local specID = set.specID;
 
@@ -270,6 +282,7 @@ local function CheckErrors(errorState, set)
     end
 end
 
+Internal.FixPvPTalentSet = FixPvPTalentSet
 Internal.GetPvPTalentSet = GetPvPTalentSet
 Internal.GetPvPTalentSetsByName = GetPvPTalentSetsByName
 Internal.GetPvPTalentSetByName = GetPvPTalentSetByName

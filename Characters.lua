@@ -49,6 +49,7 @@ end
 
 local GetSpecInfoVersion;
 local VerifyTalentForSpec;
+local VerifyPvPTalentForSpec;
 local GetTalentInfoForSpecID;
 local GetPvpTalentSlotInfoForSpecID;
 do
@@ -1737,7 +1738,7 @@ do
 		}
 	else
 		specInfo = {
-			version = 2,
+			version = 3,
 
 			-- Warrior
 			[71] = { -- Arms
@@ -3204,6 +3205,17 @@ do
 			end
 		end
 	end
+	function VerifyPvPTalentForSpec(specID, talentID)
+		if specInfo[specID] then
+			for _,slot in ipairs(specInfo[specID].pvptalentslots) do
+				for _,talent in ipairs(slot.availableTalentIDs) do
+					if talent == talentID then
+						return true
+					end
+				end
+			end
+		end
+	end
 	function GetTalentInfoForSpecID(specID, tier, column)
 		for specIndex=1,GetNumSpecializations() do
 			local playerSpecID = GetSpecializationInfo(specIndex);
@@ -3237,6 +3249,7 @@ do
 	end
 	Internal.GetSpecInfoVersion = GetSpecInfoVersion
 	Internal.VerifyTalentForSpec = VerifyTalentForSpec
+	Internal.VerifyPvPTalentForSpec = VerifyPvPTalentForSpec
 	Internal.GetTalentInfoForSpecID = GetTalentInfoForSpecID
 	Internal.GetPvpTalentSlotInfoForSpecID = GetPvpTalentSlotInfoForSpecID
 end
