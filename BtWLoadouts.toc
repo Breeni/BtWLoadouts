@@ -1,4 +1,4 @@
-## Interface: 80300
+## Interface: 90001
 ## Title: BtWLoadouts
 ## Version: 80
 ## Notes: Change your characters spec, talents, equipment, essences, and action bars all at once
