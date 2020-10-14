@@ -375,7 +375,8 @@ do
 		local itemID = GetItemInfoInstant(itemLink);
 		wipe(locationMatchValue);
 		wipe(locationFiltered);
-		for location,locationItemID in pairs(locations) do
+		for location,locationItemLink in pairs(locations) do
+			local locationItemID = GetItemInfoInstant(locationItemLink)
 			if itemID == locationItemID then
 				locationMatchValue[location] = GetMatchValue(itemLink, extras, location);
 				locationFiltered[#locationFiltered+1] = location;
@@ -962,6 +963,8 @@ local function CombineEquipmentSets(result, state, ...)
 						wipe(set.extras[inventorySlotId])
 					end
 				end
+			else
+				wipe(set.locations);
 			end
 			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 				if not set.ignored[inventorySlotId] then
@@ -973,8 +976,6 @@ local function CombineEquipmentSets(result, state, ...)
 			end
 		end
 	end
-
-	CheckEquipmentSetForIssues(result)
 
     if state then
 		state.noCombatSwap = true
