@@ -84,6 +84,12 @@ function frame:ADDON_LOADED(...)
             end
         })
 
+        BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {}
+        BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {}
+        BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {}
+        BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {}
+        BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {}
+
         -- Clean up filters
         for _,sets in pairs(BtWLoadoutsSets) do
             for setID,set in pairs(sets) do
@@ -218,13 +224,6 @@ function frame:ADDON_LOADED(...)
                 end
             end
         end
-
-        BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {}
-        BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {}
-        BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {}
-        BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {}
-
-        BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
 
         if not BtWLoadoutsHelpTipFlags["MINIMAP_ICON"] then
             BtWLoadoutsMinimapButton.FirstTimeAnim:Play();
