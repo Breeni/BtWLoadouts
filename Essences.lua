@@ -425,7 +425,7 @@ function BtWLoadoutsAzeriteMilestoneSlotMixin:OnEnter()
 	if self.id then
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 		GameTooltip:SetAzeriteEssence(self.id, 4);
-		GameTooltip_SetBackdropStyle(GameTooltip, GAME_TOOLTIP_BACKDROP_STYLE_AZERITE_ITEM);
+		SharedTooltip_SetBackdropStyle(GameTooltip, GAME_TOOLTIP_BACKDROP_STYLE_AZERITE_ITEM);
 	end
 
 	if self:GetParent().pending then
