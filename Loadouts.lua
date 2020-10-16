@@ -786,7 +786,7 @@ end
 function BtWLoadoutsSetsScrollListItemMixin:Set(item)
 	self.item = item
 
-	button = self
+	local button = self
 	if item and not item.ignore then
 		button.type = item.type
 		button.isAdd = item.isAdd
