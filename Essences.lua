@@ -59,7 +59,7 @@ local function IsEssenceSetActive(set)
 end
 local function ActivateEssenceSet(set, state)
 	local success, complete = true, true;
-	if CanActivateEssences() and state.heartEquipped then
+	if state.heartEquipped or GetInventoryItemID("player", INVSLOT_NECK) == 158075 then
 		for milestoneID,essenceID in pairs(set.essences) do
 			local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
 			local essenceName, essenceRank = info.name, info.rank
