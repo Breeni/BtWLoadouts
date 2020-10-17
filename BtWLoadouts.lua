@@ -1,28 +1,24 @@
 --[[@TODO
 	Minimap icon should show progress texture and help box
-	Loadouts need to support multiple sets of the same type, watch for issues with unique items
 	Equipment flyout
 	Equipment sets should store location? Check what events are fired with upgrading items
 	Equipment sets should store transmog?
 	Loadout keybindings
-	Conditions need to supoort boss, affixes and arena comp
+	Conditions need to support arena comp?
 	Localization
 	Update new set text button based on tab?
 	What to do when the player has no tome
-	External API
-	Configurable sidebar filtering?
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
 	Better info for why a profile is disabled
-	Delay using a tome when talents/essences are on CD
 	When combining sets, adjust sets for the current player,
-	  eg moving essences because the character missing a ring/essence 
+	  eg moving essences because the character missing a ring/essence
 	Better condition loadout list display, show specs
 	Better issue handling
 	Set save button?
-	Refresh set from currently equipped
 	Show changes for the conditions
+	Equipment item tracking
 ]]
 
 local ADDON_NAME, Internal = ...;
