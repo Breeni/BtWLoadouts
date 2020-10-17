@@ -22,6 +22,19 @@ local format = string.format
 local GetCharacterSlug = Internal.GetCharacterSlug
 local GetCharacterInfo = Internal.GetCharacterInfo
 
+local function PackLocation(bag, slot)
+	if bag == nil then -- Inventory slot
+        return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, slot);
+	else
+        if bag == BANK_CONTAINER then
+            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, slot + 51); -- Bank slots are stored as inventory slots, and start at 52
+        elseif bag >= 0 and bag <= NUM_BAG_SLOTS then
+            return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
+        elseif bag >= NUM_BAG_SLOTS+1 and bag <= NUM_BAG_SLOTS+NUM_BANKBAGSLOTS then
+            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag - ITEM_INVENTORY_BANK_BAG_OFFSET, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
+        end
+	end
+end
 --[[
     GetItemUniqueness will sometimes return Unique-Equipped info instead of Legion Legendary info,
     this is a cache of items with that or similar issues
@@ -576,6 +589,7 @@ local function IsEquipmentSetActive(set)
 end
 local ActivateEquipmentSet;
 do
+	local correctSlots = {};
 	local possibleItems = {};
 	local bestMatchForSlot = {};
 	local uniqueFamiliesTemp = {};
@@ -588,6 +602,7 @@ do
 		local locations = set.locations;
 		local errors = set.errors;
 		local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil
+		wipe(correctSlots)
 		wipe(uniqueFamilies)
 
 		local firstEquipped = INVSLOT_FIRST_EQUIPPED
@@ -636,6 +651,7 @@ do
 					if location and location ~= -1 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
 						local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
 						if player and not bags and slot == inventorySlotId then -- The item is already in the desired location
+							correctSlots[inventorySlotId] = true;
 							ignored[inventorySlotId] = true;
 						else
 							bestMatchForSlot[inventorySlotId] = location;
@@ -643,15 +659,23 @@ do
 					else
 						-- The item is already in the desired location
 						if IsItemInLocation(itemLink, extras[inventorySlotId], true, false, false, false, inventorySlotId, false) then
+							correctSlots[inventorySlotId] = true;
 							ignored[inventorySlotId] = true;
 						else
-							location = GetBestMatch(itemLink, extras[inventorySlotId], GetInventoryItemsForSlot(inventorySlotId, possibleItems));
+							GetInventoryItemsForSlot(inventorySlotId, possibleItems)
+
+							for completedSlotId in pairs(correctSlots) do
+								possibleItems[PackLocation(nil, completedSlotId)] = nil
+							end
+
+							location = GetBestMatch(itemLink, extras[inventorySlotId], possibleItems)
 							wipe(possibleItems);
 							if location == nil then -- Could not find the requested item @TODO Error
 								ignored[inventorySlotId] = true;
 							else
 								local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
 								if player and not bags and slot == inventorySlotId then -- The item is already in the desired location, this shouldnt happen
+									correctSlots[inventorySlotId] = true;
 									ignored[inventorySlotId] = true;
 								end
 								bestMatchForSlot[inventorySlotId] = location;
