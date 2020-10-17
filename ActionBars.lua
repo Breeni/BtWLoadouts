@@ -69,6 +69,9 @@ do
 
     local function BuildMacroMap()
         mapCreated = true
+        if MacroFrame and MacroFrame:IsShown() then
+            MacroFrame_Update()
+        end
 
         local global, character = GetNumMacros()
         local macro
@@ -115,7 +118,7 @@ do
 
         -- Probably means someone is using EditMacro to make a new macro or
         -- editing a macro very early in the load
-        if id == nil or not mapCreated then
+        if id == nil or id == 0 or not mapCreated then
             return BuildMacroMap()
         end
 
@@ -141,7 +144,9 @@ do
         if name == nil then
             macro.icon = icon or macro.icon
             if body ~= nil then -- Only the body has changed so macros wont have reordered
-                macroBodyMap[macro.body] = nil -- Setting to nil will cause the index metamethod to run if needed later
+                if macro.body then
+                    macroBodyMap[macro.body] = nil -- Setting to nil will cause the index metamethod to run if needed later
+                end
                 macro.body = body
                 macroBodyMap[body] = id
             end
@@ -155,16 +160,131 @@ do
             for i=min,max do
                 macro = macros[i]
 
-                macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+                if GetMacroInfo(i) then
+                    macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
 
-                macroNameMap[macro.name] = i
-                macroBodyMap[macro.body] = i
+                    if macro.name then
+                        macroNameMap[macro.name] = i
+                    end
+                    if macro.body then
+                        macroBodyMap[macro.body] = i
+                    end
+                else
+                    wipe(macro)
+                end
             end
         end
     end
     hooksecurefunc("EditMacro", EditMacroHook)
 end
 
+local covenantClassAbilities = {
+    [313347] = false, -- Zone ability base spell
+
+    -- Death Knight
+    [312202] = true, -- shackle-the-unworthy
+    [311648] = true, -- swarming-mist
+    [315443] = true, -- abomination-limb
+    [315442] = true, -- deaths-due
+
+    -- Demon Hunter
+    [306830] = true, -- elysian-decree
+    [317009] = true, -- sinful-brand
+    [329554] = true, -- fodder-to-the-flame
+    [323639] = true, -- the-hunt
+
+    -- Druid
+    [326434] = true, -- kindred-spirits
+    [323546] = true, -- ravenous-frenzy
+    [325727] = true, -- adaptive-swarm
+    [323764] = true, -- convoke-the-spirits
+
+    -- Hunter
+    [308491] = true, -- resonating-arrow
+    [324149] = true, -- flayed-shot
+    [325028] = true, -- death-chakram
+    [328231] = true, -- wild-spirits
+
+    -- Mage
+    [307443] = true, -- radiant-spark
+    [314793] = true, -- mirrors-of-torment
+    [324220] = true, -- deathborne
+    [314791] = true, -- shifting-power
+
+    -- Monk
+    [310454] = true, -- weapons-of-order
+    [326860] = true, -- fallen-order
+    [325216] = true, -- bonedust-brew
+    [327104] = true, -- faeline-stomp
+
+    -- Paladin
+    [304971] = true, -- divine-toll
+    [316958] = true, -- ashen-hallow
+    [328204] = true, -- vanquishers-hammer
+    [328278] = true, -- blessing-of-the-seasons
+
+    -- Priest
+    [325013] = true, -- boon-of-the-ascended
+    [323673] = true, -- mindgames
+    [324724] = true, -- unholy-nova
+    [327661] = true, -- fae-blessings
+
+    -- Rogue
+    [323547] = true, -- echoing-reprimand
+    [323654] = true, -- slaughter
+    [328547] = true, -- Serrated-Bone-Spike
+    [328305] = true, -- sepsis
+
+    -- Shaman
+    [324386] = true, -- vesper-totem
+    [320674] = true, -- chain-harvest
+    [326059] = true, -- primordial-wave
+    [328923] = true, -- fae-transfusion
+
+    -- Warlock
+    [312321] = true, -- scouring-tithe
+    [321792] = true, -- impending-catastrophe
+    [325289] = true, -- decimating-bolt
+    [325640] = true, -- soul-rot
+
+    -- Warrior
+    [307865] = true, -- spear-of-bastion
+    [317349] = true, -- condemn
+    [324143] = true, -- conquerors-banner
+    [325886] = true, -- ancient-aftershock
+}
+local function IsCovenantClassAbility(id)
+    return covenantClassAbilities[id] ~= nil
+end
+local function GetCovenantClassAbility()
+    for id,valid in pairs(covenantClassAbilities) do
+        if valid and IsSpellKnown(id, false) then
+            return id
+        end
+    end
+
+    return IsSpellKnown(313347, false) and 313347 -- Zone ability base spell
+end
+local covenantSignatureAbilities = {
+    [326526] = false, -- Zone ability base spell, not valid to test with IsSpellKnown as its known at level 60
+
+    [324739] = true, -- Summon Steward
+    [300728] = true, -- Door of Shadows
+    [324631] = true, -- Fleshcraft
+    [310143] = true, -- Soulshape
+}
+local function IsCovenantSignatureAbility(id)
+    return covenantSignatureAbilities[id] ~= nil
+end
+local function GetCovenantSignatureAbility()
+    for id,valid in pairs(covenantSignatureAbilities) do
+        if valid and IsSpellKnown(id, false) then
+            return id
+        end
+    end
+
+    return IsSpellKnown(326526, false) and 326526 -- Zone ability base spell
+end
 local function GetActionInfoTable(slot, tbl)
     local actionType, id, subType = GetActionInfo(slot)
     if not actionType and not tbl then -- If no action and tbl is missing just return
@@ -176,6 +296,18 @@ local function GetActionInfoTable(slot, tbl)
     -- If we use the base version of the spell it should always work
     if actionType == "spell" then
         id = FindBaseSpellByID(id) or id
+
+        if IsCovenantSignatureAbility(id) then
+            id = GetCovenantSignatureAbility() or id
+        elseif IsCovenantClassAbility(id) then
+            id = GetCovenantClassAbility() or id
+        end
+    end
+
+    -- There are some situations where actions can be "empty" but showing as macros with id 0
+    if actionType == "macro" and id == 0 then
+        actionType = nil
+        id = nil
     end
 
     tbl.type, tbl.id, tbl.subType, tbl.macroText = actionType, id, subType, nil
@@ -207,16 +339,24 @@ local function GetMacroByText(text)
         end
     end
 end
-local function CompareSlot(slot, tbl)
+local function CompareSlot(slot, tbl, settings)
     local actionType, id, subType = GetActionInfo(slot)
     if actionType == "spell" then
         id = FindBaseSpellByID(id) or id
+
+        if settings and settings.adjustCovenant then
+            if IsCovenantSignatureAbility(id) then
+                id = GetCovenantSignatureAbility() or id
+            elseif IsCovenantClassAbility(id) then
+                id = GetCovenantClassAbility() or id
+            end
+        end
     end
 
     if tbl == nil then
         return actionType == nil
     elseif actionType == "macro" and tbl.type == "macro" then
-        local macroText = trim(GetMacroBody(id))
+        local macroText = trim(GetMacroBody(id) or "")
         -- Macro in the action slot has the same text as the macro we want
         if macroText == trim(tbl.macroText) then
             return true
@@ -247,7 +387,7 @@ local function PickupMacroByText(text)
 end
 
 -- Pickup an action, when test is true the action wont actually be picked up
-local function PickupActionTable(tbl, test)
+local function PickupActionTable(tbl, test, settings, activating)
     if tbl == nil or tbl.type == nil then
         return true, "Success"
     end
@@ -255,31 +395,44 @@ local function PickupActionTable(tbl, test)
     local success, msg = true, "Success"
     if tbl.type == "macro" then
         local index = GetMacroByText(tbl.macroText)
-
-        if (not index or index == 0) and tbl.name then
-            msg = L["Could not find macro by text"]
-            index = GetMacroIndexByName(tbl.name)
+        if not index or index == 0 then
+            if settings and settings.createMissingMacros then
+                msg = L["Could not find macro by text, creating as account macro"]
+                if activating then
+                    index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText)
+                else
+                    index = -1
+                end
+            elseif settings and settings.createMissingMacrosCharacter then
+                msg = L["Could not find macro by text, creating as character macro"]
+                if activating then
+                    index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText, true)
+                else
+                    index = -1
+                end
+            elseif tbl.name then
+                msg = L["Could not find macro by text"]
+                index = GetMacroIndexByName(tbl.name)
+            end
         end
 
         if not index or index == 0 then
             msg = L["Could not find macro by text or name"]
             success = false
-            -- if GetMacroInfo(tbl.id) then
-            --     index = tbl.id
-            -- end
         elseif not test then
             PickupMacro(index)
         end
-
-        -- if not index or index == 0 then
-        --     msg = L["Could not find macro by text, name or id"]
-        --     success = false
-        -- elseif not test then
-        --     PickupMacro(index)
-        -- end
     elseif tbl.type == "spell" then
         -- If we use the base version of the spell it should always work
         tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
+
+        if settings and settings.adjustCovenant then
+            if IsCovenantSignatureAbility(tbl.id) then
+                tbl.id = GetCovenantSignatureAbility() or tbl.id
+            elseif IsCovenantClassAbility(tbl.id) then
+                tbl.id = GetCovenantClassAbility() or tbl.id
+            end
+        end
 
         local index
         success = false
@@ -472,9 +625,9 @@ local function IsActionBarSetActive(set)
     for slot=1,120 do
         if not set.ignored[slot] then
             local action = set.actions[slot]
-            local available = PickupActionTable(action, true)
+            local available = PickupActionTable(action, true, set.settings)
 
-            if available and not CompareSlot(slot, action) then
+            if available and not CompareSlot(slot, action, set.settings) then
                 return false
             end
         end
@@ -482,13 +635,13 @@ local function IsActionBarSetActive(set)
 
     return true;
 end
-local function ActivateActionBarSet(set)
+local function ActivateActionBarSet(set, state)
     local complete = true
     for slot=1,120 do
         if not set.ignored[slot] then
             local action = set.actions[slot]
 
-            if not CompareSlot(slot, action) then
+            if not CompareSlot(slot, action, set.settings) then
                 local success, done = SetActon(slot, action)
                 if not done then
                     complete = false
@@ -496,7 +649,7 @@ local function ActivateActionBarSet(set)
             end
         end
     end
-    return complete
+    return complete, not complete
 end
 local function RefreshActionBarSet(set)
     local actions = set.actions or {}
@@ -546,7 +699,7 @@ local function GetActionBarSets(id, ...)
 	end
 end
 -- Do not change the results action tables, that'll mess with the original sets
-local function CombineActionBarSets(result, ...)
+local function CombineActionBarSets(result, state, ...)
     result = result or {};
     result.actions = result.actions or {}
     result.ignored = result.ignored or {}
@@ -561,9 +714,15 @@ local function CombineActionBarSets(result, ...)
 		for slot=1,120 do
             if not set.ignored[slot] then
                 result.ignored[slot] = false
-                result.actions[slot] = set.actions[slot]
+                if PickupActionTable(set.actions[slot], true, set.settings, state ~= nil) or result.actions[slot] == nil then
+                    result.actions[slot] = set.actions[slot]
+                end
             end
 		end
+    end
+    
+    if state then
+        state.noCombatSwap = true
     end
 
 	return result;
@@ -603,13 +762,134 @@ Internal.GetActionBarSets = GetActionBarSets
 Internal.CombineActionBarSets = CombineActionBarSets
 Internal.DeleteActionBarSet = DeleteActionBarSet
 
+local setsFiltered = {}
+local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
 
+    CloseDropDownMenus();
+    local set = tab.set;
+	local index = arg2 or (#set.actionbars + 1)
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	if arg1 == nil then
+		table.remove(set.actionbars, index);
+	else
+		set.actionbars[index] = arg1;
+	end
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.actionbars + 1)
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = Internal.AddActionBarSet();
+	set.actionbars[index] = newSet.setID;
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame.ActionBars.set = newSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.ActionBars:GetID());
+
+	BtWLoadoutsFrame:Update();
+end
+local function ActionBarDropDownInit(self, level, menuList, index)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.actionbars then
+        return;
+    end
+
+	local info = UIDropDownMenu_CreateInfo();
+
+	local tab = BtWLoadoutsFrame.Profiles
+
+	local set = tab.set;
+	local selected = set and set.actionbars and set.actionbars[index];
+
+	info.arg2 = index
+	
+	if (level or 1) == 1 then
+		info.text = NONE;
+		info.func = ActionBarDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.actionbars;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+		sort(setsFiltered, function (a,b)
+			return sets[a].name < sets[b].name;
+		end)
+
+		for _,setID in ipairs(setsFiltered) do
+			info.text = sets[setID].name;
+			info.arg1 = setID;
+			info.func = ActionBarDropDown_OnClick;
+			info.checked = selected == setID;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		info.text = L["New Set"];
+		info.func = ActionBarDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+		info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	end
+end
+
+Internal.AddLoadoutSegment({
+    id = "actionbars",
+    name = L["Action Bars"],
+    after = "talents,pvptalents,essences,soulbinds,equipment",
+    events = "ACTIONBAR_SLOT_CHANGED",
+    get = GetActionBarSets,
+    combine = CombineActionBarSets,
+    isActive = IsActionBarSetActive,
+    activate = ActivateActionBarSet,
+    dropdowninit = ActionBarDropDownInit,
+})
 
 BtWLoadoutsActionButtonMixin = {}
-function BtWLoadoutsActionButtonMixin:OnClick()
+function BtWLoadoutsActionButtonMixin:OnClick(...)
 	local cursorType = GetCursorInfo()
 	if cursorType then
 		self:SetActionToCursor(GetCursorInfo())
+    elseif IsModifiedClick("CTRL") then
+        local set = self:GetParent().set;
+        local slot = self:GetID();
+        local tbl = set.actions[slot];
+        if tbl.type == "macro" then
+			local index = Internal.GetMacroByText(tbl.macroText)
+            if not index then
+                CreateMacro(tbl.name, "INV_Misc_QuestionMark", tbl.macroText, IsModifiedClick("SHIFT"));
+            end
+        end
+        BtWLoadoutsFrame:Update()
 	elseif IsModifiedClick("SHIFT") then
 		local set = self:GetParent().set;
 		self:SetIgnored(not set.ignored[self:GetID()]);
@@ -638,7 +918,14 @@ function BtWLoadoutsActionButtonMixin:SetActionToCursor(...)
 		elseif cursorType == "spell" then
 			local subType, id = select(3, ...)
 			id = FindBaseSpellByID(id) or id
-			self:SetAction("spell", id, subType)
+
+            if IsCovenantSignatureAbility(id) then
+                id = GetCovenantSignatureAbility() or id
+            elseif IsCovenantClassAbility(id) then
+                id = GetCovenantClassAbility() or id
+            end
+
+            self:SetAction("spell", id, subType)
 		elseif cursorType == "equipmentset" then
 			local id = select(2, ...)
 			local icon, name
@@ -690,13 +977,15 @@ function BtWLoadoutsActionButtonMixin:Update()
 	local ignored = set.ignored[slot];
 	local tbl = set.actions[slot];
 	if tbl and tbl.type ~= nil then
-		local success, msg = Internal.PickupActionTable(tbl, true)
-		if not success then
-			errors = msg
-		end
+        if not ignored then
+            local success, msg = Internal.PickupActionTable(tbl, true, set.settings)
+            if not success then
+                errors = msg
+            end
+        end
 
-		local icon, name = tbl.icon, tbl.name
-		if tbl.type == "item" then
+        local icon, name = tbl.icon, tbl.name
+        if tbl.type == "item" then
 			icon = select(5, GetItemInfoInstant(tbl.id))
 		elseif tbl.type == "spell" then
 			icon = select(3, GetSpellInfo(tbl.id))
@@ -712,14 +1001,14 @@ function BtWLoadoutsActionButtonMixin:Update()
 			local index = Internal.GetMacroByText(tbl.macroText)
 			if index then
 				name, icon = GetMacroInfo(index)
-			else
-				errors = L["Macro missing"]
+            elseif not ignored then
+				errors = L["Macro missing\n|rCtrl+Left Click to create macro\nCtrl+Shift+Left Click to create character macro"]
 			end
 		elseif tbl.type == "equipmentset" then
 			local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
 			if id then
 				name, icon = C_EquipmentSet.GetEquipmentSetInfo(id)
-			else
+            elseif not ignored then
 				errors = L["Equipment set missing"]
 			end
 		else
@@ -732,10 +1021,12 @@ function BtWLoadoutsActionButtonMixin:Update()
 		
 		self.Name:SetText(name)
 		self.Icon:SetTexture(icon)
+        self.Icon:SetDesaturated(ignored)
+        self.Icon:SetAlpha(ignored and 0.8 or 1)
 	else
 		self.Name:SetText(nil)
 		self.Icon:SetTexture(nil)
-	end
+    end
 
 	self.errors = errors -- For tooltip display
 	self.ErrorBorder:SetShown(errors ~= nil)
@@ -772,9 +1063,165 @@ function BtWLoadoutsIgnoreActionBarMixin:OnClick()
 	end
 end
 
-BtWLoadoutsActionBarsMixin = {}
+local function DropDown_Initialize(self, level, menuList)
+    local set = BtWLoadoutsFrame.ActionBars.set
+    if set then
+        local info = UIDropDownMenu_CreateInfo()
+        info.func = function (self, arg1, arg2, checked)
+            set.settings = set.settings or {}
+            set.settings.adjustCovenant = not checked
 
-function Internal.ActionBarsTabUpdate(self)
+            BtWLoadoutsFrame:Update()
+        end
+        info.checked = set.settings and set.settings.adjustCovenant
+        info.text = L["Adjust Covenant Abilities"]
+        UIDropDownMenu_AddButton(info, level)
+
+        
+        info.func = function (self, arg1, arg2, checked)
+            set.settings = set.settings or {}
+            set.settings.createMissingMacros = not checked
+            set.settings.createMissingMacrosCharacter = false
+
+            BtWLoadoutsFrame:Update()
+        end
+        info.checked = set.settings and set.settings.createMissingMacros
+        info.text = L["Create Missing Macros"]
+        UIDropDownMenu_AddButton(info, level)
+
+        
+        info.func = function (self, arg1, arg2, checked)
+            set.settings = set.settings or {}
+            set.settings.createMissingMacrosCharacter = not checked
+            set.settings.createMissingMacros = false
+
+            BtWLoadoutsFrame:Update()
+        end
+        info.checked = set.settings and set.settings.createMissingMacrosCharacter
+        info.text = L["Create Missing Macros (Character Only)"]
+        UIDropDownMenu_AddButton(info, level)
+    end
+end
+BtWLoadoutsActionBarsMixin = {}
+function BtWLoadoutsActionBarsMixin:OnShow()
+    if not self.initialized then
+        UIDropDownMenu_Initialize(self.SettingsDropDown, DropDown_Initialize, "MENU");
+        self.initialized = true
+    end
+end
+function BtWLoadoutsActionBarsMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsActionBarsMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsActionBarsMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+        self.Name:ClearFocus();
+		self:ChangeSet(AddActionBarSet())
+        C_Timer.After(0, function ()
+            self.Name:HighlightText();
+            self.Name:SetFocus();
+        end);
+    elseif button.isDelete then
+        local set = self.set;
+        if set.useCount > 0 then
+            StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+                set = set,
+                func = DeleteActionBarSet,
+            });
+        else
+            StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+                set = set,
+                func = DeleteActionBarSet,
+            });
+        end
+    elseif button.isRefresh then
+        local set = self.set;
+        RefreshActionBarSet(set)
+        self:Update()
+    elseif button.isActivate then
+        Internal.ActivateProfile({
+            actionbars = {self.set.setID}
+        });
+	end
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		if IsModifiedClick("SHIFT") then
+			Internal.ActivateProfile({
+				actionbars = {button.id}
+			});
+		else
+			self.Name:ClearFocus();
+            self:ChangeSet(GetActionBarSet(button.id))
+		end
+	end
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	Internal.ActivateProfile({
+		actionbars = {button.id}
+	});
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetActionBarSet(button.id);
+	local command = format("/btwloadouts activate actionbars %d", button.id);
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsActionBarsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -787,7 +1234,6 @@ function Internal.ActionBarsTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.actionbars, BtWLoadoutsCollapsed.actionbars);
 
 	if self.set ~= nil then
 		local set = self.set;

@@ -7,6 +7,8 @@ local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 local format = string.format
 local sort = table.sort
 
+local GetCharacterSlug = Internal.GetCharacterSlug
+
 -- A map from the equipment manager ids to our sets
 local equipmentSetMap = {};
 
@@ -16,12 +18,12 @@ frame:SetScript("OnEvent", function (self, event, ...)
 end);
 function frame:ADDON_LOADED(...)
     if ... == ADDON_NAME then
-        BtWLoadoutsSettings = BtWLoadoutsSettings or {};
-        Internal.Settings(BtWLoadoutsSettings);
+        BtWLoadoutsSettings = BtWLoadoutsSettings or {}
+        Internal.Settings(BtWLoadoutsSettings)
 
-        Internal.UpdateClassInfo();
+        Internal.UpdateClassInfo()
 
-        BtWLoadoutsSets = BtWLoadoutsSets or {
+        BtWLoadoutsSets = setmetatable(BtWLoadoutsSets or {
             profiles = {},
             talents = {},
             pvptalents = {},
@@ -29,9 +31,66 @@ function frame:ADDON_LOADED(...)
             equipment = {},
             actionbars = {},
             conditions = {},
-        };
-        BtWLoadoutsSets.actionbars = BtWLoadoutsSets.actionbars or {}
+        }, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
+        BtWLoadoutsCollapsed = setmetatable(BtWLoadoutsCollapsed or {
+            profiles = {},
+            talents = {},
+            pvptalents = {},
+            essences = {},
+            equipment = {},
+            actionbars = {},
+            conditions = {},
+        }, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
+        BtWLoadoutsCategories = setmetatable(BtWLoadoutsCategories or {
+            profiles = {"spec"},
+            talents = {"spec"},
+            pvptalents = {"spec"},
+            essences = {"role"},
+            equipment = {"character"},
+            actionbars = {},
+            conditions = {},
+        }, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
+        BtWLoadoutsFilters = setmetatable(BtWLoadoutsFilters or {
+            profiles = {},
+            talents = {},
+            pvptalents = {},
+            essences = {},
+            equipment = {},
+            actionbars = {},
+            conditions = {},
+        }, {
+            __index = function (self, key)
+                local result = {}
+                self[key] = result
+                return result
+            end
+        })
 
+        BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {}
+        BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {}
+        BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {}
+        BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {}
+        BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {}
+
+        -- Clean up filters
         for _,sets in pairs(BtWLoadoutsSets) do
             for setID,set in pairs(sets) do
                 if type(set) == "table" then
@@ -79,12 +138,49 @@ function frame:ADDON_LOADED(...)
                 end
             end
         end
+        -- Update talent sets for spec changes
+        if BtWLoadoutsSets.talents.version ~= Internal.GetSpecInfoVersion() then
+            local changed = false
+            local FixTalentSet = Internal.FixTalentSet
+            for _,set in pairs(BtWLoadoutsSets.talents) do
+                if type(set) == "table" then
+                    local setChanged = FixTalentSet(set)
+                    changed = setChanged or changed
+                end
+            end
+
+            BtWLoadoutsSets.talents.version = Internal.GetSpecInfoVersion()
+            if changed then
+                print(L["BtWLoadouts: Some talent sets were updated to account for talent changes"])
+            end
+        end
+        if BtWLoadoutsSets.pvptalents.version ~= Internal.GetSpecInfoVersion() then
+            local changed = false
+            local FixSet = Internal.FixPvPTalentSet
+            for _,set in pairs(BtWLoadoutsSets.pvptalents) do
+                if type(set) == "table" then
+                    local setChanged = FixSet(set)
+                    changed = setChanged or changed
+                end
+            end
+
+            BtWLoadoutsSets.pvptalents.version = Internal.GetSpecInfoVersion()
+            if changed then
+                print(L["BtWLoadouts: Some pvp talent sets were updated to account for talent changes"])
+            end
+        end
+        if BtWLoadoutsSpecInfo.version ~= Internal.GetSpecInfoVersion() then
+            wipe(BtWLoadoutsSpecInfo)
+            BtWLoadoutsSpecInfo.version = Internal.GetSpecInfoVersion()
+        end
+        -- Make sure equipment sets have all the tables needed
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" then
                 set.extras = set.extras or {};
                 set.locations = set.locations or {};
             end
         end
+        -- Update loadouts, converting to version 2 and fixing use counts
         for setID,set in pairs(BtWLoadoutsSets.profiles) do
             if type(set) == "table" then
                 -- Convert from version 1 to version 2 loadouts
@@ -109,37 +205,18 @@ function frame:ADDON_LOADED(...)
 
                 set.character = nil -- Loadouts are no longer character restricted
 
-                for _,subsetID in ipairs(set.talents) do
-                    if BtWLoadoutsSets.talents[subsetID] then
-                        BtWLoadoutsSets.talents[subsetID].useCount = BtWLoadoutsSets.talents[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.pvptalents) do
-                    if BtWLoadoutsSets.pvptalents[subsetID] then
-                        BtWLoadoutsSets.pvptalents[subsetID].useCount = BtWLoadoutsSets.pvptalents[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.essences) do
-                    if BtWLoadoutsSets.essences[subsetID] then
-                        BtWLoadoutsSets.essences[subsetID].useCount = BtWLoadoutsSets.essences[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.equipment) do
-                    if BtWLoadoutsSets.equipment[subsetID] then
-                        BtWLoadoutsSets.equipment[subsetID].useCount = BtWLoadoutsSets.equipment[subsetID].useCount + 1;
-                    end
-                end
-
-                for _,subsetID in ipairs(set.actionbars) do
-                    if BtWLoadoutsSets.actionbars[subsetID] then
-                        BtWLoadoutsSets.actionbars[subsetID].useCount = BtWLoadoutsSets.actionbars[subsetID].useCount + 1;
+                for _,segment in Internal.EnumerateLoadoutSegments() do
+                    local id = segment.id
+                    set[id] = set[id] or {}
+                    for _,subsetID in ipairs(set[id]) do
+                        if BtWLoadoutsSets[id][subsetID] then
+                            BtWLoadoutsSets[id][subsetID].useCount = BtWLoadoutsSets[id][subsetID].useCount + 1;
+                        end
                     end
                 end
             end
         end
+        -- Update condition use counts
         for setID,set in pairs(BtWLoadoutsSets.conditions) do
             if type(set) == "table" then
                 if set.profileSet and BtWLoadoutsSets.profiles[set.profileSet] then
@@ -147,42 +224,6 @@ function frame:ADDON_LOADED(...)
                 end
             end
         end
-
-        BtWLoadoutsSpecInfo = BtWLoadoutsSpecInfo or {};
-        BtWLoadoutsRoleInfo = BtWLoadoutsRoleInfo or {};
-        BtWLoadoutsEssenceInfo = BtWLoadoutsEssenceInfo or {};
-        BtWLoadoutsCharacterInfo = BtWLoadoutsCharacterInfo or {};
-        BtWLoadoutsCollapsed = BtWLoadoutsCollapsed or {
-            profiles = {},
-            talents = {},
-            pvptalents = {},
-            essences = {},
-            equipment = {},
-            actionbars = {},
-            conditions = {},
-        };
-        BtWLoadoutsCollapsed.actionbars = BtWLoadoutsCollapsed.actionbars or {}
-        BtWLoadoutsCollapsed.conditions = BtWLoadoutsCollapsed.conditions or {}
-        BtWLoadoutsCategories = BtWLoadoutsCategories or {
-            profiles = {"spec"},
-            talents = {"spec"},
-            pvptalents = {"spec"},
-            essences = {"role"},
-            equipment = {"character"},
-            actionbars = {},
-            conditions = {},
-        };
-        BtWLoadoutsFilters = BtWLoadoutsFilters or {
-            profiles = {},
-            talents = {},
-            pvptalents = {},
-            essences = {},
-            equipment = {},
-            actionbars = {},
-            conditions = {},
-        };
-
-        BtWLoadoutsHelpTipFlags = BtWLoadoutsHelpTipFlags or {};
 
         if not BtWLoadoutsHelpTipFlags["MINIMAP_ICON"] then
             BtWLoadoutsMinimapButton.FirstTimeAnim:Play();
@@ -193,9 +234,10 @@ function frame:PLAYER_LOGIN(...)
     Internal.CreateLauncher();
     Internal.CreateLauncherMinimapIcon();
 
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE");
+
     do
-        local name, realm = UnitFullName("player");
-        local character = format("%s-%s", realm, name);
+        local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" and set.character == character then
                 if set.managerID ~= nil then
@@ -251,8 +293,10 @@ function frame:PLAYER_LOGIN(...)
         end
     end
 
-    self:EQUIPMENT_SETS_CHANGED()
     Internal.BuildEquipmentMap()
+    if C_EquipmentSet.GetNumEquipmentSets() > 0 then
+        self:EQUIPMENT_SETS_CHANGED();
+    end
 end
 function frame:PLAYER_ENTERING_WORLD()
     for specIndex=1,GetNumSpecializations() do
@@ -277,23 +321,17 @@ function frame:PLAYER_ENTERING_WORLD()
     do
         local specID = GetSpecializationInfo(GetSpecialization());
         local spec = BtWLoadoutsSpecInfo[specID] or {};
-        spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-        wipe(spec.pvptalenttrinkets);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalenttrinkets[index] = talentID;
-            end
-        end
 
-        spec.pvptalents = spec.pvptalents or {};
-        wipe(spec.pvptalents);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalents[index] = talentID;
+        spec.pvptalentslots = spec.pvptalentslots or {};
+        wipe(spec.pvptalentslots);
+        do
+            local index = 1
+            local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
+            while slotInfo do
+                spec.pvptalentslots[index] = slotInfo
+
+                index = index + 1
+                slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
             end
         end
 
@@ -367,11 +405,13 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
         for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
             set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil
 
-            local location = locations[inventorySlotId] or 0;
-            if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-                set.locations[inventorySlotId] = locations[inventorySlotId] -- Only update if the item has a location
-                set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location)
-                set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
+            if locations then -- Seems in some situations the locations table is nil instead
+                local location = locations[inventorySlotId] or 0;
+                if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
+                    set.locations[inventorySlotId] = locations[inventorySlotId] -- Only update if the item has a location
+                    set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location)
+                    set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
+                end
             end
         end
 
@@ -403,23 +443,16 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
         local specID = GetSpecializationInfo(GetSpecialization());
         local spec = BtWLoadoutsSpecInfo[specID] or {};
 
-        spec.pvptalenttrinkets = spec.pvptalenttrinkets or {};
-        wipe(spec.pvptalenttrinkets);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(1);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalenttrinkets[index] = talentID;
-            end
-        end
+        spec.pvptalentslots = spec.pvptalentslots or {};
+        wipe(spec.pvptalentslots);
+        do
+            local index = 1
+            local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
+            while slotInfo do
+                spec.pvptalentslots[index] = slotInfo
 
-        spec.pvptalents = spec.pvptalents or {};
-        wipe(spec.pvptalents);
-        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(2);
-        if slotInfo then
-            local availableTalentIDs = slotInfo.availableTalentIDs;
-            for index,talentID in ipairs(availableTalentIDs) do
-                spec.pvptalents[index] = talentID;
+                index = index + 1
+                slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(index)
             end
         end
 
@@ -496,5 +529,4 @@ frame:RegisterEvent("ZONE_CHANGED");
 frame:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
 frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
 frame:RegisterEvent("PLAYER_TARGET_CHANGED");
-frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 frame:RegisterEvent("ENCOUNTER_END");

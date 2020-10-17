@@ -1,28 +1,24 @@
 --[[@TODO
 	Minimap icon should show progress texture and help box
-	Loadouts need to support multiple sets of the same type, watch for issues with unique items
 	Equipment flyout
 	Equipment sets should store location? Check what events are fired with upgrading items
 	Equipment sets should store transmog?
 	Loadout keybindings
-	Conditions need to supoort boss, affixes and arena comp
+	Conditions need to support arena comp?
 	Localization
 	Update new set text button based on tab?
 	What to do when the player has no tome
-	External API
-	Configurable sidebar filtering?
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
 	Better info for why a profile is disabled
-	Delay using a tome when talents/essences are on CD
 	When combining sets, adjust sets for the current player,
-	  eg moving essences because the character missing a ring/essence 
+	  eg moving essences because the character missing a ring/essence
 	Better condition loadout list display, show specs
 	Better issue handling
 	Set save button?
-	Refresh set from currently equipped
 	Show changes for the conditions
+	Equipment item tracking
 ]]
 
 local ADDON_NAME, Internal = ...;
@@ -31,23 +27,22 @@ local L = Internal.L;
 local External = {}
 _G[ADDON_NAME] = External
 
-local GetNextSetID = Internal.GetNextSetID;
-local DeleteSet = Internal.DeleteSet;
-local GetCharacterInfo = Internal.GetCharacterInfo;
+local GetCharacterInfo = Internal.GetCharacterInfo
+local GetCharacterSlug = Internal.GetCharacterSlug
 
-BTWLOADOUTS_PROFILE = L["Profile"];
-BTWLOADOUTS_PROFILES = L["Profiles"];
-BTWLOADOUTS_TALENTS = L["Talents"];
-BTWLOADOUTS_PVP_TALENTS = L["PvP Talents"];
-BTWLOADOUTS_ESSENCES = L["Essences"];
-BTWLOADOUTS_EQUIPMENT = L["Equipment"];
-BTWLOADOUTS_ACTION_BARS = L["Action Bars"];
-BTWLOADOUTS_CONDITIONS = L["Conditions"];
-BTWLOADOUTS_NEW_SET = L["New Set"];
-BTWLOADOUTS_ACTIVATE = L["Activate"];
-BTWLOADOUTS_DELETE = L["Delete"];
-BTWLOADOUTS_NAME = L["Name"];
-BTWLOADOUTS_SPECIALIZATION = L["Specialization"];
+BTWLOADOUTS_PROFILE = L["Profile"]
+BTWLOADOUTS_PROFILES = L["Profiles"]
+BTWLOADOUTS_TALENTS = L["Talents"]
+BTWLOADOUTS_PVP_TALENTS = L["PvP Talents"]
+BTWLOADOUTS_ESSENCES = L["Essences"]
+BTWLOADOUTS_EQUIPMENT = L["Equipment"]
+BTWLOADOUTS_ACTION_BARS = L["Action Bars"]
+BTWLOADOUTS_CONDITIONS = L["Conditions"]
+BTWLOADOUTS_NEW_SET = L["New Set"]
+BTWLOADOUTS_ACTIVATE = L["Activate"]
+BTWLOADOUTS_DELETE = L["Delete"]
+BTWLOADOUTS_NAME = L["Name"]
+BTWLOADOUTS_SPECIALIZATION = L["Specialization"]
 BTWLOADOUTS_ENABLED = L["Enabled"]
 BTWLOADOUTS_UPDATE = L["Update"]
 BTWLOADOUTS_LOG = L["Log"]
@@ -106,6 +101,11 @@ local Settings = SettingsCreate({
         key = "limitConditions",
         default = false,
     },
+    {
+        name = L["Filter chat spam while changing loadouts"],
+        key = "filterChatSpam",
+        default = false,
+    },
 });
 Internal.Settings = Settings;
 
@@ -148,8 +148,6 @@ end);
 tomeButton:HookScript("OnClick", function (self, ...)
 	self.button:GetScript("OnClick")(self.button, ...);
 end);
-
-local setsFiltered = {};
 
 StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATE"] = {
 	text = L["Activate profile %s?"],
@@ -625,8 +623,8 @@ do
 		function CharacterFilterEnumerator()
 			wipe(charaterEnumertorList)
 
-			local name, realm = UnitFullName("player");
-			local character = realm .. "-" .. name;
+			local name = UnitName("player")
+			local character = GetCharacterSlug();
 			local characterInfo = GetCharacterInfo(character);
 			if characterInfo then
 				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
@@ -673,11 +671,21 @@ do
 			error(format("Unsupported filter type %s", filter))
 		end
 	end
+	local function alphanumsort(o)
+		local function padnum(d)
+			local dec, n = string.match(d, "(%.?)0*(.+)")
+			return #dec > 0 and ("%.12f"):format(d) or ("%s%03d%s"):format(dec, #n, n)
+		end
+		table.sort(o, function(a,b)
+		  	return tostring(a.name):gsub("%.?%d+", padnum)..("%3d"):format(#b.name)
+			     < tostring(b.name):gsub("%.?%d+", padnum)..("%3d"):format(#a.name)
+		end)
+		return o
+	end
 	local function BuildList(items, depth, selected, filtered, collapsed, ...)
 		if select('#', ...) == 0 then
-			table.sort(filtered, function (a, b)
-				return a.name < b.name
-			end)
+			alphanumsort(filtered)
+
 			for _,set in ipairs(filtered) do
 				selected = selected or set
 				items[#items+1] = {
@@ -685,6 +693,7 @@ do
 					name = (set.name == nil or set.name == "") and L["Unnamed"] or set.name,
 					disabled = set.disabled,
 					selected = set == selected,
+					builtin = set.managerID ~= nil,
 					depth = depth,
 				};
 			end
@@ -789,10 +798,6 @@ do
 			end
 		end
 		HybridScrollFrame_Update(self, totalHeight, displayedHeight);
-	end
-	local function GetCharacterSlug()
-		local characterName, characterRealm = UnitFullName("player");
-		return characterRealm .. "-" .. characterName
 	end
 	local function DropDown_Initialize(self, level)
 		local sidebar = self:GetParent()
@@ -986,8 +991,6 @@ do
 	end
 end
 
-
-local SetsScrollFrame_Update
 do
 	function BtWLoadoutsTabFrame_OnLoad(self)
 		local frame = self:GetParent()
@@ -997,6 +1000,7 @@ do
 		local tab = frame.TabPool:Acquire()
 		local id = #Tabs
 
+		self:SetID(id)
 		tab:SetID(id)
 		tab:SetText(self.name)
 
@@ -1013,302 +1017,6 @@ do
 			PanelTemplates_SetTab(frame, id);
 		end
 		PanelTemplates_UpdateTabs(frame);
-	end
-
-	local NUM_SCROLL_ITEMS_TO_DISPLAY = 18;
-	local SCROLL_ROW_HEIGHT = 21;
-	function Internal.SetsScrollFrame_SpecFilter(selected, sets, collapsed)
-		wipe(setScrollItems);
-		wipe(setsFiltered);
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				setsFiltered[set.specID or 0] = setsFiltered[set.specID or 0] or {};
-				setsFiltered[set.specID or 0][#setsFiltered[set.specID or 0]+1] = setID;
-			end
-		end
-
-		local className, classFile, classID = UnitClass("player");
-		local classColor = C_ClassColor.GetClassColor(classFile);
-		className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-		for specIndex=1,GetNumSpecializationsForClassID(classID) do
-			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-			local isCollapsed = collapsed[specID] and true or false;
-			if setsFiltered[specID] then
-				setScrollItems[#setScrollItems+1] = {
-					id = specID,
-					isHeader = true,
-					isCollapsed = isCollapsed,
-					name = format("%s: %s", classColor:WrapTextInColorCode(className), specName),
-				};
-				if not isCollapsed then
-					sort(setsFiltered[specID], function (a,b)
-						return sets[a].name < sets[b].name;
-					end)
-					selected = selected or sets[select(2, next(setsFiltered[specID]))];
-					for _,setID in ipairs(setsFiltered[specID]) do
-						setScrollItems[#setScrollItems+1] = {
-							id = setID,
-							name = sets[setID].name,
-							character = sets[setID].character,
-							disabled = sets[setID].disabled,
-							selected = sets[setID] == selected,
-						};
-					end
-				end
-			end
-		end
-
-		local playerClassID = classID;
-		for classID=1,GetNumClasses() do
-			if classID ~= playerClassID then
-				local className, classFile = GetClassInfo(classID);
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					local isCollapsed = collapsed[specID] and true or false;
-					if setsFiltered[specID] then
-						setScrollItems[#setScrollItems+1] = {
-							id = specID,
-							isHeader = true,
-							isCollapsed = isCollapsed,
-							name = format("%s: %s", classColor:WrapTextInColorCode(className), specName),
-						};
-						if not isCollapsed then
-							sort(setsFiltered[specID], function (a,b)
-								return sets[a].name < sets[b].name;
-							end)
-							selected = selected or sets[select(2, next(setsFiltered[specID]))];
-							for _,setID in ipairs(setsFiltered[specID]) do
-								setScrollItems[#setScrollItems+1] = {
-									id = setID,
-									name = sets[setID].name,
-									character = sets[setID].character,
-									disabled = sets[setID].disabled,
-									selected = sets[setID] == selected,
-								};
-							end
-						end
-					end
-				end
-			end
-		end
-
-		local specID = 0;
-		local isCollapsed = collapsed[specID] and true or false;
-		if setsFiltered[specID] then
-			setScrollItems[#setScrollItems+1] = {
-				id = specID,
-				isHeader = true,
-				isCollapsed = isCollapsed,
-				name = L["Other"],
-			};
-			if not isCollapsed then
-				sort(setsFiltered[specID], function (a,b)
-					return sets[a].name < sets[b].name;
-				end)
-				selected = selected or sets[select(2, next(setsFiltered[specID]))];
-				for _,setID in ipairs(setsFiltered[specID]) do
-					setScrollItems[#setScrollItems+1] = {
-						id = setID,
-						name = sets[setID].name,
-						character = sets[setID].character,
-						disabled = sets[setID].disabled,
-						selected = sets[setID] == selected,
-					};
-				end
-			end
-		end
-
-		SetsScrollFrame_Update();
-
-		return selected;
-	end
-	function Internal.SetsScrollFrame_RoleFilter(selected, sets, collapsed)
-		wipe(setScrollItems);
-		wipe(setsFiltered);
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				setsFiltered[set.role] = setsFiltered[set.role] or {};
-				setsFiltered[set.role][#setsFiltered[set.role]+1] = setID;
-			end
-		end
-
-		local role = select(5, GetSpecializationInfo(GetSpecialization()));
-		local isCollapsed = collapsed[role] and true or false;
-		if setsFiltered[role] then
-			setScrollItems[#setScrollItems+1] = {
-				id = role,
-				isHeader = true,
-				isCollapsed = isCollapsed,
-				name = _G[role],
-			};
-			if not isCollapsed then
-				sort(setsFiltered[role], function (a,b)
-					return sets[a].name < sets[b].name;
-				end)
-				selected = selected or sets[select(2, next(setsFiltered[role]))];
-				for _,setID in ipairs(setsFiltered[role]) do
-					setScrollItems[#setScrollItems+1] = {
-						id = setID,
-						name = sets[setID].name,
-						disabled = sets[setID].disabled,
-						selected = sets[setID] == selected,
-					};
-				end
-			end
-		end
-
-		local playerRole = role;
-		for _,role in Internal.Roles() do
-			if role ~= playerRole then
-				local isCollapsed = collapsed[role] and true or false;
-				if setsFiltered[role] then
-					setScrollItems[#setScrollItems+1] = {
-						id = role,
-						isHeader = true,
-						isCollapsed = isCollapsed,
-						name = _G[role],
-					};
-					if not isCollapsed then
-						sort(setsFiltered[role], function (a,b)
-							return sets[a].name < sets[b].name;
-						end)
-						selected = selected or sets[select(2, next(setsFiltered[role]))];
-						for _,setID in ipairs(setsFiltered[role]) do
-							setScrollItems[#setScrollItems+1] = {
-								id = setID,
-								name = sets[setID].name,
-								disabled = sets[setID].disabled,
-								selected = sets[setID] == selected,
-							};
-						end
-					end
-				end
-			end
-		end
-
-		SetsScrollFrame_Update();
-
-		return selected;
-	end
-	function Internal.SetsScrollFrame_CharacterFilter(selected, sets, collapsed)
-		wipe(setScrollItems);
-		wipe(setsFiltered);
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				setsFiltered[set.character] = setsFiltered[set.character] or {};
-				setsFiltered[set.character][#setsFiltered[set.character]+1] = setID;
-			end
-		end
-
-		local characters = {};
-		for character in pairs(setsFiltered) do
-			characters[#characters+1] = character;
-		end
-		sort(characters, function (a,b)
-			return a < b;
-		end)
-
-		local name, realm = UnitFullName("player");
-		local character = realm .. "-" .. name;
-		if setsFiltered[character] then
-			local isCollapsed = collapsed[character] and true or false;
-			local name = character;
-			local characterInfo = GetCharacterInfo(character);
-			if characterInfo then
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-			end
-			setScrollItems[#setScrollItems+1] = {
-				id = character,
-				isHeader = true,
-				isCollapsed = isCollapsed,
-				name = name,
-			};
-			if not isCollapsed then
-				sort(setsFiltered[character], function (a,b)
-					return sets[a].name < sets[b].name;
-				end)
-				selected = selected or sets[select(2, next(setsFiltered[character]))];
-				for _,setID in ipairs(setsFiltered[character]) do
-					setScrollItems[#setScrollItems+1] = {
-						id = setID,
-						name = sets[setID].name,
-						selected = sets[setID] == selected,
-						disabled = sets[setID].disabled,
-						builtin = sets[setID].managerID ~= nil,
-					};
-				end
-			end
-		end
-
-		local playerCharacter = character;
-		for _,character in ipairs(characters) do
-			if character ~= playerCharacter then
-				if setsFiltered[character] then
-					local isCollapsed = collapsed[character] and true or false;
-					local name = character;
-					local characterInfo = GetCharacterInfo(character);
-					if characterInfo then
-						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					end
-					setScrollItems[#setScrollItems+1] = {
-						id = character,
-						isHeader = true,
-						isCollapsed = isCollapsed,
-						name = name,
-					};
-					if not isCollapsed then
-						sort(setsFiltered[character], function (a,b)
-							return sets[a].name < sets[b].name;
-						end)
-						selected = selected or sets[select(2, next(setsFiltered[character]))];
-						for _,setID in ipairs(setsFiltered[character]) do
-							setScrollItems[#setScrollItems+1] = {
-								id = setID,
-								name = sets[setID].name,
-								selected = sets[setID] == selected,
-								disabled = sets[setID].disabled,
-								builtin = sets[setID].managerID ~= nil,
-							};
-						end
-					end
-				end
-			end
-		end
-
-		SetsScrollFrame_Update();
-
-		return selected;
-	end
-	function Internal.SetsScrollFrame_NoFilter(selected, sets)
-		wipe(setScrollItems);
-		wipe(setsFiltered);
-		for setID,set in pairs(sets) do
-			if type(set) == "table" then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-		selected = selected or sets[select(2, next(setsFiltered))];
-		for _,setID in ipairs(setsFiltered) do
-			setScrollItems[#setScrollItems+1] = {
-				id = setID,
-				name = sets[setID].name,
-				disabled = sets[setID].disabled,
-				selected = sets[setID] == selected,
-			};
-		end
-
-		SetsScrollFrame_Update();
-
-		return selected;
 	end
 
 	BtWLoadoutsFrameMixin = {};
@@ -1374,466 +1082,33 @@ do
 		self.Conditions.set = set;
 		self:Update();
 	end
+	function BtWLoadoutsFrameMixin:GetCurrentTab()
+		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1
+		return self.TabFrames[selectedTab]
+	end
 	function BtWLoadoutsFrameMixin:Update()
-		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
+		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1
 		for id,frame in ipairs(self.TabFrames) do
-			frame:SetShown(id == selectedTab);
+			frame:SetShown(id == selectedTab)
 		end
 
-		if selectedTab == TAB_PROFILES then
-			Internal.ProfilesTabUpdate(self.Profiles);
-		elseif selectedTab == TAB_TALENTS then
-			Internal.TalentsTabUpdate(self.Talents);
-		elseif selectedTab == TAB_PVP_TALENTS then
-			Internal.PvPTalentsTabUpdate(self.PvPTalents);
-		elseif selectedTab == TAB_ESSENCES then
-			Internal.EssencesTabUpdate(self.Essences);
-		elseif selectedTab == TAB_EQUIPMENT then
-			Internal.EquipmentTabUpdate(self.Equipment);
-		elseif selectedTab == TAB_ACTION_BARS then
-			Internal.ActionBarsTabUpdate(self.ActionBars);
-		elseif selectedTab == TAB_CONDITIONS then
-			Internal.ConditionsTabUpdate(self.Conditions);
-		end
+		self.TabFrames[selectedTab]:Update(self)
 	end
-	function BtWLoadoutsFrameMixin:ScrollItemClick(button)
-		CloseDropDownMenus();
-		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
-		if selectedTab == TAB_PROFILES then
-			local frame = self.Profiles;
-			if button.isAdd then
-				BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] = true;
-
-				frame.Name:ClearFocus();
-				self:SetProfile(Internal.AddProfile());
-				C_Timer.After(0, function ()
-					frame.Name:HighlightText();
-					frame.Name:SetFocus();
-				end)
-			elseif button.isDelete then
-				local set = frame.set;
-				if set.useCount > 0 then
-					StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteProfile,
-					});
-				else
-					StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteProfile,
-					});
-				end
-			elseif button.isRefresh then
-				-- Do nothing
-			elseif button.isActivate then
-				BtWLoadoutsHelpTipFlags["TUTORIAL_ACTIVATE_SET"] = true;
-
-				local set = frame.set;
-				Internal.ActivateProfile(set);
-
-				Internal.ProfilesTabUpdate(frame);
-			elseif button.isHeader then
-				button.collapsed[button.id] = not button.collapsed[button.id]
-				-- BtWLoadoutsCollapsed.profiles[button.id] = not BtWLoadoutsCollapsed.profiles[button.id] and true or nil;
-				Internal.ProfilesTabUpdate(frame);
-			else
-				if IsModifiedClick("SHIFT") then
-					Internal.ActivateProfile(Internal.GetProfile(button.id));
-				else
-					frame.Name:ClearFocus();
-					self:SetProfile(Internal.GetProfile(button.id));
-				end
-			end
-		elseif selectedTab == TAB_TALENTS then
-			local frame = self.Talents;
-			if button.isAdd then
-				frame.Name:ClearFocus();
-				self:SetTalentSet(Internal.AddTalentSet());
-				C_Timer.After(0, function ()
-					frame.Name:HighlightText();
-					frame.Name:SetFocus();
-				end)
-			elseif button.isDelete then
-				local set = frame.set;
-				if set.useCount > 0 then
-					StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteTalentSet,
-					});
-				else
-					StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteTalentSet,
-					});
-				end
-			elseif button.isRefresh then
-				local set = frame.set;
-				Internal.RefreshTalentSet(set)
-				Internal.TalentsTabUpdate(frame);
-			elseif button.isActivate then
-				local set = frame.set;
-				if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-					Internal.ActivateProfile({
-						talents = {set.setID}
-					});
-				end
-			elseif button.isHeader then
-				BtWLoadoutsCollapsed.talents[button.id] = not BtWLoadoutsCollapsed.talents[button.id] and true or nil;
-				Internal.TalentsTabUpdate(frame);
-			else
-				if IsModifiedClick("SHIFT") then
-					local set = Internal.GetTalentSet(button.id);
-					if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-						Internal.ActivateProfile({
-							talents = {button.id}
-						});
-					end
-				else
-					frame.Name:ClearFocus();
-					self:SetTalentSet(Internal.GetTalentSet(button.id));
-				end
-			end
-		elseif selectedTab == TAB_PVP_TALENTS then
-			local frame = self.PvPTalents;
-			if button.isAdd then
-				frame.Name:ClearFocus();
-				self:SetPvPTalentSet(Internal.AddPvPTalentSet());
-				C_Timer.After(0, function ()
-					frame.Name:HighlightText();
-					frame.Name:SetFocus();
-				end)
-			elseif button.isDelete then
-				local set = frame.set;
-				if set.useCount > 0 then
-					StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
-						set = set,
-						func = Internal.DeletePvPTalentSet,
-					});
-				else
-					StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-						set = set,
-						func = Internal.DeletePvPTalentSet,
-					});
-				end
-			elseif button.isRefresh then
-				local set = frame.set;
-				Internal.RefreshPvPTalentSet(set)
-				Internal.PvPTalentsTabUpdate(frame);
-			elseif button.isActivate then
-				local set = frame.set;
-				if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-					Internal.ActivateProfile({
-						pvptalents = {set.setID}
-					});
-				end
-			elseif button.isHeader then
-				BtWLoadoutsCollapsed.pvptalents[button.id] = not BtWLoadoutsCollapsed.pvptalents[button.id] and true or nil;
-				Internal.PvPTalentsTabUpdate(self.PvPTalents);
-			else
-				if IsModifiedClick("SHIFT") then
-					local set = Internal.GetPvPTalentSet(button.id);
-					if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-						Internal.ActivateProfile({
-							pvptalents = {button.id}
-						});
-					end
-				else
-					frame.Name:ClearFocus();
-					self:SetPvPTalentSet(Internal.GetPvPTalentSet(button.id));
-				end
-			end
-		elseif selectedTab == TAB_ESSENCES then
-			local frame = self.Essences;
-			if button.isAdd then
-				frame.Name:ClearFocus();
-				self:SetEssenceSet(Internal.AddEssenceSet());
-				C_Timer.After(0, function ()
-					frame.Name:HighlightText();
-					frame.Name:SetFocus();
-				end)
-			elseif button.isDelete then
-				local set = frame.set;
-				if set.useCount > 0 then
-					StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteEssenceSet,
-					});
-				else
-					StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteEssenceSet,
-					});
-				end
-			elseif button.isRefresh then
-				local set = frame.set;
-				Internal.RefreshEssenceSet(set)
-				Internal.EssencesTabUpdate(frame);
-			elseif button.isActivate then
-				Internal.ActivateProfile({
-					essences = {frame.set.setID}
-				});
-			elseif button.isHeader then
-				BtWLoadoutsCollapsed.essences[button.id] = not BtWLoadoutsCollapsed.essences[button.id] and true or nil;
-				Internal.EssencesTabUpdate(frame);
-			else
-				if IsModifiedClick("SHIFT") then
-					Internal.ActivateProfile({
-						essences = {button.id}
-					});
-				else
-					frame.Name:ClearFocus();
-					self:SetEssenceSet(Internal.GetEssenceSet(button.id));
-				end
-			end
-		elseif selectedTab == TAB_EQUIPMENT then
-			local frame = self.Equipment;
-			if button.isAdd then
-				frame.Name:ClearFocus();
-				self:SetEquipmentSet(Internal.AddEquipmentSet());
-				C_Timer.After(0, function ()
-					frame.Name:HighlightText();
-					frame.Name:SetFocus();
-				end);
-			elseif button.isDelete then
-				local set = frame.set;
-				if set.useCount > 0 then
-					StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteEquipmentSet,
-					});
-				else
-					StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteEquipmentSet,
-					});
-				end
-			elseif button.isRefresh then
-				local set = frame.set;
-				Internal.RefreshEquipmentSet(set)
-				Internal.EquipmentTabUpdate(frame);
-			elseif button.isActivate then
-				Internal.ActivateProfile({
-					equipment = {frame.set.setID}
-				});
-			elseif button.isHeader then
-				BtWLoadoutsCollapsed.equipment[button.id] = not BtWLoadoutsCollapsed.equipment[button.id] and true or nil;
-				Internal.EquipmentTabUpdate(frame);
-			else
-				if IsModifiedClick("SHIFT") then
-					Internal.ActivateProfile({
-						equipment = {button.id}
-					});
-				else
-					frame.Name:ClearFocus();
-					self:SetEquipmentSet(Internal.GetEquipmentSet(button.id));
-				end
-			end
-		elseif selectedTab == TAB_ACTION_BARS then
-			local frame = self.ActionBars;
-			if button.isAdd then
-				frame.Name:ClearFocus();
-				self:SetActionBarSet(Internal.AddActionBarSet());
-				C_Timer.After(0, function ()
-					frame.Name:HighlightText();
-					frame.Name:SetFocus();
-				end);
-			elseif button.isDelete then
-				local set = frame.set;
-				if set.useCount > 0 then
-					StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteActionBarSet,
-					});
-				else
-					StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-						set = set,
-						func = Internal.DeleteActionBarSet,
-					});
-				end
-			elseif button.isRefresh then
-				local set = frame.set;
-				Internal.RefreshActionBarSet(set)
-				Internal.ActionBarsTabUpdate(frame);
-			elseif button.isActivate then
-				Internal.ActivateProfile({
-					actionbars = {frame.set.setID}
-				});
-			elseif button.isHeader then
-				BtWLoadoutsCollapsed.actionbars[button.id] = not BtWLoadoutsCollapsed.actionbars[button.id] and true or nil;
-				Internal.ActionBarsTabUpdate(frame);
-			else
-				if IsModifiedClick("SHIFT") then
-					Internal.ActivateProfile({
-						actionbars = {button.id}
-					});
-				else
-					frame.Name:ClearFocus();
-					self:SetActionBarSet(Internal.GetActionBarSet(button.id));
-				end
-			end
-		elseif selectedTab == TAB_CONDITIONS then
-			local frame = self.Conditions;
-			if button.isAdd then
-				frame.Name:ClearFocus();
-				self:SetConditionSet(Internal.AddConditionSet());
-				C_Timer.After(0, function ()
-					frame.Name:HighlightText();
-					frame.Name:SetFocus();
-				end);
-			elseif button.isDelete then
-				local set = frame.set;
-				StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
-					set = set,
-					func = Internal.DeleteConditionSet,
-				});
-			elseif button.isRefresh then
-				local set = frame.set;
-				Internal.RefreshConditionSet(set)
-				Internal.ConditionsTabUpdate(frame);
-			else
-				frame.Name:ClearFocus();
-				self:SetConditionSet(Internal.GetConditionSet(button.id));
-			end
-		end
+	function BtWLoadoutsFrameMixin:OnButtonClick(button)
+		self:GetCurrentTab():OnButtonClick(button)
 	end
-	function BtWLoadoutsFrameMixin:ScrollItemDoubleClick(button)
-		CloseDropDownMenus();
-		if button.isHeader then
-			return
-		end
-
-		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
-		if selectedTab == TAB_PROFILES then
-			Internal.ActivateProfile(Internal.GetProfile(button.id));
-		elseif selectedTab == TAB_TALENTS then
-			local set = Internal.GetTalentSet(button.id);
-			if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-				Internal.ActivateProfile({
-					talents = {button.id}
-				});
-			end
-		elseif selectedTab == TAB_PVP_TALENTS then
-			local set = Internal.GetPvPTalentSet(button.id);
-			if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
-				Internal.ActivateProfile({
-					pvptalents = {button.id}
-				});
-			end
-		elseif selectedTab == TAB_ESSENCES then
-			Internal.ActivateProfile({
-				essences = {button.id}
-			});
-		elseif selectedTab == TAB_EQUIPMENT then
-			Internal.ActivateProfile({
-				equipment = {button.id}
-			});
-		elseif selectedTab == TAB_ACTION_BARS then
-			Internal.ActivateProfile({
-				actionbars = {button.id}
-			});
-		end
+	function BtWLoadoutsFrameMixin:OnSidebarItemClick(button)
+		self:GetCurrentTab():OnSidebarItemClick(button)
 	end
-	function BtWLoadoutsFrameMixin:ScrollItemOnDragStart(button)
-		CloseDropDownMenus();
-		local command, set;
-		local icon = "INV_Misc_QuestionMark";
-		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
-		if selectedTab == TAB_PROFILES then
-			if not button.isHeader then
-				set = Internal.GetProfile(button.id);
-				command = format("/btwloadouts activate profile %d", button.id);
-				if set.specID then
-					icon = select(4, GetSpecializationInfoByID(set.specID));
-				end
-			end
-		elseif selectedTab == TAB_TALENTS then
-			if not button.isHeader then
-				set = Internal.GetTalentSet(button.id);
-				command = format("/btwloadouts activate talents %d", button.id);
-				if set.specID then
-					icon = select(4, GetSpecializationInfoByID(set.specID));
-				end
-			end
-		elseif selectedTab == TAB_PVP_TALENTS then
-			if not button.isHeader then
-				set = Internal.GetPvPTalentSet(button.id);
-				command = format("/btwloadouts activate pvptalents %d", button.id);
-				if set.specID then
-					icon = select(4, GetSpecializationInfoByID(set.specID));
-				end
-			end
-		elseif selectedTab == TAB_ESSENCES then
-			if not button.isHeader then
-				set = Internal.GetEssenceSet(button.id);
-				command = format("/btwloadouts activate essences %d", button.id);
-			end
-		elseif selectedTab == TAB_EQUIPMENT then
-			if not button.isHeader then
-				set = Internal.GetEquipmentSet(button.id);
-				if set.managerID then
-					icon = select(2, C_EquipmentSet.GetEquipmentSetInfo(set.managerID))
-				end
-				command = format("/btwloadouts activate equipment %d", button.id);
-			end
-		end
-
-		if command then
-			local macroId;
-			local numMacros = GetNumMacros();
-			for i=1,numMacros do
-				if GetMacroBody(i):trim() == command then
-					macroId = i;
-					break;
-				end
-			end
-
-			if not macroId then
-				if numMacros == MAX_ACCOUNT_MACROS then
-					print(L["Cannot create any more macros"]);
-					return;
-				end
-				if InCombatLockdown() then
-					print(L["Cannot create macros while in combat"]);
-					return;
-				end
-
-				macroId = CreateMacro(set.name, icon, command, false);
-			else
-				-- Rename the macro while not in combat
-				if not InCombatLockdown() then
-					icon = select(2,GetMacroInfo(macroId))
-					EditMacro(macroId, set.name, icon, command)
-				end
-			end
-
-			if macroId then
-				PickupMacro(macroId);
-			end
-		end
+	function BtWLoadoutsFrameMixin:OnSidebarItemDoubleClick(button)
+		self:GetCurrentTab():OnSidebarItemDoubleClick(button)
+	end
+	function BtWLoadoutsFrameMixin:OnSidebarItemDragStart(button)
+		self:GetCurrentTab():OnSidebarItemDragStart(button)
 	end
 	function BtWLoadoutsFrameMixin:OnHelpTipManuallyClosed(closeFlag)
 		BtWLoadoutsHelpTipFlags[closeFlag] = true;
 		self:Update();
-	end
-	function BtWLoadoutsFrameMixin:OnNameChanged(text)
-		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
-		local tab = GetTabFrame(self, selectedTab);
-		if tab.set and tab.set.name ~= text then
-			tab.set.name = text;
-			BtWLoadoutsHelpTipFlags["TUTORIAL_RENAME_SET"] = true;
-			self:Update();
-		end
-	end
-	function BtWLoadoutsFrameMixin:SetEnabled(value)
-		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1;
-		if selectedTab ~= TAB_PROFILES and selectedTab ~= TAB_CONDITIONS then -- Other tabs dont support enabling/disabling
-			return
-		end
-		local tab = GetTabFrame(self, selectedTab);
-		if tab.set and tab.set.disabled ~= not value then
-			tab.set.disabled = not value;
-			self:Update();
-		end
 	end
 	function BtWLoadoutsFrameMixin:OnShow()
 		if not self.initialized then
@@ -1876,31 +1151,68 @@ BtWLoadoutsTalentButtonMixin = {};
 function BtWLoadoutsTalentButtonMixin:OnLoad()
 	self:RegisterForClicks("LeftButtonUp");
 end
-function BtWLoadoutsTalentButtonMixin:OnClick()
-	local row = self:GetParent();
-	local talents = row:GetParent();
-	local talentID = self.id;
+function BtWLoadoutsTalentButtonMixin:SetTalent(id, isPvP)
+	self.id, self.isPvP = id, isPvP
+end
+function BtWLoadoutsTalentButtonMixin:Update()
+	local id, isPvP = self.id, self.isPvP
 
-	if talents.set.talents[talentID] then
-		talents.set.talents[talentID] = nil;
+	self:SetShown(id ~= nil)
+	if not id then
+		return 
+	end
 
-		self.knownSelection:Hide();
-		self.icon:SetDesaturated(true);
+	local grid = self:GetParent();
+	local frame = grid:GetParent();
+	local set = frame.set
+
+	local func = isPvP and GetPvpTalentInfoByID or GetTalentInfoByID
+	local _, name, texture = func(id)
+	
+	self.Name:SetText(name);
+	self.Icon:SetTexture(texture);
+
+	if set and set.talents[id] then
+		self.KnownSelection:Show();
+		self.Icon:SetDesaturated(false);
+		self.Cover:Hide()
+		self:SetEnabled(true)
 	else
-		talents.set.talents[talentID] = true;
+		self.KnownSelection:Hide();
+		self.Icon:SetDesaturated(true);
 
-		self.knownSelection:Show();
-		self.icon:SetDesaturated(false);
-
-		for _,item in ipairs(row.talents) do
-			if item ~= self then
-				talents.set.talents[item.id] = nil;
-
-				item.knownSelection:Hide();
-				item.icon:SetDesaturated(true);
-			end
+		if grid:GetMaxSelections() == 1 then
+			self.Cover:Hide()
+			self:SetEnabled(true)
+		else
+			self.Cover:SetShown(grid:IsMaxSelections())
+			self:SetEnabled(not grid:IsMaxSelections())
 		end
 	end
+end
+function BtWLoadoutsTalentButtonMixin:OnClick()
+	local grid = self:GetParent();
+	local frame = grid:GetParent();
+	local selected = frame.set and frame.set.talents
+	local talentID = self.id;
+
+	if not selected then
+		return
+	end
+
+	if selected[talentID] then
+		selected[talentID] = nil;
+	else
+		if grid:GetMaxSelections() == 1 then
+			for _,talentID in ipairs(grid.talents) do
+				selected[talentID] = nil;
+			end
+		end
+
+		selected[talentID] = true;
+	end
+
+	grid:Update()
 end
 function BtWLoadoutsTalentButtonMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
@@ -1914,25 +1226,134 @@ function BtWLoadoutsTalentButtonMixin:OnLeave()
 	GameTooltip_Hide();
 end
 
-BtWLoadoutsTalentGridButtonMixin = CreateFromMixins(BtWLoadoutsTalentButtonMixin);
-function BtWLoadoutsTalentGridButtonMixin:OnClick()
-	local grid = self:GetParent();
-	local talents = grid:GetParent();
-	local talentID = self.id;
+local TALENT_ROW_HEIGHT = 51
+BtWLoadoutsTalentSelectionMixin = {}
+function BtWLoadoutsTalentSelectionMixin:OnLoad()
+	self.talents = {}
+	self.maxSelection = 1
+	self.Buttons = {}
 
-	if talents.set.talents[talentID] then
-		talents.set.talents[talentID] = nil;
+	self.BackgroundPool = CreateTexturePool(self, "BACKGROUND", 0, "BtWLoadoutsTalentRowBackgroundTemplate")
+	self.SeparatorPool = CreateTexturePool(self, "BORDER", 0, "BtWLoadoutsTalentRowSeparatorTemplate")
+	self.ButtonPool = CreateFramePool("BUTTON", self, "BtWLoadoutsTalentButtonTemplate")
+end
+function BtWLoadoutsTalentSelectionMixin:OnShow()
+	self:Update()
+end
+function BtWLoadoutsTalentSelectionMixin:Update()
+	local rows = math.ceil(#self.talents / 3)
+	if self.BackgroundPool:GetNumActive() ~= rows then
+		self.BackgroundPool:ReleaseAll()
+		self.SeparatorPool:ReleaseAll()
+		self.ButtonPool:ReleaseAll()
 
-		self.knownSelection:Hide();
-		self.icon:SetDesaturated(true);
-	else
-		talents.set.talents[talentID] = true;
+		table.wipe(self.Buttons)
 
-		self.knownSelection:Show();
-		self.icon:SetDesaturated(false);
+		local index = 1
+		local previous = nil
+		for i=1,rows do
+			local background = self.BackgroundPool:Acquire()
+			background:SetPoint("TOPLEFT", 0, -51 * (i - 1))
+			background:SetPoint("TOPRIGHT", 0, -51 * (i - 1))
+			background:Show()
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetSize(34, 50)
+				separator:SetTexCoord(0.5, 1, 0, 1)
+				separator:SetPoint("LEFT", background, "LEFT", 0, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetSize(34, 50)
+				separator:SetTexCoord(0, 0.5, 0, 1)
+				separator:SetPoint("RIGHT", background, "RIGHT", 0, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetPoint("CENTER", background, "LEFT", 190, 0)
+				separator:Show()
+			end
+
+			do
+				local separator = self.SeparatorPool:Acquire()
+				separator:SetPoint("CENTER", background, "RIGHT", -190, 0)
+				separator:Show()
+			end
+
+			
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 0, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 190, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+
+			do
+				local button = self.ButtonPool:Acquire()
+				button:SetPoint("LEFT", background, "LEFT", 190 * 2, 0)
+				button:SetID(index)
+
+				self.Buttons[index] = button
+
+				index = index + 1
+			end
+		end
+
+		self:SetHeight(rows * TALENT_ROW_HEIGHT)
 	end
 
-	talents:GetParent():Update();
+	for index,button in ipairs(self.Buttons) do
+		button:SetTalent(self.talents[index], self.isPvP)
+		button:Update()
+	end
+end
+function BtWLoadoutsTalentSelectionMixin:SetMaxSelections(value)
+	self.maxSelection = value
+	self:Update()
+end
+function BtWLoadoutsTalentSelectionMixin:GetMaxSelections()
+	return self.maxSelection
+end
+function BtWLoadoutsTalentSelectionMixin:IsMaxSelections()
+	local frame = self:GetParent()
+	local selected = frame.set and frame.set.talents
+	if not selected then
+		return false
+	end
+
+	local count = 0
+	for _,talentID in ipairs(self.talents) do
+		if selected[talentID] then
+			count = count + 1
+			if count == self.maxSelection then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+function BtWLoadoutsTalentSelectionMixin:SetTalents(tbl, isPvP)
+	self.talents, self.isPvP = tbl, (isPvP and true or false)
+	self:Update()
 end
 
 

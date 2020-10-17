@@ -7,6 +7,7 @@ local launcher
 function Internal.CreateLauncher()
     local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
     if LDB then
+        local tempTooltip
         launcher = LDB:NewDataObject(ADDON_NAME, {
             type = "data source",
             label = L["BtWLoadouts"],
@@ -15,6 +16,10 @@ function Internal.CreateLauncher()
                 if button == "LeftButton" then
                     BtWLoadoutsFrame:SetShown(not BtWLoadoutsFrame:IsShown());
                 elseif button == "RightButton" then
+                    if tempTooltip then
+                        tempTooltip:Hide()
+                    end
+
                     if not BtWLoadoutsMinimapButton.Menu then
                         BtWLoadoutsMinimapButton.Menu = CreateFrame("Frame", BtWLoadoutsMinimapButton:GetName().."Menu", BtWLoadoutsMinimapButton, "UIDropDownMenuTemplate");
                         UIDropDownMenu_Initialize(BtWLoadoutsMinimapButton.Menu, BtWLoadoutsMinimapMenu_Init, "MENU");
@@ -24,6 +29,8 @@ function Internal.CreateLauncher()
                 end
             end,
             OnTooltipShow = function(tooltip)
+                tempTooltip = tooltip
+
                 tooltip:SetText(L["BtWLoadouts"], 1, 1, 1);
                 tooltip:AddLine(L["Click to open BtWLoadouts.\nRight Click to enable and disable settings."], nil, nil, nil, true);
                 if Internal.IsActivatingLoadout() then
@@ -31,6 +38,7 @@ function Internal.CreateLauncher()
                     tooltip:AddLine(L["Activating Loadout"], 1, 1, 1);
                     tooltip:AddLine(Internal.GetWaitReason())
                 end
+                tooltip:Show()
             end,
         })
     end
@@ -56,16 +64,13 @@ function Internal.CreateLauncherMinimapIcon()
     local icon = LibStub and LibStub("LibDBIcon-1.0", true)
     if icon then
         BtWLoadoutsSettings.LDBIcon = BtWLoadoutsSettings.LDBIcon or {
-            minimapPos = BtWLoadoutsSettings.minimapAngle
+            minimapPos = BtWLoadoutsSettings.minimapAngle,
         }
 
         BtWLoadoutsMinimapButton:SetEnabled(false)
 
         icon:Register(ADDON_NAME, launcher, BtWLoadoutsSettings.LDBIcon)
         icon:Refresh(ADDON_NAME)
-        if not Settings.minimapShown then
-            icon:Hide(ADDON_NAME)
-        end
 
         local button = icon:GetMinimapButton(ADDON_NAME)
 
@@ -92,5 +97,11 @@ function Internal.CreateLauncherMinimapIcon()
         function Internal.HideMinimap()
             icon:Hide(ADDON_NAME)
         end
+
+        C_Timer.After(0, function ()
+            if not Settings.minimapShown then
+                icon:Hide(ADDON_NAME)
+            end
+        end)
     end
 end
