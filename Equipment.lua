@@ -22,6 +22,74 @@ local format = string.format
 local GetCharacterSlug = Internal.GetCharacterSlug
 local GetCharacterInfo = Internal.GetCharacterInfo
 
+local debug = print
+
+local function PackLocation(player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
+	if not player and not bank and not voidStorage then
+		return -1
+	end
+
+	assert(((player and 1 or 0) + (bank and 1 or 0) + (voidStorage and 1 or 0)) == 1)
+
+	if player then
+		if bags then
+            return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
+		else
+			return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, slot);
+		end
+	elseif bank then
+		if bags then
+            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
+		else
+			return bit.bor(ITEM_INVENTORY_LOCATION_BANK, slot);
+		end
+	elseif voidStorage then
+	end
+end
+local function PackLocation(bag, slot)
+	if bag == nil then -- Inventory slot
+		if slot >= 52 and slot <= 79 then -- Bank Slot
+            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, slot);
+		else -- Equipment slot
+			return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, slot);
+		end
+	else
+        if bag == BANK_CONTAINER then
+            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, slot + 51); -- Bank slots are stored as inventory slots, and start at 52
+        elseif bag >= 0 and bag <= NUM_BAG_SLOTS then
+            return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
+        elseif bag >= NUM_BAG_SLOTS+1 and bag <= NUM_BAG_SLOTS+NUM_BANKBAGSLOTS then
+            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag - ITEM_INVENTORY_BANK_BAG_OFFSET, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
+        end
+	end
+end
+-- Convert an ItemLocationMixin into a location number
+local function GetLocationFromItemLocation(itemLocation)
+	if itemLocation:IsEquipmentSlot() then
+		return PackLocation(nil, itemLocation:GetEquipmentSlot())
+	elseif itemLocation:IsBagAndSlot() then
+		return PackLocation(itemLocation:GetBagAndSlot())
+	end
+end
+-- Updated an ItemLocationMixin with location from a numeric location
+local function SetItemLocationFromLocation(itemLocation, location)
+	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location)
+	if not player and not bank and not bags and not voidStorage then
+		itemLocation:Clear()
+	elseif bags then
+		itemLocation:SetBagAndSlot(bag, slot)
+	elseif player then
+		itemLocation:SetEquipmentSlot(slot)
+	elseif bank then
+		itemLocation:SetBagAndSlot(BANK_CONTAINER, slot - 51)
+	else
+		debug(location, player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
+		error("@TODO")
+	end
+	
+	return itemLocation
+end
+
 --[[
     GetItemUniqueness will sometimes return Unique-Equipped info instead of Legion Legendary info,
     this is a cache of items with that or similar issues
@@ -75,41 +143,6 @@ local itemUniquenessCache = {
     [132378] = {357, 2},
     [132369] = {357, 2},
 }
-local function PackLocation(player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
-	if not player and not bank and not voidStorage then
-		return -1
-	end
-
-	assert(((player and 1 or 0) + (bank and 1 or 0) + (voidStorage and 1 or 0)) == 1)
-
-	if player then
-		if bags then
-            return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
-		else
-			return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, slot);
-		end
-	elseif bank then
-		if bags then
-            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
-		else
-			return bit.bor(ITEM_INVENTORY_LOCATION_BANK, slot);
-		end
-	elseif voidStorage then
-	end
-end
-local function PackLocation(bag, slot)
-	if bag == nil then -- Inventory slot
-        return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, slot);
-	else
-        if bag == BANK_CONTAINER then
-            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, slot + 51); -- Bank slots are stored as inventory slots, and start at 52
-        elseif bag >= 0 and bag <= NUM_BAG_SLOTS then
-            return bit.bor(ITEM_INVENTORY_LOCATION_PLAYER, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
-        elseif bag >= NUM_BAG_SLOTS+1 and bag <= NUM_BAG_SLOTS+NUM_BANKBAGSLOTS then
-            return bit.bor(ITEM_INVENTORY_LOCATION_BANK, ITEM_INVENTORY_LOCATION_BAGS, bit.lshift(bag - ITEM_INVENTORY_BANK_BAG_OFFSET, ITEM_INVENTORY_BAG_BIT_OFFSET), slot);
-        end
-	end
-end
 -- Returns the same as GetItemUniqueness except uses the above cache, also converts -1 family to itemID
 local function GetItemUniquenessCached(itemLink)
 	local itemID = GetItemInfoInstant(itemLink)
@@ -323,17 +356,18 @@ do
 			return 0;
 		end
 
-		local locationItemLink;
-		if voidStorage then
-			locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
-			itemLocation:Clear();
-		elseif not bags then -- and (player or bank)
-			locationItemLink = GetInventoryItemLink("player", slot);
-			itemLocation:SetEquipmentSlot(slot);
-		else -- bags
-			locationItemLink = GetContainerItemLink(bag, slot);
-			itemLocation:SetBagAndSlot(bag, slot);
-		end
+		SetItemLocationFromLocation(itemLocation, location)
+		local locationItemLink = C_Item.GetItemLink(itemLocation)
+		-- if voidStorage then
+		-- 	locationItemLink = GetVoidItemHyperlinkString(tab, voidSlot);
+		-- 	itemLocation:Clear();
+		-- elseif not bags then -- and (player or bank)
+		-- 	locationItemLink = GetInventoryItemLink("player", slot);
+		-- 	itemLocation:SetEquipmentSlot(slot);
+		-- else -- bags
+		-- 	locationItemLink = GetContainerItemLink(bag, slot);
+		-- 	itemLocation:SetBagAndSlot(bag, slot);
+		-- end
 
 		local match = 0;
 		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
@@ -993,6 +1027,7 @@ local function RefreshEquipmentSet(set)
 
 	for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		set.equipment[inventorySlotId] = GetInventoryItemLink("player", inventorySlotId);
+		set.locations[inventorySlotId] = set.equipment[inventorySlotId] and PackLocation(nil, inventorySlotId) or nil; -- Only set location if there is an item
 
 		local itemLocation = ItemLocation:CreateFromEquipmentSlot(inventorySlotId);
 		if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
@@ -1013,6 +1048,9 @@ local function RefreshEquipmentSet(set)
 		else
 			set.extras[inventorySlotId] = nil;
 		end
+
+		-- We want this to supersede the other 2, but need those for fallback still
+		set.data[inventorySlotId] = EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite)
 	end
 
 	-- Need to update the built in manager too
@@ -1090,8 +1128,6 @@ local function CombineEquipmentSets(result, state, ...)
 						wipe(set.extras[inventorySlotId])
 					end
 				end
-			else
-				wipe(set.locations);
 			end
 			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 				if not set.ignored[inventorySlotId] then
@@ -1481,7 +1517,7 @@ function BtWLoadoutsItemSlotButtonMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 	if location and location > 0 and (BankFrame:IsShown() or bit.band(location, ITEM_INVENTORY_LOCATION_BANK) ~= ITEM_INVENTORY_LOCATION_BANK) then
 		local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-		if player and not bags then
+		if not bags then
 			GameTooltip:SetInventoryItem("player", slot)
 		else
 			GameTooltip:SetBagItem(bag, slot)
@@ -1517,6 +1553,8 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 	local set = self:GetParent().set;
 	if itemLink == nil then -- Clearing slot
 		set.equipment[self:GetID()] = nil;
+		set.locations[self:GetID()] = nil;
+		set.data[self:GetID()] = nil;
 
 		self:Update();
 		return true;
@@ -1531,6 +1569,8 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 			elseif slot then
 				itemLocation = ItemLocation:CreateFromEquipmentSlot(slot);
 			end
+
+			set.locations[self:GetID()] = GetLocationFromItemLocation(itemLocation)
 
 			if itemLocation and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 				set.extras[self:GetID()] = set.extras[self:GetID()] or {};
@@ -1550,6 +1590,7 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 			else
 				set.extras[self:GetID()] = nil;
 			end
+			set.data[self:GetID()] = EncodeItemData(itemLink, set.extras[self:GetID()] and set.extras[self:GetID()].azerite);
 
 			BtWLoadoutsFrame:Update(); -- Refresh everything, this'll update the error handling too
 			return true;
@@ -1855,22 +1896,6 @@ function BtWLoadoutsEquipmentMixin:Update()
 	end
 end
 
--- Updated an ItemLocationMixin with location from a numeric location
-local function SetItemLocationFromLocation(itemLocation, location)
-	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location)
-	if not player and not bank and not bags and not voidStorage then
-		itemLocation:Clear(bag, slot)
-	elseif player and bags then
-		itemLocation:SetBagAndSlot(bag, slot)
-	elseif player then
-		itemLocation:SetEquipmentSlot(slot)
-	else
-		print(location, player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
-		error("@TODO")
-	end
-	
-	return itemLocation
-end
 -- Get azerite item data from a location
 local function GetAzeriteDataForItemLocation(itemLocation)
 	if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
@@ -1954,11 +1979,17 @@ local function EncodeItemData(itemLink, azerite)
 	return SanitiseItemString(itemString) .. azerite
 end
 local function GetEncodedItemDataForItemLocation(itemLocation)
-	local itemLink = C_Item.GetItemLink(itemLocation)
-	local itemString = string.match(itemLink, "item[%-?%d:]+")
-	local azerite = GetAzeriteDataForItemLocation(itemLocation)
+	if itemLocation:IsValid() then
+		local itemLink = C_Item.GetItemLink(itemLocation)
+		if itemLink then -- Some items in inventory dont have item links, keystones, battlepets
+			local itemString = string.match(itemLink, "item[%-?%d:]+")
+			if itemString then
+				local azerite = GetAzeriteDataForItemLocation(itemLocation)
 
-	return SanitiseItemString(itemString) .. azerite
+				return SanitiseItemString(itemString) .. azerite
+			end
+		end
+	end
 end
 local GetEncodedItemDataForLocation
 do
@@ -1982,7 +2013,12 @@ end
 local GetSetsForLocation, GetEnabledSetsForLocation, GetLocationForItem
 do
 	local itemLocation = ItemLocation:CreateEmpty(); -- Reusable item location, be careful not to double use it
+	local possibleItems = {} -- Reused for storing lists of items 
 
+	--[[
+		`locationItems` is a map of `location` => `itemLink`
+		`locationSets` is a map of `location` => {"set:slot" => true}
+	]]
 	local locationItems = {}
 	local locationSets = setmetatable({}, {
 		__index = function (self, key)
@@ -1993,10 +2029,6 @@ do
 			end
 		end
 	})
-	_G['BtWLoadoutsLocationItems'] = locationItems --@TODO remove
-	_G['BtWLoadoutsLocationSets'] = locationSets --@TODO remove
-
-	local possibleItems = {}
 
 	--[[
 		2 locations have had their items swap, update sets and data store with swapped locations
@@ -2010,6 +2042,7 @@ do
 			setID, setSlot = tonumber(setID), tonumber(setSlot)
 
 			local set = GetEquipmentSet(setID)
+			assert(set)
 			set.locations[setSlot] = toLocation
 		end
 
@@ -2018,14 +2051,272 @@ do
 			setID, setSlot = tonumber(setID), tonumber(setSlot)
 
 			local set = GetEquipmentSet(setID)
+			assert(set)
 			set.locations[setSlot] = fromLocation
 		end
 		
 		-- Swap the data store
-		print(locationItems[toLocation], locationItems[fromLocation], locationSets[fromLocation], locationSets[toLocation])
 		locationItems[fromLocation], locationItems[toLocation] = locationItems[toLocation], locationItems[fromLocation]
 		locationSets[fromLocation], locationSets[toLocation] = toSets, fromSets
-		print(locationItems[toLocation], locationItems[fromLocation], locationSets[fromLocation], locationSets[toLocation])
+	end
+	--[[
+		Generic update funciton for when inventory items have been moved.
+		Veryifies all items are correct and if not updates the data store with new locations
+/run BtWLoadoutsUpdateLocations()
+	]]
+	local UpdateLocations, UpdateAllLocations
+	do
+		local newLocationItems = {}
+		local newLocationSets = setmetatable({}, {
+			__index = function (self, key)
+				if type(key) == "number" then
+					local result = {}
+					self[key] = result
+					return result
+				end
+			end
+		})
+		local missingItemDatas = {}
+
+		local function UpdateLocation(newLocation)
+			SetItemLocationFromLocation(itemLocation, newLocation)
+
+			if not newLocationItems[newLocation] and itemLocation:IsValid() then
+				local itemData = GetEncodedItemDataForItemLocation(itemLocation)
+				if missingItemDatas[itemData] then
+					local oldLocation = missingItemDatas[itemData]
+					if type(oldLocation) == "table" then
+						oldLocation = table.remove(oldLocation, 1)
+					end
+					
+					local sets = locationSets[oldLocation]
+					for setLocation in pairs(sets) do
+						local setId, slotId = strsplit(":", setLocation)
+						setID, slotId = tonumber(setId), tonumber(slotId)
+						local set = GetEquipmentSet(setID)
+						assert(set)
+						set.locations[slotId] = newLocation
+					end
+
+					newLocationItems[newLocation] = locationItems[oldLocation]
+					newLocationSets[newLocation] = locationSets[oldLocation]
+					
+					missingItemDatas[itemData] = nil
+				end
+			end
+		end
+		local function ScanDataMapForMissingItems(newLocationItems, newLocationSets, missingItemDatas)
+			for location,expectedItemData in pairs(locationItems) do
+				local actualItemData = GetEncodedItemDataForLocation(location)
+				if actualItemData == expectedItemData then -- item is in location
+					newLocationItems[location] = locationItems[location]
+					newLocationSets[location] = locationSets[location]
+				elseif missingItemDatas[expectedItemData] then
+					local tbl = missingItemDatas[expectedItemData]
+					if type(tbl) == "table" then
+						tbl[#tbl+1] = location
+					else
+						missingItemDatas[expectedItemData] = {tbl, location}
+					end
+				else
+					local foundInManager = false
+					local sets = locationSets[location]
+					for setLocation in pairs(sets) do
+						local setID, setSlot = strsplit(":", setLocation)
+						setID, setSlot = tonumber(setID), tonumber(setSlot)
+						
+						local set = GetEquipmentSet(setID)
+						if set.managerID then
+							-- Item is in blizzard manager set, they know the knew location
+							local locations = C_EquipmentSet.GetItemLocations(set.managerID)
+							
+							if locations[setSlot] and locations[setSlot] > 1 then
+								newLocationItems[locations[setSlot]] = locationItems[location]
+								newLocationSets[locations[setSlot]] = locationSets[location]
+								foundInManager = true
+							end
+
+							break
+						end
+					end
+
+					if not foundInManager then
+						missingItemDatas[expectedItemData] = location
+					end
+				end
+			end
+		end
+		function UpdateLocations(inventorySlots, bags)
+			wipe(newLocationItems)
+			wipe(newLocationSets)
+			wipe(missingItemDatas)
+
+			ScanDataMapForMissingItems(newLocationItems, newLocationSets, missingItemDatas)
+
+			debug("UpdateLocations", next(missingItemDatas))
+
+			if next(missingItemDatas) ~= nil then
+				for inventorySlotId in pairs(inventorySlots) do
+					if next(missingItemDatas) == nil then
+						break
+					end
+
+					debug("Slot", inventorySlotId)
+					local newLocation = PackLocation(nil, inventorySlotId)
+					UpdateLocation(newLocation)
+				end
+			end
+
+			if next(missingItemDatas) ~= nil then
+				for bagId in pairs(bags) do
+					if next(missingItemDatas) == nil then
+						break
+					end
+
+					debug("Bag", bagId)
+					for slotId=1,GetContainerNumSlots(bagId) do
+						if next(missingItemDatas) == nil then
+							break
+						end
+
+						local newLocation = PackLocation(bagId, slotId)
+						UpdateLocation(newLocation)
+					end
+				end
+			end
+
+			-- for itemData in pairs(missingItemDatas) do
+			-- 	debug("MISSING: ", itemData)
+			-- end
+
+			locationItems, newLocationItems = newLocationItems, locationItems
+			locationSets, newLocationSets = newLocationSets, locationSets
+		end
+		function UpdateAllLocations(skipInventory, skipBags, skipBank)
+			wipe(newLocationItems)
+			wipe(newLocationSets)
+			wipe(missingItemDatas)
+
+			ScanDataMapForMissingItems(newLocationItems, newLocationSets, missingItemDatas)
+
+			if not skipInventory and next(missingItemDatas) ~= nil then
+				for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+					if next(missingItemDatas) == nil then
+						break
+					end
+
+					local newLocation = PackLocation(nil, inventorySlotId)
+					UpdateLocation(newLocation)
+				end
+			end
+
+			if not skipBags and next(missingItemDatas) ~= nil then
+				for bagId=BACKPACK_CONTAINER,NUM_BAG_SLOTS do
+					if next(missingItemDatas) == nil then
+						break
+					end
+
+					for slotId=1,GetContainerNumSlots(bagId) do
+						if next(missingItemDatas) == nil then
+							break
+						end
+
+						local newLocation = PackLocation(bagId, slotId)
+						UpdateLocation(newLocation)
+					end
+				end
+			end
+
+			if not skipBank and next(missingItemDatas) ~= nil then
+				for slotId=1,GetContainerNumSlots(BANK_CONTAINER) do
+					if next(missingItemDatas) == nil then
+						break
+					end
+
+					local newLocation = PackLocation(BANK_CONTAINER, slotId)
+					UpdateLocation(newLocation)
+				end
+				
+				for bagId=NUM_BAG_SLOTS+1,NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
+					if next(missingItemDatas) == nil then
+						break
+					end
+
+					for slotId=1,GetContainerNumSlots(bagId) do
+						if next(missingItemDatas) == nil then
+							break
+						end
+
+						local newLocation = PackLocation(bagId, slotId)
+						UpdateLocation(newLocation)
+					end
+				end
+			end
+
+			-- for itemData in pairs(missingItemDatas) do
+			-- 	debug("MISSING: ", itemData)
+			-- end
+
+			locationItems, newLocationItems = newLocationItems, locationItems
+			locationSets, newLocationSets = newLocationSets, locationSets
+		end
+
+		_G["BtWLoadoutsMissingItemDatas"] = missingItemDatas
+		_G["BtWLoadoutsUpdateAllLocations"] = UpdateAllLocations
+	end
+
+	do -- Event handling for inventory changes
+		local frame = CreateFrame("Frame")
+		-- function frame:PLAYER_LOGIN(...)
+		-- 	BuildMaps();
+		-- end
+		-- function frame:AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED(azeriteEmpoweredItemLocation)
+		-- 	if not itemLocation:HasAnyLocation() and itemLocation:IsValid() then
+		-- 		return
+		-- 	end
+
+		-- 	local location
+		-- 	if azeriteEmpoweredItemLocation:IsEquipmentSlot() then
+		-- 		location = PackLocation(nil, azeriteEmpoweredItemLocation:GetEquipmentSlot())
+		-- 	else
+		-- 		location = PackLocation(azeriteEmpoweredItemLocation:GetBagAndSlot())
+		-- 	end
+
+
+		-- end
+		local changedBags = {}
+		local changedInventorySlots = {}
+		function frame:BAG_UPDATE(bagId)
+			changedBags[bagId] = true
+			self:Show()
+		end
+		function frame:PLAYERBANKSLOTS_CHANGED(slotId)
+			changedInventorySlots[51 + slotId] = true
+			self:Show()
+		end
+		function frame:PLAYER_EQUIPMENT_CHANGED(slotId)
+			changedInventorySlots[slotId] = true
+			self:Show()
+		end
+		function frame:OnEvent(event, ...)
+			self[event](self, ...)
+		end
+		function frame:OnUpdate()
+			self:Hide()
+			UpdateLocations(changedInventorySlots, changedBags)
+			wipe(changedBags)
+			wipe(changedInventorySlots)
+		end
+
+		frame:SetScript("OnEvent", frame.OnEvent)
+		frame:SetScript("OnUpdate", frame.OnUpdate)
+
+		-- frame:RegisterEvent("PLAYER_LOGIN")
+		-- frame:RegisterEvent("AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED")
+		frame:RegisterEvent("BAG_UPDATE")
+		frame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+		frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+		frame:Hide()
 	end
 
 	--[[
@@ -2034,8 +2325,8 @@ do
 	]]
 	local function GetItemFromLocations(itemLink, extras, locations)
 		local itemID = GetItemInfoInstant(itemLink);
-		for location,locationItemID in pairs(locations) do
-			if itemID == locationItemID and IsItemInLocation(itemLink, extras, location) then
+		for location,locationItemLink in pairs(locations) do
+			if itemID == GetItemInfoInstant(locationItemLink) and IsItemInLocation(itemLink, extras, location) then
 				return location
 			end
 		end
@@ -2044,7 +2335,21 @@ do
 	local function InitializeEquipmentTracking()
 		local character = GetCharacterSlug()
 
-		-- Update locations for equipment sets verifying the item is where its expected to be
+		--[[
+			It might be worth doing this in a few stages.
+
+			First we loop through all the equipment sets and fill in `locationItems` and `locationSets`,
+			verifying they have the item that we expect. If so the location is flagged as being in use
+			We then loop through each item that isnt correct and look for the correct item. Flagging them
+			as in use when found.
+			
+			Doing it this way means we dont cross-contaminate sets that have the same itemData but were
+			actually different items in the inventory.
+			We should probably take into account sets from the built in manager though. Those should always
+			be correct and could maybe allow us to detect item movements while we were disabled.
+
+			In the case of bank items we just leave them as is and let `InitializeBankItems` deal with it.
+		]]
 		for setID,set in pairs(BtWLoadoutsSets.equipment) do
 			if type(set) == "table" and set.character == character then
 				for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
@@ -2054,21 +2359,15 @@ do
 							location = nil
 						end
 
-						if location and bit.band(ITEM_INVENTORY_LOCATION_PLAYER, location) == ITEM_INVENTORY_LOCATION_PLAYER and not IsItemInLocation(set.equipment[slot], set.extras[slot], location) then
-							location = nil
-						end
-
-						if not location then
-							location = GetItemFromLocations(set.equipment[slot], set.extras[slot], GetInventoryItemsForSlot(slot, possibleItems))
-							wipe(possibleItems)
-						end
-
 						if location and location > 0 then
 							local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
-							assert(locationItems[location] == nil or locationItems[location] == data)
 
-							locationItems[location] = locationItems[location] or data
-							locationSets[location][(setID .. ":" .. slot)] = true
+							if locationItems[location] == nil or locationItems[location] == data then
+								locationItems[location] = locationItems[location] or data
+								locationSets[location][(setID .. ":" .. slot)] = true
+							else
+								location = nil -- Somehow 2 equipment sets are expecting different items in the same slot
+							end
 						end
 
 						set.locations[slot] = location
@@ -2076,6 +2375,44 @@ do
 				end
 			end
 		end
+
+		UpdateAllLocations(false, false, true) -- Skip banks
+
+		-- Update locations for equipment sets verifying the item is where its expected to be
+		-- for setID,set in pairs(BtWLoadoutsSets.equipment) do
+		-- 	if type(set) == "table" and set.character == character then
+		-- 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+		-- 			if set.equipment[slot] then
+		-- 				local location = set.locations[slot]
+		-- 				if location and location <= 0 then
+		-- 					location = nil
+		-- 				end
+
+		-- 				-- if location and bit.band(ITEM_INVENTORY_LOCATION_PLAYER, location) == ITEM_INVENTORY_LOCATION_PLAYER and not IsItemInLocation(set.equipment[slot], set.extras[slot], location) then
+		-- 				-- 	location = nil
+		-- 				-- end
+
+		-- 				-- if not location then
+		-- 				-- 	location = GetItemFromLocations(set.equipment[slot], set.extras[slot], GetInventoryItemsForSlot(slot, possibleItems))
+		-- 				-- 	wipe(possibleItems)
+		-- 				-- end
+
+		-- 				if location and location > 0 then
+		-- 					local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
+
+		-- 					if locationItems[location] == nil or locationItems[location] == data then
+		-- 						locationItems[location] = locationItems[location] or data
+		-- 						locationSets[location][(setID .. ":" .. slot)] = true
+		-- 					else
+		-- 						location = nil -- Somehow 2 equipment sets are expecting different items in the same slot
+		-- 					end
+		-- 				end
+
+		-- 				set.locations[slot] = location
+		-- 			end
+		-- 		end
+		-- 	end
+		-- end
 	end
 	-- Run when the bank is first opened, verifies items are where we expect them to be and if not updates locations with the correct place
 	-- Also look for items with missing locations and check if they are in the bank
@@ -2089,39 +2426,42 @@ do
 		local character = GetCharacterSlug()
 
 		-- Update locations for equipment sets verifying the item is where its expected to be
-		for setID,set in pairs(BtWLoadoutsSets.equipment) do
-			if type(set) == "table" and set.character == character then
-				for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-					if set.equipment[slot] then
-						local location = set.locations[slot]
-						if location and location <= 0 then
-							location = nil
-						end
+		-- for setID,set in pairs(BtWLoadoutsSets.equipment) do
+		-- 	if type(set) == "table" and set.character == character then
+		-- 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+		-- 			if set.equipment[slot] then
+		-- 				local location = set.locations[slot]
+		-- 				if location and location <= 0 then
+		-- 					location = nil
+		-- 				end
 
-						if location and bit.band(ITEM_INVENTORY_LOCATION_BANK, location) == ITEM_INVENTORY_LOCATION_BANK and not IsItemInLocation(set.equipment[slot], set.extras[slot], location) then
-							location = nil
-						end
+		-- 				if location and bit.band(ITEM_INVENTORY_LOCATION_BANK, location) == ITEM_INVENTORY_LOCATION_BANK and not IsItemInLocation(set.equipment[slot], set.extras[slot], location) then
+		-- 					location = nil
+		-- 				end
 
-						if not location then
-							location = GetItemFromLocations(set.equipment[slot], set.extras[slot], GetInventoryItemsForSlot(slot, possibleItems))
-							wipe(possibleItems)
-						end
+		-- 				if not location then
+		-- 					location = GetItemFromLocations(set.equipment[slot], set.extras[slot], GetInventoryItemsForSlot(slot, possibleItems))
+		-- 					wipe(possibleItems)
+		-- 				end
 
-						if location and location > 0 then
-							local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
-							assert(locationItems[location] == nil or locationItems[location] == data)
+		-- 				if location and location > 0 then
+		-- 					local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
+		-- 					assert(locationItems[location] == nil or locationItems[location] == data)
 
-							locationItems[location] = locationItems[location] or data
-							locationSets[location][(setID .. ":" .. slot)] = true
-						end
+		-- 					locationItems[location] = locationItems[location] or data
+		-- 					locationSets[location][(setID .. ":" .. slot)] = true
+		-- 				end
 
-						set.locations[slot] = location
-					end
-				end
-			end
-		end
+		-- 				set.locations[slot] = location
+		-- 			end
+		-- 		end
+		-- 	end
+		-- end
+
+		UpdateAllLocations(true, true, false) -- Skip inventory and bags
 	end
 	-- Player equipment has updated
+	--[[
 	local function EquipmentUpdated()
 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 			local location = PackLocation(nil, slot)
@@ -2137,7 +2477,7 @@ do
 		end
 	end
 	_G['BtWLoadoutsEquipmentUpdated'] = EquipmentUpdated
-
+	]]
 	-- Gets the sets items are used for
 	local temp = {}
 	function GetSetsForLocation(location, result)
@@ -2192,17 +2532,6 @@ do
 	end
 
 	--[[
-/run BtWLoadoutsUpdateLocations()
-	]]
-	local function UpdateLocations()
-		for location,itemData in pairs(locationItems) do
-			print(location, itemData)
-		end
-		print(locationItems[3146528])
-	end
-	_G["BtWLoadoutsUpdateLocations"] = UpdateLocations
-
-	--[[
 		The item at the locations has been changed, for example, selecting azerite traits or upgrading legendary cloak
 	]]
 	local function UpdateItemAtLocation(location)
@@ -2211,17 +2540,12 @@ do
 			return
 		end
 
-		local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location)
-		if player and bags then
-			itemLocation:SetBagAndSlot(bag, slot)
-		elseif player then
-			itemLocation:SetEquipmentSlot(slot)
-		else
-			error("@TODO")
-		end
+		SetItemLocationFromLocation(itemLocation, location)
 		
 		local extras = GetExtrasForItemLocation(itemLocation)
 		local itemData = EncodeItemData(itemLink, extras and extras.azerite)
+
+		debug(location, itemData, locationItems[location])
 
 		if itemData ~= locationItems[location] then -- Item has actually changed
 			locationItems[location] = itemData
@@ -2237,44 +2561,82 @@ do
 			end
 		end
 	end
+	-- Triggered by the AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED event
+	local function AzeriteItemUpdated(itemLocation)
+		UpdateItemAtLocation(GetLocationFromItemLocation(itemLocation))
+	end
+	-- Triggered by the ITEM_CHANGED, followed by a BAG_UPDATE_DELAYED or UNIT_INVENTORY_CHANGED
+	local function RuneforgeItemUpdated(previousHyperlink, newHyperlink)
+		local previousItemData, newItemData = EncodeItemData(previousHyperlink), EncodeItemData(newHyperlink)
+		for location,itemData in pairs(locationItems) do
+			if itemData == previousItemData and GetEncodedItemDataForLocation(location) == newItemData then
+				UpdateItemAtLocation(location)
+				return
+			end
+		end
+	end
+	Internal.RuneforgeItemUpdated = RuneforgeItemUpdated
+	local function SwapItemDataEnchantID(itemData, enchantID)
+		local prefix, itemID, previousEnchantID, rest = strsplit(":", itemData, 4)
+		return prefix .. ":" .. itemID .. ":" .. enchantID .. ":".. rest
+	end
+	-- Triggered by UNIT_SPELLCAST_SUCCESSFUL followed by a BAG_UPDATE_DELAYED or UNIT_INVENTORY_CHANGED,
+	-- Searched through items looking for the one with the previous 
+	local function EnchantApplied(enchantID)
+		for location,previousItemData in pairs(locationItems) do
+			local currentItemData = GetEncodedItemDataForLocation(location)
+			-- Items itemData has changed, the only change is the enchantID swapping to what we just cast
+			if previousItemData ~= currentItemData and SwapItemDataEnchantID(previousItemData, enchantID) == currentItemData then
+				UpdateItemAtLocation(location)
+				break
+			end
+		end
+	end
+	Internal.EnchantApplied = EnchantApplied
+	do -- Update items from socketing gems
+		local itemLocation = ItemLocation:CreateEmpty();
+		local function GemApplied()
+			UpdateItemAtLocation(GetLocationFromItemLocation(itemLocation))
+		end
+		local function hook_SocketInventoryItem(slotId)
+			itemLocation:SetEquipmentSlot(slotId)
+		end
+		hooksecurefunc("SocketInventoryItem", hook_SocketInventoryItem)
+		local function hook_SocketContainerItem(bagId, slotId)
+			itemLocation:SetBagAndSlot(bagId, slotId)
+		end
+		hooksecurefunc("SocketContainerItem", hook_SocketContainerItem)
+		Internal.GemApplied = GemApplied
+	end
 	--[[@TODO
-		Handle events for items changing (AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED and the general one)
 		Handle events for inventory items moving, there is a lot
+		BAG_UPDATE, bagId - May fire multiple times, wait for BAG_UPDATE_DELAYED or maybe end of frame?
+		BAG_UPDATE_DELAYED
+		PLAYERBANKSLOTS_CHANGED, slotId - May fire multiple times per frame, way of end of frame?
+		PLAYER_EQUIPMENT_CHANGED, slotId - May fire multiple times per frame, way of end of frame?
+
+		All the ways to move items:
+			Bag/Bank sort, fires BAG_UPDATE and PLAYERBANKSLOTS_CHANGED events
+			Moving bags, fires BAG_UPDATE event
+			Moving items within bank, fires PLAYERBANKSLOTS_CHANGED event
+			Moving items within inventory, fires PLAYER_EQUIPMENT_CHANGED event
+			Moving items between the previous 3, fires combinations of their events
+			Right clicking item in inventory, fires BAG_UPDATE and PLAYER_EQUIPMENT_CHANGED
+			Clicking item on actionbar, fires BAG_UPDATE and PLAYER_EQUIPMENT_CHANGED
+			Trading, fires BAG_UPDATE and PLAYER_EQUIPMENT_CHANGED
+			Equiping Manager set, fires EQUIPMENT_SWAP_FINISHED, but also BAG_UPDATE and PLAYER_EQUIPMENT_CHANGED
+
 		React to equipment set changes
-		Hook SocketInventoryItem and SocketContainerItem, and possibly others for finishing socketing
 	]]
 
 	Internal.BuildEquipmentMap = InitializeEquipmentTracking
 	Internal.InitializeBankItems = InitializeBankItems
-
-	-- local frame = CreateFrame("Frame")
-	-- function frame:PLAYER_LOGIN(...)
-	-- 	BuildMaps();
-	-- end
-	-- function frame:AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED(azeriteEmpoweredItemLocation)
-	-- 	if not itemLocation:HasAnyLocation() and itemLocation:IsValid() then
-	-- 		return
-	-- 	end
-
-	-- 	local location
-	-- 	if azeriteEmpoweredItemLocation:IsEquipmentSlot() then
-	-- 		location = PackLocation(nil, azeriteEmpoweredItemLocation:GetEquipmentSlot())
-	-- 	else
-	-- 		location = PackLocation(azeriteEmpoweredItemLocation:GetBagAndSlot())
-	-- 	end
-
-
-	-- end
-	-- frame:SetScript("OnEvent", function (self, event, ...)
-	-- 	self[event](self, ...)
-	-- end)
-	-- frame:RegisterEvent("PLAYER_LOGIN")
-	-- frame:RegisterEvent("AZERITE_EMPOWERED_ITEM_SELECTION_UPDATED")
 end
 
 -- GameTooltip
 do
 	local tooltipMatch = "^" .. string.gsub(EQUIPMENT_SETS, "%%s", "(.*)") .. "$"
+	local tooltipSellMatch = "^" .. SELL_PRICE .. ": .*$"
 	local location
 	local function UpdateTooltip(self, location)
 		-- local sets = {Internal.GetEquipmentSets()}
@@ -2301,6 +2663,27 @@ do
 					found = true
 					break
 				end
+
+				-- match = string.match(frame:GetText(), tooltipSellMatch) -- After Equipment
+				-- print(index, frame:GetText(), match)
+				-- if match then
+				-- 	local text, nextText = sets, frame:GetText()
+				-- 	frame:SetText(text)
+
+				-- 	index = index + 1
+				-- 	frame = _G[self:GetName() .. "TextLeft" .. index]
+				-- 	while frame do
+				-- 		text = nextText
+				-- 		nextText = frame:GetText()
+				-- 		frame:SetText(text)
+
+				-- 		index = index + 1
+				-- 		frame = _G[self:GetName() .. "TextLeft" .. index]
+				-- 	end
+
+				-- 	found = true
+				-- 	break
+				-- end
 			end
 
 			index = index + 1
@@ -2310,13 +2693,16 @@ do
 		if not found then
 			self:AddLine(sets)
 		end
-	end
-	-- GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
-	-- 	-- print("OnTooltipSetItem", ...)
-	-- 	if location then
 
-	-- 	end
-	-- end)
+		self:AddLine(string.format("Location: %d", location))
+		self:Show()
+	end
+	GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
+		-- print("OnTooltipSetItem", ...)
+		if location then
+
+		end
+	end)
 	hooksecurefunc(GameTooltip, "SetInventoryItem", function (self, unit, slot, nameOnly)
 		-- print("SetInventoryItem", ...)
 		if not nameOnly and unit == "player" then
