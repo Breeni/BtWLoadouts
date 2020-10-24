@@ -293,13 +293,18 @@ function frame:PLAYER_LOGIN(...)
             end
         end
     end
-
-    Internal.BuildEquipmentMap()
-    if C_EquipmentSet.GetNumEquipmentSets() > 0 then
-        self:EQUIPMENT_SETS_CHANGED();
-    end
 end
-function frame:PLAYER_ENTERING_WORLD()
+local firstLogin = true
+function frame:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
+    -- The info we want isnt available here unless we are reloading
+    if firstLogin and isReloadingUi then
+        self:UnregisterEvent("CONSOLE_MESSAGE")
+
+        Internal.BuildEquipmentMap()
+        self:EQUIPMENT_SETS_CHANGED()
+
+        firstLogin = nil
+    end
     for specIndex=1,GetNumSpecializations() do
         local specID = GetSpecializationInfo(specIndex);
         local spec = BtWLoadoutsSpecInfo[specID] or {talents = {}};
@@ -386,6 +391,17 @@ function frame:PLAYER_ENTERING_WORLD()
 
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
+function frame:CONSOLE_MESSAGE()
+    -- PLAYER_LOGIN and PLAYER_ENTERING_WORLD are to early, some info isnt available yet during first login
+    if firstLogin then
+        self:UnregisterEvent("CONSOLE_MESSAGE")
+
+        Internal.BuildEquipmentMap()
+        self:EQUIPMENT_SETS_CHANGED()
+
+        firstLogin = nil
+    end
+end
 function frame:EQUIPMENT_SETS_CHANGED(...)
     -- Update our saved equipment sets to match the built in equipment sets
     local oldEquipmentSetMap = equipmentSetMap;
@@ -393,9 +409,11 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
 
     local managerIDs = C_EquipmentSet.GetEquipmentSetIDs();
     for _,managerID in ipairs(managerIDs) do
+        local isNewSet = false
         local set = oldEquipmentSetMap[managerID];
         if set == nil then
             set = Internal.AddBlankEquipmentSet();
+            isNewSet = true
         end
 
         set.managerID = managerID;
@@ -407,13 +425,25 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
             set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil
 
             if locations then -- Seems in some situations the locations table is nil instead
-                local location = locations[inventorySlotId] or 0;
+                local location = locations[inventorySlotId] or -1;
                 if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
+                    local previousLocation = set.locations[inventorySlotId]
                     set.locations[inventorySlotId] = locations[inventorySlotId] -- Only update if the item has a location
+
                     set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location)
                     set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
+                    set.data[inventorySlotId] = Internal.EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite)
+
+                    if not isNewSet then
+                        -- We force update because the blizzard manager should be correct
+                        Internal.UpdateEquipmentSetItemInMapData(set, inventorySlotId, previousLocation, locations[inventorySlotId], true)
+                    end
                 end
             end
+        end
+
+        if isNewSet then
+            Internal.AddEquipmentSetToMapData(set)
         end
 
         equipmentSetMap[managerID] = set;
@@ -437,6 +467,7 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
 end
 function frame:BANKFRAME_OPENED(...)
+    self:EQUIPMENT_SETS_CHANGED()
     Internal.InitializeBankItems()
 end
 function frame:PLAYER_SPECIALIZATION_CHANGED(...)
@@ -1417,6 +1448,7 @@ function frame:UNIT_SPELLCAST_SUCCEEDED(unit, castID, spellID)
     end
 end
 function frame:BAG_UPDATE_DELAYED()
+    Internal.GemApplied()
     if itemChangedData[1] then
         Internal.RuneforgeItemUpdated(unpack(itemChangedData))
         wipe(itemChangedData)
@@ -1427,6 +1459,7 @@ function frame:BAG_UPDATE_DELAYED()
     end
 end
 function frame:UNIT_INVENTORY_CHANGED()
+    Internal.GemApplied()
     if itemChangedData[1] then
         Internal.RuneforgeItemUpdated(unpack(itemChangedData))
         wipe(itemChangedData)
@@ -1437,11 +1470,12 @@ function frame:UNIT_INVENTORY_CHANGED()
     end
 end
 function frame:SOCKET_INFO_SUCCESS(...)
-    Internal.GemApplied()
+    -- Internal.GemApplied()
 end
 frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");
 frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+frame:RegisterEvent("CONSOLE_MESSAGE");
 frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
 frame:RegisterEvent("BANKFRAME_OPENED");
 frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
