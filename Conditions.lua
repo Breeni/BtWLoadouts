@@ -254,7 +254,7 @@ function Internal.UpdateConditionsForInstance()
 	end
 end
 function Internal.UpdateConditionsForBoss(unitId)
-	local bossID = Internal.GetCurrentBoss() or previousConditionInfo.bossID;
+	local bossID = Internal.GetCurrentBoss(unitId) or previousConditionInfo.bossID;
 
 	if previousConditionInfo.bossID ~= bossID then
 		DeactivateConditionMap(conditionMap.bossID, previousConditionInfo.bossID);

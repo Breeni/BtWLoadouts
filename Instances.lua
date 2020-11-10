@@ -2322,7 +2322,7 @@ function Internal.BossAvailable(bossID)
 	return true
 end
 
-function Internal.GetCurrentBoss()
+function Internal.GetCurrentBoss(unitId)
 	local bossID
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	if instanceType == "party" or instanceType == "raid" then
@@ -2338,11 +2338,11 @@ function Internal.GetCurrentBoss()
             else
                 bossID = uiMapIDToBossID[uiMapID] or bossID;
             end
-		end
+        end
 		local areaID = instanceID and areaNameToIDMap[instanceID] and areaNameToIDMap[instanceID][GetSubZoneText()] or nil;
 		if areaID then
 			bossID = InstanceAreaIDToBossID[instanceID][areaID] or bossID;
-		end
+        end
 		if unitId then
 			local unitGUID = UnitGUID(unitId);
 			if unitGUID and not UnitIsDead(unitId) then
