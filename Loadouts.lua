@@ -86,25 +86,28 @@ do
 end
 local RequestTome;
 do
+	local tomeLevelRequirements = {
+		[141640] = {10, 50}, -- Tome of the Clear Mind
+		[143780] = {10, 50}, -- Tome of the Tranquil Mind
+		[143785] = {10, 50}, -- Tome of the Tranquil Mind
+		[141446] = {10, 50}, -- Tome of the Tranquil Mind
+		[153647] = {10, 59}, -- Tome of the Quiet Mind
+		[173049] = {51, 60}, -- Tome of the Still Mind
+	};
 	local tomes = {
-		321923, -- Tome of the Still Mind
+		141640, -- Tome of the Clear Mind
 		143780, -- Tome of the Tranquil Mind
 		143785, -- Tome of the Tranquil Mind
 		141446, -- Tome of the Tranquil Mind
 		153647, -- Tome of the Quiet Mind
+		173049, -- Tome of the Still Mind
 	};
 	local function GetBestTome()
-		if UnitLevel("player") <= 109 then -- Tome of the Clear Mind (WOD)
-			local itemId = 141640
-			local count = GetItemCount(itemId);
-			if count >= 1 then
-				local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
-				return itemId, name, link, quality, icon;
-			end
-		end
+		local level = UnitLevel("player")
 		for _,itemId in ipairs(tomes) do
 			local count = GetItemCount(itemId);
-			if count >= 1 then
+			local minLevel, maxLevel = unpack(tomeLevelRequirements[itemId])
+			if count >= 1 and minLevel <= level and maxLevel >= level then
 				local name, link, quality, _, _, _, _, _, _, icon = GetItemInfo(itemId);
 				return itemId, name, link, quality, icon;
 			end
