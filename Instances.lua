@@ -1757,7 +1757,25 @@ local npcIDToBossID = {
 	[155859] = 2353, -- Radiance of Azshara
 	[152364] = 2353, -- Radiance of Azshara
 
-	[152236] = 2354, -- Lady Ashvane
+    [152236] = 2354, -- Lady Ashvane
+    
+    -- Sanguine Depths
+    [162110] = 2388, -- Kryxis the Voracious
+    [162103] = 2415, -- Executor Tarvold
+    [162102] = 2421, -- Grand Proctor Beryllia
+    [162099] = 2407, -- General Kaal
+
+    -- Halls of Atonement
+    [165408] = 2406, -- Halkias, the Sin-Stained Goliath
+    [164185] = 2387, -- Echelon
+
+    -- Castle Nathria
+    [172145] = 2393, -- Shriekwing
+    [165066] = 2429, -- Huntsman Altimor
+    [164261] = 2428, -- Hungering Destroyer
+    [174733] = 2394, -- Sludgefist
+    [165318] = 2425, -- Stone Legion Generals
+    [168938] = 2424, -- Sire Denathrius
 };
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
@@ -1793,11 +1811,29 @@ local InstanceAreaIDToBossID = {
 		[13471] = 2395, -- Blightbone
 		[13473] = 2391, -- Amarth, The Harvester
 	},
-	[2217] = { -- Plaguefall
+	[2289] = { -- Plaguefall
 		[13423] = 2419, -- Globgrog
 		[13421] = 2403, -- Doctor Ickus
 		[13422] = 2423, -- Domina Venomblade
-	},
+    },
+    
+	[2287] = { -- Halls of Atonement
+    },
+    [2284] = { -- Sanguine Depths
+    },
+    [2285] = { -- Spires of Ascension
+        [13511] = 2399, -- Kin-Tara
+        [13513] = 2416, -- Ventunax
+    },
+    [2293] = { -- Theater of Pain
+    },
+    [2290] = { -- Mists of Tirna Scithe
+        [13429] = 2400, -- Ingra Maloch
+        [13430] = 2402, -- Mistcaller
+        [13431] = 2405, -- Tred'ova
+    },
+    [2296] = { -- Castle Nathria
+    },
 };
 -- This is for bosses that have their own unique world map
 local uiMapIDToBossID = {
@@ -2078,6 +2114,7 @@ local uiMapIDToBossID = {
     [1694] = 2414, -- Oryphrion
     [1695] = 2412, -- Devos, Paragon of Doubt
     -- Theater of Pain
+    [1683] = {2397, 2417}, -- An Affront of Challengers, and Mordretha, the Endless Empress
     [1687] = 2401, -- Gorechop
     [1684] = 2390, -- Xav the Unfallen
     [1685] = 2389, -- Kul'tharok
@@ -2265,7 +2302,8 @@ local bossRequirements = {
 	[2370] = {2377}, -- Vexiona, requires Dark Inquisitor Xanesh
 	[2364] = {2372}, -- Ra-den the Despoiled, requires The Hivemind
 
-	[2417] = {2397}, -- Mordretha, the Endless Empress, requires An Affront of Challengers
+    [2417] = {2401, 2390, 2389}, -- Mordretha, the Endless Empress, requires Gorechop, Xav the Unfallen, Kul'tharok
+    [2410] = {2408, 2409, 2398}, -- Mueh'zala, requires Hakkar the Soulflayer, The Manastorms, and Dealer Xy'exa
 }
 function Internal.BossAvailable(bossID)
 	if IsEncounterComplete(bossID) then
@@ -2289,8 +2327,17 @@ function Internal.GetCurrentBoss()
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	if instanceType == "party" or instanceType == "raid" then
 		local uiMapID = C_Map.GetBestMapForUnit("player");
-		if uiMapID then
-			bossID = uiMapIDToBossID[uiMapID] or bossID;
+        if uiMapID then
+            if type(uiMapIDToBossID[uiMapID]) == "table" then
+                for _,mapBossID in ipairs(uiMapIDToBossID[uiMapID]) do
+                    if Internal.BossAvailable(mapBossID) then
+                        bossID = mapBossID or bossID;
+                        break
+                    end
+                end
+            else
+                bossID = uiMapIDToBossID[uiMapID] or bossID;
+            end
 		end
 		local areaID = instanceID and areaNameToIDMap[instanceID] and areaNameToIDMap[instanceID][GetSubZoneText()] or nil;
 		if areaID then
