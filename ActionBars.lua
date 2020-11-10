@@ -398,14 +398,16 @@ local function PickupActionTable(tbl, test, settings, activating)
         if not index or index == 0 then
             if settings and settings.createMissingMacros then
                 msg = L["Could not find macro by text, creating as account macro"]
-                if activating then
+                local numMacros = GetNumMacros()
+                if activating and numMacros < MAX_ACCOUNT_MACROS then
                     index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText)
                 else
                     index = -1
                 end
             elseif settings and settings.createMissingMacrosCharacter then
                 msg = L["Could not find macro by text, creating as character macro"]
-                if activating then
+                local _, numMacros = GetNumMacros()
+                if activating and numMacros < MAX_CHARACTER_MACROS  then
                     index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText, true)
                 else
                     index = -1
