@@ -885,7 +885,7 @@ do
 		local a, b, c, d = Internal.GetAffixesForID(affixesID)
 		local mask = Internal.GetExclusiveAffixes(affixesID)
 		for _,button in ipairs(self.Buttons) do
-			button:SetEnabled(bit.band(button.mask, mask) == button.mask);
+			button:SetEnabled(Internal.CompareAffixMasks(button.mask, mask));
 			local affixID = button:GetID()
 			button.Selection:SetShown(affixID == a or affixID == b or affixID == c or affixID == d);
 		end
