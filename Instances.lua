@@ -1760,7 +1760,7 @@ local npcIDToBossID = {
     [152236] = 2354, -- Lady Ashvane
     
     -- Sanguine Depths
-    [162110] = 2388, -- Kryxis the Voracious
+    [162100] = 2388, -- Kryxis the Voracious
     [162103] = 2415, -- Executor Tarvold
     [162102] = 2421, -- Grand Proctor Beryllia
     [162099] = 2407, -- General Kaal
