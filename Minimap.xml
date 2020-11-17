@@ -7,6 +7,10 @@
 		<Anchors>
 			<Anchor point="CENTER" x="-12" y="-80"/>
 		</Anchors>
+		<KeyValues>
+			<!-- Prevent ElvUI Enhanced from skinning this minimap button on the first pass -->
+			<KeyValue key="isSkinned" value="true" type="boolean"/>
+		</KeyValues>
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture parentKey="Icon" file="Interface\ICONS\Ability_marksmanship">

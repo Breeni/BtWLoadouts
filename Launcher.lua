@@ -103,5 +103,7 @@ function Internal.CreateLauncherMinimapIcon()
                 icon:Hide(ADDON_NAME)
             end
         end)
+    else
+        BtWLoadoutsMinimapButton.isSkinned = nil
     end
 end
