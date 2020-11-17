@@ -2151,7 +2151,7 @@ function Internal.AffixesLevels()
 	return ipairs(affixLevels)
 end
 local affixesByLevel
-if select(4, GetBuildInfo()) < 90002 then
+if GetExpansionLevel() ~= 8 then
     affixesByLevel = {
         [2] = {10, 9},
         [4] = {7, 6, 8, 5, 11},
@@ -2267,7 +2267,7 @@ local function GetAffixesForID(id)
 end
 Internal.GetAffixesForID = GetAffixesForID
 local affixRotation
-if select(4, GetBuildInfo()) < 90002 then
+if GetExpansionLevel() ~= 8 then
     affixRotation = {
         GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
         GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened

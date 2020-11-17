@@ -1,4 +1,4 @@
-if not C_Covenants or select(4, GetBuildInfo()) < 90002 then -- Skip for pre-Shadowlands
+if not C_Covenants or GetExpansionLevel() ~= 8 then -- Skip for pre-Shadowlands
     return
 end
 
