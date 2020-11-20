@@ -2202,7 +2202,7 @@ end
 _G["BtWLoadoutsAffixesMask"] = affixesMask;
 function Internal.GetExclusiveAffixes(affixesID)
 	affixesID = bit.band(affixesID or 0, 0xffffff)
-	if affixesID == 0 then
+	if affixesID == 0 or GetExpansionLevel() == 8 then
 		return {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}
 	end
 	return affixesMask[affixesID];
