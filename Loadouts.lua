@@ -188,7 +188,7 @@ local function LoadoutHasErrors(set)
 
 	errorState.specID = set.specID
 	for _,segment in ipairs(loadoutSegments) do
-		if set[segment.id] then
+		if segment.enabled and set[segment.id] then
 			for index,subsetID in ipairs(set[segment.id]) do
 				if segment.checkerrors then
 					local error = segment.checkerrors(errorState, subsetID)
@@ -209,7 +209,7 @@ local function GetLoadoutErrors(errors, set)
 	local hasError = false
 
 	for _,segment in ipairs(loadoutSegments) do
-		if set[segment.id] then
+		if segment.enabled and set[segment.id] then
 			local segmenterrors = errors[segment.id]
 			if not segmenterrors then
 				segmenterrors = {}
@@ -343,7 +343,7 @@ local function ActivateProfile(profile)
 
 	for _,segment in ipairs(loadoutSegments) do
 		local id = segment.id
-		if profile[id] and #profile[id] > 0 then
+		if segment.enabled and profile[id] and #profile[id] > 0 then
 			target[id] = target[id] or {};
 			for _,setID in ipairs(profile[id]) do
 				target[id][#target[id]+1] = setID;
@@ -399,7 +399,7 @@ do
 
 		for _,segment in ipairs(loadoutSegments) do
 			local ids = set[segment.id]
-			if ids and #ids > 0 then
+			if segment.enabled and ids and #ids > 0 then
 				wipe(temp);
 
 				segment.combine(temp, nil, segment.get(unpack(ids)));
@@ -496,7 +496,7 @@ local function ContinueActivateProfile()
 
 	wipe(combinedSets)
 	for _,segment in ipairs(loadoutSegments) do
-		if target[segment.id] then
+		if segment.enabled and target[segment.id] then
 			combinedSets[segment.id] = segment.combine(combinedSets[segment.id], state, segment.get(unpack(target[segment.id])))
 		end
 	end
@@ -553,7 +553,7 @@ local function ContinueActivateProfile()
 
 	local complete = true;
 	for _,segment in ipairs(loadoutSegments) do
-		if combinedSets[segment.id] then
+		if segment.enabled and combinedSets[segment.id] then
 			local segmentComplete, segmentDirty = segment.activate(combinedSets[segment.id], state)
 			if not segmentComplete then
 				complete = false
@@ -672,6 +672,8 @@ do
 		return false
 	end
 	function Internal.AddLoadoutSegment(details)
+		details.enabled = details.enabled == nil and true or details.enabled
+
 		loadoutSegmentsUIOrder[#loadoutSegmentsUIOrder+1] = details
 		loadoutSegmentsByID[details.id] = details
 
@@ -688,7 +690,14 @@ do
 		loadoutSegments[#loadoutSegments+1] = details
 	end
 	function Internal.EnumerateLoadoutSegments()
-		return ipairs(loadoutSegmentsUIOrder)
+		return function (tbl, index)
+			repeat
+				index = index + 1
+			until not tbl[index] or tbl[index].enabled
+			if tbl[index] then
+				return index, tbl[index]
+			end
+		end, loadoutSegmentsUIOrder, 0
 	end
 	function Internal.GetLoadoutSegment(id)
 		return loadoutSegmentsByID[id]
