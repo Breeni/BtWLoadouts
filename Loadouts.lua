@@ -388,6 +388,7 @@ local function ActivateProfile(profile)
 end
 local IsProfileActive, AddWipeCacheEvents
 do
+	local state = {}
 	local temp = {}
 	local function IsActive(set)
 		if set.specID then
@@ -397,12 +398,13 @@ do
 			end
 		end
 
+		wipe(state)
 		for _,segment in ipairs(loadoutSegments) do
 			local ids = set[segment.id]
 			if segment.enabled and ids and #ids > 0 then
 				wipe(temp);
 
-				segment.combine(temp, nil, segment.get(unpack(ids)));
+				segment.combine(temp, state, segment.get(unpack(ids)));
 				if not segment.isActive(temp) then
 					return false;
 				end
