@@ -177,7 +177,7 @@ local function CombineEssenceSets(result, state, ...)
 	result = result or {};
 
 	result.essences = {};
-	if CanActivateEssences() then -- Check if essences have been unlocked
+	if CanActivateEssences() and (not state or not state.heartEquipped) then -- Check if essences have been unlocked and we will have the heart equipped
 		for i=1,select('#', ...) do
 			local set = select(i, ...);
 			for milestoneID, essenceID in pairs(set.essences) do
