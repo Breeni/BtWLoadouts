@@ -743,6 +743,8 @@ function BtWLoadoutsSoulbindsMixin:Update()
         addButton.Flash:Hide();
         addButton.FlashAnim:Stop();
     else
+        self.nodes:ReleaseAll()
+        self.links:ReleaseAll()
         self.Name:SetEnabled(false);
         UIDropDownMenu_DisableDropDown(self.SoulbindDropDown);
         -- self.SoulbindDropDown.Button:SetEnabled(false);
