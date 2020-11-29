@@ -157,31 +157,33 @@ local function GetSet(id)
 	end
 end
 local function GetSets(id, ...)
-	if id ~= nil then
+    if id ~= nil then
 		return GetSet(id), GetSets(...);
 	end
 end
 local function IsSetActive(set)
-    local covenantID = GetActiveCovenantID()
-    if covenantID then
-        local soulbindID = GetActiveSoulbindID()
-        local soulbindData = GetSoulbindData(set.soulbindID)
-        -- The target soulbind is unlocked, is for the players covenant, so is valid for the character
-        if soulbindData.unlocked and soulbindData.covenantID == covenantID then
-            if set.soulbindID == soulbindID then
-                if set.nodes then
-                    for nodeID in pairs(set.nodes) do
-                        local node = GetSoulbindNode(nodeID)
-                        if node.state ~= Enum.SoulbindNodeState.Selected and node.state ~= Enum.SoulbindNodeState.Unavailable then
-                            return false
+    if set.soulbindID then
+        local covenantID = GetActiveCovenantID()
+        if covenantID then
+            local soulbindID = GetActiveSoulbindID()
+            local soulbindData = GetSoulbindData(set.soulbindID)
+            -- The target soulbind is unlocked, is for the players covenant, so is valid for the character
+            if soulbindData.unlocked and soulbindData.covenantID == covenantID then
+                if set.soulbindID == soulbindID then
+                    if set.nodes then
+                        for nodeID in pairs(set.nodes) do
+                            local node = GetSoulbindNode(nodeID)
+                            if node.state ~= Enum.SoulbindNodeState.Selected and node.state ~= Enum.SoulbindNodeState.Unavailable then
+                                return false
+                            end
                         end
+                        return true
+                    else
+                        return true
                     end
-                    return true
                 else
-                    return true
+                    return false
                 end
-            else
-                return false
             end
         end
     end
