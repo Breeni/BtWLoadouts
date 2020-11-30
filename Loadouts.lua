@@ -64,6 +64,7 @@ do
 		[256231] = true,
 		[321923] = true,
 		[324028] = true,
+		[325012] = true,
 	};
 	function PlayerNeedsTome()
 		if IsResting() then
