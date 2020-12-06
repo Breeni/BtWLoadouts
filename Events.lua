@@ -237,13 +237,19 @@ function frame:PLAYER_LOGIN(...)
     frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 
     do
+        local name, realm = UnitFullName("player");
         local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
-            if type(set) == "table" and set.character == character and set.managerID ~= nil then
-                if equipmentSetMap[set.managerID] then
-                    set.managerID = nil;
-                else
-                    equipmentSetMap[set.managerID] = set;
+            if type(set) == "table" then
+                if not Internal.GetCharacterInfo(set.character) then
+                    BtWLoadoutsSets.equipment[setID] = nil
+                end
+                if set.character == character and set.managerID ~= nil then
+                    if equipmentSetMap[set.managerID] then
+                        set.managerID = nil;
+                    else
+                        equipmentSetMap[set.managerID] = set;
+                    end
                 end
             end
         end
