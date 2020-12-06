@@ -19,6 +19,7 @@
 	Set save button?
 	Show changes for the conditions
 	Equipment item tracking
+	Zone Specific conditions
 ]]
 
 local ADDON_NAME, Internal = ...;
