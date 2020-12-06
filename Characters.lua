@@ -41,10 +41,16 @@ function Internal.UpdateClassInfo()
     end
 end
 
+-- In very niche situations UnitFullName will not correctly respond with the realm
+-- but since player realm cant change while logged in we can just reuse the previous value
+local playerNameCache, playerRealmCache
 function Internal.GetCharacterSlug()
 	local name, realm = UnitFullName("player");
-	assert(realm ~= nil)
-	return realm .. "-" .. name
+
+	playerNameCache = name or playerNameCache
+	playerRealmCache = realm or playerRealmCache
+
+	return playerNameCache .. "-" .. playerRealmCache
 end
 
 local GetSpecInfoVersion;
