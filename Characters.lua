@@ -50,7 +50,7 @@ function Internal.GetCharacterSlug()
 	playerNameCache = name or playerNameCache
 	playerRealmCache = realm or playerRealmCache
 
-	return playerNameCache .. "-" .. playerRealmCache
+	return playerRealmCache .. "-" .. playerNameCache
 end
 
 local GetSpecInfoVersion;
