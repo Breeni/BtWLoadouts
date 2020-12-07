@@ -176,8 +176,8 @@ function frame:ADDON_LOADED(...)
         -- Make sure equipment sets have all the tables needed
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" then
-                -- Fix an issue where equipment sets were created with character data flipped and caused
-                -- duplicated data from the in game equipment sets
+                -- Fix an issue where equipment sets were created with character data flipped
+                -- and caused duplicated data from the in game equipment sets
                 if not Internal.GetCharacterInfo(set.character) then
                     BtWLoadoutsSets.equipment[setID] = nil
                 else
