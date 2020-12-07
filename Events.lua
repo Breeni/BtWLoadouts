@@ -176,8 +176,14 @@ function frame:ADDON_LOADED(...)
         -- Make sure equipment sets have all the tables needed
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" then
-                set.extras = set.extras or {};
-                set.locations = set.locations or {};
+                -- Fix an issue where equipment sets were created with character data flipped and caused
+                -- duplicated data from the in game equipment sets
+                if not Internal.GetCharacterInfo(set.character) then
+                    BtWLoadoutsSets.equipment[setID] = nil
+                else
+                    set.extras = set.extras or {};
+                    set.locations = set.locations or {};
+                end
             end
         end
         -- Update loadouts, converting to version 2 and fixing use counts
@@ -208,9 +214,12 @@ function frame:ADDON_LOADED(...)
                 for _,segment in Internal.EnumerateLoadoutSegments() do
                     local id = segment.id
                     set[id] = set[id] or {}
-                    for _,subsetID in ipairs(set[id]) do
+                    for i=#set[id],1,-1 do
+                        local subsetID = set[id][i]
                         if BtWLoadoutsSets[id][subsetID] then
                             BtWLoadoutsSets[id][subsetID].useCount = BtWLoadoutsSets[id][subsetID].useCount + 1;
+                        elseif subsetID > 0 then -- Negative numbers are virtual sets, like soulbinds
+                            table.remove(set[id], i)
                         end
                     end
                 end
@@ -241,9 +250,6 @@ function frame:PLAYER_LOGIN(...)
         local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" then
-                if not Internal.GetCharacterInfo(set.character) then
-                    BtWLoadoutsSets.equipment[setID] = nil
-                end
                 if set.character == character and set.managerID ~= nil then
                     if equipmentSetMap[set.managerID] then
                         set.managerID = nil;
