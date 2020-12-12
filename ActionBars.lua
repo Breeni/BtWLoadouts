@@ -398,191 +398,201 @@ local function PickupActionTable(tbl, test, settings, activating)
     end
 
     local success, msg = true, "Success"
-    if tbl.type == "macro" then
-        local index = GetMacroByText(tbl.macroText)
-        if not index or index == 0 then
-            if settings and settings.createMissingMacros then
-                msg = L["Could not find macro by text, creating as account macro"]
-                local numMacros = GetNumMacros()
-                if activating and numMacros < MAX_ACCOUNT_MACROS then
-                    index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText)
-                else
-                    index = -1
-                end
-            elseif settings and settings.createMissingMacrosCharacter then
-                msg = L["Could not find macro by text, creating as character macro"]
-                local _, numMacros = GetNumMacros()
-                if activating and numMacros < MAX_CHARACTER_MACROS  then
-                    index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText, true)
-                else
-                    index = -1
-                end
-            elseif tbl.name then
-                msg = L["Could not find macro by text"]
-                index = GetMacroIndexByName(tbl.name)
-            end
-        end
-
-        if not index or index == 0 then
-            msg = L["Could not find macro by text or name"]
-            success = false
-        elseif not test then
-            PickupMacro(index)
-        end
-    elseif tbl.type == "spell" then
-        -- If we use the base version of the spell it should always work
-        tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
-
-        if settings and settings.adjustCovenant then
-            if IsCovenantSignatureAbility(tbl.id) then
-                tbl.id = GetCovenantSignatureAbility() or tbl.id
-            elseif IsCovenantClassAbility(tbl.id) then
-                tbl.id = GetCovenantClassAbility() or tbl.id
-            end
-        end
-
-        local index
-        success = false
-        if tbl.subType == "spell" then
-            for tabIndex = 1,min(2,GetNumSpellTabs()) do
-                local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
-                for spellIndex = offset,offset+numEntries do
-                    local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
-                    if skillType == "SPELL" and id == tbl.id then
-                        index = spellIndex
-                        break
+    local noError, err = pcall(function ()
+        if tbl.type == "macro" then
+            local index = GetMacroByText(tbl.macroText)
+            if not index or index == 0 then
+                if settings and settings.createMissingMacros then
+                    msg = L["Could not find macro by text, creating as account macro"]
+                    local numMacros = GetNumMacros()
+                    if activating and numMacros < MAX_ACCOUNT_MACROS then
+                        index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText)
+                    else
+                        index = -1
                     end
-                end
-            end
-        else
-            local spellIndex = 1
-            local skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
-            while skillType do
-                if skillType == "SPELL" and id == tbl.id then
-                    index = spellIndex
-                    break
-                end
-
-                spellIndex = spellIndex + 1
-                skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
-            end
-        end
-        if index then
-            success = true
-            if not test then
-                PickupSpellBookItem(index, tbl.subType)
-            end
-        end
-
-        if not success then
-            -- In cases where we need a pvp talent but they arent active
-            -- we have to pickup the talent, not the spell
-            local pvptalents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
-            for _,talentId in ipairs(pvptalents) do
-                if select(6, GetPvpTalentInfoByID(talentId)) == tbl.id then
-                    success = true
-                    if not test then
-                        PickupPvpTalent(talentId)
+                elseif settings and settings.createMissingMacrosCharacter then
+                    msg = L["Could not find macro by text, creating as character macro"]
+                    local _, numMacros = GetNumMacros()
+                    if activating and numMacros < MAX_CHARACTER_MACROS  then
+                        index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText, true)
+                    else
+                        index = -1
                     end
+                elseif tbl.name then
+                    msg = L["Could not find macro by text"]
+                    index = GetMacroIndexByName(tbl.name)
                 end
             end
-        end
 
-        if not success then
-            if tbl.subType == "pet" then
-                if IsSpellKnown(tbl.id, true) then
-                    success = true
-                    if not test then
-                        PickupPetSpell(tbl.id)
-                    end
-                end
-            elseif tbl.subType == "spell" then
-                if IsSpellKnown(tbl.id, false) then
-                    success = true
-                    if not test then
-                        PickupSpell(tbl.id)
-                    end
-                end
-            end
-        end
-
-        if not success then
-            msg = L["Spell not found"]
-        end
-    elseif tbl.type == "item" then
-        if not test then
-            PickupItem(tbl.id)
-        end
-    elseif tbl.type == "summonmount" then
-        if tbl.id == 0xFFFFFFF then -- Random Favourite
-            if not test then
-                C_MountJournal.Pickup(0)
-            end
-        else
-            if not select(11, C_MountJournal.GetMountInfoByID(tbl.id)) then
+            if not index or index == 0 then
+                msg = L["Could not find macro by text or name"]
                 success = false
-                msg = L["Mount is not available"]
             elseif not test then
-                -- We will attempt to pickup the mount using the latest way, if that
-                -- fails because of filtering we will pickup the spell instead
-                local index = nil
-                for i=1,C_MountJournal.GetNumDisplayedMounts() do
-                    if select(12,C_MountJournal.GetDisplayedMountInfo(i)) == tbl.id then
-                        index = i
-                        break
-                    end
-                end
-                if index then
-                    C_MountJournal.Pickup(index)
-                else
-                    PickupSpell((select(2, C_MountJournal.GetMountInfoByID(tbl.id))))
+                PickupMacro(index)
+            end
+        elseif tbl.type == "spell" then
+            -- If we use the base version of the spell it should always work
+            tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
+
+            if settings and settings.adjustCovenant then
+                if IsCovenantSignatureAbility(tbl.id) then
+                    tbl.id = GetCovenantSignatureAbility() or tbl.id
+                elseif IsCovenantClassAbility(tbl.id) then
+                    tbl.id = GetCovenantClassAbility() or tbl.id
                 end
             end
-        end
-    elseif tbl.type == "summonpet" then
-        if not C_PetJournal.GetPetInfoByPetID(tbl.id) then
-            success = false
-            msg = L["Pet is not available"]
-        elseif not test then
-            C_PetJournal.PickupPet(tbl.id)
-        end
-    elseif tbl.type == "companion" then -- This is the old way of handling mounts and pets
-        if not test and tbl.subType == "MOUNT" then
-            PickupSpell(tbl.id)
-        end
-    elseif tbl.type == "equipmentset" then
-        local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
-        if not id then
-            success = false
-            msg = L["Equipment set is not available"]
-        elseif not test then
-            C_EquipmentSet.PickupEquipmentSet(id)
-        end
-    elseif tbl.type == "flyout" then
-        if not GetFlyoutInfo(tbl.id) then
-            success = false
-            msg = L["Flyout is not available"]
-        else
-            -- Find the spell book index for the flyout
+
             local index
-            for tabIndex = 1,min(2,GetNumSpellTabs()) do
-                local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
-                for spellIndex = offset,offset+numEntries do
-                    local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
-                    if skillType == "FLYOUT" and id == tbl.id then
+            success = false
+            if tbl.subType == "spell" then
+                for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                    local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
+                    for spellIndex = offset,offset+numEntries do
+                        local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                        if skillType == "SPELL" and id == tbl.id then
+                            index = spellIndex
+                            break
+                        end
+                    end
+                end
+            else
+                local spellIndex = 1
+                local skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
+                while skillType do
+                    if tbl.id == 0 then
+                        print(skillType, tbl.subType == "pet")
+                    end
+                    if (skillType == "SPELL" or (skillType == "PETACTION" and tbl.subType == "pet")) and id == tbl.id then
                         index = spellIndex
                         break
                     end
+
+                    spellIndex = spellIndex + 1
+                    skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
                 end
             end
-            if not index then -- Couldn't find the flyout in the spell book
+            if index then
+                success = true
+                if not test then
+                    PickupSpellBookItem(index, tbl.subType)
+                end
+            end
+
+            if not success then
+                -- In cases where we need a pvp talent but they arent active
+                -- we have to pickup the talent, not the spell
+                local pvptalents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
+                for _,talentId in ipairs(pvptalents) do
+                    if select(6, GetPvpTalentInfoByID(talentId)) == tbl.id then
+                        success = true
+                        if not test then
+                            PickupPvpTalent(talentId)
+                        end
+                    end
+                end
+            end
+
+            if not success then
+                if tbl.subType == "pet" then
+                    if IsSpellKnown(tbl.id, true) then
+                        success = true
+                        if not test then
+                            PickupPetSpell(tbl.id)
+                        end
+                    end
+                elseif tbl.subType == "spell" then
+                    if IsSpellKnown(tbl.id, false) then
+                        success = true
+                        if not test then
+                            PickupSpell(tbl.id)
+                        end
+                    end
+                end
+            end
+
+            if not success then
+                msg = L["Spell not found"]
+            end
+        elseif tbl.type == "item" then
+            if not test then
+                PickupItem(tbl.id)
+            end
+        elseif tbl.type == "summonmount" then
+            if tbl.id == 0xFFFFFFF then -- Random Favourite
+                if not test then
+                    C_MountJournal.Pickup(0)
+                end
+            else
+                if not select(11, C_MountJournal.GetMountInfoByID(tbl.id)) then
+                    success = false
+                    msg = L["Mount is not available"]
+                elseif not test then
+                    -- We will attempt to pickup the mount using the latest way, if that
+                    -- fails because of filtering we will pickup the spell instead
+                    local index = nil
+                    for i=1,C_MountJournal.GetNumDisplayedMounts() do
+                        if select(12,C_MountJournal.GetDisplayedMountInfo(i)) == tbl.id then
+                            index = i
+                            break
+                        end
+                    end
+                    if index then
+                        C_MountJournal.Pickup(index)
+                    else
+                        PickupSpell((select(2, C_MountJournal.GetMountInfoByID(tbl.id))))
+                    end
+                end
+            end
+        elseif tbl.type == "summonpet" then
+            if not C_PetJournal.GetPetInfoByPetID(tbl.id) then
                 success = false
-                msg = L["Flyout is not is spell book"]
+                msg = L["Pet is not available"]
             elseif not test then
-                PickupSpellBookItem(index, "spell")
+                C_PetJournal.PickupPet(tbl.id)
+            end
+        elseif tbl.type == "companion" then -- This is the old way of handling mounts and pets
+            if not test and tbl.subType == "MOUNT" then
+                PickupSpell(tbl.id)
+            end
+        elseif tbl.type == "equipmentset" then
+            local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
+            if not id then
+                success = false
+                msg = L["Equipment set is not available"]
+            elseif not test then
+                C_EquipmentSet.PickupEquipmentSet(id)
+            end
+        elseif tbl.type == "flyout" then
+            if not GetFlyoutInfo(tbl.id) then
+                success = false
+                msg = L["Flyout is not available"]
+            else
+                -- Find the spell book index for the flyout
+                local index
+                for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                    local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
+                    for spellIndex = offset,offset+numEntries do
+                        local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                        if skillType == "FLYOUT" and id == tbl.id then
+                            index = spellIndex
+                            break
+                        end
+                    end
+                end
+                if not index then -- Couldn't find the flyout in the spell book
+                    success = false
+                    msg = L["Flyout is not is spell book"]
+                elseif not test then
+                    PickupSpellBookItem(index, "spell")
+                end
             end
         end
+    end)
+    if not noError then
+        success = false
+        msg = L["Error: "] .. err
     end
+
     return success, msg
 end
 
