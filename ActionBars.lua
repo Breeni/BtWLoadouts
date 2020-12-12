@@ -83,6 +83,7 @@ do
             macro = macros[i]
 
             macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+            macro.body = trim(macro.body) -- Remove empty lines from start and end
 
             macroNameMap[macro.name] = i
             macroBodyMap[macro.body] = i
@@ -94,6 +95,7 @@ do
             macro = macros[i]
 
             macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+            macro.body = trim(macro.body) -- Remove empty lines from start and end
 
             macroNameMap[macro.name] = i
             macroBodyMap[macro.body] = i
@@ -110,7 +112,7 @@ do
 
     hooksecurefunc("CreateMacro", BuildMacroMap)
     hooksecurefunc("DeleteMacro", BuildMacroMap)
-
+    
     local function EditMacroHook(id, name, icon, body)
         if type(id) == "string" then
             id = macroNameMap[id]
@@ -121,6 +123,8 @@ do
         if id == nil or id == 0 or not mapCreated then
             return BuildMacroMap()
         end
+
+        body = trim(body) -- Remove empty lines from start and end
 
         local macro = macros[id]
         local changed = (name ~= nil and name ~= macro.name) or (body ~= nil and body ~= macro.body)
@@ -162,6 +166,7 @@ do
 
                 if GetMacroInfo(i) then
                     macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+                    macro.body = trim(macro.body)
 
                     if macro.name then
                         macroNameMap[macro.name] = i
