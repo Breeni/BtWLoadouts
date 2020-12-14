@@ -459,9 +459,6 @@ local function PickupActionTable(tbl, test, settings, activating)
                 local spellIndex = 1
                 local skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
                 while skillType do
-                    if tbl.id == 0 then
-                        print(skillType, tbl.subType == "pet")
-                    end
                     if (skillType == "SPELL" or (skillType == "PETACTION" and tbl.subType == "pet")) and id == tbl.id then
                         index = spellIndex
                         break
