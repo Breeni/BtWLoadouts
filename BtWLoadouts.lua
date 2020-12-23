@@ -20,6 +20,7 @@
 	Show changes for the conditions
 	Equipment item tracking
 	Zone Specific conditions
+	Loadout restrictions like class/character
 ]]
 
 local ADDON_NAME, Internal = ...;
