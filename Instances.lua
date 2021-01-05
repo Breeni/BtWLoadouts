@@ -1757,7 +1757,25 @@ local npcIDToBossID = {
 	[155859] = 2353, -- Radiance of Azshara
 	[152364] = 2353, -- Radiance of Azshara
 
-	[152236] = 2354, -- Lady Ashvane
+    [152236] = 2354, -- Lady Ashvane
+    
+    -- Sanguine Depths
+    [162100] = 2388, -- Kryxis the Voracious
+    [162103] = 2415, -- Executor Tarvold
+    [162102] = 2421, -- Grand Proctor Beryllia
+    [162099] = 2407, -- General Kaal
+
+    -- Halls of Atonement
+    [165408] = 2406, -- Halkias, the Sin-Stained Goliath
+    [164185] = 2387, -- Echelon
+
+    -- Castle Nathria
+    [172145] = 2393, -- Shriekwing
+    [165066] = 2429, -- Huntsman Altimor
+    [164261] = 2428, -- Hungering Destroyer
+    [174733] = 2394, -- Sludgefist
+    [165318] = 2425, -- Stone Legion Generals
+    [168938] = 2424, -- Sire Denathrius
 };
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
@@ -1793,11 +1811,29 @@ local InstanceAreaIDToBossID = {
 		[13471] = 2395, -- Blightbone
 		[13473] = 2391, -- Amarth, The Harvester
 	},
-	[2217] = { -- Plaguefall
+	[2289] = { -- Plaguefall
 		[13423] = 2419, -- Globgrog
 		[13421] = 2403, -- Doctor Ickus
 		[13422] = 2423, -- Domina Venomblade
-	},
+    },
+    
+	[2287] = { -- Halls of Atonement
+    },
+    [2284] = { -- Sanguine Depths
+    },
+    [2285] = { -- Spires of Ascension
+        [13511] = 2399, -- Kin-Tara
+        [13513] = 2416, -- Ventunax
+    },
+    [2293] = { -- Theater of Pain
+    },
+    [2290] = { -- Mists of Tirna Scithe
+        [13429] = 2400, -- Ingra Maloch
+        [13430] = 2402, -- Mistcaller
+        [13431] = 2405, -- Tred'ova
+    },
+    [2296] = { -- Castle Nathria
+    },
 };
 -- This is for bosses that have their own unique world map
 local uiMapIDToBossID = {
@@ -2078,6 +2114,7 @@ local uiMapIDToBossID = {
     [1694] = 2414, -- Oryphrion
     [1695] = 2412, -- Devos, Paragon of Doubt
     -- Theater of Pain
+    [1683] = {2397, 2417}, -- An Affront of Challengers, and Mordretha, the Endless Empress
     [1687] = 2401, -- Gorechop
     [1684] = 2390, -- Xav the Unfallen
     [1685] = 2389, -- Kul'tharok
@@ -2113,12 +2150,22 @@ local affixLevels = {2, 4, 7, 10}
 function Internal.AffixesLevels()
 	return ipairs(affixLevels)
 end
-local affixesByLevel = {
-	[2] = {10, 9},
-	[4] = {7, 6, 8, 5, 11},
-	[7] = {12, 13, 3, 2, 4, 14},
-	[10] = {120},
-}
+local affixesByLevel
+if GetExpansionLevel() ~= 8 then
+    affixesByLevel = {
+        [2] = {10, 9},
+        [4] = {7, 6, 8, 5, 11},
+        [7] = {12, 13, 3, 2, 4, 14},
+        [10] = {120},
+    }
+else
+    affixesByLevel = {
+        [2] = {10, 9},
+        [4] = {11, 8, 122, 6, 123, 7},
+        [7] = {124, 12, 13, 14, 3, 4},
+        [10] = {121},
+    }
+end
 function Internal.Affixes(level)
 	level = tonumber(level)
 	if level >= 10 then
@@ -2135,23 +2182,43 @@ end
 -- A list of affixesIDs along with the mask of available affixes for other levels excludes seasonal affixes,
 -- built from affixRotation later
 local affixesMask = {};
+local function AffixBOR(r, value)
+    if value >= 96 then
+        r[4] = bit.bor(r[4] or 0, bit.lshift(1, value))
+    elseif value >= 64 then
+        r[3] = bit.bor(r[3] or 0, bit.lshift(1, value))
+    elseif value >= 32 then
+        r[2] = bit.bor(r[2] or 0, bit.lshift(1, value))
+    else
+        r[1] = bit.bor(r[1] or 0, bit.lshift(1, value))
+    end
+end
 local function PushAffixMask(a, b)
-	affixesMask[a] = bit.bor(affixesMask[a] or 0, b)
+    affixesMask[a] = affixesMask[a] or {}
+    for i=1,4 do
+        affixesMask[a][i] = bit.bor(affixesMask[a][i] or 0, b[i] or 0)
+    end
 end
 _G["BtWLoadoutsAffixesMask"] = affixesMask;
 function Internal.GetExclusiveAffixes(affixesID)
 	affixesID = bit.band(affixesID or 0, 0xffffff)
-	if affixesID == 0 then
-		return 0xffffffff
+	if affixesID == 0 or GetExpansionLevel() == 8 then
+		return {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}
 	end
 	return affixesMask[affixesID];
+end
+function Internal.CompareAffixMasks(a, b)
+    return bit.band(a[1] or 0, b[1] or 0) == (a[1] or 0) and
+           bit.band(a[2] or 0, b[2] or 0) == (a[2] or 0) and
+           bit.band(a[3] or 0, b[3] or 0) == (a[3] or 0) and
+           bit.band(a[4] or 0, b[4] or 0) == (a[4] or 0)
 end
 
 function Internal.GetAffixesName(affixesID)
 	local names = {};
 	local icons = {};
 	local id = affixesID
-	local mask = 0
+	local mask = {}
 	local i = 1
 	while affixesID > 0 do
 		local affixID = bit.band(affixesID, 0xFF);
@@ -2162,22 +2229,18 @@ function Internal.GetAffixesName(affixesID)
 			names[#names+1] = name;
 			icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
 
-			if affixID < 32 then
-				mask = bit.bor(mask, bit.lshift(1, affixID));
-			end
+            if affixID ~= 121 then -- Prideful
+                AffixBOR(mask, affixID)
+            end
 		end
 		i = i + 1
 	end
 
 	return id, table.concat(names, " "), table.concat(icons, ", "), mask
 end
-local function GetAffixMaskForID(id)
-	return bit.lshift(1, id);
-end
-Internal.GetAffixMaskForID = GetAffixMaskForID
 local function GetAffixesInfo(...)
 	local id = 0;
-	local mask = 0;
+	local mask = {};
 	local names = {};
 	local icons = {};
 	for i=1,select('#', ...) do
@@ -2185,7 +2248,7 @@ local function GetAffixesInfo(...)
 		local name, _, icon = GetAffixInfo(affixID);
 
 		if i < 4 then
-			mask = bit.bor(mask, bit.lshift(1, affixID));
+            AffixBOR(mask, affixID)
 		end
 		id = bit.bor(bit.rshift(id, 8), bit.lshift(affixID, 24));
 		names[#names+1] = name;
@@ -2203,28 +2266,50 @@ local function GetAffixesForID(id)
 	return bit.band(id, 0xff), bit.band(bit.rshift(id, 8), 0xff), bit.band(bit.rshift(id, 16), 0xff), bit.band(bit.rshift(id, 24), 0xff)
 end
 Internal.GetAffixesForID = GetAffixesForID
-local affixRotation = {
-	GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
-	GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened
-	GetAffixesInfo(10, 8, 12, 120), -- Fortified, 	Sanguine, 	Grievous, 	Awakened
-	GetAffixesInfo(9, 5, 3, 120), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Awakened
-	GetAffixesInfo(10, 7, 2, 120), 	-- Fortified, 	Bolstering, Skittish, 	Awakened
-	GetAffixesInfo(9, 11, 4, 120), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Awakened
-	GetAffixesInfo(10, 8, 14, 120),	-- Fortified, 	Sanguine, 	Quaking, 	Awakened
-	GetAffixesInfo(9, 7, 13, 120), 	-- Tyrannical, 	Bolstering, Explosive, 	Awakened
-	GetAffixesInfo(10, 11, 3, 120),	-- Fortified, 	Bursting, 	Volcanic, 	Awakened
-	GetAffixesInfo(9, 6, 4, 120),	-- Tyrannical, 	Raging, 	Necrotic, 	Awakened
-	GetAffixesInfo(10, 5, 14, 120),	-- Fortified, 	Teeming, 	Quaking, 	Awakened
-	GetAffixesInfo(9, 11, 2, 120),	-- Tyrannical, 	Bursting, 	Skittish, 	Awakened
-};
+local affixRotation
+if GetExpansionLevel() ~= 8 then
+    affixRotation = {
+        GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
+        GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened
+        GetAffixesInfo(10, 8, 12, 120), -- Fortified, 	Sanguine, 	Grievous, 	Awakened
+        GetAffixesInfo(9, 5, 3, 120), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Awakened
+        GetAffixesInfo(10, 7, 2, 120), 	-- Fortified, 	Bolstering, Skittish, 	Awakened
+        GetAffixesInfo(9, 11, 4, 120), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Awakened
+        GetAffixesInfo(10, 8, 14, 120),	-- Fortified, 	Sanguine, 	Quaking, 	Awakened
+        GetAffixesInfo(9, 7, 13, 120), 	-- Tyrannical, 	Bolstering, Explosive, 	Awakened
+        GetAffixesInfo(10, 11, 3, 120),	-- Fortified, 	Bursting, 	Volcanic, 	Awakened
+        GetAffixesInfo(9, 6, 4, 120),	-- Tyrannical, 	Raging, 	Necrotic, 	Awakened
+        GetAffixesInfo(10, 5, 14, 120),	-- Fortified, 	Teeming, 	Quaking, 	Awakened
+        GetAffixesInfo(9, 11, 2, 120),	-- Tyrannical, 	Bursting, 	Skittish, 	Awakened
+    };
+else
+    affixRotation = {
+        GetAffixesInfo(10, 11, 124, 121),   -- Fortified, 	Bursting,   Storming,	Prideful
+        GetAffixesInfo(9, 8, 12, 121),      -- Tyrannical, 	Sanguine,   Grievous,	Prideful
+        GetAffixesInfo(10, 122, 13, 121),   -- Fortified, 	Inspiring,	Explosive, 	Prideful
+        GetAffixesInfo(9, 6, 14, 121), 	    -- Tyrannical, 	Raging, 	Quaking, 	Prideful
+        GetAffixesInfo(10, 11, 3, 121),	    -- Fortified, 	Bursting, 	Grievous, 	Prideful
+        GetAffixesInfo(9, 123, 12, 121),    -- Tyrannical, 	Spiteful, 	Quaking, 	Prideful
+        GetAffixesInfo(10, 7, 124, 121),    -- Fortified, 	Bolstering, Storming,	Prideful
+        GetAffixesInfo(9, 122, 4, 121),     -- Tyrannical, 	Inspiring,	Necrotic, 	Prideful
+        GetAffixesInfo(10, 8, 14, 121),	    -- Fortified, 	Sanguine, 	Quaking, 	Prideful
+        GetAffixesInfo(9, 6, 13, 121), 	    -- Tyrannical, 	Raging, 	Explosive, 	Prideful
+        GetAffixesInfo(10, 123, 3, 121),	-- Fortified, 	Spiteful, 	Volcanic, 	Prideful
+        GetAffixesInfo(9, 7, 4, 121), 	    -- Tyrannical, 	Bolstering, Necrotic, 	Prideful
+    };
+end
 function Internal.AffixRotation()
 	return ipairs(affixRotation)
 end
 -- Fill affixes mask based on Affix Rotation
 for _,affixes in Internal.AffixRotation() do
 	local ma, mb, mc = bit.band(affixes.id, 0xff), bit.band(affixes.id, 0xff00), bit.band(affixes.id, 0xff0000)
-	local a, b, c = ma, bit.rshift(mb, 8), bit.rshift(mc, 16)
-	local r = bit.bor(bit.lshift(1, a), bit.lshift(1, b), bit.lshift(1, c))
+    local a, b, c = ma, bit.rshift(mb, 8), bit.rshift(mc, 16)
+    
+    local r = {}
+    AffixBOR(r, a)
+    AffixBOR(r, b)
+    AffixBOR(r, c)
 
 	PushAffixMask(ma, r)
 	PushAffixMask(mb, r)
@@ -2265,7 +2350,8 @@ local bossRequirements = {
 	[2370] = {2377}, -- Vexiona, requires Dark Inquisitor Xanesh
 	[2364] = {2372}, -- Ra-den the Despoiled, requires The Hivemind
 
-	[2417] = {2397}, -- Mordretha, the Endless Empress, requires An Affront of Challengers
+    [2417] = {2401, 2390, 2389}, -- Mordretha, the Endless Empress, requires Gorechop, Xav the Unfallen, Kul'tharok
+    [2410] = {2408, 2409, 2398}, -- Mueh'zala, requires Hakkar the Soulflayer, The Manastorms, and Dealer Xy'exa
 }
 function Internal.BossAvailable(bossID)
 	if IsEncounterComplete(bossID) then
@@ -2284,18 +2370,27 @@ function Internal.BossAvailable(bossID)
 	return true
 end
 
-function Internal.GetCurrentBoss()
+function Internal.GetCurrentBoss(unitId)
 	local bossID
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	if instanceType == "party" or instanceType == "raid" then
 		local uiMapID = C_Map.GetBestMapForUnit("player");
-		if uiMapID then
-			bossID = uiMapIDToBossID[uiMapID] or bossID;
-		end
+        if uiMapID then
+            if type(uiMapIDToBossID[uiMapID]) == "table" then
+                for _,mapBossID in ipairs(uiMapIDToBossID[uiMapID]) do
+                    if Internal.BossAvailable(mapBossID) then
+                        bossID = mapBossID or bossID;
+                        break
+                    end
+                end
+            else
+                bossID = uiMapIDToBossID[uiMapID] or bossID;
+            end
+        end
 		local areaID = instanceID and areaNameToIDMap[instanceID] and areaNameToIDMap[instanceID][GetSubZoneText()] or nil;
 		if areaID then
 			bossID = InstanceAreaIDToBossID[instanceID][areaID] or bossID;
-		end
+        end
 		if unitId then
 			local unitGUID = UnitGUID(unitId);
 			if unitGUID and not UnitIsDead(unitId) then

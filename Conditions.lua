@@ -254,7 +254,7 @@ function Internal.UpdateConditionsForInstance()
 	end
 end
 function Internal.UpdateConditionsForBoss(unitId)
-	local bossID = Internal.GetCurrentBoss() or previousConditionInfo.bossID;
+	local bossID = Internal.GetCurrentBoss(unitId) or previousConditionInfo.bossID;
 
 	if previousConditionInfo.bossID ~= bossID then
 		DeactivateConditionMap(conditionMap.bossID, previousConditionInfo.bossID);
@@ -614,7 +614,7 @@ local function InstanceDropDown_OnClick(self, arg1, arg2, checked)
 	BtWLoadoutsFrame:Update();
 end
 local CURRENT_EXPANSION = 9
-if select(4, GetBuildInfo()) < 90002 then
+if GetExpansionLevel() ~= 8 then
 	CURRENT_EXPANSION = 8
 end
 local function InstanceDropDownInit(self, level, menuList)
@@ -885,7 +885,7 @@ do
 		local a, b, c, d = Internal.GetAffixesForID(affixesID)
 		local mask = Internal.GetExclusiveAffixes(affixesID)
 		for _,button in ipairs(self.Buttons) do
-			button:SetEnabled(bit.band(button.mask, mask) == button.mask);
+			button:SetEnabled(Internal.CompareAffixMasks(button.mask, mask));
 			local affixID = button:GetID()
 			button.Selection:SetShown(affixID == a or affixID == b or affixID == c or affixID == d);
 		end

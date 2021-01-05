@@ -1257,16 +1257,21 @@ local function CombineEquipmentSets(result, state, ...)
 			if set.managerID then -- Just making sure everything is up to date
 				local ignored = C_EquipmentSet.GetIgnoredSlots(set.managerID);
 				local locations = C_EquipmentSet.GetItemLocations(set.managerID);
-				for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-					set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
+				if ignored and locations then
+					for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+						set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil;
 
-					local location = locations[inventorySlotId] or 0;
-					if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
-						set.equipment[inventorySlotId] = GetItemLinkByLocation(location)
-						set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
-						set.data[inventorySlotId] = set.equipment[inventorySlotId] and Internal.EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite) or nil
+						local location = locations[inventorySlotId] or 0;
+						if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
+							set.equipment[inventorySlotId] = GetItemLinkByLocation(location)
+							set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
+							set.data[inventorySlotId] = set.equipment[inventorySlotId] and Internal.EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite) or nil
+						end
+						set.locations[inventorySlotId] = location;
+						if set.extras[inventorySlotId] then
+							wipe(set.extras[inventorySlotId])
+						end
 					end
-					set.locations[inventorySlotId] = location;
 				end
 			end
 			for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do

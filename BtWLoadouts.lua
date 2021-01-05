@@ -19,6 +19,12 @@
 	Set save button?
 	Show changes for the conditions
 	Equipment item tracking
+	Zone Specific conditions
+	Loadout restrictions like class/character
+	Bagnon support
+	Conditions should support multiple bosses/affix combos?
+	Conditions level support
+	Option to show minimap menu on mouse over
 ]]
 
 local ADDON_NAME, Internal = ...;
@@ -35,6 +41,7 @@ BTWLOADOUTS_PROFILES = L["Profiles"]
 BTWLOADOUTS_TALENTS = L["Talents"]
 BTWLOADOUTS_PVP_TALENTS = L["PvP Talents"]
 BTWLOADOUTS_ESSENCES = L["Essences"]
+BTWLOADOUTS_SOULBINDS = L["Soulbinds"]
 BTWLOADOUTS_EQUIPMENT = L["Equipment"]
 BTWLOADOUTS_ACTION_BARS = L["Action Bars"]
 BTWLOADOUTS_CONDITIONS = L["Conditions"]
@@ -996,7 +1003,13 @@ do
 		local frame = self:GetParent()
 		local Tabs = frame.Tabs
 
-		local previous = Tabs[#Tabs]
+		local index = #Tabs
+		local previous = Tabs[index]
+		while previous and not previous:IsShown() do
+			index = index - 1
+			previous = Tabs[index]
+		end
+
 		local tab = frame.TabPool:Acquire()
 		local id = #Tabs
 
@@ -1010,7 +1023,7 @@ do
 			tab:SetPoint("BOTTOMLEFT", 7, -30)
 		end
 
-		tab:Show()
+		tab:SetShown(self.enabled ~= false)
 
 		PanelTemplates_SetNumTabs(frame, id);
 		if id == 1 then

@@ -176,9 +176,15 @@ function frame:ADDON_LOADED(...)
         -- Make sure equipment sets have all the tables needed
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
             if type(set) == "table" then
-                set.extras = set.extras or {};
-                set.locations = set.locations or {};
-                set.data = set.data or {};
+                -- Fix an issue where equipment sets were created with character data flipped
+                -- and caused duplicated data from the in game equipment sets
+                if not Internal.GetCharacterInfo(set.character) then
+                    BtWLoadoutsSets.equipment[setID] = nil
+                else
+                    set.extras = set.extras or {};
+                    set.locations = set.locations or {};
+                    set.data = set.data or {};
+                end
             end
         end
         -- Update loadouts, converting to version 2 and fixing use counts
@@ -209,9 +215,12 @@ function frame:ADDON_LOADED(...)
                 for _,segment in Internal.EnumerateLoadoutSegments() do
                     local id = segment.id
                     set[id] = set[id] or {}
-                    for _,subsetID in ipairs(set[id]) do
+                    for i=#set[id],1,-1 do
+                        local subsetID = set[id][i]
                         if BtWLoadoutsSets[id][subsetID] then
                             BtWLoadoutsSets[id][subsetID].useCount = BtWLoadoutsSets[id][subsetID].useCount + 1;
+                        elseif subsetID > 0 then -- Negative numbers are virtual sets, like soulbinds
+                            table.remove(set[id], i)
                         end
                     end
                 end
@@ -238,23 +247,16 @@ function frame:PLAYER_LOGIN(...)
     frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 
     do
+        local name, realm = UnitFullName("player");
         local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.equipment) do
-            if type(set) == "table" and set.character == character then
-                if set.managerID ~= nil then
+            if type(set) == "table" then
+                if set.character == character and set.managerID ~= nil then
                     if equipmentSetMap[set.managerID] then
                         set.managerID = nil;
                     else
                         equipmentSetMap[set.managerID] = set;
                     end
-                -- else
-                --     for slot,location in pairs(set.locations) do
-                --         if location and not set.ignored[slot] and set.equipment[slot] then
-                --             if not Internal.IsItemInLocation(set.equipment[slot], set.extras[slot], location) then
-                --                 set.locations[slot] = nil
-                --             end
-                --         end
-                --     end
                 end
             end
         end

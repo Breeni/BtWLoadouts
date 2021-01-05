@@ -30,3 +30,4 @@ L["Battlegrounds"] = BATTLEGROUNDS
 L["Other"] = OTHER
 L["Scenarios"] = SCENARIOS
 L["Enabled"] = VIDEO_OPTIONS_ENABLED
+L["Soulbinds"] = COVENANT_PREVIEW_SOULBINDS

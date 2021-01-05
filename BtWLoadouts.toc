@@ -1,6 +1,6 @@
-## Interface: 90001
+## Interface: 90002
 ## Title: BtWLoadouts
-## Version: 83
+## Version: 83.12
 ## Notes: Change your characters spec, talents, equipment, essences, and action bars all at once
 ## Author: Breen
 ## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings
@@ -23,7 +23,7 @@ Loadouts.xml
 Talents.xml
 PvPTalents.xml
 Essences.xml
-Soulbinds.lua
+Soulbinds.xml
 Equipment.xml
 ActionBars.xml
 Conditions.xml
