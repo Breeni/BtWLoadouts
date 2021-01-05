@@ -2948,7 +2948,7 @@ if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
 	end
 end
 
--- LibItemSearch
+-- LibItemSearch, used by Bagnon to display borders around items within equipment sets
 if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
 	local Lib = LibStub("LibItemSearch-1.2")
 	local Search = LibStub('CustomSearch-1.0')
