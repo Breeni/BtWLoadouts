@@ -23,6 +23,8 @@ local GetCharacterSlug = Internal.GetCharacterSlug
 local GetCharacterInfo = Internal.GetCharacterInfo
 
 local debug = print
+function debug()
+end
 
 local AddSetToMapData, RemoveSetFromMapData, UpdateSetItemInMapData
 
@@ -2051,7 +2053,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 end
 
 -- Inventory item tracking
-local GetSetsForLocation, GetEnabledSetsForLocation, GetLocationForItem
+local GetSetsForLocation, GetEnabledSetsForLocation, GetLocationForItem, GetEnabledSetsForItem, GetEnabledSetsForItemID
 do
 	local itemLocation = ItemLocation:CreateEmpty(); -- Reusable item location, be careful not to double use it
 	local possibleItems = {} -- Reused for storing lists of items 
@@ -2674,6 +2676,53 @@ do
 	function GetLocationForItem(itemLink, extras)
 		
 	end
+	function GetEnabledSetsForItemID(itemID, result)
+		result = result or {}
+
+		local character = GetCharacterSlug()
+		local sets = BtWLoadoutsSets.equipment
+		for _,set in pairs(sets) do
+			if type(set) == "table" and set.character == character and not set.disabled then
+				for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+					if not set.ignored[slot] and set.equipment[slot] and GetItemInfoInstant(set.equipment[slot]) == itemID then
+						result[#result+1] = set
+						break;
+					end
+				end
+			end
+		end
+
+		table.sort(result, function (a, b)
+			return a.name < b.name
+		end)
+
+		return result
+	end
+	function GetEnabledSetsForItem(itemLink, result)
+		if type(itemLink) == "number" then
+			return GetEnabledSetsForItemID(itemLink, result)
+		end
+
+		result = result or {}
+
+		local sets = BtWLoadoutsSets.equipment
+		for _,set in pairs(sets) do
+			if type(set) == "table" and set.character == character and not set.disabled then
+				for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
+					if not set.ignored[slot] and set.equipments[slot] == itemLink then
+						result[#result+1] = set
+						break;
+					end
+				end
+			end
+		end
+
+		table.sort(result, function (a, b)
+			return a.name < b.name
+		end)
+
+		return result
+	end
 
 	--[[
 		The item at the locations has been changed, for example, selecting azerite traits or upgrading legendary cloak
@@ -2894,6 +2943,22 @@ if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
 			local set = GetEnabledSetsForLocation(location, sets)[1]
 			if set then
 				return set.name, L["Equipment"]
+			end
+		end
+	end
+end
+
+-- LibItemSearch
+if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
+	local Lib = LibStub("LibItemSearch-1.2")
+	local Search = LibStub('CustomSearch-1.0')
+
+	-- I dont really like replacing this, maybe there is a better solution?
+	function Lib:BelongsToSet(id, search)
+		local result = GetEnabledSetsForItemID(id)
+		for _,set in ipairs(result) do
+			if Search:Find(search, set.name) then
+				return true
 			end
 		end
 	end
