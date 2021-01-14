@@ -2256,9 +2256,15 @@ do
 								newLocationItems[locations[setSlot]] = locationItems[location]
 								newLocationSets[locations[setSlot]] = locationSets[location]
 
-								-- This is needed, even though the same thing would be done later we need
-								-- to update the location now so saving the set triggers an update correctly
-								set.locations[setSlot] = locations[setSlot]
+								-- Update the location for every set using this exact item
+								local location = locations[setSlot]
+								for setLocation in pairs(sets) do
+									local setID, setSlot = strsplit(":", setLocation)
+									setID, setSlot = tonumber(setID), tonumber(setSlot)
+									
+									local set = GetEquipmentSet(setID)
+									set.locations[setSlot] = location
+								end
 
 								foundInManager = true
 							end
