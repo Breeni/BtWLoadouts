@@ -2116,6 +2116,7 @@ do
 			end
 		end
 	end
+	Internal.RemoveEquipmentSetFromMapData = RemoveSetFromMapData
 	function UpdateSetItemInMapData(set, inventorySlotId, oldLocation, newLocation, force)
 		-- Remove it from the old location
 		if oldLocation ~= nil then
@@ -2184,7 +2185,6 @@ do
 	--[[
 		Generic update funciton for when inventory items have been moved.
 		Veryifies all items are correct and if not updates the data store with new locations
-/run BtWLoadoutsUpdateLocations()
 	]]
 	local UpdateLocations, UpdateAllLocations
 	do
@@ -2255,6 +2255,11 @@ do
 							if locations[setSlot] and locations[setSlot] > -1 then
 								newLocationItems[locations[setSlot]] = locationItems[location]
 								newLocationSets[locations[setSlot]] = locationSets[location]
+
+								-- This is needed, even though the same thing would be done later we need
+								-- to update the location now so saving the set triggers an update correctly
+								set.locations[setSlot] = locations[setSlot]
+
 								foundInManager = true
 							end
 
@@ -2275,6 +2280,8 @@ do
 
 			ScanDataMapForMissingItems(newLocationItems, newLocationSets, missingItemDatas)
 
+			-- debug("UpdateLocations", next(newLocationItems))
+			-- debug("UpdateLocations", next(newLocationSets))
 			debug("UpdateLocations", next(missingItemDatas))
 
 			if next(missingItemDatas) ~= nil then
@@ -2498,67 +2505,10 @@ do
 		for setID,set in pairs(BtWLoadoutsSets.equipment) do
 			if type(set) == "table" and set.character == character then
 				AddSetToMapData(set)
-				-- for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-				-- 	if set.equipment[slot] then
-				-- 		local location = set.locations[slot]
-				-- 		if location and location <= 0 then
-				-- 			location = nil
-				-- 		end
-
-				-- 		if location and location > 0 then
-				-- 			local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
-
-				-- 			if locationItems[location] == nil or locationItems[location] == data then
-				-- 				locationItems[location] = locationItems[location] or data
-				-- 				locationSets[location][(setID .. ":" .. slot)] = true
-				-- 			else
-				-- 				location = nil -- Somehow 2 equipment sets are expecting different items in the same slot
-				-- 			end
-				-- 		end
-
-				-- 		set.locations[slot] = location
-				-- 	end
-				-- end
 			end
 		end
 
 		UpdateAllLocations(false, false, true) -- Skip banks
-
-		-- Update locations for equipment sets verifying the item is where its expected to be
-		-- for setID,set in pairs(BtWLoadoutsSets.equipment) do
-		-- 	if type(set) == "table" and set.character == character then
-		-- 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-		-- 			if set.equipment[slot] then
-		-- 				local location = set.locations[slot]
-		-- 				if location and location <= 0 then
-		-- 					location = nil
-		-- 				end
-
-		-- 				-- if location and bit.band(ITEM_INVENTORY_LOCATION_PLAYER, location) == ITEM_INVENTORY_LOCATION_PLAYER and not IsItemInLocation(set.equipment[slot], set.extras[slot], location) then
-		-- 				-- 	location = nil
-		-- 				-- end
-
-		-- 				-- if not location then
-		-- 				-- 	location = GetItemFromLocations(set.equipment[slot], set.extras[slot], GetInventoryItemsForSlot(slot, possibleItems))
-		-- 				-- 	wipe(possibleItems)
-		-- 				-- end
-
-		-- 				if location and location > 0 then
-		-- 					local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
-
-		-- 					if locationItems[location] == nil or locationItems[location] == data then
-		-- 						locationItems[location] = locationItems[location] or data
-		-- 						locationSets[location][(setID .. ":" .. slot)] = true
-		-- 					else
-		-- 						location = nil -- Somehow 2 equipment sets are expecting different items in the same slot
-		-- 					end
-		-- 				end
-
-		-- 				set.locations[slot] = location
-		-- 			end
-		-- 		end
-		-- 	end
-		-- end
 	end
 	-- Run when the bank is first opened, verifies items are where we expect them to be and if not updates locations with the correct place
 	-- Also look for items with missing locations and check if they are in the bank
