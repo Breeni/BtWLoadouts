@@ -14,6 +14,7 @@ Internal.L = L
 L["Talents"] = TALENTS
 L["PvP Talents"] = PVP_TALENTS
 L["Equipment"] = BAG_FILTER_EQUIPMENT
+L["Set: %s"] = ITEM_SET_BONUS
 L["New Set"] = PAPERDOLL_NEWEQUIPMENTSET
 L["Activate"] = TALENT_SPEC_ACTIVATE
 L["Update"] = UPDATE

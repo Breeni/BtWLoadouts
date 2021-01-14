@@ -2942,7 +2942,7 @@ if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
 			local sets = {}
 			local set = GetEnabledSetsForLocation(location, sets)[1]
 			if set then
-				return set.name, L["Equipment"]
+				return format(L["Set: %s"], set.name), L["Equipment"]
 			end
 		end
 	end
