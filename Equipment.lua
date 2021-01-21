@@ -2610,10 +2610,11 @@ do
 		local sets = locationSets[location]
 		if sets then
 			for setLocation in pairs(sets) do
-				local setID = tonumber((strsplit(":", setLocation)))
+				local setID, setInventorySlotID = strsplit(":", setLocation)
+				setID, setInventorySlotID = tonumber(setID), tonumber(setInventorySlotID)
 				if not temp[setID] then
 					local set = GetEquipmentSet(setID)
-					if not set.disabled then
+					if not set.disabled and not set.ignored[setInventorySlotID] then
 						result[#result+1] = set
 					end
 					temp[setID] = true
