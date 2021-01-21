@@ -18,10 +18,8 @@
 	Better issue handling
 	Set save button?
 	Show changes for the conditions
-	Equipment item tracking
 	Zone Specific conditions
 	Loadout restrictions like class/character
-	Bagnon support
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
