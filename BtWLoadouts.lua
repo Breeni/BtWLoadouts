@@ -23,6 +23,8 @@
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
+	Yes/No/Cancel button for tomes?
+	Trigger system for changing loadouts, run custom code when a set is changed?
 ]]
 
 local ADDON_NAME, Internal = ...;
