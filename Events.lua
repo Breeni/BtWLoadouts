@@ -502,6 +502,7 @@ function frame:UPDATE_INSTANCE_INFO(...)
     
     Internal.UpdateConditionsForInstance();
     local bossID = Internal.UpdateConditionsForBoss();
+    Internal.UpdateConditionsForAffixes();
     -- Boss is unavailable so dont trigger conditions
     if bossID and not Internal.BossAvailable(bossID) then
         return
