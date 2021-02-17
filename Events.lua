@@ -422,12 +422,14 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
         set.name = C_EquipmentSet.GetEquipmentSetInfo(managerID);
 
         local ignored = C_EquipmentSet.GetIgnoredSlots(managerID);
+        local ids = C_EquipmentSet.GetItemIDs(managerID);
         local locations = C_EquipmentSet.GetItemLocations(managerID);
         for inventorySlotId=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
             set.ignored[inventorySlotId] = ignored[inventorySlotId] and true or nil
 
             if locations then -- Seems in some situations the locations table is nil instead
                 local location = locations[inventorySlotId] or -1;
+                
                 if location > -1 then -- If location is -1 we ignore it as we cant get the item link for the item
                     local previousLocation = set.locations[inventorySlotId]
                     set.locations[inventorySlotId] = locations[inventorySlotId] -- Only update if the item has a location
@@ -439,6 +441,18 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
                     if not isNewSet then
                         -- We force update because the blizzard manager should be correct
                         Internal.UpdateEquipmentSetItemInMapData(set, inventorySlotId, previousLocation, locations[inventorySlotId], true)
+                    end
+                elseif ids[inventorySlotId] == nil then -- Slot is empty
+                    local previousLocation = set.locations[inventorySlotId]
+                    set.locations[inventorySlotId] = nil
+
+                    set.equipment[inventorySlotId] = nil
+                    set.extras[inventorySlotId] = nil
+                    set.data[inventorySlotId] = nil
+
+                    if not isNewSet then
+                        -- We force update because the blizzard manager should be correct
+                        Internal.UpdateEquipmentSetItemInMapData(set, inventorySlotId, previousLocation, nil, true)
                     end
                 end
             end
