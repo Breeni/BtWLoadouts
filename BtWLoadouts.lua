@@ -157,6 +157,7 @@ tomeButton:HookScript("OnClick", function (self, ...)
 end);
 
 StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATE"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = L["Activate profile %s?"],
 	button1 = YES,
 	button2 = NO,
@@ -167,6 +168,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATE"] = {
 	hideOnEscape = 1
 };
 StaticPopupDialogs["BTWLOADOUTS_REQUESTMULTIACTIVATE"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = L["Activate the following profile?\n"],
 	button1 = YES,
 	button2 = NO,
@@ -177,6 +179,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTMULTIACTIVATE"] = {
 	hideOnEscape = 1
 };
 StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATERESTED"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = "Activate spec %s?\nThis set will require a tome or rested to activate",
 	button1 = YES,
 	button2 = NO,
@@ -190,6 +193,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATERESTED"] = {
 	hideOnEscape = 1
 };
 StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATETOME"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = "Activate spec %s?\nThis will use a Tome",
 	button1 = YES,
 	button2 = NO,
@@ -218,6 +222,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATETOME"] = {
 	hideOnEscape = 1
 };
 StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = L["A tome is needed to continue equiping your set."],
 	button1 = YES,
 	button2 = NO,
@@ -250,6 +255,7 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 	hideOnEscape = 1
 };
 StaticPopupDialogs["BTWLOADOUTS_DELETESET"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = L["Are you sure you wish to delete the set \"%s\". This cannot be reversed."],
 	button1 = YES,
 	button2 = NO,
@@ -261,6 +267,7 @@ StaticPopupDialogs["BTWLOADOUTS_DELETESET"] = {
 	showAlert = 1
 };
 StaticPopupDialogs["BTWLOADOUTS_DELETEINUSESET"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."],
 	button1 = YES,
 	button2 = NO,
