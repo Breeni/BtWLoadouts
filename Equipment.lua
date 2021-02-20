@@ -1282,6 +1282,7 @@ local function CombineEquipmentSets(result, state, ...)
 					result.equipment[inventorySlotId] = set.equipment[inventorySlotId];
 					result.extras[inventorySlotId] = set.extras[inventorySlotId] or nil;
 					result.locations[inventorySlotId] = set.locations[inventorySlotId] or nil;
+					result.data[inventorySlotId] = set.data[inventorySlotId] or nil;
 				end
 			end
 		end
@@ -2085,7 +2086,7 @@ do
 				end
 
 				if location and location > 0 then
-					local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
+					local data = set.data[slot] or EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
 
 					if locationItems[location] == nil or locationItems[location] == data then
 						locationItems[location] = locationItems[location] or data
@@ -2361,7 +2362,7 @@ do
 					if type(set) == "table" and set.character == character and set.managerID == nil then
 						for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 							if set.equipment[slot] and set.locations[slot] == nil then
-								local data = EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
+								local data = set.data[slot] or EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
 
 								do
 									local tbl = missingItemDatas[data]
