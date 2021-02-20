@@ -2790,6 +2790,7 @@ do
 
 		local found = false
 
+		local R, G, B = NORMAL_FONT_COLOR:GetRGB()
 		local index = 1
 		local frame = _G[self:GetName() .. "TextLeft" .. index]
 		while frame do
@@ -2800,27 +2801,6 @@ do
 					found = true
 					break
 				end
-
-				-- match = string.match(frame:GetText(), tooltipSellMatch) -- After Equipment
-				-- print(index, frame:GetText(), match)
-				-- if match then
-				-- 	local text, nextText = sets, frame:GetText()
-				-- 	frame:SetText(text)
-
-				-- 	index = index + 1
-				-- 	frame = _G[self:GetName() .. "TextLeft" .. index]
-				-- 	while frame do
-				-- 		text = nextText
-				-- 		nextText = frame:GetText()
-				-- 		frame:SetText(text)
-
-				-- 		index = index + 1
-				-- 		frame = _G[self:GetName() .. "TextLeft" .. index]
-				-- 	end
-
-				-- 	found = true
-				-- 	break
-				-- end
 			end
 
 			index = index + 1
@@ -2828,7 +2808,101 @@ do
 		end
 
 		if not found then
-			self:AddLine(sets)
+			local sellPriceFrame, sellPriceFrameAnchor, sellPriceFrameXOffset, _
+			if self.shownMoneyFrames and self.shownMoneyFrames >= 1 then
+				local index = 1
+				local name = self:GetName().."MoneyFrame" .. index
+				local moneyFrame = _G[name];
+				while moneyFrame do
+					if _G[name .. "PrefixText"]:GetText() == string.format("%s:", SELL_PRICE) then
+						sellPriceFrame = moneyFrame
+						_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPoint("LEFT")
+						break
+					end
+
+					index = index + 1
+					name = self:GetName().."MoneyFrame" .. index
+					moneyFrame = _G[name];
+				end
+			end
+			
+			index = self:NumLines()
+			local left, right = _G[self:GetName() .. "TextLeft" .. index], _G[self:GetName() .. "TextRight" .. index]
+			local leftText = left:GetText()
+			local leftR, leftG, leftB
+			local rightText, rightR, rightG, rightB
+			if leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match((ITEM_CREATED_BY:gsub("%%s", ".*"))) or leftText:match((DURABILITY_TEMPLATE:gsub("%%d", "%%d+"))) then
+				self:AddLine(sets)
+				found = true
+			else
+				leftR, leftG, leftB = left:GetTextColor()
+				rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
+				self:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
+
+				if left == sellPriceFrameAnchor then
+					sellPriceFrame:ClearAllPoints()
+					sellPriceFrame:SetPoint("LEFT", _G[self:GetName() .. "TextLeft" .. (index + 1)], "LEFT", sellPriceFrameXOffset, 0);
+				end
+				if left == sellPriceFrameAnchor or leftText == SELL_PRICE or leftText == ITEM_UNSELLABLE then
+					left:SetTextColor(R, G, B, 1)
+					right:SetTextColor(R, G, B, 1)
+
+					left:SetText(sets)
+					right:SetText("")
+
+					found = true
+				end
+			end
+
+			if not found then
+				while index > 1 do
+					index = index - 1
+					local leftNext, rightNext = _G[self:GetName() .. "TextLeft" .. index], _G[self:GetName() .. "TextRight" .. index]
+					leftText = leftNext:GetText()
+
+					if leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match((ITEM_CREATED_BY:gsub("%%s", ".*"))) or leftText:match((DURABILITY_TEMPLATE:gsub("%%d", "%%d+"))) then
+						left:SetTextColor(R, G, B, 1)
+						right:SetTextColor(R, G, B, 1)
+
+						left:SetText(sets)
+						right:SetText("")
+
+						found = true
+						break
+					else
+						leftR, leftG, leftB = leftNext:GetTextColor()
+						rightText, rightR, rightG, rightB = rightNext:GetText(), rightNext:GetTextColor()
+
+						left:SetTextColor(leftR, leftG, leftB, 1)
+						left:SetText(leftText)
+						right:SetTextColor(rightR, rightG, rightB, 1)
+						right:SetText(rightText)
+
+						if leftNext == sellPriceFrameAnchor then
+							sellPriceFrame:ClearAllPoints()
+							sellPriceFrame:SetPoint("LEFT", left, "LEFT", sellPriceFrameXOffset, 0);
+						end
+						if leftNext == sellPriceFrameAnchor or leftText == SELL_PRICE or leftText == ITEM_UNSELLABLE then
+							left, right = leftNext, rightNext
+
+							left:SetTextColor(R, G, B, 1)
+							right:SetTextColor(R, G, B, 1)
+	
+							left:SetText(sets)
+							right:SetText("")
+	
+							found = true
+							break
+						end
+					end
+
+					left, right = leftNext, rightNext
+				end
+			end
+
+			if not found then
+				self:AddLine(sets)
+			end
 		end
 
 		self:AddLine(string.format("Location: %d", location))
