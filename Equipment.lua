@@ -1250,6 +1250,7 @@ local function CombineEquipmentSets(result, state, ...)
 	result.extras = {};
 	result.locations = {};
 	result.ignored = {};
+	result.data = {};
 	for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
 		result.ignored[slot] = true;
 	end
