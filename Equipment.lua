@@ -1659,13 +1659,14 @@ function BtWLoadoutsItemSlotButtonMixin:OnEvent(event, itemID, success)
 	end
 end
 function BtWLoadoutsItemSlotButtonMixin:OnEnter()
+	local character = GetCharacterSlug()
 	local set = self:GetParent().set;
 	local slot = self:GetID();
 	local location = set.locations[slot];
 	local itemLink = set.equipment[slot];
 
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-	if location and location > 0 and (BankFrame:IsShown() or bit.band(location, ITEM_INVENTORY_LOCATION_BANK) ~= ITEM_INVENTORY_LOCATION_BANK) then
+	if set.character == character and location and location > 0 and (BankFrame:IsShown() or bit.band(location, ITEM_INVENTORY_LOCATION_BANK) ~= ITEM_INVENTORY_LOCATION_BANK) then
 		local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
 		if not bags then
 			GameTooltip:SetInventoryItem("player", slot)
