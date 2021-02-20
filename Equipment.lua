@@ -2440,18 +2440,25 @@ do
 				end
 			end
 
-			for itemData,location in pairs(missingItemDatas) do
-				local isInventory = bit.band(ITEM_INVENTORY_LOCATION_PLAYER, location) ~= 0 and bit.band(ITEM_INVENTORY_LOCATION_BAGS, location) == 0
-				local isBags = bit.band(ITEM_INVENTORY_LOCATION_PLAYER, location) ~= 0 and bit.band(ITEM_INVENTORY_LOCATION_BAGS, location) ~= 0
-				local isBank = bit.band(ITEM_INVENTORY_LOCATION_BANK, location) ~= 0
-				if (not skipInventory == isInventory) or (not skipBags == isBags) or (not skipBank == isBank) then
-					for setLocation in pairs(locationSets[location]) do
-						local setID, setSlot = strsplit(":", setLocation)
-						setID, setSlot = tonumber(setID), tonumber(setSlot)
-			
-						local set = GetEquipmentSet(setID)
-						assert(set)
-						set.locations[setSlot] = nil
+			for itemData,tbl in pairs(missingItemDatas) do
+				if type(tbl) == "number" then
+					tbl = {tbl}
+				end
+				for _,location in ipairs(tbl) do
+					if location > 0 then
+						local isInventory = bit.band(ITEM_INVENTORY_LOCATION_PLAYER, location) ~= 0 and bit.band(ITEM_INVENTORY_LOCATION_BAGS, location) == 0
+						local isBags = bit.band(ITEM_INVENTORY_LOCATION_PLAYER, location) ~= 0 and bit.band(ITEM_INVENTORY_LOCATION_BAGS, location) ~= 0
+						local isBank = bit.band(ITEM_INVENTORY_LOCATION_BANK, location) ~= 0
+						if (not skipInventory == isInventory) or (not skipBags == isBags) or (not skipBank == isBank) then
+							for setLocation in pairs(locationSets[location]) do
+								local setID, setSlot = strsplit(":", setLocation)
+								setID, setSlot = tonumber(setID), tonumber(setSlot)
+					
+								local set = GetEquipmentSet(setID)
+								assert(set)
+								set.locations[setSlot] = nil
+							end
+						end
 					end
 				end
 			end
