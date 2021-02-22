@@ -153,6 +153,8 @@ local function GetExtrasForItemLocation(itemLocation, extras)
 		end
 
 		extras.azerite = azerite
+	else
+		extras.azerite = nil -- Clear azerite data
 	end
 
 	return extras
@@ -1188,6 +1190,7 @@ local function RefreshEquipmentSet(set)
 
 		-- We want this to supersede the other 2, but need those for fallback still
 		set.data[inventorySlotId] = set.equipment[inventorySlotId] and EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite) or nil
+		debug(inventorySlotId, set.data[inventorySlotId])
 		if set.setID then -- Only do this for previously created sets
 			UpdateSetItemInMapData(set, inventorySlotId, previousLocation, set.locations[inventorySlotId])
 		end
