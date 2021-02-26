@@ -1775,7 +1775,7 @@ local npcIDToBossID = {
     [164261] = 2428, -- Hungering Destroyer
     [174733] = 2394, -- Sludgefist
     [165318] = 2425, -- Stone Legion Generals
-    [168938] = 2424, -- Sire Denathrius
+    [167406] = 2424, -- Sire Denathrius
 };
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
@@ -1833,6 +1833,7 @@ local InstanceAreaIDToBossID = {
         [13431] = 2405, -- Tred'ova
     },
     [2296] = { -- Castle Nathria
+        [13435] = 2424, -- Sire Denathrius
     },
 };
 -- This is for bosses that have their own unique world map
