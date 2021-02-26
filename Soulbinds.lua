@@ -214,10 +214,10 @@ local function CombineSets(result, state, ...)
 
 	return result;
 end
-local function ActivateSet(set)
+local function ActivateSet(set, state)
     local complete = true;
 
-    if not IsSetActive(set) then
+    if (not state or not state.ignoreTome) and not IsSetActive(set) then
         local soulbindData = GetSoulbindData(set.soulbindID)
         Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
 

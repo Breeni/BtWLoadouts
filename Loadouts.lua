@@ -116,14 +116,14 @@ do
 		end
 	end
 	function RequestTome()
-		if not StaticPopup_Visible("BTWLOADOUTS_NEEDTOME") then --  and not StaticPopup_Visible("BTWLOADOUTS_NEEDRESTED")
-			local itemId, name, link, quality, icon = GetBestTome();
-			if name ~= nil then
-				local r, g, b = GetItemQualityColor(quality or 2);
-				StaticPopup_Show("BTWLOADOUTS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
-			elseif itemId == nil then
-				-- StaticPopup_Show("BTWLOADOUTS_NEEDRESTED", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
-			end
+		local itemId, name, link, quality, icon = GetBestTome();
+		if name ~= nil and not StaticPopup_Visible("BTWLOADOUTS_NEEDTOME") then
+			local r, g, b = GetItemQualityColor(quality or 2);
+			StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+			StaticPopup_Show("BTWLOADOUTS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
+		elseif itemId == nil and not StaticPopup_Visible("BTWLOADOUTS_NEEDRESTED") then
+			StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+			StaticPopup_Show("BTWLOADOUTS_NEEDRESTED")
 		end
 	end
 end
@@ -177,12 +177,18 @@ local function CancelActivateProfile()
 	wipe(target);
 	wipe(targetstate);
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+	StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 	Internal.Call("LOADOUT_CHANGE_END")
 	Internal.LogMessage("--- END ---")
 end
 Internal.CancelActivateProfile = CancelActivateProfile;
+local function ContinueWithoutTomeActivateProfile()
+    target.dirty = true
+	target.ignoreTome = true
+end
+Internal.ContinueWithoutTomeActivateProfile = ContinueWithoutTomeActivateProfile;
 
 local errorState = {} -- Reusable state for checking loadouts for errors
 local function LoadoutHasErrors(set)
@@ -381,6 +387,7 @@ local function ActivateProfile(profile)
 	eventHandler:RegisterEvent("PLAYER_LEARN_TALENT_FAILED");
 	eventHandler:RegisterEvent("PLAYER_PVP_TALENT_UPDATE");
 	eventHandler:RegisterEvent("PLAYER_LEARN_PVP_TALENT_FAILED");
+	eventHandler:RegisterEvent("BAG_UPDATE_DELAYED");
 	if C_Covenants then -- Skip for pre-Shadowlands
 		eventHandler:RegisterEvent("SOULBIND_ACTIVATED");
 	end
@@ -485,6 +492,7 @@ local function ContinueActivateProfile()
 	if IsChangingSpec() then
 		Internal.SetWaitReason(L["Waiting for specialization change"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
         return;
 	end
 
@@ -497,6 +505,7 @@ local function ContinueActivateProfile()
 		state.noTaxiSwap = true
 		state.noMovingSwap = true
 	end
+	state.ignoreTome = target.ignoreTome
 
 	wipe(combinedSets)
 	for _,segment in ipairs(loadoutSegments) do
@@ -508,18 +517,21 @@ local function ContinueActivateProfile()
 	if state.noCombatSwap and InCombatLockdown() then
 		Internal.SetWaitReason(L["Waiting for combat to end"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 		return;
 	end
 
 	if state.noTaxiSwap and UnitOnTaxi("player") then
 		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
         return;
 	end
 
 	if state.noMovingSwap and IsPlayerMoving() then
 		Internal.SetWaitReason(L["Waiting to change specialization"])
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 		return;
 	end
 
@@ -538,17 +550,18 @@ local function ContinueActivateProfile()
 	if state.customWait then
 		Internal.SetWaitReason(state.customWait)
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 		return
 	end
 
-	if state.needTome and PlayerNeedsTome() then
+	if not state.ignoreTome and state.needTome and PlayerNeedsTome() then
 		Internal.SetWaitReason(L["Waiting for tome"])
 		RequestTome();
 		return;
 	end
 
 	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-	-- StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED");
+	StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 
 	if uiErrorTracking == nil then
 		uiErrorTracking = UIErrorsFrame:IsEventRegistered("UI_ERROR_MESSAGE")
@@ -589,7 +602,8 @@ function eventHandler:GET_ITEM_INFO_RECEIVED()
     target.dirty = true;
 end
 function eventHandler:PLAYER_REGEN_DISABLED()
-    StaticPopup_Hide("BTWLOADOUTS_NEEDTOME");
+    StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+	StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 end
 function eventHandler:PLAYER_REGEN_ENABLED()
     target.dirty = true;
@@ -630,6 +644,9 @@ function eventHandler:PLAYER_PVP_TALENT_UPDATE(...)
 	target.dirty = true;
 end
 function eventHandler:PLAYER_LEARN_PVP_TALENT_FAILED(...)
+	target.dirty = true;
+end
+function eventHandler:BAG_UPDATE_DELAYED(...)
 	target.dirty = true;
 end
 function eventHandler:SOULBIND_ACTIVATED(...)
