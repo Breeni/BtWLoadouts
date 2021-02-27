@@ -69,6 +69,9 @@ do
 
     local function BuildMacroMap()
         mapCreated = true
+        if MacroFrame and MacroFrame:IsShown() then
+            MacroFrame_Update()
+        end
 
         local global, character = GetNumMacros()
         local macro
@@ -80,6 +83,7 @@ do
             macro = macros[i]
 
             macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+            macro.body = macro.body and trim(macro.body) -- Remove empty lines from start and end
 
             macroNameMap[macro.name] = i
             macroBodyMap[macro.body] = i
@@ -91,6 +95,7 @@ do
             macro = macros[i]
 
             macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+            macro.body = macro.body and trim(macro.body) -- Remove empty lines from start and end
 
             macroNameMap[macro.name] = i
             macroBodyMap[macro.body] = i
@@ -107,7 +112,7 @@ do
 
     hooksecurefunc("CreateMacro", BuildMacroMap)
     hooksecurefunc("DeleteMacro", BuildMacroMap)
-
+    
     local function EditMacroHook(id, name, icon, body)
         if type(id) == "string" then
             id = macroNameMap[id]
@@ -118,6 +123,8 @@ do
         if id == nil or id == 0 or not mapCreated then
             return BuildMacroMap()
         end
+
+        body = body and trim(body) -- Remove empty lines from start and end
 
         local macro = macros[id]
         local changed = (name ~= nil and name ~= macro.name) or (body ~= nil and body ~= macro.body)
@@ -159,6 +166,7 @@ do
 
                 if GetMacroInfo(i) then
                     macro.index, macro.name, macro.icon, macro.body = i, GetMacroInfo(i)
+                    macro.body = macro.body and trim(macro.body)
 
                     if macro.name then
                         macroNameMap[macro.name] = i
@@ -384,190 +392,204 @@ local function PickupMacroByText(text)
 end
 
 -- Pickup an action, when test is true the action wont actually be picked up
-local function PickupActionTable(tbl, test, settings)
+local function PickupActionTable(tbl, test, settings, activating)
     if tbl == nil or tbl.type == nil then
         return true, "Success"
     end
 
     local success, msg = true, "Success"
-    if tbl.type == "macro" then
-        local index = GetMacroByText(tbl.macroText)
-
-        if (not index or index == 0) and tbl.name then
-            msg = L["Could not find macro by text"]
-            index = GetMacroIndexByName(tbl.name)
-        end
-
-        if not index or index == 0 then
-            msg = L["Could not find macro by text or name"]
-            success = false
-            -- if GetMacroInfo(tbl.id) then
-            --     index = tbl.id
-            -- end
-        elseif not test then
-            PickupMacro(index)
-        end
-
-        -- if not index or index == 0 then
-        --     msg = L["Could not find macro by text, name or id"]
-        --     success = false
-        -- elseif not test then
-        --     PickupMacro(index)
-        -- end
-    elseif tbl.type == "spell" then
-        -- If we use the base version of the spell it should always work
-        tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
-
-        if settings and settings.adjustCovenant then
-            if IsCovenantSignatureAbility(tbl.id) then
-                tbl.id = GetCovenantSignatureAbility() or tbl.id
-            elseif IsCovenantClassAbility(tbl.id) then
-                tbl.id = GetCovenantClassAbility() or tbl.id
-            end
-        end
-
-        local index
-        success = false
-        if tbl.subType == "spell" then
-            for tabIndex = 1,min(2,GetNumSpellTabs()) do
-                local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
-                for spellIndex = offset,offset+numEntries do
-                    local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
-                    if skillType == "SPELL" and id == tbl.id then
-                        index = spellIndex
-                        break
+    local noError, err = pcall(function ()
+        if tbl.type == "macro" then
+            local index = GetMacroByText(tbl.macroText)
+            if not index or index == 0 then
+                if settings and settings.createMissingMacros then
+                    msg = L["Could not find macro by text, creating as account macro"]
+                    local numMacros = GetNumMacros()
+                    if activating and numMacros < MAX_ACCOUNT_MACROS then
+                        index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText)
+                    else
+                        index = -1
                     end
-                end
-            end
-        else
-            local spellIndex = 1
-            local skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
-            while skillType do
-                if skillType == "SPELL" and id == tbl.id then
-                    index = spellIndex
-                    break
-                end
-
-                spellIndex = spellIndex + 1
-                skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
-            end
-        end
-        if index then
-            success = true
-            if not test then
-                PickupSpellBookItem(index, tbl.subType)
-            end
-        end
-
-        if not success then
-            -- In cases where we need a pvp talent but they arent active
-            -- we have to pickup the talent, not the spell
-            local pvptalents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
-            for _,talentId in ipairs(pvptalents) do
-                if select(6, GetPvpTalentInfoByID(talentId)) == tbl.id then
-                    success = true
-                    if not test then
-                        PickupPvpTalent(talentId)
+                elseif settings and settings.createMissingMacrosCharacter then
+                    msg = L["Could not find macro by text, creating as character macro"]
+                    local _, numMacros = GetNumMacros()
+                    if activating and numMacros < MAX_CHARACTER_MACROS  then
+                        index = CreateMacro(tbl.name or "BtWLoadouts Missing Macro", "INV_Misc_QuestionMark", tbl.macroText, true)
+                    else
+                        index = -1
                     end
+                elseif tbl.name then
+                    msg = L["Could not find macro by text"]
+                    index = GetMacroIndexByName(tbl.name)
                 end
             end
-        end
 
-        if not success then
-            if tbl.subType == "pet" then
-                if IsSpellKnown(tbl.id, true) then
-                    success = true
-                    if not test then
-                        PickupPetSpell(tbl.id)
-                    end
-                end
-            elseif tbl.subType == "spell" then
-                if IsSpellKnown(tbl.id, false) then
-                    success = true
-                    if not test then
-                        PickupSpell(tbl.id)
-                    end
-                end
-            end
-        end
-
-        if not success then
-            msg = L["Spell not found"]
-        end
-    elseif tbl.type == "item" then
-        if not test then
-            PickupItem(tbl.id)
-        end
-    elseif tbl.type == "summonmount" then
-        if tbl.id == 0xFFFFFFF then -- Random Favourite
-            if not test then
-                C_MountJournal.Pickup(0)
-            end
-        else
-            if not select(11, C_MountJournal.GetMountInfoByID(tbl.id)) then
+            if not index or index == 0 then
+                msg = L["Could not find macro by text or name"]
                 success = false
-                msg = L["Mount is not available"]
             elseif not test then
-                -- We will attempt to pickup the mount using the latest way, if that
-                -- fails because of filtering we will pickup the spell instead
-                local index = nil
-                for i=1,C_MountJournal.GetNumDisplayedMounts() do
-                    if select(12,C_MountJournal.GetDisplayedMountInfo(i)) == tbl.id then
-                        index = i
-                        break
-                    end
-                end
-                if index then
-                    C_MountJournal.Pickup(index)
-                else
-                    PickupSpell((select(2, C_MountJournal.GetMountInfoByID(tbl.id))))
+                PickupMacro(index)
+            end
+        elseif tbl.type == "spell" then
+            -- If we use the base version of the spell it should always work
+            tbl.id = FindBaseSpellByID(tbl.id) or tbl.id
+
+            if settings and settings.adjustCovenant then
+                if IsCovenantSignatureAbility(tbl.id) then
+                    tbl.id = GetCovenantSignatureAbility() or tbl.id
+                elseif IsCovenantClassAbility(tbl.id) then
+                    tbl.id = GetCovenantClassAbility() or tbl.id
                 end
             end
-        end
-    elseif tbl.type == "summonpet" then
-        if not C_PetJournal.GetPetInfoByPetID(tbl.id) then
-            success = false
-            msg = L["Pet is not available"]
-        elseif not test then
-            C_PetJournal.PickupPet(tbl.id)
-        end
-    elseif tbl.type == "companion" then -- This is the old way of handling mounts and pets
-        if not test and tbl.subType == "MOUNT" then
-            PickupSpell(tbl.id)
-        end
-    elseif tbl.type == "equipmentset" then
-        local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
-        if not id then
-            success = false
-            msg = L["Equipment set is not available"]
-        elseif not test then
-            C_EquipmentSet.PickupEquipmentSet(id)
-        end
-    elseif tbl.type == "flyout" then
-        if not GetFlyoutInfo(tbl.id) then
-            success = false
-            msg = L["Flyout is not available"]
-        else
-            -- Find the spell book index for the flyout
+
             local index
-            for tabIndex = 1,min(2,GetNumSpellTabs()) do
-                local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
-                for spellIndex = offset,offset+numEntries do
-                    local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
-                    if skillType == "FLYOUT" and id == tbl.id then
+            success = false
+            if tbl.subType == "spell" then
+                for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                    local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
+                    for spellIndex = offset,offset+numEntries do
+                        local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                        if skillType == "SPELL" and id == tbl.id then
+                            index = spellIndex
+                            break
+                        end
+                    end
+                end
+            else
+                local spellIndex = 1
+                local skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
+                while skillType do
+                    if (skillType == "SPELL" or (skillType == "PETACTION" and tbl.subType == "pet")) and id == tbl.id then
                         index = spellIndex
                         break
                     end
+
+                    spellIndex = spellIndex + 1
+                    skillType, id = GetSpellBookItemInfo(spellIndex, tbl.subType)
                 end
             end
-            if not index then -- Couldn't find the flyout in the spell book
+            if index then
+                success = true
+                if not test then
+                    PickupSpellBookItem(index, tbl.subType)
+                end
+            end
+
+            if not success then
+                -- In cases where we need a pvp talent but they arent active
+                -- we have to pickup the talent, not the spell
+                local pvptalents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
+                for _,talentId in ipairs(pvptalents) do
+                    if select(6, GetPvpTalentInfoByID(talentId)) == tbl.id then
+                        success = true
+                        if not test then
+                            PickupPvpTalent(talentId)
+                        end
+                    end
+                end
+            end
+
+            if not success then
+                if tbl.subType == "pet" then
+                    if IsSpellKnown(tbl.id, true) then
+                        success = true
+                        if not test then
+                            PickupPetSpell(tbl.id)
+                        end
+                    end
+                elseif tbl.subType == "spell" then
+                    if IsSpellKnown(tbl.id, false) then
+                        success = true
+                        if not test then
+                            PickupSpell(tbl.id)
+                        end
+                    end
+                end
+            end
+
+            if not success then
+                msg = L["Spell not found"]
+            end
+        elseif tbl.type == "item" then
+            if not test then
+                PickupItem(tbl.id)
+            end
+        elseif tbl.type == "summonmount" then
+            if tbl.id == 0xFFFFFFF then -- Random Favourite
+                if not test then
+                    C_MountJournal.Pickup(0)
+                end
+            else
+                if not select(11, C_MountJournal.GetMountInfoByID(tbl.id)) then
+                    success = false
+                    msg = L["Mount is not available"]
+                elseif not test then
+                    -- We will attempt to pickup the mount using the latest way, if that
+                    -- fails because of filtering we will pickup the spell instead
+                    local index = nil
+                    for i=1,C_MountJournal.GetNumDisplayedMounts() do
+                        if select(12,C_MountJournal.GetDisplayedMountInfo(i)) == tbl.id then
+                            index = i
+                            break
+                        end
+                    end
+                    if index then
+                        C_MountJournal.Pickup(index)
+                    else
+                        PickupSpell((select(2, C_MountJournal.GetMountInfoByID(tbl.id))))
+                    end
+                end
+            end
+        elseif tbl.type == "summonpet" then
+            if not C_PetJournal.GetPetInfoByPetID(tbl.id) then
                 success = false
-                msg = L["Flyout is not is spell book"]
+                msg = L["Pet is not available"]
             elseif not test then
-                PickupSpellBookItem(index, "spell")
+                C_PetJournal.PickupPet(tbl.id)
+            end
+        elseif tbl.type == "companion" then -- This is the old way of handling mounts and pets
+            if not test and tbl.subType == "MOUNT" then
+                PickupSpell(tbl.id)
+            end
+        elseif tbl.type == "equipmentset" then
+            local id = C_EquipmentSet.GetEquipmentSetID(tbl.id)
+            if not id then
+                success = false
+                msg = L["Equipment set is not available"]
+            elseif not test then
+                C_EquipmentSet.PickupEquipmentSet(id)
+            end
+        elseif tbl.type == "flyout" then
+            if not GetFlyoutInfo(tbl.id) then
+                success = false
+                msg = L["Flyout is not available"]
+            else
+                -- Find the spell book index for the flyout
+                local index
+                for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                    local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
+                    for spellIndex = offset,offset+numEntries do
+                        local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                        if skillType == "FLYOUT" and id == tbl.id then
+                            index = spellIndex
+                            break
+                        end
+                    end
+                end
+                if not index then -- Couldn't find the flyout in the spell book
+                    success = false
+                    msg = L["Flyout is not is spell book"]
+                elseif not test then
+                    PickupSpellBookItem(index, "spell")
+                end
             end
         end
+    end)
+    if not noError then
+        success = false
+        msg = L["Error: "] .. err
     end
+
     return success, msg
 end
 
@@ -627,7 +649,7 @@ local function IsActionBarSetActive(set)
 
     return true;
 end
-local function ActivateActionBarSet(set)
+local function ActivateActionBarSet(set, state)
     local complete = true
     for slot=1,120 do
         if not set.ignored[slot] then
@@ -641,7 +663,7 @@ local function ActivateActionBarSet(set)
             end
         end
     end
-    return complete
+    return complete, not complete
 end
 local function RefreshActionBarSet(set)
     local actions = set.actions or {}
@@ -691,7 +713,7 @@ local function GetActionBarSets(id, ...)
 	end
 end
 -- Do not change the results action tables, that'll mess with the original sets
-local function CombineActionBarSets(result, ...)
+local function CombineActionBarSets(result, state, ...)
     result = result or {};
     result.actions = result.actions or {}
     result.ignored = result.ignored or {}
@@ -706,11 +728,15 @@ local function CombineActionBarSets(result, ...)
 		for slot=1,120 do
             if not set.ignored[slot] then
                 result.ignored[slot] = false
-                if PickupActionTable(set.actions[slot], true, set.settings) or result.actions[slot] == nil then
+                if PickupActionTable(set.actions[slot], true, set.settings, state ~= nil) or result.actions[slot] == nil then
                     result.actions[slot] = set.actions[slot]
                 end
             end
 		end
+    end
+    
+    if state then
+        state.noCombatSwap = true
     end
 
 	return result;
@@ -750,7 +776,117 @@ Internal.GetActionBarSets = GetActionBarSets
 Internal.CombineActionBarSets = CombineActionBarSets
 Internal.DeleteActionBarSet = DeleteActionBarSet
 
+local setsFiltered = {}
+local function ActionBarDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
 
+    CloseDropDownMenus();
+    local set = tab.set;
+	local index = arg2 or (#set.actionbars + 1)
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	if arg1 == nil then
+		table.remove(set.actionbars, index);
+	else
+		set.actionbars[index] = arg1;
+	end
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame:Update();
+end
+local function ActionBarDropDown_NewOnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Profiles
+
+	CloseDropDownMenus();
+	local set = tab.set;
+	local index = arg2 or (#set.actionbars + 1)
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 1) - 1;
+	end
+
+	local newSet = Internal.AddActionBarSet();
+	set.actionbars[index] = newSet.setID;
+
+	if set.actionbars[index] then
+		local subset = Internal.GetActionBarSet(set.actionbars[index]);
+		subset.useCount = (subset.useCount or 0) + 1;
+	end
+
+	BtWLoadoutsFrame.ActionBars.set = newSet;
+	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.ActionBars:GetID());
+
+	BtWLoadoutsFrame:Update();
+end
+local function ActionBarDropDownInit(self, level, menuList, index)
+    if not BtWLoadoutsSets or not BtWLoadoutsSets.actionbars then
+        return;
+    end
+
+	local info = UIDropDownMenu_CreateInfo();
+
+	local tab = BtWLoadoutsFrame.Profiles
+
+	local set = tab.set;
+	local selected = set and set.actionbars and set.actionbars[index];
+
+	info.arg2 = index
+	
+	if (level or 1) == 1 then
+		info.text = NONE;
+		info.func = ActionBarDropDown_OnClick;
+		info.checked = selected == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+		wipe(setsFiltered);
+		local sets = BtWLoadoutsSets.actionbars;
+		for setID,subset in pairs(sets) do
+			if type(subset) == "table" then
+				setsFiltered[#setsFiltered+1] = setID;
+			end
+		end
+		sort(setsFiltered, function (a,b)
+			return sets[a].name < sets[b].name;
+		end)
+
+		for _,setID in ipairs(setsFiltered) do
+			info.text = sets[setID].name;
+			info.arg1 = setID;
+			info.func = ActionBarDropDown_OnClick;
+			info.checked = selected == setID;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		info.text = L["New Set"];
+		info.func = ActionBarDropDown_NewOnClick;
+		info.hasArrow, info.menuList = false, nil;
+		info.keepShownOnClick = false;
+		info.notCheckable = true;
+		info.checked = false;
+		UIDropDownMenu_AddButton(info, level);
+	end
+end
+
+Internal.AddLoadoutSegment({
+    id = "actionbars",
+    name = L["Action Bars"],
+    after = "talents,pvptalents,essences,soulbinds,equipment",
+    events = "ACTIONBAR_SLOT_CHANGED",
+    get = GetActionBarSets,
+    combine = CombineActionBarSets,
+    isActive = IsActionBarSetActive,
+    activate = ActivateActionBarSet,
+    dropdowninit = ActionBarDropDownInit,
+})
 
 BtWLoadoutsActionButtonMixin = {}
 function BtWLoadoutsActionButtonMixin:OnClick(...)
@@ -765,9 +901,6 @@ function BtWLoadoutsActionButtonMixin:OnClick(...)
 			local index = Internal.GetMacroByText(tbl.macroText)
             if not index then
                 CreateMacro(tbl.name, "INV_Misc_QuestionMark", tbl.macroText, IsModifiedClick("SHIFT"));
-                if MacroFrame_Update then
-                    MacroFrame_Update()
-                end
             end
         end
         BtWLoadoutsFrame:Update()
@@ -957,6 +1090,30 @@ local function DropDown_Initialize(self, level, menuList)
         info.checked = set.settings and set.settings.adjustCovenant
         info.text = L["Adjust Covenant Abilities"]
         UIDropDownMenu_AddButton(info, level)
+
+        
+        info.func = function (self, arg1, arg2, checked)
+            set.settings = set.settings or {}
+            set.settings.createMissingMacros = not checked
+            set.settings.createMissingMacrosCharacter = false
+
+            BtWLoadoutsFrame:Update()
+        end
+        info.checked = set.settings and set.settings.createMissingMacros
+        info.text = L["Create Missing Macros"]
+        UIDropDownMenu_AddButton(info, level)
+
+        
+        info.func = function (self, arg1, arg2, checked)
+            set.settings = set.settings or {}
+            set.settings.createMissingMacrosCharacter = not checked
+            set.settings.createMissingMacros = false
+
+            BtWLoadoutsFrame:Update()
+        end
+        info.checked = set.settings and set.settings.createMissingMacrosCharacter
+        info.text = L["Create Missing Macros (Character Only)"]
+        UIDropDownMenu_AddButton(info, level)
     end
 end
 BtWLoadoutsActionBarsMixin = {}
@@ -966,8 +1123,119 @@ function BtWLoadoutsActionBarsMixin:OnShow()
         self.initialized = true
     end
 end
+function BtWLoadoutsActionBarsMixin:UpdateSetName(value)
+	if self.set and self.set.name ~= not value then
+		self.set.name = value;
+		self:Update();
+	end
+end
+function BtWLoadoutsActionBarsMixin:ChangeSet(set)
+    self.set = set
+    self:Update()
+end
+function BtWLoadoutsActionBarsMixin:OnButtonClick(button)
+	CloseDropDownMenus()
+	if button.isAdd then
+        self.Name:ClearFocus();
+		self:ChangeSet(AddActionBarSet())
+        C_Timer.After(0, function ()
+            self.Name:HighlightText();
+            self.Name:SetFocus();
+        end);
+    elseif button.isDelete then
+        local set = self.set;
+        if set.useCount > 0 then
+            StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
+                set = set,
+                func = DeleteActionBarSet,
+            });
+        else
+            StaticPopup_Show("BTWLOADOUTS_DELETESET", set.name, nil, {
+                set = set,
+                func = DeleteActionBarSet,
+            });
+        end
+    elseif button.isRefresh then
+        local set = self.set;
+        RefreshActionBarSet(set)
+        self:Update()
+    elseif button.isActivate then
+        Internal.ActivateProfile({
+            actionbars = {self.set.setID}
+        });
+	end
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		button.collapsed[button.id] = not button.collapsed[button.id]
+		self:Update()
+	else
+		if IsModifiedClick("SHIFT") then
+			Internal.ActivateProfile({
+				actionbars = {button.id}
+			});
+		else
+			self.Name:ClearFocus();
+            self:ChangeSet(GetActionBarSet(button.id))
+		end
+	end
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemDoubleClick(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
 
-function Internal.ActionBarsTabUpdate(self)
+	Internal.ActivateProfile({
+		actionbars = {button.id}
+	});
+end
+function BtWLoadoutsActionBarsMixin:OnSidebarItemDragStart(button)
+	CloseDropDownMenus()
+	if button.isHeader then
+		return
+	end
+
+	local icon = "INV_Misc_QuestionMark";
+	local set = GetActionBarSet(button.id);
+	local command = format("/btwloadouts activate actionbars %d", button.id);
+
+	if command then
+		local macroId;
+		local numMacros = GetNumMacros();
+		for i=1,numMacros do
+			if GetMacroBody(i):trim() == command then
+				macroId = i;
+				break;
+			end
+		end
+
+		if not macroId then
+			if numMacros == MAX_ACCOUNT_MACROS then
+				print(L["Cannot create any more macros"]);
+				return;
+			end
+			if InCombatLockdown() then
+				print(L["Cannot create macros while in combat"]);
+				return;
+			end
+
+			macroId = CreateMacro(set.name, icon, command, false);
+		else
+			-- Rename the macro while not in combat
+			if not InCombatLockdown() then
+				icon = select(2,GetMacroInfo(macroId))
+				EditMacro(macroId, set.name, icon, command)
+			end
+		end
+
+		if macroId then
+			PickupMacro(macroId);
+		end
+	end
+end
+function BtWLoadoutsActionBarsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
@@ -980,7 +1248,6 @@ function Internal.ActionBarsTabUpdate(self)
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-	-- self.set = Internal.SetsScrollFrame_NoFilter(self.set, BtWLoadoutsSets.actionbars, BtWLoadoutsCollapsed.actionbars);
 
 	if self.set ~= nil then
 		local set = self.set;

@@ -502,7 +502,7 @@ local scenarioInfo = {
 		},
 	},
 	{
-		name = L["Battle For Azeroth"],
+		name = L["Battle for Azeroth"],
 		instances = {
 			{nil, 38, (function () return string.format("%s %s", GetDifficultyInfo(38), L["Island Expedition"]) end)()}, -- Normal Island
 			{nil, 39, (function () return string.format("%s %s", GetDifficultyInfo(39), L["Island Expedition"]) end)()}, -- Heroic Island
@@ -1757,7 +1757,25 @@ local npcIDToBossID = {
 	[155859] = 2353, -- Radiance of Azshara
 	[152364] = 2353, -- Radiance of Azshara
 
-	[152236] = 2354, -- Lady Ashvane
+    [152236] = 2354, -- Lady Ashvane
+    
+    -- Sanguine Depths
+    [162100] = 2388, -- Kryxis the Voracious
+    [162103] = 2415, -- Executor Tarvold
+    [162102] = 2421, -- Grand Proctor Beryllia
+    [162099] = 2407, -- General Kaal
+
+    -- Halls of Atonement
+    [165408] = 2406, -- Halkias, the Sin-Stained Goliath
+    [164185] = 2387, -- Echelon
+
+    -- Castle Nathria
+    [172145] = 2393, -- Shriekwing
+    [165066] = 2429, -- Huntsman Altimor
+    [164261] = 2428, -- Hungering Destroyer
+    [174733] = 2394, -- Sludgefist
+    [165318] = 2425, -- Stone Legion Generals
+    [167406] = 2424, -- Sire Denathrius
 };
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
@@ -1793,11 +1811,30 @@ local InstanceAreaIDToBossID = {
 		[13471] = 2395, -- Blightbone
 		[13473] = 2391, -- Amarth, The Harvester
 	},
-	[2217] = { -- Plaguefall
+	[2289] = { -- Plaguefall
 		[13423] = 2419, -- Globgrog
 		[13421] = 2403, -- Doctor Ickus
 		[13422] = 2423, -- Domina Venomblade
-	},
+    },
+    
+	[2287] = { -- Halls of Atonement
+    },
+    [2284] = { -- Sanguine Depths
+    },
+    [2285] = { -- Spires of Ascension
+        [13511] = 2399, -- Kin-Tara
+        [13513] = 2416, -- Ventunax
+    },
+    [2293] = { -- Theater of Pain
+    },
+    [2290] = { -- Mists of Tirna Scithe
+        [13429] = 2400, -- Ingra Maloch
+        [13430] = 2402, -- Mistcaller
+        [13431] = 2405, -- Tred'ova
+    },
+    [2296] = { -- Castle Nathria
+        [13435] = 2424, -- Sire Denathrius
+    },
 };
 -- This is for bosses that have their own unique world map
 local uiMapIDToBossID = {
@@ -1813,8 +1850,8 @@ local uiMapIDToBossID = {
     [ 239] =  404, -- Lethtendris
     [ 237] =  408, -- Magister Kalendris
     -- Gnomeregan
-    [ 228] =  418, -- Crowd Pummeler 9-60
     [ 226] =  419, -- Grubbis
+    [ 228] =  418, -- Crowd Pummeler 9-60
     [ 229] =  422, -- Mekgineer Thermaplugg
     -- Uldaman
     [ 231] =  473, -- Archaedas
@@ -1892,21 +1929,21 @@ local uiMapIDToBossID = {
     -- Halls of Origination
     [ 298] =  125, -- Earthrager Ptah
     -- End Time
-    [ 405] =  283, -- Echo of Tyrande
-    [ 402] =  285, -- Echo of Jaina
-    [ 406] =  289, -- Murozond
-    [ 403] =  323, -- Echo of Sylvanas
     [ 404] =  340, -- Echo of Baine
+    [ 402] =  285, -- Echo of Jaina
+    [ 403] =  323, -- Echo of Sylvanas
+    [ 405] =  283, -- Echo of Tyrande
+    [ 406] =  289, -- Murozond
     -- Hour of Twilight
     [ 400] =  341, -- Archbishop Benedictus
     -- The Bastion of Twilight
     [ 296] =  168, -- Sinestra
     -- Dragon Soul
-    [ 412] =  317, -- Hagara the Stormbinder
-    [ 414] =  318, -- Spine of Deathwing
     [ 410] =  324, -- Warlord Zon'ozz
     [ 411] =  325, -- Yor'sahj the Unsleeping
+    [ 412] =  317, -- Hagara the Stormbinder
     [ 413] =  332, -- Warmaster Blackhorn
+    [ 414] =  318, -- Spine of Deathwing
     [ 415] =  333, -- Madness of Deathwing
 
     -- Mists of Pandaria
@@ -1915,9 +1952,9 @@ local uiMapIDToBossID = {
     [ 441] =  669, -- Hoptallus
     [ 442] =  670, -- Yan-Zhu the Uncasked
     -- Mogu'shan Palace
+    [ 453] =  708, -- Trial of the King
     [ 454] =  690, -- Gekkan
     [ 455] =  698, -- Xin the Weaponmaster
-    [ 453] =  708, -- Trial of the King
     -- Gate of the Setting Sun
     [ 438] =  675, -- Striker Ga'dok
     -- Siege of Niuzao Temple
@@ -1925,16 +1962,16 @@ local uiMapIDToBossID = {
     -- Throne of Thunder
     [ 508] =  827, -- Jin'rokh the Breaker
     [ 511] =  828, -- Ji-Kun
-    [ 515] =  831, -- Ra-den
     [ 514] =  832, -- Lei Shen
+    [ 515] =  831, -- Ra-den
     -- Siege of Orgrimmar
-    [ 563] =  846, -- Malkorok
-    [ 556] =  849, -- The Fallen Protectors
-    [ 562] =  850, -- General Nazgrim
     [ 557] =  852, -- Immerseus
-    [ 566] =  853, -- Paragons of the Klaxxi
+    [ 556] =  849, -- The Fallen Protectors
     [ 560] =  856, -- Kor'kron Dark Shaman
+    [ 562] =  850, -- General Nazgrim
+    [ 563] =  846, -- Malkorok
     [ 565] =  865, -- Siegecrafter Blackfuse
+    [ 566] =  853, -- Paragons of the Klaxxi
     [ 567] =  869, -- Garrosh Hellscream
 
     -- Warlords of Draenor
@@ -1956,11 +1993,11 @@ local uiMapIDToBossID = {
     [ 542] = 1262, -- Rukhmar
     [ 534] = 1452, -- Supreme Lord Kazzak
     -- Hellfire Citadel
-    [ 662] = 1372, -- Gorefiend
     [ 664] = 1392, -- Kormrok
+    [ 662] = 1372, -- Gorefiend
+    [ 667] = 1447, -- Xhul'horac
     [ 669] = 1395, -- Mannoroth
     [ 670] = 1438, -- Archimonde
-    [ 667] = 1447, -- Xhul'horac
 
     -- Legion
     -- Vault of the Wardens
@@ -1978,51 +2015,51 @@ local uiMapIDToBossID = {
     -- Court of Stars
     [ 763] = 1720, -- Advisor Melandrus
     -- Return to Karazhan
-    [ 818] = 1817, -- Shade of Medivh
-    [ 819] = 1818, -- Mana Devourer
+    [ 811] = 1837, -- Moroes
     [ 809] = 1835, -- Attumen the Huntsman
     [ 817] = 1836, -- The Curator
-    [ 811] = 1837, -- Moroes
+    [ 818] = 1817, -- Shade of Medivh
+    [ 819] = 1818, -- Mana Devourer
     [ 822] = 1838, -- Viz'aduum the Watcher
     -- Cathedral of Eternal Night
     [ 846] = 1905, -- Agronox
     [ 847] = 1906, -- Thrashbite the Scornful
     -- The Emerald Nightmare
-    [ 786] = 1667, -- Ursoc
     [ 777] = 1703, -- Nythendra
-    [ 781] = 1704, -- Dragons of Nightmare
-    [ 788] = 1726, -- Xavius
     [ 780] = 1738, -- Il'gynoth, Heart of Corruption
     [ 779] = 1744, -- Elerethe Renferal
+    [ 786] = 1667, -- Ursoc
+    [ 781] = 1704, -- Dragons of Nightmare
     [ 787] = 1750, -- Cenarius
+    [ 788] = 1726, -- Xavius
     -- The Nighthold
+    [ 768] = 1762, -- Tichondrius
+    [ 767] = 1761, -- High Botanist Tel'arn
     [ 769] = 1732, -- Star Augur Etraeus
     [ 772] = 1737, -- Gul'dan
-    [ 767] = 1761, -- High Botanist Tel'arn
-    [ 768] = 1762, -- Tichondrius
     -- Trial of Valor
     [ 807] = 1819, -- Odyn
     -- Tomb of Sargeras
-    [ 854] = 1873, -- Fallen Avatar
     [ 853] = 1897, -- Maiden of Vigilance
+    [ 854] = 1873, -- Fallen Avatar
     [ 856] = 1898, -- Kil'jaeden
     -- Antorus, the Burning Throne
-    [ 916] = 1983, -- Varimathras
-    [ 917] = 1984, -- Aggramar
-    [ 911] = 1985, -- Portal Keeper Hasabel
-    [ 915] = 1986, -- The Coven of Shivarra
     [ 910] = 1997, -- Antoran High Command
+    [ 911] = 1985, -- Portal Keeper Hasabel
     [ 913] = 2025, -- Eonar the Life-Binder
+    [ 916] = 1983, -- Varimathras
+    [ 915] = 1986, -- The Coven of Shivarra
+    [ 917] = 1984, -- Aggramar
     [ 918] = 2031, -- Argus the Unmaker
 
     -- Battle for Azeroth
     -- Atal'Dazar
     [ 935] = 2083, -- Rezan
     -- Tol Dagor
-    [ 980] = 2096, -- Overseer Korgus
     [ 974] = 2097, -- The Sand Queen
     [ 977] = 2098, -- Jes Howlis
     [ 979] = 2099, -- Knight Captain Valyri
+    [ 980] = 2096, -- Overseer Korgus
     -- Waycrest Manor
     [1018] = 2128, -- Lord and Lady Waycrest
     [1029] = 2129, -- Gorak Tul
@@ -2034,36 +2071,36 @@ local uiMapIDToBossID = {
     [1491] = 2336, -- Tussle Tonks
     [1494] = 2339, -- K.U.-J.0.
     -- Uldir
+    [1148] = 2168, -- Taloc
+    [1149] = 2167, -- MOTHER
+    [1151] = 2169, -- Zek'voz, Herald of N'Zoth
     [1153] = 2146, -- Fetid Devourer
     [1152] = 2166, -- Vectis
-    [1149] = 2167, -- MOTHER
-    [1148] = 2168, -- Taloc
-    [1151] = 2169, -- Zek'voz, Herald of N'Zoth
     [1154] = 2195, -- Zul, Reborn
     -- Battle of Dazar'alor
+    [1353] = 2342, -- Opulence
     [1354] = 2330, -- Conclave of the Chosen
     [1357] = 2335, -- King Rastakhan
-    [1353] = 2342, -- Opulence
     [1364] = 2343, -- Lady Jaina Proudmoore
     -- Crucible of Storms
     [1345] = 2328, -- The Restless Cabal
     [1346] = 2332, -- Uu'nat, Harbinger of the Void
     -- The Eternal Palace
-    [1514] = 2347, -- Blackwater Behemoth
-    [1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
-    [1517] = 2351, -- Orgozoa
     [1512] = 2352, -- Abyssal Commander Sivara
+    [1514] = 2347, -- Blackwater Behemoth
+    [1517] = 2351, -- Orgozoa
     [1518] = 2359, -- The Queen's Court
+    [1519] = 2349, -- Za'qul, Harbinger of Ny'alotha
     [1520] = 2361, -- Queen Azshara
     -- Ny'alotha, the Waking City
-    [1591] = 2364, -- Ra-den the Despoiled
-    [1594] = 2367, -- Shad'har the Insatiable
     [1580] = 2368, -- Wrathion, the Black Emperor
-    [1593] = 2370, -- Vexiona
+    [1592] = 2377, -- Dark Inquisitor Xanesh
     [1590] = 2372, -- The Hivemind
+    [1594] = 2367, -- Shad'har the Insatiable
     [1595] = 2373, -- Drest'agath
     [1596] = 2374, -- Il'gynoth, Corruption Reborn
-    [1592] = 2377, -- Dark Inquisitor Xanesh
+    [1593] = 2370, -- Vexiona
+    [1591] = 2364, -- Ra-den the Despoiled
 
     -- Shadowlands
     -- The Necrotic Wake
@@ -2075,17 +2112,24 @@ local uiMapIDToBossID = {
     [1664] = 2411, -- High Adjudicator Aleez
     [1665] = 2413, -- Lord Chamberlain
     -- Spires of Ascension
-    [1695] = 2412, -- Devos, Paragon of Doubt
     [1694] = 2414, -- Oryphrion
+    [1695] = 2412, -- Devos, Paragon of Doubt
     -- Theater of Pain
-    [1685] = 2389, -- Kul'tharok
-    [1684] = 2390, -- Xav the Unfallen
+    [1683] = {2397, 2417}, -- An Affront of Challengers, and Mordretha, the Endless Empress
     [1687] = 2401, -- Gorechop
+    [1684] = 2390, -- Xav the Unfallen
+    [1685] = 2389, -- Kul'tharok
     -- De Other Side
-    [1677] = 2398, -- Dealer Xy'exa
     [1679] = 2408, -- Hakkar the Soulflayer
     [1678] = 2409, -- The Manastorms
+    [1677] = 2398, -- Dealer Xy'exa
     [1680] = 2410, -- Mueh'zala
+    -- Castle Nathria
+    [1746] = 2422, -- Sun King's Salvation
+    [1745] = 2418, -- Artificer Xy'mox
+    [1744] = 2420, -- Lady Inerva Darkvein
+    [1750] = 2426, -- The Council of Blood
+    [1748] = 2424, -- Sire Denathrius
 }
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
@@ -2107,12 +2151,22 @@ local affixLevels = {2, 4, 7, 10}
 function Internal.AffixesLevels()
 	return ipairs(affixLevels)
 end
-local affixesByLevel = {
-	[2] = {10, 9},
-	[4] = {7, 6, 8, 5, 11},
-	[7] = {12, 13, 3, 2, 4, 14},
-	[10] = {120},
-}
+local affixesByLevel
+if GetExpansionLevel() ~= 8 then
+    affixesByLevel = {
+        [2] = {10, 9},
+        [4] = {7, 6, 8, 5, 11},
+        [7] = {12, 13, 3, 2, 4, 14},
+        [10] = {120},
+    }
+else
+    affixesByLevel = {
+        [2] = {10, 9},
+        [4] = {11, 8, 122, 6, 123, 7},
+        [7] = {124, 12, 13, 14, 3, 4},
+        [10] = {121},
+    }
+end
 function Internal.Affixes(level)
 	level = tonumber(level)
 	if level >= 10 then
@@ -2129,23 +2183,43 @@ end
 -- A list of affixesIDs along with the mask of available affixes for other levels excludes seasonal affixes,
 -- built from affixRotation later
 local affixesMask = {};
+local function AffixBOR(r, value)
+    if value >= 96 then
+        r[4] = bit.bor(r[4] or 0, bit.lshift(1, value))
+    elseif value >= 64 then
+        r[3] = bit.bor(r[3] or 0, bit.lshift(1, value))
+    elseif value >= 32 then
+        r[2] = bit.bor(r[2] or 0, bit.lshift(1, value))
+    else
+        r[1] = bit.bor(r[1] or 0, bit.lshift(1, value))
+    end
+end
 local function PushAffixMask(a, b)
-	affixesMask[a] = bit.bor(affixesMask[a] or 0, b)
+    affixesMask[a] = affixesMask[a] or {}
+    for i=1,4 do
+        affixesMask[a][i] = bit.bor(affixesMask[a][i] or 0, b[i] or 0)
+    end
 end
 _G["BtWLoadoutsAffixesMask"] = affixesMask;
 function Internal.GetExclusiveAffixes(affixesID)
 	affixesID = bit.band(affixesID or 0, 0xffffff)
-	if affixesID == 0 then
-		return 0xffffffff
+	if affixesID == 0 or GetExpansionLevel() == 8 then
+		return {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}
 	end
 	return affixesMask[affixesID];
+end
+function Internal.CompareAffixMasks(a, b)
+    return bit.band(a[1] or 0, b[1] or 0) == (a[1] or 0) and
+           bit.band(a[2] or 0, b[2] or 0) == (a[2] or 0) and
+           bit.band(a[3] or 0, b[3] or 0) == (a[3] or 0) and
+           bit.band(a[4] or 0, b[4] or 0) == (a[4] or 0)
 end
 
 function Internal.GetAffixesName(affixesID)
 	local names = {};
 	local icons = {};
 	local id = affixesID
-	local mask = 0
+	local mask = {}
 	local i = 1
 	while affixesID > 0 do
 		local affixID = bit.band(affixesID, 0xFF);
@@ -2156,22 +2230,18 @@ function Internal.GetAffixesName(affixesID)
 			names[#names+1] = name;
 			icons[#icons+1] = format("|T%d:18:18:0:0|t %s", icon, name);
 
-			if affixID < 32 then
-				mask = bit.bor(mask, bit.lshift(1, affixID));
-			end
+            if affixID ~= 121 then -- Prideful
+                AffixBOR(mask, affixID)
+            end
 		end
 		i = i + 1
 	end
 
 	return id, table.concat(names, " "), table.concat(icons, ", "), mask
 end
-local function GetAffixMaskForID(id)
-	return bit.lshift(1, id);
-end
-Internal.GetAffixMaskForID = GetAffixMaskForID
 local function GetAffixesInfo(...)
 	local id = 0;
-	local mask = 0;
+	local mask = {};
 	local names = {};
 	local icons = {};
 	for i=1,select('#', ...) do
@@ -2179,7 +2249,7 @@ local function GetAffixesInfo(...)
 		local name, _, icon = GetAffixInfo(affixID);
 
 		if i < 4 then
-			mask = bit.bor(mask, bit.lshift(1, affixID));
+            AffixBOR(mask, affixID)
 		end
 		id = bit.bor(bit.rshift(id, 8), bit.lshift(affixID, 24));
 		names[#names+1] = name;
@@ -2197,28 +2267,50 @@ local function GetAffixesForID(id)
 	return bit.band(id, 0xff), bit.band(bit.rshift(id, 8), 0xff), bit.band(bit.rshift(id, 16), 0xff), bit.band(bit.rshift(id, 24), 0xff)
 end
 Internal.GetAffixesForID = GetAffixesForID
-local affixRotation = {
-	GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
-	GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened
-	GetAffixesInfo(10, 8, 12, 120), -- Fortified, 	Sanguine, 	Grievous, 	Awakened
-	GetAffixesInfo(9, 5, 3, 120), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Awakened
-	GetAffixesInfo(10, 7, 2, 120), 	-- Fortified, 	Bolstering, Skittish, 	Awakened
-	GetAffixesInfo(9, 11, 4, 120), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Awakened
-	GetAffixesInfo(10, 8, 14, 120),	-- Fortified, 	Sanguine, 	Quaking, 	Awakened
-	GetAffixesInfo(9, 7, 13, 120), 	-- Tyrannical, 	Bolstering, Explosive, 	Awakened
-	GetAffixesInfo(10, 11, 3, 120),	-- Fortified, 	Bursting, 	Volcanic, 	Awakened
-	GetAffixesInfo(9, 6, 4, 120),	-- Tyrannical, 	Raging, 	Necrotic, 	Awakened
-	GetAffixesInfo(10, 5, 14, 120),	-- Fortified, 	Teeming, 	Quaking, 	Awakened
-	GetAffixesInfo(9, 11, 2, 120),	-- Tyrannical, 	Bursting, 	Skittish, 	Awakened
-};
+local affixRotation
+if GetExpansionLevel() ~= 8 then
+    affixRotation = {
+        GetAffixesInfo(10, 7, 12, 120), -- Fortified, 	Bolstering, Grievous, 	Awakened
+        GetAffixesInfo(9, 6, 13, 120), 	-- Tyrannical, 	Raging, 	Explosive, 	Awakened
+        GetAffixesInfo(10, 8, 12, 120), -- Fortified, 	Sanguine, 	Grievous, 	Awakened
+        GetAffixesInfo(9, 5, 3, 120), 	-- Tyrannical, 	Teeming, 	Volcanic, 	Awakened
+        GetAffixesInfo(10, 7, 2, 120), 	-- Fortified, 	Bolstering, Skittish, 	Awakened
+        GetAffixesInfo(9, 11, 4, 120), 	-- Tyrannical, 	Bursting, 	Necrotic, 	Awakened
+        GetAffixesInfo(10, 8, 14, 120),	-- Fortified, 	Sanguine, 	Quaking, 	Awakened
+        GetAffixesInfo(9, 7, 13, 120), 	-- Tyrannical, 	Bolstering, Explosive, 	Awakened
+        GetAffixesInfo(10, 11, 3, 120),	-- Fortified, 	Bursting, 	Volcanic, 	Awakened
+        GetAffixesInfo(9, 6, 4, 120),	-- Tyrannical, 	Raging, 	Necrotic, 	Awakened
+        GetAffixesInfo(10, 5, 14, 120),	-- Fortified, 	Teeming, 	Quaking, 	Awakened
+        GetAffixesInfo(9, 11, 2, 120),	-- Tyrannical, 	Bursting, 	Skittish, 	Awakened
+    };
+else
+    affixRotation = {
+        GetAffixesInfo(10, 11, 124, 121),   -- Fortified, 	Bursting,   Storming,	Prideful
+        GetAffixesInfo(9, 8, 12, 121),      -- Tyrannical, 	Sanguine,   Grievous,	Prideful
+        GetAffixesInfo(10, 122, 13, 121),   -- Fortified, 	Inspiring,	Explosive, 	Prideful
+        GetAffixesInfo(9, 6, 14, 121), 	    -- Tyrannical, 	Raging, 	Quaking, 	Prideful
+        GetAffixesInfo(10, 11, 3, 121),	    -- Fortified, 	Bursting, 	Grievous, 	Prideful
+        GetAffixesInfo(9, 123, 12, 121),    -- Tyrannical, 	Spiteful, 	Quaking, 	Prideful
+        GetAffixesInfo(10, 7, 124, 121),    -- Fortified, 	Bolstering, Storming,	Prideful
+        GetAffixesInfo(9, 122, 4, 121),     -- Tyrannical, 	Inspiring,	Necrotic, 	Prideful
+        GetAffixesInfo(10, 8, 14, 121),	    -- Fortified, 	Sanguine, 	Quaking, 	Prideful
+        GetAffixesInfo(9, 6, 13, 121), 	    -- Tyrannical, 	Raging, 	Explosive, 	Prideful
+        GetAffixesInfo(10, 123, 3, 121),	-- Fortified, 	Spiteful, 	Volcanic, 	Prideful
+        GetAffixesInfo(9, 7, 4, 121), 	    -- Tyrannical, 	Bolstering, Necrotic, 	Prideful
+    };
+end
 function Internal.AffixRotation()
 	return ipairs(affixRotation)
 end
 -- Fill affixes mask based on Affix Rotation
 for _,affixes in Internal.AffixRotation() do
 	local ma, mb, mc = bit.band(affixes.id, 0xff), bit.band(affixes.id, 0xff00), bit.band(affixes.id, 0xff0000)
-	local a, b, c = ma, bit.rshift(mb, 8), bit.rshift(mc, 16)
-	local r = bit.bor(bit.lshift(1, a), bit.lshift(1, b), bit.lshift(1, c))
+    local a, b, c = ma, bit.rshift(mb, 8), bit.rshift(mc, 16)
+    
+    local r = {}
+    AffixBOR(r, a)
+    AffixBOR(r, b)
+    AffixBOR(r, c)
 
 	PushAffixMask(ma, r)
 	PushAffixMask(mb, r)
@@ -2259,7 +2351,8 @@ local bossRequirements = {
 	[2370] = {2377}, -- Vexiona, requires Dark Inquisitor Xanesh
 	[2364] = {2372}, -- Ra-den the Despoiled, requires The Hivemind
 
-	[2417] = {2397}, -- Mordretha, the Endless Empress, requires An Affront of Challengers
+    [2417] = {2401, 2390, 2389}, -- Mordretha, the Endless Empress, requires Gorechop, Xav the Unfallen, Kul'tharok
+    [2410] = {2408, 2409, 2398}, -- Mueh'zala, requires Hakkar the Soulflayer, The Manastorms, and Dealer Xy'exa
 }
 function Internal.BossAvailable(bossID)
 	if IsEncounterComplete(bossID) then
@@ -2278,18 +2371,27 @@ function Internal.BossAvailable(bossID)
 	return true
 end
 
-function Internal.GetCurrentBoss()
+function Internal.GetCurrentBoss(unitId)
 	local bossID
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	if instanceType == "party" or instanceType == "raid" then
 		local uiMapID = C_Map.GetBestMapForUnit("player");
-		if uiMapID then
-			bossID = uiMapIDToBossID[uiMapID] or bossID;
-		end
+        if uiMapID then
+            if type(uiMapIDToBossID[uiMapID]) == "table" then
+                for _,mapBossID in ipairs(uiMapIDToBossID[uiMapID]) do
+                    if Internal.BossAvailable(mapBossID) then
+                        bossID = mapBossID or bossID;
+                        break
+                    end
+                end
+            else
+                bossID = uiMapIDToBossID[uiMapID] or bossID;
+            end
+        end
 		local areaID = instanceID and areaNameToIDMap[instanceID] and areaNameToIDMap[instanceID][GetSubZoneText()] or nil;
 		if areaID then
 			bossID = InstanceAreaIDToBossID[instanceID][areaID] or bossID;
-		end
+        end
 		if unitId then
 			local unitGUID = UnitGUID(unitId);
 			if unitGUID and not UnitIsDead(unitId) then

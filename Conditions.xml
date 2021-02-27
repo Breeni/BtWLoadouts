@@ -75,7 +75,7 @@
                 </HitRectInsets>
                 <Scripts>
                     <OnClick>
-                        self:GetParent():GetParent():SetEnabled(self:GetChecked())
+                        self:GetParent():UpdateSetEnabled(not self:GetChecked())
                     </OnClick>
                 </Scripts>
             </CheckButton>
@@ -87,7 +87,7 @@
                 </Anchors>
                 <Scripts>
                     <OnTextChanged>
-                        self:GetParent():GetParent():OnNameChanged(self:GetText());
+                        self:GetParent():UpdateSetName(self:GetText())
                     </OnTextChanged>
                     <OnEnterPressed function="EditBox_ClearFocus"/>
                 </Scripts>
@@ -153,6 +153,7 @@
             </Button>
         </Frames>
         <Scripts>
+            <OnLoad inherit="prepend" method="OnLoad"/>
             <OnShow inherit="prepend" method="OnShow"/>
         </Scripts>
     </Frame>

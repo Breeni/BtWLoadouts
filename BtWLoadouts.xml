@@ -116,13 +116,13 @@
 				self:RegisterForDrag("LeftButton");
 			</OnLoad>
 			<OnClick>
-				BtWLoadoutsFrame:ScrollItemClick(self);
+				BtWLoadoutsFrame:OnSidebarItemClick(self);
 			</OnClick>
 			<OnDoubleClick>
-				BtWLoadoutsFrame:ScrollItemDoubleClick(self);
+				BtWLoadoutsFrame:OnSidebarItemDoubleClick(self);
 			</OnDoubleClick>
 			<OnDragStart>
-				BtWLoadoutsFrame:ScrollItemOnDragStart(self);
+				BtWLoadoutsFrame:OnSidebarItemDragStart(self);
 			</OnDragStart>
 		</Scripts>
 	</Button>
@@ -388,7 +388,7 @@
 				</Animations>
 				<Scripts>
 					<OnClick>
-						BtWLoadoutsFrame:ScrollItemClick(self);
+						BtWLoadoutsFrame:OnButtonClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -402,7 +402,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						BtWLoadoutsFrame:ScrollItemClick(self);
+						BtWLoadoutsFrame:OnButtonClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -416,7 +416,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						BtWLoadoutsFrame:ScrollItemClick(self);
+						BtWLoadoutsFrame:OnButtonClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
@@ -430,7 +430,7 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						BtWLoadoutsFrame:ScrollItemClick(self);
+						BtWLoadoutsFrame:OnButtonClick(self);
 					</OnClick>
 				</Scripts>
 			</Button>
