@@ -22,10 +22,6 @@ local format = string.format
 local GetCharacterSlug = Internal.GetCharacterSlug
 local GetCharacterInfo = Internal.GetCharacterInfo
 
-local debug = print
-function debug()
-end
-
 local AddSetToMapData, RemoveSetFromMapData, UpdateSetItemInMapData
 
 local function PackLocation(bag, slot)
@@ -99,7 +95,6 @@ local function SetItemLocationFromLocation(itemLocation, location)
 	elseif bank then
 		itemLocation:SetBagAndSlot(BANK_CONTAINER, slot - 51)
 	else
-		debug(location, player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
 		error("@TODO")
 	end
 	
@@ -170,6 +165,10 @@ end
 Internal.GetExtrasForLocation = GetExtrasForLocation
 
 
+local function DeEnchantItemLink(itemLink)
+	local itemString = string.match(itemLink, "item[%-?%d:]+")
+	return string.format("%s::::::%s:::%s", string.match(itemString, "^(item:%d+):[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:([^:]*:[^:]*):[^:]*:[^:]*:(.*)$"))
+end
 -- Remove parts of the item string that dont reflect item variations
 local function SanitiseItemString(itemString)
 	return string.format("%s:::%s", string.match(itemString, "^(item:%d+:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*):[^:]*:[^:]*:(.*)$"))
@@ -1006,7 +1005,6 @@ do
 				if uniqueFamily then
 					if uniqueFamilies[uniqueFamily] then
 						if uniqueFamilies[uniqueFamily] <= 0 then
-							-- print(format("%s cannot be equipped because it is unique", itemLink))
 							ignored[inventorySlotId] = true -- To many of the unique items already equipped
 						else
 							uniqueFamiliesTemp[uniqueFamily] = true
@@ -1027,7 +1025,6 @@ do
 							uniqueFamiliesTemp[uniqueFamily] = true
 
 							if uniqueFamilies[uniqueFamily] <= 0 then
-								-- print(format("%s cannot be equipped because its gem is unique", itemLink))
 								ignored[inventorySlotId] = true -- To many of the unique items already equipped
 								break
 							else
@@ -1190,7 +1187,6 @@ local function RefreshEquipmentSet(set)
 
 		-- We want this to supersede the other 2, but need those for fallback still
 		set.data[inventorySlotId] = set.equipment[inventorySlotId] and EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite) or nil
-		debug(inventorySlotId, set.data[inventorySlotId])
 		if set.setID then -- Only do this for previously created sets
 			UpdateSetItemInMapData(set, inventorySlotId, previousLocation, set.locations[inventorySlotId])
 		end
@@ -2147,13 +2143,9 @@ do
 				locationItems[newLocation] = locationItems[newLocation] or data
 				locationSets[newLocation][(set.setID .. ":" .. inventorySlotId)] = true
 			elseif force then
-				debug(set.setID, inventorySlotId, oldLocation, newLocation)
-				debug(locationItems[newLocation], data)
 				locationItems[newLocation] = locationItems[newLocation] or data
 				locationSets[newLocation][(set.setID .. ":" .. inventorySlotId)] = true
 			else
-				debug(set.setID, inventorySlotId, oldLocation, newLocation)
-				debug(locationItems[newLocation], data)
 				error("ERROR")
 			end
 		end
@@ -2315,17 +2307,12 @@ do
 
 			ScanDataMapForMissingItems(newLocationItems, newLocationSets, missingItemDatas)
 
-			-- debug("UpdateLocations", next(newLocationItems))
-			-- debug("UpdateLocations", next(newLocationSets))
-			debug("UpdateLocations", next(missingItemDatas))
-
 			if next(missingItemDatas) ~= nil then
 				for inventorySlotId in pairs(inventorySlots) do
 					if next(missingItemDatas) == nil then
 						break
 					end
 
-					debug("Slot", inventorySlotId)
 					local newLocation = PackLocation(nil, inventorySlotId)
 					UpdateLocation(newLocation)
 				end
@@ -2337,7 +2324,6 @@ do
 						break
 					end
 
-					debug("Bag", bagId)
 					for slotId=1,GetContainerNumSlots(bagId) do
 						if next(missingItemDatas) == nil then
 							break
@@ -2681,8 +2667,6 @@ do
 		local extras = GetExtrasForItemLocation(itemLocation)
 		local itemData = EncodeItemData(itemLink, extras and extras.azerite)
 
-		debug(location, itemData, locationItems[location])
-
 		if itemData ~= locationItems[location] then -- Item has actually changed
 			locationItems[location] = itemData
 
@@ -2692,6 +2676,7 @@ do
 				setID, setSlot = tonumber(setID), tonumber(setSlot)
 
 				local set = GetEquipmentSet(setID)
+				set.data[setSlot] = itemData
 				set.equipment[setSlot] = itemLink
 				set.extras[setSlot] = extras
 			end
@@ -2703,9 +2688,9 @@ do
 	end
 	-- Triggered by the ITEM_CHANGED, followed by a BAG_UPDATE_DELAYED or UNIT_INVENTORY_CHANGED
 	local function RuneforgeItemUpdated(previousHyperlink, newHyperlink)
-		local previousItemData, newItemData = EncodeItemData(previousHyperlink), EncodeItemData(newHyperlink)
+		local previousItemData, newItemData = DeEnchantItemLink(previousHyperlink), DeEnchantItemLink(newHyperlink)
 		for location,itemData in pairs(locationItems) do
-			if itemData == previousItemData and GetEncodedItemDataForLocation(location) == newItemData then
+			if DeEnchantItemLink(itemData) == previousItemData and DeEnchantItemLink(GetEncodedItemDataForLocation(location)) == newItemData then
 				UpdateItemAtLocation(location)
 				return
 			end
@@ -2733,7 +2718,6 @@ do
 		local itemLocation = ItemLocation:CreateEmpty();
 		local function GemApplied()
 			if itemLocation:HasAnyLocation() and itemLocation:IsValid() then
-				debug("GemApplied", GetLocationFromItemLocation(itemLocation))
 				UpdateItemAtLocation(GetLocationFromItemLocation(itemLocation))
 				itemLocation:Clear()
 			end
@@ -2912,13 +2896,11 @@ do
 		self:Show()
 	end
 	GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
-		-- print("OnTooltipSetItem", ...)
 		if location then
 
 		end
 	end)
 	hooksecurefunc(GameTooltip, "SetInventoryItem", function (self, unit, slot, nameOnly)
-		-- print("SetInventoryItem", ...)
 		if not nameOnly and unit == "player" then
 			location = PackLocation(nil, slot)
 			UpdateTooltip(self, location)
@@ -2927,7 +2909,6 @@ do
 		end
 	end)
 	hooksecurefunc(GameTooltip, "SetBagItem", function (self, bag, slot)
-		-- print("SetBagItem", ...)
 		location = PackLocation(bag, slot)
 		UpdateTooltip(self, location)
 	end)
