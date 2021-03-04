@@ -263,12 +263,14 @@ local function CombineTalentSets(result, state, ...)
 		for talentID in pairs(set.talents) do
 			if result.talents[talentID] == nil then
 				local tier = select(8, GetTalentInfoByID(talentID, 1));
-				if talentSetsByTier[tier] then
-					result.talents[talentSetsByTier[tier]] = nil;
-				end
+                if (GetTalentTierInfo(tier, 1)) then
+                    if talentSetsByTier[tier] then
+                        result.talents[talentSetsByTier[tier]] = nil;
+                    end
 
-				result.talents[talentID] = true;
-				talentSetsByTier[tier] = talentID;
+                    result.talents[talentID] = true;
+                    talentSetsByTier[tier] = talentID;
+                end
 			end
 		end
     end
