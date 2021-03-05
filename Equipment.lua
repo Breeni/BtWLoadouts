@@ -2762,6 +2762,57 @@ do
 	local tooltipMatch = "^" .. string.gsub(EQUIPMENT_SETS, "%%s", "(.*)") .. "$"
 	local tooltipSellMatch = "^" .. SELL_PRICE .. ": .*$"
 	local location
+
+	--[[
+		Searches an item tooltip looking for important lines, like Equipment Sets, Sell Price and similar
+
+		returns "Equipment Sets: ..." line number, last line number before equipment set line should be added, first line number after equipment set line should be added, any money frame that needs moving
+	]]
+	local equipmentSetPattern = "^" .. string.gsub(EQUIPMENT_SETS, "%%s", "(.*)") .. "$"
+	local itemCreatedPattern = "^" .. (ITEM_CREATED_BY:gsub("%%s", ".*")) .. "$"
+	local durabilityPattern = "^" .. (DURABILITY_TEMPLATE:gsub("%%d", "%%d+")) .. "$"
+	local sellPricePrefix = string.format("%s:", SELL_PRICE)
+	local function GetTooltipLineNumbers(tooltip)
+		local equipmentSetLine, beforeLine, afterLine, sellPriceFrameResult, sellPriceFrameXOffsetResult
+		local tooltipName = tooltip:GetName()
+
+		local sellPriceFrame, sellPriceFrameAnchor, sellPriceFrameXOffset, _
+		if tooltip.shownMoneyFrames and tooltip.shownMoneyFrames >= 1 then
+			for i=1,tooltip.shownMoneyFrames do
+				local name = tooltipName.."MoneyFrame" .. i
+				local moneyFrame = _G[name];
+				
+				if _G[name .. "PrefixText"]:GetText() == sellPricePrefix then
+					sellPriceFrame = moneyFrame
+					_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPoint("LEFT")
+					break
+				end
+			end
+		end
+
+		for i=1,tooltip:NumLines() do
+			local left, right = _G[tooltipName .. "TextLeft" .. i], _G[tooltipName .. "TextRight" .. i]
+			local leftText = left:GetText()
+			if leftText then
+				if leftText:match(equipmentSetPattern) then
+					equipmentSetLine = i
+					break
+				elseif leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match(itemCreatedPattern) or leftText:match(durabilityPattern) then
+					beforeLine = i
+				elseif left == sellPriceFrameAnchor then
+					afterLine = i
+					sellPriceFrameResult, sellPriceFrameXOffsetResult = sellPriceFrame, sellPriceFrameXOffset
+				elseif leftText == ITEM_UNSELLABLE then
+					afterLine = i
+				end
+			end
+		end
+		if beforeLine and not afterLine then
+			afterLine = beforeLine + 1
+		end
+		return equipmentSetLine, beforeLine, afterLine, sellPriceFrameResult, sellPriceFrameXOffsetResult
+	end
+
 	local function UpdateTooltip(self, location)
 		local sets = GetSetsForLocation(location, {})
 		if #sets == 0 then
@@ -2774,121 +2825,40 @@ do
 
 		sets = string.format(EQUIPMENT_SETS, table.concat(sets, ", "))
 
-		local found = false
+		local tooltipName = self:GetName()
+		local equipmentSetLine, beforeLine, afterLine, sellPriceFrame, sellPriceFrameXOffset = GetTooltipLineNumbers(self)
+		if equipmentSetLine then
+			_G[tooltipName .. "TextLeft" .. equipmentSetLine]:SetText(sets)
+		elseif afterLine and afterLine < self:NumLines() then
+			local left, right = _G[tooltipName .. "TextLeft" .. self:NumLines()], _G[tooltipName .. "TextRight" .. self:NumLines()]
+			leftText, leftR, leftG, leftB  = left:GetText(), left:GetTextColor()
+			rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
 
-		local R, G, B = NORMAL_FONT_COLOR:GetRGB()
-		local index = 1
-		local frame = _G[self:GetName() .. "TextLeft" .. index]
-		while frame do
-			if frame:GetText() then
-				local match = string.match(frame:GetText(), tooltipMatch)
-				if match then
-					frame:SetText(sets)
-					found = true
-					break
-				end
+			self:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
+
+			for i=self:NumLines()-1,afterLine,-1 do
+				local left, right = _G[tooltipName .. "TextLeft" .. (i - 1)], _G[tooltipName .. "TextRight" .. (i - 1)]
+				local leftNext, rightNext = _G[tooltipName .. "TextLeft" .. i], _G[tooltipName .. "TextRight" .. i]
+				
+				leftNext:SetTextColor(left:GetTextColor())
+				leftNext:SetText(left:GetText())
+				leftNext:SetShown(left:IsShown())
+				rightNext:SetTextColor(right:GetTextColor())
+				rightNext:SetText(right:GetText())
+				rightNext:SetShown(right:IsShown())
 			end
 
-			index = index + 1
-			frame = _G[self:GetName() .. "TextLeft" .. index]
-		end
+			left, right = _G[tooltipName .. "TextLeft" .. afterLine], _G[tooltipName .. "TextRight" .. afterLine]
+			left:SetTextColor(NORMAL_FONT_COLOR:GetRGB())
+			left:SetText(sets)
+			right:SetText("")
 
-		if not found then
-			local sellPriceFrame, sellPriceFrameAnchor, sellPriceFrameXOffset, _
-			if self.shownMoneyFrames and self.shownMoneyFrames >= 1 then
-				local index = 1
-				local name = self:GetName().."MoneyFrame" .. index
-				local moneyFrame = _G[name];
-				while moneyFrame do
-					if _G[name .. "PrefixText"]:GetText() == string.format("%s:", SELL_PRICE) then
-						sellPriceFrame = moneyFrame
-						_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPoint("LEFT")
-						break
-					end
-
-					index = index + 1
-					name = self:GetName().."MoneyFrame" .. index
-					moneyFrame = _G[name];
-				end
+			if sellPriceFrame then
+				sellPriceFrame:ClearAllPoints()
+				sellPriceFrame:SetPoint("LEFT", _G[tooltipName .. "TextLeft" .. (afterLine + 1)], "LEFT", sellPriceFrameXOffset, 0);
 			end
-			
-			index = self:NumLines()
-			local left, right = _G[self:GetName() .. "TextLeft" .. index], _G[self:GetName() .. "TextRight" .. index]
-			local leftText = left:GetText()
-			local leftR, leftG, leftB
-			local rightText, rightR, rightG, rightB
-			if leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match((ITEM_CREATED_BY:gsub("%%s", ".*"))) or leftText:match((DURABILITY_TEMPLATE:gsub("%%d", "%%d+"))) then
-				self:AddLine(sets)
-				found = true
-			else
-				leftR, leftG, leftB = left:GetTextColor()
-				rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
-				self:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
-
-				if left == sellPriceFrameAnchor then
-					sellPriceFrame:ClearAllPoints()
-					sellPriceFrame:SetPoint("LEFT", _G[self:GetName() .. "TextLeft" .. (index + 1)], "LEFT", sellPriceFrameXOffset, 0);
-				end
-				if left == sellPriceFrameAnchor or leftText == SELL_PRICE or leftText == ITEM_UNSELLABLE then
-					left:SetTextColor(R, G, B, 1)
-					right:SetTextColor(R, G, B, 1)
-
-					left:SetText(sets)
-					right:SetText("")
-
-					found = true
-				end
-			end
-
-			if not found then
-				while index > 1 do
-					index = index - 1
-					local leftNext, rightNext = _G[self:GetName() .. "TextLeft" .. index], _G[self:GetName() .. "TextRight" .. index]
-					leftText = leftNext:GetText()
-
-					if leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match((ITEM_CREATED_BY:gsub("%%s", ".*"))) or leftText:match((DURABILITY_TEMPLATE:gsub("%%d", "%%d+"))) then
-						left:SetTextColor(R, G, B, 1)
-						right:SetTextColor(R, G, B, 1)
-
-						left:SetText(sets)
-						right:SetText("")
-
-						found = true
-						break
-					else
-						leftR, leftG, leftB = leftNext:GetTextColor()
-						rightText, rightR, rightG, rightB = rightNext:GetText(), rightNext:GetTextColor()
-
-						left:SetTextColor(leftR, leftG, leftB, 1)
-						left:SetText(leftText)
-						right:SetTextColor(rightR, rightG, rightB, 1)
-						right:SetText(rightText)
-
-						if leftNext == sellPriceFrameAnchor then
-							sellPriceFrame:ClearAllPoints()
-							sellPriceFrame:SetPoint("LEFT", left, "LEFT", sellPriceFrameXOffset, 0);
-						end
-						if leftNext == sellPriceFrameAnchor or leftText == SELL_PRICE or leftText == ITEM_UNSELLABLE then
-							left, right = leftNext, rightNext
-
-							left:SetTextColor(R, G, B, 1)
-							right:SetTextColor(R, G, B, 1)
-	
-							left:SetText(sets)
-							right:SetText("")
-	
-							found = true
-							break
-						end
-					end
-
-					left, right = leftNext, rightNext
-				end
-			end
-
-			if not found then
-				self:AddLine(sets)
-			end
+		else
+			self:AddLine(sets)
 		end
 
 		self:Show()
@@ -2907,6 +2877,18 @@ do
 		end
 	end)
 	hooksecurefunc(GameTooltip, "SetBagItem", function (self, bag, slot)
+		location = PackLocation(bag, slot)
+		UpdateTooltip(self, location)
+	end)
+	hooksecurefunc(ItemRefTooltip, "SetInventoryItem", function (self, unit, slot, nameOnly)
+		if not nameOnly and unit == "player" then
+			location = PackLocation(nil, slot)
+			UpdateTooltip(self, location)
+		else
+			location = nil
+		end
+	end)
+	hooksecurefunc(ItemRefTooltip, "SetBagItem", function (self, bag, slot)
 		location = PackLocation(bag, slot)
 		UpdateTooltip(self, location)
 	end)
