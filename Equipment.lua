@@ -2763,7 +2763,6 @@ do
 	local tooltipSellMatch = "^" .. SELL_PRICE .. ": .*$"
 	local location
 	local function UpdateTooltip(self, location)
-		-- local sets = {Internal.GetEquipmentSets()}
 		local sets = GetSetsForLocation(location, {})
 		if #sets == 0 then
 			return
@@ -2892,7 +2891,6 @@ do
 			end
 		end
 
-		self:AddLine(string.format("Location: %d", location))
 		self:Show()
 	end
 	GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
