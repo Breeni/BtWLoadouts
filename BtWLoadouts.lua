@@ -432,6 +432,238 @@ function BtWLoadoutsSpecDropDownMixin:OnShow()
 	end
 end
 
+-- Restrictions Drop Down, used by sets to handle limit activation
+do
+	--
+	local races = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 22, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37}
+	local classes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	local specializations = {}
+	do -- Build Spec List
+		for classIndex=1,GetNumClasses() do
+			local _, _, classID = GetClassInfo(classIndex)
+			for specIndex=1,GetNumSpecializationsForClassID(classID) do
+				local specID = GetSpecializationInfoForClassID(classID, specIndex);
+				specializations[#specializations+1] = specID
+			end
+		end
+	end
+	local charaterEnumertorList = {}
+	local types = {
+		covenant = {
+			name = L["Covenant"],
+			enumerate = function ()
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, tbl[index], C_Covenants.GetCovenantData(tbl[index]).name
+					end
+				end, C_Covenants.GetCovenantIDs(), 0
+			end,
+		},
+		race = {
+			name = L["Race"],
+			enumerate = function ()
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, tbl[index], GetFactionColor(C_CreatureInfo.GetFactionInfo(tbl[index]).groupTag):WrapTextInColorCode(C_CreatureInfo.GetRaceInfo(tbl[index]).raceName)
+					end
+				end, races, 0
+			end,
+		},
+		class = {
+			name = L["Class"],
+			enumerate = function ()
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, tbl[index], C_CreatureInfo.GetClassInfo(tbl[index]).className
+					end
+				end, classes, 0
+			end,
+		},
+		spec = {
+			name = L["Specialization"],
+			enumerate = function ()
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						local _, specName, _, _, _, classFile, className = GetSpecializationInfoByID(tbl[index])
+						local classColor = C_ClassColor.GetClassColor(classFile);
+						local name = format("%s - %s", classColor:WrapTextInColorCode(className), specName)
+
+						return index, tbl[index], name
+					end
+				end, specializations, 0
+			end,
+		},
+		character = {
+			name = L["Character"],
+			enumerate = function ()
+				wipe(charaterEnumertorList)
+	
+				local name = UnitName("player")
+				local character = GetCharacterSlug();
+				local characterInfo = GetCharacterInfo(character);
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+					name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+				end
+				charaterEnumertorList[#charaterEnumertorList+1] = {character, name}
+	
+				local playerCharacter = character
+				for _,character in Internal.CharacterIterator() do
+					if playerCharacter ~= character then
+						local characterInfo = GetCharacterInfo(character);
+						if characterInfo then
+							local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+							name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+						end
+						charaterEnumertorList[#charaterEnumertorList+1] = {character,name}
+					end
+				end
+	
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, unpack(tbl[index])
+					end
+				end, charaterEnumertorList, 0
+			end,
+		},
+	}
+
+	local function DropDown_OnClick(self, arg1, arg2, checked)
+	end
+	local function DropDownInit(self, level, menuList)
+		local function OnClick(_, arg1, arg2, checked)
+			self:ToggleSelected(arg1, arg2)
+		end
+
+		local info = UIDropDownMenu_CreateInfo()
+		if (level or 1) == 1 then
+			local hasSelected = false
+
+			info.func = OnClick
+			info.checked = true
+			info.keepShownOnClick = true
+			for _,type,key,name in self:EnumerateSelected() do
+				info.text = name
+				info.arg1 = type
+				info.arg2 = key
+				UIDropDownMenu_AddButton(info, level)
+
+				hasSelected = true
+			end
+
+			if hasSelected then
+				UIDropDownMenu_AddSeparator()
+			end
+			
+			info.func = nil
+			info.checked = nil
+			for _,type,name in self:EnumerateSupportedTypes() do
+				info.text = name
+				info.hasArrow, info.menuList = true, type
+				info.notCheckable = true
+				UIDropDownMenu_AddButton(info, level)
+			end
+		else
+			info.func = OnClick
+			info.keepShownOnClick = true
+			for _,key,name in self:EnumerateType(menuList) do
+				info.text = name
+				info.arg1 = menuList
+				info.arg2 = key
+				info.checked = self:IsSelected(menuList, key)
+				UIDropDownMenu_AddButton(info, level)
+			end
+		end
+	end
+
+	BtWLoadoutsRestrictionsDropDownMixin = {}
+	function BtWLoadoutsRestrictionsDropDownMixin:OnLoad()
+		self.InitFunc = DropDownInit
+		self.selected = {}
+		self.supportedTypes = {}
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:OnShow()
+		if not self.initialized then
+			UIDropDownMenu_Initialize(self, self.InitFunc, "MENU")
+			self.initialized = true
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateSelected()
+		local selected = {}
+
+		for _,type,typeName in self:EnumerateSupportedTypes() do
+			if self.selected[type] and next(self.selected[type]) then
+				for _,key,name in self:EnumerateType(type) do
+					if self:IsSelected(type, key) then
+						selected[#selected+1] = {type, key, string.format("%s: %s", typeName, name)}
+					end
+				end
+			end
+		end
+
+		return function (tbl, index)
+			index = index + 1
+			if tbl[index] then
+				return index, unpack(tbl[index])
+			end
+		end, selected, 0
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:SetSelections(tbl)
+		assert(type(tbl) == "table", "Expected table")
+		self.selected = tbl
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:ClearSelected()
+		wipe(self.selected)
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:IsSelected(type, key)
+		return self.selected[type] and self.selected[type][key]
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:ToggleSelected(type, key)
+		self.selected[type] = self.selected[type] or {}
+		if self.selected[type][key] then
+			self.selected[type][key] = nil
+		else
+			self.selected[type][key] = true
+		end
+
+		if self.onchange then
+			self:onchange(type, key)
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:SetSupportedTypes(...)
+		wipe(self.supportedTypes)
+		for i=1,select('#', ...) do
+			local type = strlower(select(i, ...))
+			assert(types[type] ~= nil, "Unavailable type " .. type)
+			self.supportedTypes[i] = type
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateSupportedTypes()
+		return function (tbl, index)
+			index = index + 1
+			local type = tbl[index]
+			if type then
+				return index, type, types[type].name
+			end
+		end, self.supportedTypes, 0
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateType(type)
+		return types[type].enumerate()
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:SetScript(scriptType, handler)
+		if scriptType == "OnChange" then
+			self.onchange = handler
+		else
+			getmetatable(self).SetScript(self, scriptType, handler)
+		end
+	end
+end
+
 --[[
 	BtWLoadoutsSidebarMixin, sidebar display with filtering
 ]]
@@ -514,6 +746,30 @@ do
 		end
 
 		return result
+	end
+	local CovenantFilterEnumerator
+	do
+		local tbl
+		function CovenantFilterEnumerator()
+			if tbl == nil then
+				tbl = {}
+
+				for _,id in ipairs(C_Covenants.GetCovenantIDs()) do
+					local data = C_Covenants.GetCovenantData(id)
+					tbl[#tbl+1] = {
+						id = id,
+						name = data.name,
+					}
+				end
+				
+				tbl[#tbl+1] = {
+					id = 0,
+					name = L["Other"],
+				}
+			end
+
+			return ipairs(tbl)
+		end
 	end
 	local SpecFilterEnumerator
 	do
@@ -673,7 +929,9 @@ do
 		end
 	end
 	local function FilterEnumerator(filter)
-		if filter == "spec" then
+		if filter == "covenant" then
+			return CovenantFilterEnumerator()
+		elseif filter == "spec" then
 			return SpecFilterEnumerator()
 		elseif filter == "class" then
 			return ClassFilterEnumerator()
@@ -891,6 +1149,7 @@ do
 	BtWLoadoutsSidebarMixin = {}
 	function BtWLoadoutsSidebarMixin:OnLoad()
 		self.names = {
+			["covenant"] = L["Covenant"],
 			["spec"] = L["Specialization"],
 			["class"] = L["Class"],
 			["role"] = L["Role"],

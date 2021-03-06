@@ -183,6 +183,67 @@ do
     hooksecurefunc("EditMacro", EditMacroHook)
 end
 
+local function UpdateFilters(set)
+	local filters = set.filters or {}
+
+    if set.restrictions then
+        -- Covenant
+        if set.restrictions.covenant and next(set.restrictions.covenant) then
+            filters.covenant = wipe(filters.covenant or {})
+            local tbl = filters.covenant
+            for covenant in pairs(set.restrictions.covenant) do
+                tbl[#tbl+1] = covenant
+            end
+        else
+            filters.covenant = nil
+        end
+        
+        -- Specialization
+        local roles = {}
+        local classes = {}
+        if set.restrictions.spec and next(set.restrictions.spec) then
+            do
+                filters.spec = wipe(filters.spec or {})
+                local tbl = filters.spec
+                for spec in pairs(set.restrictions.spec) do
+                    local role, class = select(5, GetSpecializationInfoByID(spec))
+
+                    roles[role] = true
+                    classes[class] = true
+
+                    tbl[#tbl+1] = spec
+                end
+            end
+
+            do
+                filters.role = wipe(filters.role or {})
+                local tbl = filters.role
+                for role in pairs(roles) do
+                    tbl[#tbl+1] = role
+                end
+            end
+
+            do
+                filters.class = wipe(filters.class or {})
+                local tbl = filters.class
+                for class in pairs(classes) do
+                    tbl[#tbl+1] = class
+                end
+            end
+        else
+            filters.spec = nil
+            filters.role = nil
+            filters.class = nil
+        end
+    else
+        wipe(filters)
+    end
+
+	set.filters = filters
+
+    return set
+end
+
 local covenantClassAbilities = {
     [313347] = false, -- Zone ability base spell
 
@@ -674,7 +735,7 @@ local function RefreshActionBarSet(set)
 
     set.actions = actions
 
-    return set
+    return UpdateFilters(set)
 end
 local function AddActionBarSet()
     local classFile = select(2, UnitClass("player"))
@@ -711,6 +772,34 @@ local function GetActionBarSets(id, ...)
 	if id ~= nil then
 		return GetActionBarSet(id), GetActionBarSets(...);
 	end
+end
+-- Checks restrictions to see if the set if valid for the current player
+local function SetValidForPlayer(set)
+    local restrictions = set.restrictions
+    if restrictions then
+        if restrictions.spec then
+            local id = GetSpecializationInfo(GetSpecialization())
+            if not restrictions.spec[id] then
+                return false
+            end
+        end
+        
+        if restrictions.covenant then
+            local id = C_Covenants.GetActiveCovenantID()
+            if not restrictions.covenant[id] then
+                return false
+            end
+        end
+        
+        if restrictions.race then
+            local _, _, id = UnitRace("player")
+            if not restrictions.race[id] then
+                return false
+            end
+        end
+    end
+
+    return true
 end
 -- Do not change the results action tables, that'll mess with the original sets
 local function CombineActionBarSets(result, state, ...)
@@ -1117,6 +1206,12 @@ local function DropDown_Initialize(self, level, menuList)
     end
 end
 BtWLoadoutsActionBarsMixin = {}
+function BtWLoadoutsActionBarsMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("covenant", "spec", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+end
 function BtWLoadoutsActionBarsMixin:OnShow()
     if not self.initialized then
         UIDropDownMenu_Initialize(self.SettingsDropDown, DropDown_Initialize, "MENU");
@@ -1239,7 +1334,7 @@ function BtWLoadoutsActionBarsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters()
+	sidebar:SetSupportedFilters("covenant", "spec", "class", "role")
 	sidebar:SetSets(BtWLoadoutsSets.actionbars)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.actionbars)
 	sidebar:SetCategories(BtWLoadoutsCategories.actionbars)
@@ -1250,8 +1345,17 @@ function BtWLoadoutsActionBarsMixin:Update()
 	self.set = sidebar:GetSelected()
 
 	if self.set ~= nil then
+		self.SettingsButton:SetEnabled(true);
+		self.RestrictionsButton:SetEnabled(true);
+
 		local set = self.set;
 		local slots = set.actions;
+
+		UpdateFilters(set)
+		sidebar:Update()
+
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
 
 		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
@@ -1298,6 +1402,9 @@ function BtWLoadoutsActionBarsMixin:Update()
             helpTipBox:Hide();
         end
 	else
+		self.SettingsButton:SetEnabled(false);
+		self.RestrictionsButton:SetEnabled(false);
+
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");
 

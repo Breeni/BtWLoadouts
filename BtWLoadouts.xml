@@ -8,6 +8,13 @@
 		</Scripts>
 	</Frame>
 
+	<Frame name="BtWLoadoutsRestrictionsDropDownTemplate" mixin="BtWLoadoutsRestrictionsDropDownMixin" inherits="UIDropDownMenuTemplate" enableMouse="true" virtual="true">
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnShow method="OnShow"/>
+		</Scripts>
+	</Frame>
+
 	<Button name="BtWLoadoutsTalentButtonTemplate" mixin="BtWLoadoutsTalentButtonMixin" motionScriptsWhileDisabled="true" virtual="true">
 		<Size x="190" y="42"/>
 		<Layers>
