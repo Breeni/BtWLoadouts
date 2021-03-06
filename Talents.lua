@@ -204,32 +204,38 @@ local function TalentSetDelay(set)
 end
 --[[
     Check what is needed to activate this talent set
-    return isActive, waitForCooldown
+    return isActive, waitForCooldown, anySelected
 ]]
 local function TalentSetRequirements(set)
-    local isActive, waitForCooldown = true, false
+    local isActive, waitForCooldown, anySelected = true, false, false
 
     for talentID in pairs(set.talents) do
         local row = select(8, GetTalentInfoByID(talentID, 1))
-        local column = select(2, GetTalentTierInfo(row, 1))
-        local selectedTalentID, _, _, _, _, spellID = GetTalentInfo(row, column, 1)
+        local available, column = GetTalentTierInfo(row, 1)
+        if available then
+            local selectedTalentID, _, _, _, _, spellID = GetTalentInfo(row, column, 1)
 
-        if selectedTalentID ~= talentID then
-            isActive = false
+            if selectedTalentID ~= talentID then
+                isActive = false
 
-            if spellID then
-                spellID = FindSpellOverrideByID(spellID)
-                local start, duration = GetSpellCooldown(spellID)
-                if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
-                    Internal.DirtyAfter((start + duration) - GetTime() + 1)
-                    waitForCooldown = true
-                    break -- We dont actually need to check anything more
+                if spellID then
+                    spellID = FindSpellOverrideByID(spellID)
+                    local start, duration = GetSpellCooldown(spellID)
+                    if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+                        Internal.DirtyAfter((start + duration) - GetTime() + 1)
+                        waitForCooldown = true
+                        break -- We dont actually need to check anything more
+                    end
+                end
+
+                if column ~= 0 then
+                    anySelected = true
                 end
             end
         end
     end
 
-    return isActive, waitForCooldown
+    return isActive, waitForCooldown, anySelected
 end
 local function GetTalentSetsByName(name)
 	return Internal.GetSetsByName("talents", name)
@@ -265,12 +271,14 @@ local function CombineTalentSets(result, state, ...)
 		for talentID in pairs(set.talents) do
 			if result.talents[talentID] == nil then
 				local tier = select(8, GetTalentInfoByID(talentID, 1));
-				if talentSetsByTier[tier] then
-					result.talents[talentSetsByTier[tier]] = nil;
-				end
+                if (GetTalentTierInfo(tier, 1)) then
+                    if talentSetsByTier[tier] then
+                        result.talents[talentSetsByTier[tier]] = nil;
+                    end
 
-				result.talents[talentID] = true;
-				talentSetsByTier[tier] = talentID;
+                    result.talents[talentID] = true;
+                    talentSetsByTier[tier] = talentID;
+                end
 			end
 		end
     end
@@ -280,9 +288,9 @@ local function CombineTalentSets(result, state, ...)
         state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
 
         if not state.customWait or not state.needTome then
-            local isActive, waitForCooldown = TalentSetRequirements(result)
+            local isActive, waitForCooldown, anySelected = TalentSetRequirements(result)
 
-            state.needTome = state.needTome or (not isActive)
+            state.needTome = state.needTome or (not isActive and anySelected)
             state.customWait = state.customWait or (waitForCooldown and L["Waiting for talent cooldown"])
         end
     end
