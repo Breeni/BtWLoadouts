@@ -264,7 +264,7 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 };
 StaticPopupDialogs["BTWLOADOUTS_NEEDRESTED"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["A rested area or tome is needed to fully apply your loadout, do you wish to partially continue intead?"],
+	text = L["A rested area or tome is needed to fully apply your loadout, do you wish to partially continue instead?"],
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self, ...)
