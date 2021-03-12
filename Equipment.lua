@@ -2770,7 +2770,7 @@ do
 	]]
 	local equipmentSetPattern = "^" .. string.gsub(EQUIPMENT_SETS, "%%s", "(.*)") .. "$"
 	local itemCreatedPattern = "^" .. (ITEM_CREATED_BY:gsub("%%s", ".*")) .. "$"
-	local durabilityPattern = "^" .. (DURABILITY_TEMPLATE:gsub("%%d", "%%d+")) .. "$"
+	local durabilityPattern = "^" .. (DURABILITY_TEMPLATE:gsub("%%d", "%%d+"):gsub("%%%d%$d", "%%d+")) .. "$"
 	local sellPricePrefix = string.format("%s:", SELL_PRICE)
 	local function GetTooltipLineNumbers(tooltip)
 		local equipmentSetLine, beforeLine, afterLine, sellPriceFrameResult, sellPriceFrameXOffsetResult
