@@ -10,7 +10,10 @@
 Localizations.lua
 Localizations.deDE.lua
 Localizations.esES.lua
+Localizations.frFR.lua
+Localizations.koKR.lua
 Localizations.ruRU.lua
+Localizations.zhCN.lua
 Localizations.zhTW.lua
 
 Characters.lua
