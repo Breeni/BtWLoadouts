@@ -393,7 +393,7 @@ do
 	local state = {}
 	local temp = {}
 	local function IsActive(set)
-		if set.specID then
+		if set.specID and UnitLevel("player") >= 10 then
 			local playerSpecID = GetSpecializationInfo(GetSpecialization());
 			if set.specID ~= playerSpecID then
 				return false;
@@ -490,7 +490,7 @@ local function ContinueActivateProfile()
 
 	wipe(state)
 	local specID = set.specID;
-	local playerSpecID = GetSpecializationInfo(GetSpecialization());
+	local playerSpecID = GetSpecializationInfo(GetSpecialization())
 	if specID ~= nil and specID ~= playerSpecID then
 		-- Need to change spec
 		state.noCombatSwap = true
@@ -523,7 +523,7 @@ local function ContinueActivateProfile()
 		return;
 	end
 
-	if specID ~= nil and specID ~= playerSpecID then
+	if specID ~= nil and specID ~= playerSpecID and UnitLevel("player") >= 10 then
 		for specIndex=1,GetNumSpecializations() do
 			if GetSpecializationInfo(specIndex) == specID then
 				Internal.LogMessage("Switching specialization to %s", (select(2, GetSpecializationInfo(specIndex))))
