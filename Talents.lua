@@ -148,10 +148,11 @@ end
 ]]
 local function ActivateTalentSet(set, state)
 	local success, complete = true, true;
-    if not state or not state.ignoreTome then
-        for talentID in pairs(set.talents) do
-            local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
-            if not selected and GetTalentTierInfo(tier, 1) then
+    for talentID in pairs(set.talents) do
+        local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
+        local available, currentColumn = GetTalentTierInfo(tier, 1)
+        if not selected and available then
+            if not state or not state.ignoreTome or currentColumn == 0 then
                 local slotSuccess = LearnTalent(talentID)
                 success = slotSuccess and success
                 complete = false
