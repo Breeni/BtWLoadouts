@@ -109,6 +109,11 @@ local Settings = SettingsCreate({
         default = false,
     },
     {
+        name = L["Dont offer conditions of different specialization"],
+        key = "noSpecSwitch",
+        default = false,
+    },
+    {
         name = L["Filter chat spam while changing loadouts"],
         key = "filterChatSpam",
         default = false,
