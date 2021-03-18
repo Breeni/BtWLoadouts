@@ -195,48 +195,6 @@ function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
 
             UIDropDownMenu_AddButton(info, level);
         end
-
-        UIDropDownMenu_AddSeparator()
-        
-        info.func = nil
-        info.text = L["Delete Character Data"]
-        info.notCheckable = true
-		info.keepShownOnClick = true
-        info.hasArrow, info.menuList = true, "delete"
-
-        UIDropDownMenu_AddButton(info, level);
-    elseif level == 2 and menuList == "delete" then
-        local info = UIDropDownMenu_CreateInfo()
-        info.notCheckable = true
-		info.keepShownOnClick = true
-        for _,realm in Internal.EnumerateRealms() do
-            info.text = realm
-            info.hasArrow, info.menuList = true, realm
-
-            UIDropDownMenu_AddButton(info, level)
-        end
-    elseif level == 3 then
-        local info = UIDropDownMenu_CreateInfo()
-        info.notCheckable = true
-        info.func = function (self, slug)
-			StaticPopup_Show("BTWLOADOUTS_DELETECHARACTER", Internal.GetFormattedCharacterName(slug, true), nil, slug)
-        end
-        local playerSlug = Internal.GetCharacterSlug()
-        for _,character in Internal.EnumerateCharactersForRealm(menuList) do
-            if character ~= playerSlug then
-                local name = character
-                local characterInfo = Internal.GetCharacterInfo(character)
-                if characterInfo then
-                    local classColor = C_ClassColor.GetClassColor(characterInfo.class)
-                    name = classColor:WrapTextInColorCode(characterInfo.name)
-                end
-
-                info.text = name
-                info.arg1 = character
-
-                UIDropDownMenu_AddButton(info, level)
-            end
-        end
     end
 end
 

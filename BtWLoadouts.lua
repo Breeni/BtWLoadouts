@@ -1203,6 +1203,72 @@ do
 		BtWLoadoutsHelpTipFlags[closeFlag] = true;
 		self:Update();
 	end
+	local function OptionsMenu_Init(self, level, menuList)
+		if level == 1 then
+			local info = UIDropDownMenu_CreateInfo();
+			info.isTitle, info.disabled, info.notCheckable = false, false, false;
+			info.func = function (self, key)
+				Settings[key] = not Settings[key];
+			end
+			for i, entry in ipairs(Settings) do
+				info.text = entry.name;
+				info.arg1 = entry.key;
+				info.checked = Settings[entry.key];
+	
+				UIDropDownMenu_AddButton(info, level);
+			end
+	
+			UIDropDownMenu_AddSeparator()
+			
+			info.func = nil
+			info.text = L["Delete Character Data"]
+			info.notCheckable = true
+			info.keepShownOnClick = true
+			info.hasArrow, info.menuList = true, "delete"
+	
+			UIDropDownMenu_AddButton(info, level);
+		elseif level == 2 and menuList == "delete" then
+			local info = UIDropDownMenu_CreateInfo()
+			info.notCheckable = true
+			info.keepShownOnClick = true
+			for _,realm in Internal.EnumerateRealms() do
+				info.text = realm
+				info.hasArrow, info.menuList = true, realm
+	
+				UIDropDownMenu_AddButton(info, level)
+			end
+		elseif level == 3 then
+			local info = UIDropDownMenu_CreateInfo()
+			info.notCheckable = true
+			info.func = function (self, slug)
+				StaticPopup_Show("BTWLOADOUTS_DELETECHARACTER", Internal.GetFormattedCharacterName(slug, true), nil, slug)
+			end
+			local playerSlug = Internal.GetCharacterSlug()
+			for _,character in Internal.EnumerateCharactersForRealm(menuList) do
+				if character ~= playerSlug then
+					local name = character
+					local characterInfo = Internal.GetCharacterInfo(character)
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+						name = classColor:WrapTextInColorCode(characterInfo.name)
+					end
+	
+					info.text = name
+					info.arg1 = character
+	
+					UIDropDownMenu_AddButton(info, level)
+				end
+			end
+		end
+	end
+	function BtWLoadoutsFrameMixin:OnOptionsClick(button)
+		if not self.OptionsMenu then
+			self.OptionsMenu = CreateFrame("Frame", self:GetName().."OptionsMenu", self, "UIDropDownMenuTemplate");
+			UIDropDownMenu_Initialize(self.OptionsMenu, OptionsMenu_Init, "MENU");
+		end
+
+		ToggleDropDownMenu(1, nil, self.OptionsMenu, button, 0, 0);
+	end
 	function BtWLoadoutsFrameMixin:OnShow()
 		if not self.initialized then
 			-- self.Equipment.flyoutSettings = {
