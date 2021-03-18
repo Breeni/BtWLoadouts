@@ -59,7 +59,7 @@ local function IsEssenceSetActive(set)
 end
 local function ActivateEssenceSet(set, state)
 	local success, complete = true, true;
-	if (not state or not state.ignoreTome) and state.heartEquipped or GetInventoryItemID("player", INVSLOT_NECK) == 158075 then
+	if (not state or (not state.ignoreTome and not state.ignoreJailersChains)) and state.heartEquipped or GetInventoryItemID("player", INVSLOT_NECK) == 158075 then
 		for milestoneID,essenceID in pairs(set.essences) do
 			local info = C_AzeriteEssence.GetEssenceInfo(essenceID)
 			local essenceName, essenceRank = info.name, info.rank
@@ -186,19 +186,19 @@ local function CombineEssenceSets(result, state, ...)
 		end
 
 		if state then
-			state.noCombatSwap = true
-			state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
-
 			if result.essences[115] == nil then
 				state.conflictAndStrife = GetMilestoneEssence(115) == 32; -- Conflict is equipped
 			else
 				state.conflictAndStrife = result.essences[115] == 32
 			end
 
-			if not state.customWait or not state.needTome then
-				local isActive, waitForCooldown = EssenceSetRequirements(result)
+			local isActive, waitForCooldown = EssenceSetRequirements(result)
 
-				state.needTome = state.needTome or (not isActive)
+			if not isActive then
+				state.needTome = true
+				state.blockedByJailersChains = true
+				state.noCombatSwap = true
+				state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
 				state.customWait = state.customWait or (waitForCooldown and L["Waiting for essence cooldown"])
 			end
 		end

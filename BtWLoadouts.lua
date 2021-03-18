@@ -269,6 +269,22 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 	hideOnEscape = 1,
 	noCancelOnReuse = 1,
 };
+StaticPopupDialogs["BTWLOADOUTS_JAILERSCHAINS"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
+	text = L["Cannot fully apply your loadout under the effects of the Jailer's Chains, do you wish to partially continue instead?"],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, ...)
+		Internal.ContinueIgnoreChainsActivateProfile();
+	end,
+	OnCancel = function(self, data, reason, ...)
+		if reason == "clicked" then
+			Internal.CancelActivateProfile();
+		end
+	end,
+	timeout = 0,
+	hideOnEscape = 1
+};
 StaticPopupDialogs["BTWLOADOUTS_NEEDRESTED"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
 	text = L["A rested area or tome is needed to fully apply your loadout, do you wish to partially continue instead?"],
@@ -1427,9 +1443,19 @@ end
 function Internal.ClearLog()
 	BtWLoadoutsLogFrame.Scroll.EditBox:SetText("")
 end
+local lastPass = false
+function Internal.LogNewPass()
+	if not lastPass then
+		BtWLoadoutsLogFrame.Scroll.EditBox:Insert(string.format("[%.03f] %s\n", GetTime(), "--- NEW PASS ---"))
+		lastPass = true
+	end
+end
 function Internal.LogMessage(...)
 	BtWLoadoutsLogFrame.Scroll.EditBox:Insert(string.format("[%.03f] %s\n", GetTime(), string.format(...):gsub("|", "||")))
+	lastPass = false
 end
+
+-- [[ CUSTOM EVENT HANDLING ]]
 
 local eventHandlers = {}
 function Internal.OnEvent(event, callback)

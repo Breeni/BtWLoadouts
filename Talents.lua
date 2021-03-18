@@ -148,16 +148,18 @@ end
 ]]
 local function ActivateTalentSet(set, state)
 	local success, complete = true, true;
-    for talentID in pairs(set.talents) do
-        local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
-        local available, currentColumn = GetTalentTierInfo(tier, 1)
-        if not selected and available then
-            if not state or not state.ignoreTome or currentColumn == 0 then
-                local slotSuccess = LearnTalent(talentID)
-                success = slotSuccess and success
-                complete = false
+	if not state or not state.ignoreJailersChains then
+        for talentID in pairs(set.talents) do
+            local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
+            local available, currentColumn = GetTalentTierInfo(tier, 1)
+            if not selected and available then
+                if not state or not state.ignoreTome or currentColumn == 0 then
+                    local slotSuccess = LearnTalent(talentID)
+                    success = slotSuccess and success
+                    complete = false
 
-                Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
+                    Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
+                end
             end
         end
     end
@@ -285,14 +287,14 @@ local function CombineTalentSets(result, state, ...)
     end
 
     if state then
-        state.noCombatSwap = true
-        state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
+        local isActive, waitForCooldown, anySelected = TalentSetRequirements(result)
 
-        if not state.customWait or not state.needTome then
-            local isActive, waitForCooldown, anySelected = TalentSetRequirements(result)
-
-            state.needTome = state.needTome or (not isActive and anySelected)
+        if not isActive then
+            state.needTome = state.needTome or anySelected
             state.customWait = state.customWait or (waitForCooldown and L["Waiting for talent cooldown"])
+            state.noCombatSwap = true
+            state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
+            state.blockedByJailersChains = true
         end
     end
 

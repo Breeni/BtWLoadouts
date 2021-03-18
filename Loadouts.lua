@@ -119,9 +119,11 @@ do
 		local itemId, name, link, quality, icon = GetBestTome();
 		if name ~= nil and not StaticPopup_Visible("BTWLOADOUTS_NEEDTOME") then
 			local r, g, b = GetItemQualityColor(quality or 2);
+			StaticPopup_Hide("BTWLOADOUTS_JAILERSCHAINS")
 			StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 			StaticPopup_Show("BTWLOADOUTS_NEEDTOME", "", nil, {["texture"] = icon, ["name"] = name, ["color"] = {r, g, b, 1}, ["link"] = link, ["count"] = 1});
 		elseif itemId == nil and not StaticPopup_Visible("BTWLOADOUTS_NEEDRESTED") then
+			StaticPopup_Hide("BTWLOADOUTS_JAILERSCHAINS")
 			StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 			StaticPopup_Show("BTWLOADOUTS_NEEDRESTED")
 		end
@@ -164,6 +166,11 @@ _G['BtWLoadoutsTarget'] = target; -- @TODO REMOVE
 local eventHandler = CreateFrame("Frame");
 eventHandler:Hide();
 
+local function HideLoadoutPopups()
+	StaticPopup_Hide("BTWLOADOUTS_JAILERSCHAINS")
+	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
+	StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+end
 local uiErrorTracking
 local function CancelActivateProfile()
 	C_Timer.After(1, function ()
@@ -176,8 +183,7 @@ local function CancelActivateProfile()
 
 	wipe(target);
 	wipe(targetstate);
-	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-	StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+	HideLoadoutPopups()
 	eventHandler:UnregisterAllEvents();
 	eventHandler:Hide();
 	Internal.Call("LOADOUT_CHANGE_END")
@@ -189,6 +195,11 @@ local function ContinueWithoutTomeActivateProfile()
 	target.ignoreTome = true
 end
 Internal.ContinueWithoutTomeActivateProfile = ContinueWithoutTomeActivateProfile;
+local function ContinueIgnoreChainsActivateProfile()
+    target.dirty = true
+	target.ignoreJailersChains = true
+end
+Internal.ContinueIgnoreChainsActivateProfile = ContinueIgnoreChainsActivateProfile;
 
 local errorState = {} -- Reusable state for checking loadouts for errors
 local function LoadoutHasErrors(set)
@@ -485,14 +496,15 @@ local function ContinueActivateProfile()
 		CancelActivateProfile()
 		return
 	end
+	
+	Internal.LogNewPass()
 
 	Internal.SetWaitReason() -- Clear wait reason
 	Internal.UpdateLauncher(GetActiveProfiles());
 
 	if IsChangingSpec() then
 		Internal.SetWaitReason(L["Waiting for specialization change"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+		HideLoadoutPopups()
         return;
 	end
 
@@ -504,8 +516,19 @@ local function ContinueActivateProfile()
 		state.noCombatSwap = true
 		state.noTaxiSwap = true
 		state.noMovingSwap = true
+		if Internal.HasJailersChains() then
+			-- We attempt to switch the spec to trigger the correct error message
+			for specIndex=1,GetNumSpecializations() do
+				if GetSpecializationInfo(specIndex) == specID then
+					SetSpecialization(specIndex);
+				end
+			end
+			CancelActivateProfile();
+			return;
+		end
 	end
 	state.ignoreTome = target.ignoreTome
+	state.ignoreJailersChains = target.ignoreJailersChains
 
 	wipe(combinedSets)
 	for _,segment in ipairs(loadoutSegments) do
@@ -514,24 +537,29 @@ local function ContinueActivateProfile()
 		end
 	end
 
-	if state.noCombatSwap and InCombatLockdown() then
-		Internal.SetWaitReason(L["Waiting for combat to end"])
+	if not state.ignoreJailersChains and state.blockedByJailersChains and Internal.HasJailersChains() then
+		Internal.SetWaitReason(L["Waiting for you to be freed from the Jailer's Chains"])
+		StaticPopup_Show("BTWLOADOUTS_JAILERSCHAINS")
 		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
 		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
 		return;
 	end
 
+	if state.noCombatSwap and InCombatLockdown() then
+		Internal.SetWaitReason(L["Waiting for combat to end"])
+		HideLoadoutPopups()
+		return;
+	end
+
 	if state.noTaxiSwap and UnitOnTaxi("player") then
 		Internal.SetWaitReason(L["Waiting for taxi ride to end"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+		HideLoadoutPopups()
         return;
 	end
 
 	if state.noMovingSwap and IsPlayerMoving() then
 		Internal.SetWaitReason(L["Waiting to change specialization"])
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+		HideLoadoutPopups()
 		return;
 	end
 
@@ -549,19 +577,17 @@ local function ContinueActivateProfile()
 
 	if state.customWait then
 		Internal.SetWaitReason(state.customWait)
-		StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-		StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+		HideLoadoutPopups()
 		return
 	end
 
-	if not state.ignoreTome and state.needTome and PlayerNeedsTome() then
+	if not state.ignoreTome and not state.ignoreJailersChains and state.needTome and PlayerNeedsTome() then
 		Internal.SetWaitReason(L["Waiting for tome"])
 		RequestTome();
 		return;
 	end
 
-	StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-	StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+	HideLoadoutPopups()
 
 	if uiErrorTracking == nil then
 		uiErrorTracking = UIErrorsFrame:IsEventRegistered("UI_ERROR_MESSAGE")
@@ -602,8 +628,7 @@ function eventHandler:GET_ITEM_INFO_RECEIVED()
     target.dirty = true;
 end
 function eventHandler:PLAYER_REGEN_DISABLED()
-    StaticPopup_Hide("BTWLOADOUTS_NEEDTOME")
-	StaticPopup_Hide("BTWLOADOUTS_NEEDRESTED")
+    HideLoadoutPopups()
 end
 function eventHandler:PLAYER_REGEN_ENABLED()
     target.dirty = true;

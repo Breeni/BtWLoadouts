@@ -1852,3 +1852,6 @@ function Internal.CanSwitchToSpecialization(specID)
 
 	return true
 end
+function Internal.HasJailersChains()
+	return GetPlayerAuraBySpellID(338906) ~= nil
+end

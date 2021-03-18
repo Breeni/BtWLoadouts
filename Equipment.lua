@@ -867,253 +867,256 @@ do
 	local uniqueFamiliesTemp = {};
 	local uniqueFamilies = {};
 	-- This function is destructive to the set
-	function ActivateEquipmentSet(set)
-		local ignored = set.ignored;
-		local expected = set.equipment;
-		local extras = set.extras;
-		local locations = set.locations;
-		local errors = set.errors;
-		local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil
-		wipe(correctSlots)
-		wipe(uniqueFamilies)
+	function ActivateEquipmentSet(set, state)
+		if not state or not state.ignoreJailersChains then
+			local ignored = set.ignored;
+			local expected = set.equipment;
+			local extras = set.extras;
+			local locations = set.locations;
+			local errors = set.errors;
+			local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil
+			wipe(correctSlots)
+			wipe(uniqueFamilies)
 
-		local firstEquipped = INVSLOT_FIRST_EQUIPPED
-		local lastEquipped = INVSLOT_LAST_EQUIPPED
+			local firstEquipped = INVSLOT_FIRST_EQUIPPED
+			local lastEquipped = INVSLOT_LAST_EQUIPPED
 
-		-- if combatSwap then
-		-- 	firstEquipped = INVSLOT_MAINHAND
-		-- 	lastEquipped = INVSLOT_RANGED
-		-- end
+			-- if combatSwap then
+			-- 	firstEquipped = INVSLOT_MAINHAND
+			-- 	lastEquipped = INVSLOT_RANGED
+			-- end
 
-		-- Store a list of all available empty slots
-		local totalFreeSlots = 0
-		for i=BACKPACK_CONTAINER,NUM_BAG_SLOTS do
-			if not freeSlotsCache[i] then
-				freeSlotsCache[i] = {}
-			else
-				wipe(freeSlotsCache[i])
+			-- Store a list of all available empty slots
+			local totalFreeSlots = 0
+			for i=BACKPACK_CONTAINER,NUM_BAG_SLOTS do
+				if not freeSlotsCache[i] then
+					freeSlotsCache[i] = {}
+				else
+					wipe(freeSlotsCache[i])
+				end
+
+				if GetContainerFreeSlots(i, freeSlotsCache[i]) then
+					totalFreeSlots = totalFreeSlots + #freeSlotsCache[i]
+				end
 			end
 
-			if GetContainerFreeSlots(i, freeSlotsCache[i]) then
-				totalFreeSlots = totalFreeSlots + #freeSlotsCache[i]
-			end
-		end
-
-		-- Loop through and empty slots that should be empty, also store locations for other slots
-		for inventorySlotId = firstEquipped, lastEquipped do
-			if errors and errors[inventorySlotId] then -- If there is an error in a slot, normally due to unique-equipped items then just ignore it
-				ignored[inventorySlotId] = true
-			end
-
-			if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] ~= -1 and not expected[inventorySlotId] then
-				expected[inventorySlotId] = GetItemLinkByLocation(locations[inventorySlotId])
-
-				if not expected[inventorySlotId] then
+			-- Loop through and empty slots that should be empty, also store locations for other slots
+			for inventorySlotId = firstEquipped, lastEquipped do
+				if errors and errors[inventorySlotId] then -- If there is an error in a slot, normally due to unique-equipped items then just ignore it
 					ignored[inventorySlotId] = true
 				end
-			end
 
-			if not ignored[inventorySlotId] then
-				local slotLocked = IsInventoryItemLocked(inventorySlotId)
-				anyLockedSlots = anyLockedSlots or slotLocked
+				if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] ~= -1 and not expected[inventorySlotId] then
+					expected[inventorySlotId] = GetItemLinkByLocation(locations[inventorySlotId])
 
-				local itemLink = expected[inventorySlotId];
-				if itemLink then
-					local location = locations[inventorySlotId];
-					if location and location ~= -1 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
-						local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-						if player and not bags and slot == inventorySlotId then -- The item is already in the desired location
-							correctSlots[inventorySlotId] = true;
-							ignored[inventorySlotId] = true;
-						else
-							bestMatchForSlot[inventorySlotId] = location;
-						end
-					else
-						-- The item is already in the desired location
-						if IsItemInLocation(itemLink, extras[inventorySlotId], true, false, false, false, inventorySlotId, false) then
-							correctSlots[inventorySlotId] = true;
-							ignored[inventorySlotId] = true;
-						else
-							GetInventoryItemsForSlot(inventorySlotId, possibleItems)
-
-							for completedSlotId in pairs(correctSlots) do
-								possibleItems[PackLocation(nil, completedSlotId)] = nil
-							end
-
-							location = GetBestMatch(itemLink, extras[inventorySlotId], possibleItems)
-							wipe(possibleItems);
-							if location == nil then -- Could not find the requested item @TODO Error
-								ignored[inventorySlotId] = true;
-							else
-								local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-								if player and not bags and slot == inventorySlotId then -- The item is already in the desired location, this shouldnt happen
-									correctSlots[inventorySlotId] = true;
-									ignored[inventorySlotId] = true;
-								end
-								bestMatchForSlot[inventorySlotId] = location;
-							end
-						end
-					end
-				else -- Unequip
-					if GetInventoryItemLink("player", inventorySlotId) ~= nil then
-						if not IsInventoryItemLocked(inventorySlotId) then
-							local complete, foundSlot = EmptyInventorySlot(inventorySlotId)
-							anyChangedSlots = anyChangedSlots or complete
-							anyFoundFreeSlots = anyFoundFreeSlots or foundSlot
-						end
-					else -- Already unequipped
-						ignored[inventorySlotId] = true;
+					if not expected[inventorySlotId] then
+						ignored[inventorySlotId] = true
 					end
 				end
-			end
 
-			-- If we arent swapping an item out and its in some way unique we may need to skip swapping another unique item in
-			if ignored[inventorySlotId] then
-				local itemLink = GetInventoryItemLink("player", inventorySlotId)
-				if itemLink then
-					local itemID = GetItemInfoInstant(itemLink)
-					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+				if not ignored[inventorySlotId] then
+					local slotLocked = IsInventoryItemLocked(inventorySlotId)
+					anyLockedSlots = anyLockedSlots or slotLocked
 
-					if uniqueFamily ~= nil then
-						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+					local itemLink = expected[inventorySlotId];
+					if itemLink then
+						local location = locations[inventorySlotId];
+						if location and location ~= -1 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
+							local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
+							if player and not bags and slot == inventorySlotId then -- The item is already in the desired location
+								correctSlots[inventorySlotId] = true;
+								ignored[inventorySlotId] = true;
+							else
+								bestMatchForSlot[inventorySlotId] = location;
+							end
+						else
+							-- The item is already in the desired location
+							if IsItemInLocation(itemLink, extras[inventorySlotId], true, false, false, false, inventorySlotId, false) then
+								correctSlots[inventorySlotId] = true;
+								ignored[inventorySlotId] = true;
+							else
+								GetInventoryItemsForSlot(inventorySlotId, possibleItems)
+
+								for completedSlotId in pairs(correctSlots) do
+									possibleItems[PackLocation(nil, completedSlotId)] = nil
+								end
+
+								location = GetBestMatch(itemLink, extras[inventorySlotId], possibleItems)
+								wipe(possibleItems);
+								if location == nil then -- Could not find the requested item @TODO Error
+									ignored[inventorySlotId] = true;
+								else
+									local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
+									if player and not bags and slot == inventorySlotId then -- The item is already in the desired location, this shouldnt happen
+										correctSlots[inventorySlotId] = true;
+										ignored[inventorySlotId] = true;
+									end
+									bestMatchForSlot[inventorySlotId] = location;
+								end
+							end
+						end
+					else -- Unequip
+						if GetInventoryItemLink("player", inventorySlotId) ~= nil then
+							if not IsInventoryItemLocked(inventorySlotId) then
+								local complete, foundSlot = EmptyInventorySlot(inventorySlotId)
+								anyChangedSlots = anyChangedSlots or complete
+								anyFoundFreeSlots = anyFoundFreeSlots or foundSlot
+							end
+						else -- Already unequipped
+							ignored[inventorySlotId] = true;
+						end
 					end
+				end
 
-					local index = 1
-					local gemName, gemLink = GetItemGem(itemLink, index)
-					while gemName do
-						itemID = GetItemInfoInstant(gemLink)
-						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+				-- If we arent swapping an item out and its in some way unique we may need to skip swapping another unique item in
+				if ignored[inventorySlotId] then
+					local itemLink = GetInventoryItemLink("player", inventorySlotId)
+					if itemLink then
+						local itemID = GetItemInfoInstant(itemLink)
+						local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
 						if uniqueFamily ~= nil then
 							uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 						end
 
-						index = index + 1
-						gemName, gemLink = GetItemGem(itemLink, index)
+						local index = 1
+						local gemName, gemLink = GetItemGem(itemLink, index)
+						while gemName do
+							itemID = GetItemInfoInstant(gemLink)
+							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+
+							if uniqueFamily ~= nil then
+								uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+							end
+
+							index = index + 1
+							gemName, gemLink = GetItemGem(itemLink, index)
+						end
 					end
 				end
 			end
-		end
 
-		-- Check expected items uniqueness
-		for inventorySlotId = firstEquipped, lastEquipped do
-			if not ignored[inventorySlotId] and expected[inventorySlotId] then
-				local itemLink = expected[inventorySlotId];
-				local itemID = GetItemInfoInstant(itemLink);
-				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+			-- Check expected items uniqueness
+			for inventorySlotId = firstEquipped, lastEquipped do
+				if not ignored[inventorySlotId] and expected[inventorySlotId] then
+					local itemLink = expected[inventorySlotId];
+					local itemID = GetItemInfoInstant(itemLink);
+					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
-				if uniqueFamily then
-					if uniqueFamilies[uniqueFamily] then
-						if uniqueFamilies[uniqueFamily] <= 0 then
-							ignored[inventorySlotId] = true -- To many of the unique items already equipped
-						else
-							uniqueFamiliesTemp[uniqueFamily] = true
-						end
-
-						uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
-					end
-				end
-
-				if not ignored[inventorySlotId] then
-					local index = 1
-					local gemName, gemLink = GetItemGem(itemLink, index)
-					while gemName do
-						itemID = GetItemInfoInstant(gemLink);
-						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
-
-						if uniqueFamily and uniqueFamilies[uniqueFamily] then
-							uniqueFamiliesTemp[uniqueFamily] = true
-
+					if uniqueFamily then
+						if uniqueFamilies[uniqueFamily] then
 							if uniqueFamilies[uniqueFamily] <= 0 then
 								ignored[inventorySlotId] = true -- To many of the unique items already equipped
-								break
 							else
 								uniqueFamiliesTemp[uniqueFamily] = true
 							end
 
 							uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
 						end
-
-						index = index + 1
-						gemName, gemLink = GetItemGem(itemLink, index)
 					end
-				end
 
-				if ignored[inventorySlotId] then
-					-- uniqueFamiliesTemp is a list of all the unique families that were non-blocking
-					-- because we found 1 that was blocking we will unblock the others
-					for uniqueFamily in pairs(uniqueFamiliesTemp) do
-						uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] + 1
+					if not ignored[inventorySlotId] then
+						local index = 1
+						local gemName, gemLink = GetItemGem(itemLink, index)
+						while gemName do
+							itemID = GetItemInfoInstant(gemLink);
+							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+
+							if uniqueFamily and uniqueFamilies[uniqueFamily] then
+								uniqueFamiliesTemp[uniqueFamily] = true
+
+								if uniqueFamilies[uniqueFamily] <= 0 then
+									ignored[inventorySlotId] = true -- To many of the unique items already equipped
+									break
+								else
+									uniqueFamiliesTemp[uniqueFamily] = true
+								end
+
+								uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
+							end
+
+							index = index + 1
+							gemName, gemLink = GetItemGem(itemLink, index)
+						end
 					end
-					wipe(uniqueFamiliesTemp)
+
+					if ignored[inventorySlotId] then
+						-- uniqueFamiliesTemp is a list of all the unique families that were non-blocking
+						-- because we found 1 that was blocking we will unblock the others
+						for uniqueFamily in pairs(uniqueFamiliesTemp) do
+							uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] + 1
+						end
+						wipe(uniqueFamiliesTemp)
+					end
 				end
 			end
-		end
 
-		-- Swap currently equipped "unique" items that need to be swapped out before others can be swapped in
-		for inventorySlotId = firstEquipped, lastEquipped do
-			local itemLink = GetInventoryItemLink("player", inventorySlotId)
+			-- Swap currently equipped "unique" items that need to be swapped out before others can be swapped in
+			for inventorySlotId = firstEquipped, lastEquipped do
+				local itemLink = GetInventoryItemLink("player", inventorySlotId)
 
-			if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] and itemLink ~= nil then
-				local itemID = GetItemInfoInstant(itemLink);
-				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+				if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] and itemLink ~= nil then
+					local itemID = GetItemInfoInstant(itemLink);
+					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
-				local swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
+					local swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
 
-				if not swapSlot then
-					local index = 1
-					local gemName, gemLink = GetItemGem(itemLink, index)
-					while gemName do
-						itemID = GetItemInfoInstant(gemLink)
-						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+					if not swapSlot then
+						local index = 1
+						local gemName, gemLink = GetItemGem(itemLink, index)
+						while gemName do
+							itemID = GetItemInfoInstant(gemLink)
+							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
 
-						swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
+							swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
 
-						if swapSlot then
-							break
+							if swapSlot then
+								break
+							end
+
+							index = index + 1
+							gemName, gemLink = GetItemGem(itemLink, index)
 						end
+					end
 
-						index = index + 1
-						gemName, gemLink = GetItemGem(itemLink, index)
+					if swapSlot then
+						if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
+							anyChangedSlots = true
+						end
 					end
 				end
+			end
 
-				if swapSlot then
+			-- Swap out items
+			for inventorySlotId = firstEquipped, lastEquipped do
+				if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
 					if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
 						anyChangedSlots = true
 					end
 				end
 			end
-		end
 
-		-- Swap out items
-		for inventorySlotId = firstEquipped, lastEquipped do
-			if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
-				if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
-					anyChangedSlots = true
+			ClearCursor()
+
+			-- We assume that if we have any locked slots or any changed slots we are not complete yet
+			local complete = not anyLockedSlots and not anyChangedSlots
+			if complete then
+				-- If there are no locked slots and not changed slots and we never found a free slot
+				-- to remove an item, we will consider ourselves complete but with an error
+				if anyFoundFreeSlots == false then
+					return complete, L["Failed to change equipment set"]
+				end
+				for inventorySlotId = firstEquipped, lastEquipped do
+					-- We mark slots as ignored when they are finished
+					if not ignored[inventorySlotId] then
+						complete = false
+					end
 				end
 			end
+
+			return complete, false;
 		end
-
-		ClearCursor()
-
-		-- We assume that if we have any locked slots or any changed slots we are not complete yet
-		local complete = not anyLockedSlots and not anyChangedSlots
-		if complete then
-			-- If there are no locked slots and not changed slots and we never found a free slot
-			-- to remove an item, we will consider ourselves complete but with an error
-			if anyFoundFreeSlots == false then
-				return complete, L["Failed to change equipment set"]
-			end
-			for inventorySlotId = firstEquipped, lastEquipped do
-				-- We mark slots as ignored when they are finished
-				if not ignored[inventorySlotId] then
-					complete = false
-				end
-			end
-		end
-
-		return complete, false;
+		return true, false
 	end
 end
 local function UpdateEquipmentSetFilters(set)
@@ -1290,6 +1293,7 @@ local function CombineEquipmentSets(result, state, ...)
 
     if state then
 		state.noCombatSwap = true
+		state.blockedByJailersChains = true
 
 		if result.ignored[INVSLOT_NECK] then
 			state.heartEquipped = GetInventoryItemID("player", INVSLOT_NECK) == 158075
