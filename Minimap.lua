@@ -201,12 +201,14 @@ function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
         info.func = nil
         info.text = L["Delete Character Data"]
         info.notCheckable = true
+		info.keepShownOnClick = true
         info.hasArrow, info.menuList = true, "delete"
 
         UIDropDownMenu_AddButton(info, level);
     elseif level == 2 and menuList == "delete" then
         local info = UIDropDownMenu_CreateInfo()
         info.notCheckable = true
+		info.keepShownOnClick = true
         for _,realm in Internal.EnumerateRealms() do
             info.text = realm
             info.hasArrow, info.menuList = true, realm
