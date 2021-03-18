@@ -271,7 +271,7 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 };
 StaticPopupDialogs["BTWLOADOUTS_JAILERSCHAINS"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["Cannot fully apply your loadout under the effects of the Jailer's Chains, do you wish to partially continue instead?"],
+	text = L["Cannot fully apply your loadout while under the effects of the Jailer's Chains, do you wish to partially continue instead?"],
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self, ...)
