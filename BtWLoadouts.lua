@@ -175,6 +175,13 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTMULTIACTIVATE"] = {
 	OnAccept = function(self, data)
 		data.func(Internal.GetAciveConditionSelection().profile);
 	end,
+	OnShow = function(self)
+		-- Something is changing the frame strata causing issues with the dropdown
+		-- box so we will change it to defgault
+		if self:GetFrameStrata() ~= "DIALOG" then
+			self:SetFrameStrata("DIALOG")
+		end
+	end,
 	timeout = 0,
 	hideOnEscape = 1
 };
