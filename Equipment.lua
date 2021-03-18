@@ -1133,6 +1133,15 @@ local function GetEquipmentSet(id)
 		return BtWLoadoutsSets.equipment[id];
 	end
 end
+local function GetSetsForCharacter(tbl, slug)
+	tbl = tbl or {}
+	for _,set in pairs(BtWLoadoutsSets.equipment) do
+		if type(set) == "table" and set.character == slug then
+			tbl[#tbl+1] = set
+		end
+	end
+	return tbl
+end
 -- returns isValid and isValidForPlayer
 local function EquipmentSetIsValid(set)
 	local set = GetEquipmentSet(set);
@@ -1307,8 +1316,13 @@ local function CombineEquipmentSets(result, state, ...)
 	return result;
 end
 local function DeleteEquipmentSet(id)
-	Internal.DeleteSet(BtWLoadoutsSets.equipment, id);
-	RemoveSetFromMapData(GetEquipmentSet(id))
+	do
+		local set = GetEquipmentSet(id)
+		if set.character == Internal.GetCharacterSlug() and set.locations then
+			RemoveSetFromMapData(set)
+		end
+	end
+	Internal.DeleteSet(BtWLoadoutsSets.equipment, id)
 
 	if type(id) == "table" then
 		id = id.setID;
@@ -2945,3 +2959,12 @@ if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
 		end
 	end
 end
+
+-- Character deletion
+Internal.OnEvent("CHARACTER_DELETE", function (event, slug)
+	local sets = GetSetsForCharacter({}, slug)
+	for _,set in ipairs(sets) do
+		DeleteEquipmentSet(set.setID)
+	end
+	return true
+end)

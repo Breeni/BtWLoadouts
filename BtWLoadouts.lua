@@ -1051,8 +1051,17 @@ do
 		filtered = FilterSets({}, self.filters, filtered)
 		filtered = CategoriesSets(filtered, unpack(self.categories))
 
-		wipe(self.Scroll.items);
+		wipe(self.Scroll.items)
 		self.selected = BuildList(self.Scroll.items, 0, self.selected, filtered, self.collapsed, unpack(self.categories))
+		if not self.selected then -- Fallback in case everything is hidden
+			for _,set in pairs(self.sets) do
+				if type(set) == "table" then
+					self.selected = set
+					break
+				end
+			end
+		end
+
 		self.Scroll:update();
 	end
 end
@@ -1472,11 +1481,15 @@ function Internal.OnEvent(event, callback)
 end
 function Internal.Call(event, ...)
 	local callbacks = eventHandlers[event]
+	local result = true
 	if callbacks then
 		for callback in pairs(callbacks) do
-			callback(event, ...)
+			if callback(event, ...) == false then
+				result = false
+			end
 		end
 	end
+	return result
 end
 
 -- [[ Slash Command ]]
