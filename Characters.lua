@@ -1808,6 +1808,18 @@ end
 function Internal.GetCharacterInfo(character)
 	return BtWLoadoutsCharacterInfo and BtWLoadoutsCharacterInfo[character];
 end
+function Internal.GetFormattedCharacterName(slug, includeRealm)
+	local characterInfo = Internal.GetCharacterInfo(slug)
+	if characterInfo then
+		local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+		if includeRealm then
+			return format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+		else
+			return classColor:WrapTextInColorCode(characterInfo.name)
+		end
+	end
+	return slug
+end
 local characterIteratorTemp = {}
 function Internal.CharacterIterator()
 	wipe(characterIteratorTemp);

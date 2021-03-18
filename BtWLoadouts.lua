@@ -330,6 +330,18 @@ StaticPopupDialogs["BTWLOADOUTS_DELETEINUSESET"] = {
 	whileDead = 1,
 	showAlert = 1
 };
+StaticPopupDialogs["BTWLOADOUTS_DELETECHARACTER"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
+	text = L["Are you sure you wish to delete the character data for \"%s\", this will also irreversibly delete any equipment sets for the character."],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, slug)
+		Internal.DeleteCharacter(slug)
+	end,
+	timeout = 0,
+	whileDead = 1,
+	showAlert = 1
+};
 
 
 function Internal.HelpTipBox_Anchor(self, anchorPoint, frame, offset)

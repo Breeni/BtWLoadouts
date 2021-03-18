@@ -216,8 +216,8 @@ function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
     elseif level == 3 then
         local info = UIDropDownMenu_CreateInfo()
         info.notCheckable = true
-        info.func = function (self, key)
-            Internal.DeleteCharacter(key)
+        info.func = function (self, slug)
+			StaticPopup_Show("BTWLOADOUTS_DELETECHARACTER", Internal.GetFormattedCharacterName(slug, true), nil, slug)
         end
         local playerSlug = Internal.GetCharacterSlug()
         for _,character in Internal.EnumerateCharactersForRealm(menuList) do
