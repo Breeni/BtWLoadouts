@@ -1857,6 +1857,7 @@ function Internal.DeleteCharacter(slug)
 	if Internal.Call("CHARACTER_DELETE", slug) then
 		BtWLoadoutsCharacterInfo[slug] = nil
 	end
+	BtWLoadoutsFrame:Update();
 end
 function Internal.UpdatePlayerInfo()
     local name, realm = UnitFullName("player");
