@@ -2629,6 +2629,7 @@ do
 
 		result = result or {}
 
+		local character = GetCharacterSlug()
 		local sets = BtWLoadoutsSets.equipment
 		for _,set in pairs(sets) do
 			if type(set) == "table" and set.character == character and not set.disabled then
