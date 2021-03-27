@@ -1107,16 +1107,16 @@ do
 		self:StopMovingOrSizing();
 	end
 	function BtWLoadoutsFrameMixin:OnMouseUp()
-		-- if self.Essences.pending ~= nil then
-		-- 	self.Essences.pending = nil
-		-- 	SetCursor(nil);
-		-- 	self:Update();
-		-- end
+		if self.Essences.pending ~= nil then
+			self.Essences.pending = nil
+			SetCursor(nil);
+			self:Update();
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnEnter()
-		-- if self.Essences.pending ~= nil then
-		-- 	SetCursor("interface/cursor/cast.blp");
-		-- end
+		if self.Essences.pending ~= nil then
+			SetCursor("interface/cursor/cast.blp");
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnLeave()
 		SetCursor(nil);
