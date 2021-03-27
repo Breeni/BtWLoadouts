@@ -1144,10 +1144,6 @@ _G['BtWLoadoutsErrors'] = errors
 BtWLoadoutsProfilesMixin = {}
 function BtWLoadoutsProfilesMixin:OnLoad()
 	self:RegisterEvent("GLOBAL_MOUSE_UP")
-	
-	self.SpecDropDown.includeNone = true;
-	UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
-	UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
 
 	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 	self.SetsScroll.update = SetsScrollFrameUpdate;
@@ -1158,7 +1154,12 @@ function BtWLoadoutsProfilesMixin:OnEvent()
 	end
 end
 function BtWLoadoutsProfilesMixin:OnShow()
-	
+	if not self.initialized then
+		self.SpecDropDown.includeNone = true;
+		UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
+		UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+		self.initialized = true;
+	end
 end
 function BtWLoadoutsProfilesMixin:ChangeSet(set)
     self.set = set
