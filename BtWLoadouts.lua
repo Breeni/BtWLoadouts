@@ -70,11 +70,9 @@ local function SettingsCreate(options)
 	local mt = {};
 	function mt:__call (tbl)
 		setmetatable(tbl, {__index = defaults});
-		-- local mt = getmetatable(self);
 		mt.__index = tbl;
 	end
 	function mt:__newindex (key, value)
-		-- local mt = getmetatable(self);
 		mt.__index[key] = value;
 
 		local option = optionsByKey[key];
@@ -117,6 +115,16 @@ local Settings = SettingsCreate({
         name = L["Filter chat spam while changing loadouts"],
         key = "filterChatSpam",
         default = false,
+    },
+    {
+        name = L["Enable Essences"],
+        key = "essences",
+        onChange = function (id, value)
+			BtWLoadoutsFrame.Essences:SetEnabled(value)
+			Internal.SetLoadoutSegmentEnabled(id, value)
+			BtWLoadoutsFrame:Update()
+        end,
+        default = true,
     },
 });
 Internal.Settings = Settings;
@@ -1090,6 +1098,36 @@ do
 		end
 		PanelTemplates_UpdateTabs(frame);
 	end
+	function BtWLoadoutsTabFrame_SetEnabled(self, value)
+		self.enabled = value and true or false
+		BtWLoadoutsTabFrame_ReanchorTabs(self)
+	end
+	function BtWLoadoutsTabFrame_ReanchorTabs(self)
+		local frame = self:GetParent()
+		local Tabs = frame.Tabs
+		local TabFrames = frame.TabFrames
+
+		local index = self:GetID() - 1
+		local previous = Tabs[index]
+		while previous and not previous:IsShown() do
+			index = index - 1
+			previous = Tabs[index]
+		end
+		for i=self:GetID(),#Tabs do
+			local tab = Tabs[i]
+			local tabFrame = TabFrames[i]
+
+			tab:SetShown(tabFrame.enabled ~= false)
+			if tabFrame.enabled ~= false then
+				if previous then
+					tab:SetPoint("LEFT", previous, "RIGHT", -16, 0)
+				else
+					tab:SetPoint("BOTTOMLEFT", 7, -30)
+				end
+				previous = tab
+			end
+		end
+	end
 
 	BtWLoadoutsFrameMixin = {};
 	function BtWLoadoutsFrameMixin:OnLoad()
@@ -1160,6 +1198,11 @@ do
 	end
 	function BtWLoadoutsFrameMixin:Update()
 		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1
+		if self.TabFrames[selectedTab].enabled == false then
+			selectedTab = 1
+			PanelTemplates_SetTab(self, selectedTab)
+		end
+
 		for id,frame in ipairs(self.TabFrames) do
 			frame:SetShown(id == selectedTab)
 		end
