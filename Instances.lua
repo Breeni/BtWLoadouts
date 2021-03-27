@@ -2200,7 +2200,6 @@ local function PushAffixMask(a, b)
         affixesMask[a][i] = bit.bor(affixesMask[a][i] or 0, b[i] or 0)
     end
 end
-_G["BtWLoadoutsAffixesMask"] = affixesMask;
 function Internal.GetExclusiveAffixes(affixesID)
 	affixesID = bit.band(affixesID or 0, 0xffffff)
 	if affixesID == 0 or GetExpansionLevel() == 8 then
@@ -2325,7 +2324,6 @@ end
 
 local areaNameToIDMap = {};
 Internal.areaNameToIDMap = areaNameToIDMap;
-_G['BtWLoadoutsAreaMap'] = areaNameToIDMap; -- @TODO Remove
 
 -- Updates areaNameToIDMap with localized area name to area id
 function Internal.UpdateAreaMap()

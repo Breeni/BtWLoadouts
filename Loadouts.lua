@@ -43,7 +43,6 @@ local GetCharacterSlug = Internal.GetCharacterSlug
 local loadoutSegments = {}
 local loadoutSegmentsByID = {}
 local loadoutSegmentsUIOrder = {}
-_G['BtWLoadoutsLoadoutSegments'] = loadoutSegments; -- @TODO REMOVE
 
 local PlayerNeedsTome;
 do
@@ -160,7 +159,6 @@ end
 -- by switching spec or waiting for the player to use a tome
 local target = {};
 local targetstate = {};
-_G['BtWLoadoutsTarget'] = target; -- @TODO REMOVE
 
 -- Handles events during loadout changing
 local eventHandler = CreateFrame("Frame");
@@ -1060,7 +1058,7 @@ local function SetsScrollFrameUpdate(self)
 	HybridScrollFrame_Update(self, totalHeight, displayedHeight)
 end
 local function AddItem(items, index)
-	item = items[index] or {}
+	local item = items[index] or {}
 	items[index] = item
 	
 	wipe(item)
@@ -1139,7 +1137,6 @@ end
 
 -- Stores errors for currently viewed set
 local errors = {}
-_G['BtWLoadoutsErrors'] = errors
 
 BtWLoadoutsProfilesMixin = {}
 function BtWLoadoutsProfilesMixin:OnLoad()

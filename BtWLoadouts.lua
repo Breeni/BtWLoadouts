@@ -573,7 +573,6 @@ do
 		function SpecFilterEnumerator()
 			if specEnumertorList == nil then
 				specEnumertorList = {}
-				_G['BtWLoadouts_SpecEnumertorList'] = specEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);
@@ -619,7 +618,6 @@ do
 		function ClassFilterEnumerator()
 			if classEnumertorList == nil then
 				classEnumertorList = {}
-				_G['BtWLoadouts_ClassEnumertorList'] = classEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);

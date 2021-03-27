@@ -2079,8 +2079,6 @@ do
 			end
 		end
 	})
-	_G['BtWLoadoutsLocationItems'] = locationItems
-	_G['BtWLoadoutsLocationSets'] = locationSets
 
 	function AddSetToMapData(set)
 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
@@ -2341,8 +2339,6 @@ do
 
 			locationItems, newLocationItems = newLocationItems, locationItems
 			locationSets, newLocationSets = newLocationSets, locationSets
-			_G['BtWLoadoutsLocationItems'] = locationItems
-			_G['BtWLoadoutsLocationSets'] = locationSets
 		end
 		function UpdateAllLocations(skipInventory, skipBags, skipBank, includeMissingLocations)
 			wipe(newLocationItems)
@@ -2460,12 +2456,7 @@ do
 
 			locationItems, newLocationItems = newLocationItems, locationItems
 			locationSets, newLocationSets = newLocationSets, locationSets
-			_G['BtWLoadoutsLocationItems'] = locationItems
-			_G['BtWLoadoutsLocationSets'] = locationSets
 		end
-
-		_G["BtWLoadoutsMissingItemDatas"] = missingItemDatas
-		_G["BtWLoadoutsUpdateAllLocations"] = UpdateAllLocations
 	end
 
 	do -- Event handling for inventory changes
@@ -2835,8 +2826,8 @@ do
 			_G[tooltipName .. "TextLeft" .. equipmentSetLine]:SetText(sets)
 		elseif afterLine and afterLine < self:NumLines() then
 			local left, right = _G[tooltipName .. "TextLeft" .. self:NumLines()], _G[tooltipName .. "TextRight" .. self:NumLines()]
-			leftText, leftR, leftG, leftB  = left:GetText(), left:GetTextColor()
-			rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
+			local leftText, leftR, leftG, leftB  = left:GetText(), left:GetTextColor()
+			local rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
 
 			self:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
 
