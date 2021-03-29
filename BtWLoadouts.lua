@@ -7,7 +7,6 @@
 	Conditions need to support arena comp?
 	Localization
 	Update new set text button based on tab?
-	What to do when the player has no tome
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
@@ -23,7 +22,6 @@
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
-	Yes/No/Cancel button for tomes?
 	Trigger system for changing loadouts, run custom code when a set is changed?
 ]]
 
@@ -585,7 +583,6 @@ do
 		function SpecFilterEnumerator()
 			if specEnumertorList == nil then
 				specEnumertorList = {}
-				_G['BtWLoadouts_SpecEnumertorList'] = specEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);
@@ -631,7 +628,6 @@ do
 		function ClassFilterEnumerator()
 			if classEnumertorList == nil then
 				classEnumertorList = {}
-				_G['BtWLoadouts_ClassEnumertorList'] = classEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);
@@ -1130,16 +1126,16 @@ do
 		self:StopMovingOrSizing();
 	end
 	function BtWLoadoutsFrameMixin:OnMouseUp()
-		-- if self.Essences.pending ~= nil then
-		-- 	self.Essences.pending = nil
-		-- 	SetCursor(nil);
-		-- 	self:Update();
-		-- end
+		if self.Essences.pending ~= nil then
+			self.Essences.pending = nil
+			SetCursor(nil);
+			self:Update();
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnEnter()
-		-- if self.Essences.pending ~= nil then
-		-- 	SetCursor("interface/cursor/cast.blp");
-		-- end
+		if self.Essences.pending ~= nil then
+			SetCursor("interface/cursor/cast.blp");
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnLeave()
 		SetCursor(nil);
