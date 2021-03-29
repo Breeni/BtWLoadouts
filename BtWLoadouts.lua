@@ -7,7 +7,6 @@
 	Conditions need to support arena comp?
 	Localization
 	Update new set text button based on tab?
-	What to do when the player has no tome
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
@@ -23,7 +22,6 @@
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
-	Yes/No/Cancel button for tomes?
 	Trigger system for changing loadouts, run custom code when a set is changed?
 ]]
 
