@@ -95,7 +95,6 @@ local conditionMap = {
 	affixID3 = {},
 	affixID4 = {},
 };
-_G['BtWLoadoutsConditionMap'] = conditionMap; --@TODO Remove
 local function ActivateConditionMap(map, key)
 	if key ~= nil and map[key] ~= nil then
 		local tbl = map[key];
@@ -214,7 +213,6 @@ local function DeleteConditionSet(id)
 	end
 end
 local previousConditionInfo = {};
-_G['BtWLoadoutsPreviousConditionInfo'] = previousConditionInfo; --@TODO Remove
 function Internal.ClearConditions()
 	wipe(previousConditionInfo);
 	wipe(activeConditions);

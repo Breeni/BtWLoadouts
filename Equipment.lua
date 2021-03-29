@@ -1133,6 +1133,15 @@ local function GetEquipmentSet(id)
 		return BtWLoadoutsSets.equipment[id];
 	end
 end
+local function GetSetsForCharacter(tbl, slug)
+	tbl = tbl or {}
+	for _,set in pairs(BtWLoadoutsSets.equipment) do
+		if type(set) == "table" and set.character == slug then
+			tbl[#tbl+1] = set
+		end
+	end
+	return tbl
+end
 -- returns isValid and isValidForPlayer
 local function EquipmentSetIsValid(set)
 	local set = GetEquipmentSet(set);
@@ -1307,8 +1316,13 @@ local function CombineEquipmentSets(result, state, ...)
 	return result;
 end
 local function DeleteEquipmentSet(id)
-	Internal.DeleteSet(BtWLoadoutsSets.equipment, id);
-	RemoveSetFromMapData(GetEquipmentSet(id))
+	do
+		local set = GetEquipmentSet(id)
+		if set.character == Internal.GetCharacterSlug() and set.locations then
+			RemoveSetFromMapData(set)
+		end
+	end
+	Internal.DeleteSet(BtWLoadoutsSets.equipment, id)
 
 	if type(id) == "table" then
 		id = id.setID;
@@ -2079,8 +2093,6 @@ do
 			end
 		end
 	})
-	_G['BtWLoadoutsLocationItems'] = locationItems
-	_G['BtWLoadoutsLocationSets'] = locationSets
 
 	function AddSetToMapData(set)
 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
@@ -2341,8 +2353,6 @@ do
 
 			locationItems, newLocationItems = newLocationItems, locationItems
 			locationSets, newLocationSets = newLocationSets, locationSets
-			_G['BtWLoadoutsLocationItems'] = locationItems
-			_G['BtWLoadoutsLocationSets'] = locationSets
 		end
 		function UpdateAllLocations(skipInventory, skipBags, skipBank, includeMissingLocations)
 			wipe(newLocationItems)
@@ -2460,12 +2470,7 @@ do
 
 			locationItems, newLocationItems = newLocationItems, locationItems
 			locationSets, newLocationSets = newLocationSets, locationSets
-			_G['BtWLoadoutsLocationItems'] = locationItems
-			_G['BtWLoadoutsLocationSets'] = locationSets
 		end
-
-		_G["BtWLoadoutsMissingItemDatas"] = missingItemDatas
-		_G["BtWLoadoutsUpdateAllLocations"] = UpdateAllLocations
 	end
 
 	do -- Event handling for inventory changes
@@ -2638,6 +2643,7 @@ do
 
 		result = result or {}
 
+		local character = GetCharacterSlug()
 		local sets = BtWLoadoutsSets.equipment
 		for _,set in pairs(sets) do
 			if type(set) == "table" and set.character == character and not set.disabled then
@@ -2835,8 +2841,8 @@ do
 			_G[tooltipName .. "TextLeft" .. equipmentSetLine]:SetText(sets)
 		elseif afterLine and afterLine < self:NumLines() then
 			local left, right = _G[tooltipName .. "TextLeft" .. self:NumLines()], _G[tooltipName .. "TextRight" .. self:NumLines()]
-			leftText, leftR, leftG, leftB  = left:GetText(), left:GetTextColor()
-			rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
+			local leftText, leftR, leftG, leftB  = left:GetText(), left:GetTextColor()
+			local rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
 
 			self:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
 
@@ -2945,3 +2951,12 @@ if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
 		end
 	end
 end
+
+-- Character deletion
+Internal.OnEvent("CHARACTER_DELETE", function (event, slug)
+	local sets = GetSetsForCharacter({}, slug)
+	for _,set in ipairs(sets) do
+		DeleteEquipmentSet(set.setID)
+	end
+	return true
+end)

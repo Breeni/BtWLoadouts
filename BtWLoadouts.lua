@@ -7,7 +7,6 @@
 	Conditions need to support arena comp?
 	Localization
 	Update new set text button based on tab?
-	What to do when the player has no tome
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
@@ -23,7 +22,6 @@
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
-	Yes/No/Cancel button for tomes?
 	Trigger system for changing loadouts, run custom code when a set is changed?
 ]]
 
@@ -338,6 +336,18 @@ StaticPopupDialogs["BTWLOADOUTS_DELETEINUSESET"] = {
 	whileDead = 1,
 	showAlert = 1
 };
+StaticPopupDialogs["BTWLOADOUTS_DELETECHARACTER"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
+	text = L["Are you sure you wish to delete the character data for \"%s\", this will also irreversibly delete any equipment sets for the character."],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, slug)
+		Internal.DeleteCharacter(slug)
+	end,
+	timeout = 0,
+	whileDead = 1,
+	showAlert = 1
+};
 
 
 function Internal.HelpTipBox_Anchor(self, anchorPoint, frame, offset)
@@ -581,7 +591,6 @@ do
 		function SpecFilterEnumerator()
 			if specEnumertorList == nil then
 				specEnumertorList = {}
-				_G['BtWLoadouts_SpecEnumertorList'] = specEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);
@@ -627,7 +636,6 @@ do
 		function ClassFilterEnumerator()
 			if classEnumertorList == nil then
 				classEnumertorList = {}
-				_G['BtWLoadouts_ClassEnumertorList'] = classEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);
@@ -1059,8 +1067,17 @@ do
 		filtered = FilterSets({}, self.filters, filtered)
 		filtered = CategoriesSets(filtered, unpack(self.categories))
 
-		wipe(self.Scroll.items);
+		wipe(self.Scroll.items)
 		self.selected = BuildList(self.Scroll.items, 0, self.selected, filtered, self.collapsed, unpack(self.categories))
+		if not self.selected then -- Fallback in case everything is hidden
+			for _,set in pairs(self.sets) do
+				if type(set) == "table" then
+					self.selected = set
+					break
+				end
+			end
+		end
+
 		self.Scroll:update();
 	end
 end
@@ -1147,16 +1164,16 @@ do
 		self:StopMovingOrSizing();
 	end
 	function BtWLoadoutsFrameMixin:OnMouseUp()
-		-- if self.Essences.pending ~= nil then
-		-- 	self.Essences.pending = nil
-		-- 	SetCursor(nil);
-		-- 	self:Update();
-		-- end
+		if self.Essences.pending ~= nil then
+			self.Essences.pending = nil
+			SetCursor(nil);
+			self:Update();
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnEnter()
-		-- if self.Essences.pending ~= nil then
-		-- 	SetCursor("interface/cursor/cast.blp");
-		-- end
+		if self.Essences.pending ~= nil then
+			SetCursor("interface/cursor/cast.blp");
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnLeave()
 		SetCursor(nil);
@@ -1224,6 +1241,72 @@ do
 	function BtWLoadoutsFrameMixin:OnHelpTipManuallyClosed(closeFlag)
 		BtWLoadoutsHelpTipFlags[closeFlag] = true;
 		self:Update();
+	end
+	local function OptionsMenu_Init(self, level, menuList)
+		if level == 1 then
+			local info = UIDropDownMenu_CreateInfo();
+			info.isTitle, info.disabled, info.notCheckable = false, false, false;
+			info.func = function (self, key)
+				Settings[key] = not Settings[key];
+			end
+			for i, entry in ipairs(Settings) do
+				info.text = entry.name;
+				info.arg1 = entry.key;
+				info.checked = Settings[entry.key];
+	
+				UIDropDownMenu_AddButton(info, level);
+			end
+	
+			UIDropDownMenu_AddSeparator()
+			
+			info.func = nil
+			info.text = L["Delete Character Data"]
+			info.notCheckable = true
+			info.keepShownOnClick = true
+			info.hasArrow, info.menuList = true, "delete"
+	
+			UIDropDownMenu_AddButton(info, level);
+		elseif level == 2 and menuList == "delete" then
+			local info = UIDropDownMenu_CreateInfo()
+			info.notCheckable = true
+			info.keepShownOnClick = true
+			for _,realm in Internal.EnumerateRealms() do
+				info.text = realm
+				info.hasArrow, info.menuList = true, realm
+	
+				UIDropDownMenu_AddButton(info, level)
+			end
+		elseif level == 3 then
+			local info = UIDropDownMenu_CreateInfo()
+			info.notCheckable = true
+			info.func = function (self, slug)
+				StaticPopup_Show("BTWLOADOUTS_DELETECHARACTER", Internal.GetFormattedCharacterName(slug, true), nil, slug)
+			end
+			local playerSlug = Internal.GetCharacterSlug()
+			for _,character in Internal.EnumerateCharactersForRealm(menuList) do
+				if character ~= playerSlug then
+					local name = character
+					local characterInfo = Internal.GetCharacterInfo(character)
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+						name = classColor:WrapTextInColorCode(characterInfo.name)
+					end
+	
+					info.text = name
+					info.arg1 = character
+	
+					UIDropDownMenu_AddButton(info, level)
+				end
+			end
+		end
+	end
+	function BtWLoadoutsFrameMixin:OnOptionsClick(button)
+		if not self.OptionsMenu then
+			self.OptionsMenu = CreateFrame("Frame", self:GetName().."OptionsMenu", self, "UIDropDownMenuTemplate");
+			UIDropDownMenu_Initialize(self.OptionsMenu, OptionsMenu_Init, "MENU");
+		end
+
+		ToggleDropDownMenu(1, nil, self.OptionsMenu, button, 0, 0);
 	end
 	function BtWLoadoutsFrameMixin:OnShow()
 		if not self.initialized then
@@ -1515,11 +1598,15 @@ function Internal.OnEvent(event, callback)
 end
 function Internal.Call(event, ...)
 	local callbacks = eventHandlers[event]
+	local result = true
 	if callbacks then
 		for callback in pairs(callbacks) do
-			callback(event, ...)
+			if callback(event, ...) == false then
+				result = false
+			end
 		end
 	end
+	return result
 end
 
 -- [[ Slash Command ]]

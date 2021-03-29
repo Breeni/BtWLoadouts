@@ -1056,8 +1056,6 @@ function BtWLoadoutsActionButtonMixin:OnEnter()
 	end
 end
 function BtWLoadoutsActionButtonMixin:OnLeave()
-	gameTooltipErrorLink = nil
-	gameTooltipErrorText = nil
 	GameTooltip:Hide();
 end
 

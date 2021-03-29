@@ -331,11 +331,30 @@
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
+		<KeyValues>
+			<KeyValue key="layoutType" value="ButtonFrameTemplateNoPortraitMinimizable" type="string"/>
+		</KeyValues>
 		<Frames>
 			<Button name="$parentCloseButton" parentKey="CloseButton" inherits="UIPanelCloseButton">
 				<Anchors>
 					<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="5.6" y="5"/>
 				</Anchors>
+			</Button>
+			<Button parentKey="OptionsButton">
+				<Size x="32" y="32"/>
+				<HitRectInsets left="5" right="5" top="5" bottom="5"/>
+				<Anchors>
+					<Anchor point="RIGHT" relativeKey="$parent.CloseButton" relativePoint="LEFT" x="9" y="0"/>
+				</Anchors>
+				<DisabledTexture file="Interface\Addons\BtWLoadouts\UI-Frame-OptionsButton-Disabled"/>
+				<NormalTexture file="Interface\Addons\BtWLoadouts\UI-Frame-OptionsButton-Up"/>
+				<PushedTexture file="Interface\Addons\BtWLoadouts\UI-Frame-OptionsButton-Down"/>
+				<HighlightTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Highlight" alphaMode="ADD"/>
+				<Scripts>
+					<OnClick>
+						self:GetParent():OnOptionsClick(self)
+					</OnClick>
+				</Scripts>
 			</Button>
 			<Frame parentKey="SidebarInset" useParentLevel="true" inherits="InsetFrameTemplate">
 				<Anchors>
