@@ -547,27 +547,33 @@ do
 		},
 		spec = {
 			name = L["Specialization"],
-			enumerate = function (limitations)
-				local role, classFile = limitations.role
-				if limitations.character then
-					local characterData = Internal.GetCharacterInfo(limitations.character)
-					classFile = characterData.class
+			enumerate = function (limitations, includeLimitations)
+				local limitRole, limitClassFile
+				if limitations then
+					limitRole = limitations.role
+					if limitations.character then
+						local characterData = Internal.GetCharacterInfo(limitations.character)
+						limitClassFile = characterData.class
+					end
 				end
 
 				return function (tbl, index)
 					repeat
 						index = index + 1
-					until not tbl[index] or (
-						(classFile == nil or classFile == (select(6, GetSpecializationInfoByID(tbl[index])))) and
-						(role == nil or role == (select(5, GetSpecializationInfoByID(tbl[index]))))
+					until not tbl[index] or includeLimitations or (
+						(limitClassFile == nil or limitClassFile == (select(6, GetSpecializationInfoByID(tbl[index])))) and
+						(limitRole == nil or limitRole == (select(5, GetSpecializationInfoByID(tbl[index]))))
 					)
 
 					if tbl[index] then
-						local _, specName, _, _, _, classFile, className = GetSpecializationInfoByID(tbl[index])
+						local _, specName, _, _, role, classFile, className = GetSpecializationInfoByID(tbl[index])
 						local classColor = C_ClassColor.GetClassColor(classFile);
 						local name = format("%s - %s", classColor:WrapTextInColorCode(className), specName)
 
-						return index, tbl[index], name
+						return index, tbl[index], name, not (
+							(limitClassFile == nil or limitClassFile == classFile) and
+							(limitRole == nil or limitRole == role)
+						)
 					end
 				end, specializations, 0
 			end,
@@ -622,14 +628,28 @@ do
 			info.func = OnClick
 			info.checked = true
 			info.keepShownOnClick = true
-			for _,type,key,name in self:EnumerateSelected() do
-				info.text = name
+			for _,type,key,name, restricted in self:EnumerateSelected() do
+				info.text = restricted and string.format("|CFFFF8080%s|r", name) or name
 				info.arg1 = type
 				info.arg2 = key
+
+				info.tooltipOnButton = restricted
+				if restricted then
+					info.tooltipTitle = L["Restriction error"]
+					info.tooltipText = L["Invalid restriction for the set"]
+				else
+					info.tooltipTitle = nil
+					info.tooltipText = nil
+				end
+
 				UIDropDownMenu_AddButton(info, level)
 
 				hasSelected = true
 			end
+			
+			info.tooltipOnButton = false
+			info.tooltipTitle = nil
+			info.tooltipText = nil
 
 			if hasSelected then
 				UIDropDownMenu_AddSeparator()
@@ -673,9 +693,9 @@ do
 
 		for _,type,typeName in self:EnumerateSupportedTypes() do
 			if self.selected[type] and next(self.selected[type]) then
-				for _,key,name in self:EnumerateType(type) do
+				for _,key,name,restricted in self:EnumerateType(type, true) do
 					if self:IsSelected(type, key) then
-						selected[#selected+1] = {type, key, string.format("%s: %s", typeName, name)}
+						selected[#selected+1] = {type, key, string.format("%s: %s", typeName, name), restricted}
 					end
 				end
 			end
@@ -748,8 +768,8 @@ do
 			end
 		end, self.supportedTypes, 0
 	end
-	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateType(type)
-		return types[type].enumerate(self.limitations)
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateType(type, includeLimitations)
+		return types[type].enumerate(self.limitations, includeLimitations)
 	end
 	function BtWLoadoutsRestrictionsDropDownMixin:SetScript(scriptType, handler)
 		if scriptType == "OnChange" then
@@ -813,25 +833,21 @@ do
 			end
 		end
 	end
-	-- Used by combine functions to check set restrictions
-	function Internal.AreRestrictionsValidForPlayer(restrictions)
+	function Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
 		if restrictions then
-			if restrictions.spec then
-				local id = GetSpecializationInfo(GetSpecialization())
-				if not restrictions.spec[id] then
+			if restrictions.spec and specID ~= nil then
+				if not restrictions.spec[specID] then
 					return false
 				end
 			end
 			
-			if restrictions.covenant then
-				local id = C_Covenants.GetActiveCovenantID()
-				if not restrictions.covenant[id] then
+			if restrictions.covenant and covenantID ~= nil then
+				if not restrictions.covenant[covenantID] then
 					return false
 				end
 			end
 			
-			if restrictions.race then
-				local _, _, id = UnitRace("player")
+			if restrictions.race and raceID ~= nil then
 				if not restrictions.race[id] then
 					return false
 				end
@@ -839,6 +855,14 @@ do
 		end
 	
 		return true
+	end
+	-- Used by combine functions to check set restrictions
+	function Internal.AreRestrictionsValidForPlayer(restrictions)
+		local specID = GetSpecializationInfo(GetSpecialization()) or false
+		local covenantID = C_Covenants.GetActiveCovenantID() or false
+		local raceID = select(3, UnitRace("player")) or false
+	
+		return Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
 	end
 end
 
