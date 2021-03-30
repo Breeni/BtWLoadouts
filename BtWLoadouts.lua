@@ -635,8 +635,8 @@ do
 
 				info.tooltipOnButton = restricted
 				if restricted then
-					info.tooltipTitle = L["Restriction error"]
-					info.tooltipText = L["Invalid restriction for the set"]
+					info.tooltipTitle = name
+					info.tooltipText = L["Incompatible Restrictions"]
 				else
 					info.tooltipTitle = nil
 					info.tooltipText = nil
