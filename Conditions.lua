@@ -95,7 +95,6 @@ local conditionMap = {
 	affixID3 = {},
 	affixID4 = {},
 };
-_G['BtWLoadoutsConditionMap'] = conditionMap; --@TODO Remove
 local function ActivateConditionMap(map, key)
 	if key ~= nil and map[key] ~= nil then
 		local tbl = map[key];
@@ -214,7 +213,6 @@ local function DeleteConditionSet(id)
 	end
 end
 local previousConditionInfo = {};
-_G['BtWLoadoutsPreviousConditionInfo'] = previousConditionInfo; --@TODO Remove
 function Internal.ClearConditions()
 	wipe(previousConditionInfo);
 	wipe(activeConditions);
@@ -322,10 +320,11 @@ function Internal.TriggerConditions()
 	previousActiveConditions,activeConditions = activeConditions,previousActiveConditions;
 	wipe(activeConditions);
 	wipe(conditionMatchCount);
+	local specID = GetSpecializationInfo(GetSpecialization())
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
 		if type(set) == "table" and set.profileSet ~= nil and not set.disabled then
 			local profile = Internal.GetProfile(set.profileSet);
-			if Internal.IsLoadoutActivatable(profile) then
+			if (not Settings.noSpecSwitch or profile.specID == specID) and Internal.IsLoadoutActivatable(profile) then
 				local match = IsConditionActive(set);
 				if match then
 					activeConditions[profile] = set;
@@ -339,7 +338,6 @@ function Internal.TriggerConditions()
 		return
 	end
 
-	local specID = GetSpecializationInfo(GetSpecialization());
 	wipe(sortedActiveConditions);
 	for profile,condition in pairs(activeConditions) do
 		sortedActiveConditions[#sortedActiveConditions+1] = {

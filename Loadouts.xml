@@ -230,6 +230,7 @@
         </Frames>
         <Scripts>
             <OnLoad inherit="prepend" method="OnLoad"/>
+            <OnShow inherit="prepend" method="OnShow"/>
             <OnEvent method="OnEvent"/>
         </Scripts>
     </Frame>

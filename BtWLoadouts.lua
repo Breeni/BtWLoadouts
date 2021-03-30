@@ -7,7 +7,6 @@
 	Conditions need to support arena comp?
 	Localization
 	Update new set text button based on tab?
-	What to do when the player has no tome
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
@@ -23,7 +22,6 @@
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
-	Yes/No/Cancel button for tomes?
 	Trigger system for changing loadouts, run custom code when a set is changed?
 ]]
 
@@ -109,6 +107,11 @@ local Settings = SettingsCreate({
         default = false,
     },
     {
+        name = L["Dont offer conditions of different specialization"],
+        key = "noSpecSwitch",
+        default = false,
+    },
+    {
         name = L["Filter chat spam while changing loadouts"],
         key = "filterChatSpam",
         default = false,
@@ -175,6 +178,13 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTMULTIACTIVATE"] = {
 	OnAccept = function(self, data)
 		data.func(Internal.GetAciveConditionSelection().profile);
 	end,
+	OnShow = function(self)
+		-- Something is changing the frame strata causing issues with the dropdown
+		-- box so we will change it to defgault
+		if self:GetFrameStrata() ~= "DIALOG" then
+			self:SetFrameStrata("DIALOG")
+		end
+	end,
 	timeout = 0,
 	hideOnEscape = 1
 };
@@ -223,14 +233,21 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATETOME"] = {
 };
 StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["A tome is needed to continue equiping your set."],
+	text = L["A tome or rested area is required to fully apply your loadout, do you wish to use a tome or partially continue without one?"],
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function(self)
+	button3 = CONTINUE,
+	selectCallbackByIndex = true,
+	OnButton1 = function(self, ...)
 	end,
-	OnCancel = function(self, data, reason)
+	OnCancel = function(self, data, reason, ...)
 		if reason == "clicked" then
 			Internal.CancelActivateProfile();
+		end
+	end,
+	OnButton3 = function (self, data, reason, ...)
+		if reason == "clicked" then
+			Internal.ContinueWithoutTomeActivateProfile();
 		end
 	end,
 	OnShow = function(self, data)
@@ -244,13 +261,46 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 		tomeButton:SetAttribute("item", data.name);
 		tomeButton:SetAttribute("active", true);
 	end,
-	OnHide = function(self)
+	OnHide = function(self, ...)
 		tomeButton:SetParent(UIParent);
 		tomeButton:ClearAllPoints();
 		tomeButton.button = nil;
 		tomeButton:SetAttribute("active", false);
 	end,
 	hasItemFrame = 1,
+	timeout = 0,
+	hideOnEscape = 1,
+	noCancelOnReuse = 1,
+};
+StaticPopupDialogs["BTWLOADOUTS_JAILERSCHAINS"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
+	text = L["Cannot fully apply your loadout while under the effects of the Jailer's Chains, do you wish to partially continue instead?"],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, ...)
+		Internal.ContinueIgnoreChainsActivateProfile();
+	end,
+	OnCancel = function(self, data, reason, ...)
+		if reason == "clicked" then
+			Internal.CancelActivateProfile();
+		end
+	end,
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWLOADOUTS_NEEDRESTED"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
+	text = L["A rested area or tome is needed to fully apply your loadout, do you wish to partially continue instead?"],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, ...)
+		Internal.ContinueWithoutTomeActivateProfile();
+	end,
+	OnCancel = function(self, data, reason, ...)
+		if reason == "clicked" then
+			Internal.CancelActivateProfile();
+		end
+	end,
 	timeout = 0,
 	hideOnEscape = 1
 };
@@ -273,6 +323,18 @@ StaticPopupDialogs["BTWLOADOUTS_DELETEINUSESET"] = {
 	button2 = NO,
 	OnAccept = function(self, data)
 		data.func(data.set);
+	end,
+	timeout = 0,
+	whileDead = 1,
+	showAlert = 1
+};
+StaticPopupDialogs["BTWLOADOUTS_DELETECHARACTER"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
+	text = L["Are you sure you wish to delete the character data for \"%s\", this will also irreversibly delete any equipment sets for the character."],
+	button1 = YES,
+	button2 = NO,
+	OnAccept = function(self, slug)
+		Internal.DeleteCharacter(slug)
 	end,
 	timeout = 0,
 	whileDead = 1,
@@ -777,7 +839,6 @@ do
 		function SpecFilterEnumerator()
 			if specEnumertorList == nil then
 				specEnumertorList = {}
-				_G['BtWLoadouts_SpecEnumertorList'] = specEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);
@@ -823,7 +884,6 @@ do
 		function ClassFilterEnumerator()
 			if classEnumertorList == nil then
 				classEnumertorList = {}
-				_G['BtWLoadouts_ClassEnumertorList'] = classEnumertorList -- @TODO REMOVE
 
 				local className, classFile, classID = UnitClass("player");
 				local classColor = C_ClassColor.GetClassColor(classFile);
@@ -1258,8 +1318,17 @@ do
 		filtered = FilterSets({}, self.filters, filtered)
 		filtered = CategoriesSets(filtered, unpack(self.categories))
 
-		wipe(self.Scroll.items);
+		wipe(self.Scroll.items)
 		self.selected = BuildList(self.Scroll.items, 0, self.selected, filtered, self.collapsed, unpack(self.categories))
+		if not self.selected then -- Fallback in case everything is hidden
+			for _,set in pairs(self.sets) do
+				if type(set) == "table" then
+					self.selected = set
+					break
+				end
+			end
+		end
+
 		self.Scroll:update();
 	end
 end
@@ -1316,16 +1385,16 @@ do
 		self:StopMovingOrSizing();
 	end
 	function BtWLoadoutsFrameMixin:OnMouseUp()
-		-- if self.Essences.pending ~= nil then
-		-- 	self.Essences.pending = nil
-		-- 	SetCursor(nil);
-		-- 	self:Update();
-		-- end
+		if self.Essences.pending ~= nil then
+			self.Essences.pending = nil
+			SetCursor(nil);
+			self:Update();
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnEnter()
-		-- if self.Essences.pending ~= nil then
-		-- 	SetCursor("interface/cursor/cast.blp");
-		-- end
+		if self.Essences.pending ~= nil then
+			SetCursor("interface/cursor/cast.blp");
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnLeave()
 		SetCursor(nil);
@@ -1388,6 +1457,72 @@ do
 	function BtWLoadoutsFrameMixin:OnHelpTipManuallyClosed(closeFlag)
 		BtWLoadoutsHelpTipFlags[closeFlag] = true;
 		self:Update();
+	end
+	local function OptionsMenu_Init(self, level, menuList)
+		if level == 1 then
+			local info = UIDropDownMenu_CreateInfo();
+			info.isTitle, info.disabled, info.notCheckable = false, false, false;
+			info.func = function (self, key)
+				Settings[key] = not Settings[key];
+			end
+			for i, entry in ipairs(Settings) do
+				info.text = entry.name;
+				info.arg1 = entry.key;
+				info.checked = Settings[entry.key];
+	
+				UIDropDownMenu_AddButton(info, level);
+			end
+	
+			UIDropDownMenu_AddSeparator()
+			
+			info.func = nil
+			info.text = L["Delete Character Data"]
+			info.notCheckable = true
+			info.keepShownOnClick = true
+			info.hasArrow, info.menuList = true, "delete"
+	
+			UIDropDownMenu_AddButton(info, level);
+		elseif level == 2 and menuList == "delete" then
+			local info = UIDropDownMenu_CreateInfo()
+			info.notCheckable = true
+			info.keepShownOnClick = true
+			for _,realm in Internal.EnumerateRealms() do
+				info.text = realm
+				info.hasArrow, info.menuList = true, realm
+	
+				UIDropDownMenu_AddButton(info, level)
+			end
+		elseif level == 3 then
+			local info = UIDropDownMenu_CreateInfo()
+			info.notCheckable = true
+			info.func = function (self, slug)
+				StaticPopup_Show("BTWLOADOUTS_DELETECHARACTER", Internal.GetFormattedCharacterName(slug, true), nil, slug)
+			end
+			local playerSlug = Internal.GetCharacterSlug()
+			for _,character in Internal.EnumerateCharactersForRealm(menuList) do
+				if character ~= playerSlug then
+					local name = character
+					local characterInfo = Internal.GetCharacterInfo(character)
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+						name = classColor:WrapTextInColorCode(characterInfo.name)
+					end
+	
+					info.text = name
+					info.arg1 = character
+	
+					UIDropDownMenu_AddButton(info, level)
+				end
+			end
+		end
+	end
+	function BtWLoadoutsFrameMixin:OnOptionsClick(button)
+		if not self.OptionsMenu then
+			self.OptionsMenu = CreateFrame("Frame", self:GetName().."OptionsMenu", self, "UIDropDownMenuTemplate");
+			UIDropDownMenu_Initialize(self.OptionsMenu, OptionsMenu_Init, "MENU");
+		end
+
+		ToggleDropDownMenu(1, nil, self.OptionsMenu, button, 0, 0);
 	end
 	function BtWLoadoutsFrameMixin:OnShow()
 		if not self.initialized then
@@ -1655,9 +1790,19 @@ end
 function Internal.ClearLog()
 	BtWLoadoutsLogFrame.Scroll.EditBox:SetText("")
 end
+local lastPass = false
+function Internal.LogNewPass()
+	if not lastPass then
+		BtWLoadoutsLogFrame.Scroll.EditBox:Insert(string.format("[%.03f] %s\n", GetTime(), "--- NEW PASS ---"))
+		lastPass = true
+	end
+end
 function Internal.LogMessage(...)
 	BtWLoadoutsLogFrame.Scroll.EditBox:Insert(string.format("[%.03f] %s\n", GetTime(), string.format(...):gsub("|", "||")))
+	lastPass = false
 end
+
+-- [[ CUSTOM EVENT HANDLING ]]
 
 local eventHandlers = {}
 function Internal.OnEvent(event, callback)
@@ -1669,11 +1814,15 @@ function Internal.OnEvent(event, callback)
 end
 function Internal.Call(event, ...)
 	local callbacks = eventHandlers[event]
+	local result = true
 	if callbacks then
 		for callback in pairs(callbacks) do
-			callback(event, ...)
+			if callback(event, ...) == false then
+				result = false
+			end
 		end
 	end
+	return result
 end
 
 -- [[ Slash Command ]]

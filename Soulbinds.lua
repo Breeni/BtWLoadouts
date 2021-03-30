@@ -206,18 +206,19 @@ local function CombineSets(result, state, ...)
 
         local soulbindID = GetActiveSoulbindID()
         if state and not IsSetActive(result) then
-            state.combatSwap = false
-            state.taxiSwap = false -- Maybe check for rested area or tomb first?
+            state.noCombatSwap = true
+            state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
+            state.blockedByJailersChains = true
             state.needTome = true
         end
     end
 
 	return result;
 end
-local function ActivateSet(set)
+local function ActivateSet(set, state)
     local complete = true;
 
-    if not IsSetActive(set) then
+    if (not state or (not state.ignoreTome and not state.ignoreJailersChains)) and not IsSetActive(set) then
         local soulbindData = GetSoulbindData(set.soulbindID)
         Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
 
