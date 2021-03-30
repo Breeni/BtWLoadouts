@@ -1940,7 +1940,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 	self:GetParent().TitleText:SetText(L["Equipment"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("character")
+	sidebar:SetSupportedFilters("spec", "character")
 	sidebar:SetSets(BtWLoadoutsSets.equipment)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.equipment)
 	sidebar:SetCategories(BtWLoadoutsCategories.equipment)
