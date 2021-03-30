@@ -1270,7 +1270,7 @@ local function CombineEquipmentSets(result, state, ...)
 	end
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		if set.character == playerCharacter then -- Skip other characters
+		if set.character == playerCharacter and Internal.AreRestrictionsValidForPlayer(set.restrictions) then -- Skip other characters
 			if set.managerID then -- Just making sure everything is up to date
 				local ignored = C_EquipmentSet.GetIgnoredSlots(set.managerID);
 				local locations = C_EquipmentSet.GetItemLocations(set.managerID);

@@ -183,8 +183,10 @@ local function CombineEssenceSets(result, state, ...)
 	if CanActivateEssences() and (not state or state.heartEquipped) then -- Check if essences have been unlocked and we will have the heart equipped
 		for i=1,select('#', ...) do
 			local set = select(i, ...);
-			for milestoneID, essenceID in pairs(set.essences) do
-				result.essences[milestoneID] = essenceID;
+			if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+				for milestoneID, essenceID in pairs(set.essences) do
+					result.essences[milestoneID] = essenceID;
+				end
 			end
 		end
 

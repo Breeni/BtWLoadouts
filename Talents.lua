@@ -273,19 +273,21 @@ local function CombineTalentSets(result, state, ...)
 	wipe(talentSetsByTier);
 	for i=1,select('#', ...) do
 		local set = Internal.GetTalentSet(select(i, ...));
-		for talentID in pairs(set.talents) do
-			if result.talents[talentID] == nil then
-				local tier = select(8, GetTalentInfoByID(talentID, 1));
-                if (GetTalentTierInfo(tier, 1)) then
-                    if talentSetsByTier[tier] then
-                        result.talents[talentSetsByTier[tier]] = nil;
-                    end
+        if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+            for talentID in pairs(set.talents) do
+                if result.talents[talentID] == nil then
+                    local tier = select(8, GetTalentInfoByID(talentID, 1));
+                    if (GetTalentTierInfo(tier, 1)) then
+                        if talentSetsByTier[tier] then
+                            result.talents[talentSetsByTier[tier]] = nil;
+                        end
 
-                    result.talents[talentID] = true;
-                    talentSetsByTier[tier] = talentID;
+                        result.talents[talentID] = true;
+                        talentSetsByTier[tier] = talentID;
+                    end
                 end
-			end
-		end
+            end
+        end
     end
 
     if state then

@@ -207,7 +207,7 @@ local function CombineSets(result, state, ...)
         for i=1,select('#', ...) do
             local set = select(i, ...);
             local soulbindData = GetSoulbindData(set.soulbindID)
-            if soulbindData.covenantID == covenantID and soulbindData.unlocked then
+            if soulbindData.covenantID == covenantID and soulbindData.unlocked and Internal.AreRestrictionsValidForPlayer(set.restrictions) then
                 result.soulbindID = set.soulbindID
                 result.nodes = set.nodes
             end

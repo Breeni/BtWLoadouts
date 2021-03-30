@@ -813,6 +813,33 @@ do
 			end
 		end
 	end
+	-- Used by combine functions to check set restrictions
+	function Internal.AreRestrictionsValidForPlayer(restrictions)
+		if restrictions then
+			if restrictions.spec then
+				local id = GetSpecializationInfo(GetSpecialization())
+				if not restrictions.spec[id] then
+					return false
+				end
+			end
+			
+			if restrictions.covenant then
+				local id = C_Covenants.GetActiveCovenantID()
+				if not restrictions.covenant[id] then
+					return false
+				end
+			end
+			
+			if restrictions.race then
+				local _, _, id = UnitRace("player")
+				if not restrictions.race[id] then
+					return false
+				end
+			end
+		end
+	
+		return true
+	end
 end
 
 --[[

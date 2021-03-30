@@ -239,9 +239,11 @@ local function CombinePvPTalentSets(result, state, ...)
 
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		for talentID in pairs(set.talents) do
-			if result.talents[talentID] == nil then
-				result.talents[talentID] = true;
+		if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+			for talentID in pairs(set.talents) do
+				if result.talents[talentID] == nil then
+					result.talents[talentID] = true;
+				end
 			end
 		end
 	end

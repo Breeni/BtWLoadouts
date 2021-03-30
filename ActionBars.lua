@@ -722,34 +722,6 @@ local function GetActionBarSets(id, ...)
 		return GetActionBarSet(id), GetActionBarSets(...);
 	end
 end
--- Checks restrictions to see if the set if valid for the current player
-local function SetValidForPlayer(set)
-    local restrictions = set.restrictions
-    if restrictions then
-        if restrictions.spec then
-            local id = GetSpecializationInfo(GetSpecialization())
-            if not restrictions.spec[id] then
-                return false
-            end
-        end
-        
-        if restrictions.covenant then
-            local id = C_Covenants.GetActiveCovenantID()
-            if not restrictions.covenant[id] then
-                return false
-            end
-        end
-        
-        if restrictions.race then
-            local _, _, id = UnitRace("player")
-            if not restrictions.race[id] then
-                return false
-            end
-        end
-    end
-
-    return true
-end
 -- Do not change the results action tables, that'll mess with the original sets
 local function CombineActionBarSets(result, state, ...)
     result = result or {};
@@ -763,14 +735,16 @@ local function CombineActionBarSets(result, state, ...)
 
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		for slot=1,120 do
-            if not set.ignored[slot] then
-                result.ignored[slot] = false
-                if PickupActionTable(set.actions[slot], true, set.settings, state ~= nil) or result.actions[slot] == nil then
-                    result.actions[slot] = set.actions[slot]
+        if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+            for slot=1,120 do
+                if not set.ignored[slot] then
+                    result.ignored[slot] = false
+                    if PickupActionTable(set.actions[slot], true, set.settings, state ~= nil) or result.actions[slot] == nil then
+                        result.actions[slot] = set.actions[slot]
+                    end
                 end
             end
-		end
+        end
     end
     
     if state then
