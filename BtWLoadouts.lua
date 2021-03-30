@@ -999,7 +999,7 @@ do
 			return RoleFilterEnumerator()
 		elseif filter == "character" then
 			return CharacterFilterEnumerator()
-		else -- @TODO Character, role
+		else
 			error(format("Unsupported filter type %s", filter))
 		end
 	end
