@@ -259,6 +259,10 @@ local function CheckErrors(errorState, set)
     if errorState.role ~= set.role then
         return L["Incompatible Role"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.GetEssenceSets = GetEssenceSets

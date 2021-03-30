@@ -334,6 +334,10 @@ local function CheckErrors(errorState, set)
     if errorState.specID ~= set.specID then
         return L["Incompatible Specialization"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.FixTalentSet = FixTalentSet

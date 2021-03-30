@@ -1372,6 +1372,10 @@ local function CheckErrors(errorState, set)
 	if errorState.class ~= characterInfo.class then
         return L["Incompatible Class"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.GetEquipmentSet = GetEquipmentSet

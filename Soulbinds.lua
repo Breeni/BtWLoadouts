@@ -246,6 +246,13 @@ local function ActivateSet(set, state)
 
 	return complete
 end
+local function CheckErrors(errorState, set)
+    set = GetSet(set)
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
+end
 
 local function DropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Profiles
@@ -337,6 +344,7 @@ Internal.AddLoadoutSegment({
     isActive = IsSetActive,
 	activate = ActivateSet,
 	dropdowninit = DropDownInit,
+	checkerrors = CheckErrors,
 })
 
 -- [[ TAB UI ]]

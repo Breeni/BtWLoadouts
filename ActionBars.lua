@@ -776,6 +776,13 @@ local function DeleteActionBarSet(id)
 		BtWLoadoutsFrame:Update()
 	end
 end
+local function CheckErrors(errorState, set)
+    set = GetActionBarSet(set)
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
+end
 
 Internal.PickupActionTable = PickupActionTable
 Internal.IsActionBarSetActive = IsActionBarSetActive
@@ -898,6 +905,7 @@ Internal.AddLoadoutSegment({
     isActive = IsActionBarSetActive,
     activate = ActivateActionBarSet,
     dropdowninit = ActionBarDropDownInit,
+	checkerrors = CheckErrors,
 })
 
 BtWLoadoutsActionButtonMixin = {}
