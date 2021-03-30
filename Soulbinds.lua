@@ -92,8 +92,15 @@ end
 --[[ SET HANDLING ]]
 
 local function UpdateSetFilters(set)
-    set.filters = set.filters or {}
-    wipe(set.filters)
+	local filters = set.filters or {}
+    wipe(filters)
+    
+	filters.soulbind = set.soulbindID
+    
+    local soulbindData = GetSoulbindData(set.soulbindID)
+    filters.covenant = soulbindData.covenantID
+    
+	set.filters = filters
 
     return set
 end
@@ -642,7 +649,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
     self:GetParent().TitleText:SetText(L["Soulbinds"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters()
+	sidebar:SetSupportedFilters("covenant")
 	sidebar:SetSets(BtWLoadoutsSets.soulbinds)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.soulbinds)
 	sidebar:SetCategories(BtWLoadoutsCategories.soulbinds)

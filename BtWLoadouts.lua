@@ -577,6 +577,30 @@ do
 
 		return result
 	end
+	local CovenantFilterEnumerator
+	do
+		local tbl
+		function CovenantFilterEnumerator()
+			if tbl == nil then
+				tbl = {}
+
+				for _,id in ipairs(C_Covenants.GetCovenantIDs()) do
+					local data = C_Covenants.GetCovenantData(id)
+					tbl[#tbl+1] = {
+						id = id,
+						name = data.name,
+					}
+				end
+				
+				tbl[#tbl+1] = {
+					id = 0,
+					name = L["Other"],
+				}
+			end
+
+			return ipairs(tbl)
+		end
+	end
 	local SpecFilterEnumerator
 	do
 		local specEnumertorList
@@ -733,7 +757,9 @@ do
 		end
 	end
 	local function FilterEnumerator(filter)
-		if filter == "spec" then
+		if filter == "covenant" then
+			return CovenantFilterEnumerator()
+		elseif filter == "spec" then
 			return SpecFilterEnumerator()
 		elseif filter == "class" then
 			return ClassFilterEnumerator()
@@ -741,7 +767,7 @@ do
 			return RoleFilterEnumerator()
 		elseif filter == "character" then
 			return CharacterFilterEnumerator()
-		else -- @TODO Character, role
+		else
 			error(format("Unsupported filter type %s", filter))
 		end
 	end
@@ -951,6 +977,7 @@ do
 	BtWLoadoutsSidebarMixin = {}
 	function BtWLoadoutsSidebarMixin:OnLoad()
 		self.names = {
+			["covenant"] = L["Covenant"],
 			["spec"] = L["Specialization"],
 			["class"] = L["Class"],
 			["role"] = L["Role"],
