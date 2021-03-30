@@ -287,7 +287,7 @@
             <ScrollFrame parentKey="EssenceList" inherits="HybridScrollFrameTemplate">
                 <Size x="185" y="250"/>
                 <Anchors>
-                    <Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="-18" y="-11"/>
+                    <Anchor point="TOPRIGHT" relativeKey="$parent.Name" relativePoint="BOTTOMRIGHT" x="12" y="-11"/>
                     <Anchor point="BOTTOM" x="0" y="0"/>
                 </Anchors>
                 <Frames>
