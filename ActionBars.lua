@@ -134,7 +134,7 @@ do
                 if type(set) == "table" then
                     for _,action in pairs(set.actions) do
                         if action.type == "macro" then
-                            if action.macroText == macro.body and action.name == macro.name then
+                            if trim(action.macroText) == macro.body and action.name == macro.name then
                                 action.macroText = body or macro.body
                                 action.name = name or macro.name
                             end
@@ -950,7 +950,7 @@ function BtWLoadoutsActionButtonMixin:SetActionToCursor(...)
 			self:SetAction("equipmentset", id, nil, icon, name)
 		elseif cursorType == "macro" then
 			local id = select(2, ...)
-			local macroText = GetMacroBody(id)
+			local macroText = trim(GetMacroBody(id))
 			local name, icon = GetMacroInfo(id)
 			self:SetAction("macro", id, nil, icon, name, macroText)
 		elseif cursorType == "flyout" then
@@ -1056,8 +1056,6 @@ function BtWLoadoutsActionButtonMixin:OnEnter()
 	end
 end
 function BtWLoadoutsActionButtonMixin:OnLeave()
-	gameTooltipErrorLink = nil
-	gameTooltipErrorText = nil
 	GameTooltip:Hide();
 end
 

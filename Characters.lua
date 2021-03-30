@@ -1808,6 +1808,18 @@ end
 function Internal.GetCharacterInfo(character)
 	return BtWLoadoutsCharacterInfo and BtWLoadoutsCharacterInfo[character];
 end
+function Internal.GetFormattedCharacterName(slug, includeRealm)
+	local characterInfo = Internal.GetCharacterInfo(slug)
+	if characterInfo then
+		local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+		if includeRealm then
+			return format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+		else
+			return classColor:WrapTextInColorCode(characterInfo.name)
+		end
+	end
+	return slug
+end
 local characterIteratorTemp = {}
 function Internal.CharacterIterator()
 	wipe(characterIteratorTemp);
@@ -1818,6 +1830,46 @@ function Internal.CharacterIterator()
 		return a < b
 	end)
 	return ipairs(characterIteratorTemp)
+end
+-- EnumerateRealms
+do
+	local unique, list = {}, {}
+	function Internal.EnumerateRealms()
+		wipe(unique)
+		wipe(list)
+		for _,character in pairs(BtWLoadoutsCharacterInfo or {}) do
+			unique[character.realm] = true
+		end
+		for realm in pairs(unique) do
+			list[#list+1] = realm
+		end
+		table.sort(list, function (a, b)
+			return a < b
+		end)
+		return ipairs(list)
+	end
+end
+-- EnumerateCharactersForRealm
+do
+	local list = {}
+	function Internal.EnumerateCharactersForRealm(realm)
+		wipe(list)
+		for slug,character in pairs(BtWLoadoutsCharacterInfo or {}) do
+			if character.realm == realm then
+				list[#list+1] = slug
+			end
+		end
+		table.sort(list, function (a, b)
+			return a < b
+		end)
+		return ipairs(list)
+	end
+end
+function Internal.DeleteCharacter(slug)
+	if Internal.Call("CHARACTER_DELETE", slug) then
+		BtWLoadoutsCharacterInfo[slug] = nil
+	end
+	BtWLoadoutsFrame:Update();
 end
 function Internal.UpdatePlayerInfo()
     local name, realm = UnitFullName("player");
@@ -1851,4 +1903,7 @@ function Internal.CanSwitchToSpecialization(specID)
 	end
 
 	return true
+end
+function Internal.HasJailersChains()
+	return GetPlayerAuraBySpellID(338906) ~= nil
 end

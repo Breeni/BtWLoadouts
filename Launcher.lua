@@ -72,6 +72,13 @@ function Internal.CreateLauncherMinimapIcon()
         icon:Register(ADDON_NAME, launcher, BtWLoadoutsSettings.LDBIcon)
         icon:Refresh(ADDON_NAME)
 
+        if ElvUI and ElvUI[1] and ElvUI[1].GetModule then
+            local MB = ElvUI[1]:GetModule("MinimapButtons", true)
+            if MB then
+                MB:SkinMinimapButtons()
+            end
+        end
+
         local button = icon:GetMinimapButton(ADDON_NAME)
 
         button.Progess = Reanchor(button, BtWLoadoutsMinimapButton.Progress)

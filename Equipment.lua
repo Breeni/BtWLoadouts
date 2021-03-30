@@ -22,10 +22,6 @@ local format = string.format
 local GetCharacterSlug = Internal.GetCharacterSlug
 local GetCharacterInfo = Internal.GetCharacterInfo
 
-local debug = print
-function debug()
-end
-
 local AddSetToMapData, RemoveSetFromMapData, UpdateSetItemInMapData
 
 local function PackLocation(bag, slot)
@@ -99,7 +95,6 @@ local function SetItemLocationFromLocation(itemLocation, location)
 	elseif bank then
 		itemLocation:SetBagAndSlot(BANK_CONTAINER, slot - 51)
 	else
-		debug(location, player, bank, bags, voidStorage, slot, bag, tab, voidSlot)
 		error("@TODO")
 	end
 	
@@ -170,6 +165,10 @@ end
 Internal.GetExtrasForLocation = GetExtrasForLocation
 
 
+local function DeEnchantItemLink(itemLink)
+	local itemString = string.match(itemLink, "item[%-?%d:]+")
+	return string.format("%s::::::%s:::%s", string.match(itemString, "^(item:%d+):[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:([^:]*:[^:]*):[^:]*:[^:]*:(.*)$"))
+end
 -- Remove parts of the item string that dont reflect item variations
 local function SanitiseItemString(itemString)
 	return string.format("%s:::%s", string.match(itemString, "^(item:%d+:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*):[^:]*:[^:]*:(.*)$"))
@@ -868,255 +867,256 @@ do
 	local uniqueFamiliesTemp = {};
 	local uniqueFamilies = {};
 	-- This function is destructive to the set
-	function ActivateEquipmentSet(set)
-		local ignored = set.ignored;
-		local expected = set.equipment;
-		local extras = set.extras;
-		local locations = set.locations;
-		local errors = set.errors;
-		local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil
-		wipe(correctSlots)
-		wipe(uniqueFamilies)
+	function ActivateEquipmentSet(set, state)
+		if not state or not state.ignoreJailersChains then
+			local ignored = set.ignored;
+			local expected = set.equipment;
+			local extras = set.extras;
+			local locations = set.locations;
+			local errors = set.errors;
+			local anyLockedSlots, anyFoundFreeSlots, anyChangedSlots = nil, nil, nil
+			wipe(correctSlots)
+			wipe(uniqueFamilies)
 
-		local firstEquipped = INVSLOT_FIRST_EQUIPPED
-		local lastEquipped = INVSLOT_LAST_EQUIPPED
+			local firstEquipped = INVSLOT_FIRST_EQUIPPED
+			local lastEquipped = INVSLOT_LAST_EQUIPPED
 
-		-- if combatSwap then
-		-- 	firstEquipped = INVSLOT_MAINHAND
-		-- 	lastEquipped = INVSLOT_RANGED
-		-- end
+			-- if combatSwap then
+			-- 	firstEquipped = INVSLOT_MAINHAND
+			-- 	lastEquipped = INVSLOT_RANGED
+			-- end
 
-		-- Store a list of all available empty slots
-		local totalFreeSlots = 0
-		for i=BACKPACK_CONTAINER,NUM_BAG_SLOTS do
-			if not freeSlotsCache[i] then
-				freeSlotsCache[i] = {}
-			else
-				wipe(freeSlotsCache[i])
+			-- Store a list of all available empty slots
+			local totalFreeSlots = 0
+			for i=BACKPACK_CONTAINER,NUM_BAG_SLOTS do
+				if not freeSlotsCache[i] then
+					freeSlotsCache[i] = {}
+				else
+					wipe(freeSlotsCache[i])
+				end
+
+				if GetContainerFreeSlots(i, freeSlotsCache[i]) then
+					totalFreeSlots = totalFreeSlots + #freeSlotsCache[i]
+				end
 			end
 
-			if GetContainerFreeSlots(i, freeSlotsCache[i]) then
-				totalFreeSlots = totalFreeSlots + #freeSlotsCache[i]
-			end
-		end
-
-		-- Loop through and empty slots that should be empty, also store locations for other slots
-		for inventorySlotId = firstEquipped, lastEquipped do
-			if errors and errors[inventorySlotId] then -- If there is an error in a slot, normally due to unique-equipped items then just ignore it
-				ignored[inventorySlotId] = true
-			end
-
-			if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] ~= -1 and not expected[inventorySlotId] then
-				expected[inventorySlotId] = GetItemLinkByLocation(locations[inventorySlotId])
-
-				if not expected[inventorySlotId] then
+			-- Loop through and empty slots that should be empty, also store locations for other slots
+			for inventorySlotId = firstEquipped, lastEquipped do
+				if errors and errors[inventorySlotId] then -- If there is an error in a slot, normally due to unique-equipped items then just ignore it
 					ignored[inventorySlotId] = true
 				end
-			end
 
-			if not ignored[inventorySlotId] then
-				local slotLocked = IsInventoryItemLocked(inventorySlotId)
-				anyLockedSlots = anyLockedSlots or slotLocked
+				if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] ~= -1 and not expected[inventorySlotId] then
+					expected[inventorySlotId] = GetItemLinkByLocation(locations[inventorySlotId])
 
-				local itemLink = expected[inventorySlotId];
-				if itemLink then
-					local location = locations[inventorySlotId];
-					if location and location ~= -1 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
-						local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-						if player and not bags and slot == inventorySlotId then -- The item is already in the desired location
-							correctSlots[inventorySlotId] = true;
-							ignored[inventorySlotId] = true;
-						else
-							bestMatchForSlot[inventorySlotId] = location;
-						end
-					else
-						-- The item is already in the desired location
-						if IsItemInLocation(itemLink, extras[inventorySlotId], true, false, false, false, inventorySlotId, false) then
-							correctSlots[inventorySlotId] = true;
-							ignored[inventorySlotId] = true;
-						else
-							GetInventoryItemsForSlot(inventorySlotId, possibleItems)
-
-							for completedSlotId in pairs(correctSlots) do
-								possibleItems[PackLocation(nil, completedSlotId)] = nil
-							end
-
-							location = GetBestMatch(itemLink, extras[inventorySlotId], possibleItems)
-							wipe(possibleItems);
-							if location == nil then -- Could not find the requested item @TODO Error
-								ignored[inventorySlotId] = true;
-							else
-								local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
-								if player and not bags and slot == inventorySlotId then -- The item is already in the desired location, this shouldnt happen
-									correctSlots[inventorySlotId] = true;
-									ignored[inventorySlotId] = true;
-								end
-								bestMatchForSlot[inventorySlotId] = location;
-							end
-						end
-					end
-				else -- Unequip
-					if GetInventoryItemLink("player", inventorySlotId) ~= nil then
-						if not IsInventoryItemLocked(inventorySlotId) then
-							local complete, foundSlot = EmptyInventorySlot(inventorySlotId)
-							anyChangedSlots = anyChangedSlots or complete
-							anyFoundFreeSlots = anyFoundFreeSlots or foundSlot
-						end
-					else -- Already unequipped
-						ignored[inventorySlotId] = true;
+					if not expected[inventorySlotId] then
+						ignored[inventorySlotId] = true
 					end
 				end
-			end
 
-			-- If we arent swapping an item out and its in some way unique we may need to skip swapping another unique item in
-			if ignored[inventorySlotId] then
-				local itemLink = GetInventoryItemLink("player", inventorySlotId)
-				if itemLink then
-					local itemID = GetItemInfoInstant(itemLink)
-					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+				if not ignored[inventorySlotId] then
+					local slotLocked = IsInventoryItemLocked(inventorySlotId)
+					anyLockedSlots = anyLockedSlots or slotLocked
 
-					if uniqueFamily ~= nil then
-						uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+					local itemLink = expected[inventorySlotId];
+					if itemLink then
+						local location = locations[inventorySlotId];
+						if location and location ~= -1 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
+							local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
+							if player and not bags and slot == inventorySlotId then -- The item is already in the desired location
+								correctSlots[inventorySlotId] = true;
+								ignored[inventorySlotId] = true;
+							else
+								bestMatchForSlot[inventorySlotId] = location;
+							end
+						else
+							-- The item is already in the desired location
+							if IsItemInLocation(itemLink, extras[inventorySlotId], true, false, false, false, inventorySlotId, false) then
+								correctSlots[inventorySlotId] = true;
+								ignored[inventorySlotId] = true;
+							else
+								GetInventoryItemsForSlot(inventorySlotId, possibleItems)
+
+								for completedSlotId in pairs(correctSlots) do
+									possibleItems[PackLocation(nil, completedSlotId)] = nil
+								end
+
+								location = GetBestMatch(itemLink, extras[inventorySlotId], possibleItems)
+								wipe(possibleItems);
+								if location == nil then -- Could not find the requested item @TODO Error
+									ignored[inventorySlotId] = true;
+								else
+									local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
+									if player and not bags and slot == inventorySlotId then -- The item is already in the desired location, this shouldnt happen
+										correctSlots[inventorySlotId] = true;
+										ignored[inventorySlotId] = true;
+									end
+									bestMatchForSlot[inventorySlotId] = location;
+								end
+							end
+						end
+					else -- Unequip
+						if GetInventoryItemLink("player", inventorySlotId) ~= nil then
+							if not IsInventoryItemLocked(inventorySlotId) then
+								local complete, foundSlot = EmptyInventorySlot(inventorySlotId)
+								anyChangedSlots = anyChangedSlots or complete
+								anyFoundFreeSlots = anyFoundFreeSlots or foundSlot
+							end
+						else -- Already unequipped
+							ignored[inventorySlotId] = true;
+						end
 					end
+				end
 
-					local index = 1
-					local gemName, gemLink = GetItemGem(itemLink, index)
-					while gemName do
-						itemID = GetItemInfoInstant(gemLink)
-						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+				-- If we arent swapping an item out and its in some way unique we may need to skip swapping another unique item in
+				if ignored[inventorySlotId] then
+					local itemLink = GetInventoryItemLink("player", inventorySlotId)
+					if itemLink then
+						local itemID = GetItemInfoInstant(itemLink)
+						local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
 						if uniqueFamily ~= nil then
 							uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
 						end
 
-						index = index + 1
-						gemName, gemLink = GetItemGem(itemLink, index)
+						local index = 1
+						local gemName, gemLink = GetItemGem(itemLink, index)
+						while gemName do
+							itemID = GetItemInfoInstant(gemLink)
+							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+
+							if uniqueFamily ~= nil then
+								uniqueFamilies[uniqueFamily] = (uniqueFamilies[uniqueFamily] or maxEquipped) - 1
+							end
+
+							index = index + 1
+							gemName, gemLink = GetItemGem(itemLink, index)
+						end
 					end
 				end
 			end
-		end
 
-		-- Check expected items uniqueness
-		for inventorySlotId = firstEquipped, lastEquipped do
-			if not ignored[inventorySlotId] and expected[inventorySlotId] then
-				local itemLink = expected[inventorySlotId];
-				local itemID = GetItemInfoInstant(itemLink);
-				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+			-- Check expected items uniqueness
+			for inventorySlotId = firstEquipped, lastEquipped do
+				if not ignored[inventorySlotId] and expected[inventorySlotId] then
+					local itemLink = expected[inventorySlotId];
+					local itemID = GetItemInfoInstant(itemLink);
+					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
-				if uniqueFamily then
-					if uniqueFamilies[uniqueFamily] then
-						if uniqueFamilies[uniqueFamily] <= 0 then
-							-- print(format("%s cannot be equipped because it is unique", itemLink))
-							ignored[inventorySlotId] = true -- To many of the unique items already equipped
-						else
-							uniqueFamiliesTemp[uniqueFamily] = true
-						end
-
-						uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
-					end
-				end
-
-				if not ignored[inventorySlotId] then
-					local index = 1
-					local gemName, gemLink = GetItemGem(itemLink, index)
-					while gemName do
-						itemID = GetItemInfoInstant(gemLink);
-						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
-
-						if uniqueFamily and uniqueFamilies[uniqueFamily] then
-							uniqueFamiliesTemp[uniqueFamily] = true
-
+					if uniqueFamily then
+						if uniqueFamilies[uniqueFamily] then
 							if uniqueFamilies[uniqueFamily] <= 0 then
-								-- print(format("%s cannot be equipped because its gem is unique", itemLink))
 								ignored[inventorySlotId] = true -- To many of the unique items already equipped
-								break
 							else
 								uniqueFamiliesTemp[uniqueFamily] = true
 							end
 
 							uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
 						end
-
-						index = index + 1
-						gemName, gemLink = GetItemGem(itemLink, index)
 					end
-				end
 
-				if ignored[inventorySlotId] then
-					-- uniqueFamiliesTemp is a list of all the unique families that were non-blocking
-					-- because we found 1 that was blocking we will unblock the others
-					for uniqueFamily in pairs(uniqueFamiliesTemp) do
-						uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] + 1
+					if not ignored[inventorySlotId] then
+						local index = 1
+						local gemName, gemLink = GetItemGem(itemLink, index)
+						while gemName do
+							itemID = GetItemInfoInstant(gemLink);
+							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+
+							if uniqueFamily and uniqueFamilies[uniqueFamily] then
+								uniqueFamiliesTemp[uniqueFamily] = true
+
+								if uniqueFamilies[uniqueFamily] <= 0 then
+									ignored[inventorySlotId] = true -- To many of the unique items already equipped
+									break
+								else
+									uniqueFamiliesTemp[uniqueFamily] = true
+								end
+
+								uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
+							end
+
+							index = index + 1
+							gemName, gemLink = GetItemGem(itemLink, index)
+						end
 					end
-					wipe(uniqueFamiliesTemp)
+
+					if ignored[inventorySlotId] then
+						-- uniqueFamiliesTemp is a list of all the unique families that were non-blocking
+						-- because we found 1 that was blocking we will unblock the others
+						for uniqueFamily in pairs(uniqueFamiliesTemp) do
+							uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] + 1
+						end
+						wipe(uniqueFamiliesTemp)
+					end
 				end
 			end
-		end
 
-		-- Swap currently equipped "unique" items that need to be swapped out before others can be swapped in
-		for inventorySlotId = firstEquipped, lastEquipped do
-			local itemLink = GetInventoryItemLink("player", inventorySlotId)
+			-- Swap currently equipped "unique" items that need to be swapped out before others can be swapped in
+			for inventorySlotId = firstEquipped, lastEquipped do
+				local itemLink = GetInventoryItemLink("player", inventorySlotId)
 
-			if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] and itemLink ~= nil then
-				local itemID = GetItemInfoInstant(itemLink);
-				local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
+				if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] and itemLink ~= nil then
+					local itemID = GetItemInfoInstant(itemLink);
+					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
-				local swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
+					local swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
 
-				if not swapSlot then
-					local index = 1
-					local gemName, gemLink = GetItemGem(itemLink, index)
-					while gemName do
-						itemID = GetItemInfoInstant(gemLink)
-						uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
+					if not swapSlot then
+						local index = 1
+						local gemName, gemLink = GetItemGem(itemLink, index)
+						while gemName do
+							itemID = GetItemInfoInstant(gemLink)
+							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
 
-						swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
+							swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
 
-						if swapSlot then
-							break
+							if swapSlot then
+								break
+							end
+
+							index = index + 1
+							gemName, gemLink = GetItemGem(itemLink, index)
 						end
+					end
 
-						index = index + 1
-						gemName, gemLink = GetItemGem(itemLink, index)
+					if swapSlot then
+						if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
+							anyChangedSlots = true
+						end
 					end
 				end
+			end
 
-				if swapSlot then
+			-- Swap out items
+			for inventorySlotId = firstEquipped, lastEquipped do
+				if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
 					if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
 						anyChangedSlots = true
 					end
 				end
 			end
-		end
 
-		-- Swap out items
-		for inventorySlotId = firstEquipped, lastEquipped do
-			if not ignored[inventorySlotId] and not IsInventoryItemLocked(inventorySlotId) and expected[inventorySlotId] then
-				if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
-					anyChangedSlots = true
+			ClearCursor()
+
+			-- We assume that if we have any locked slots or any changed slots we are not complete yet
+			local complete = not anyLockedSlots and not anyChangedSlots
+			if complete then
+				-- If there are no locked slots and not changed slots and we never found a free slot
+				-- to remove an item, we will consider ourselves complete but with an error
+				if anyFoundFreeSlots == false then
+					return complete, L["Failed to change equipment set"]
+				end
+				for inventorySlotId = firstEquipped, lastEquipped do
+					-- We mark slots as ignored when they are finished
+					if not ignored[inventorySlotId] then
+						complete = false
+					end
 				end
 			end
+
+			return complete, false;
 		end
-
-		ClearCursor()
-
-		-- We assume that if we have any locked slots or any changed slots we are not complete yet
-		local complete = not anyLockedSlots and not anyChangedSlots
-		if complete then
-			-- If there are no locked slots and not changed slots and we never found a free slot
-			-- to remove an item, we will consider ourselves complete but with an error
-			if anyFoundFreeSlots == false then
-				return complete, L["Failed to change equipment set"]
-			end
-			for inventorySlotId = firstEquipped, lastEquipped do
-				-- We mark slots as ignored when they are finished
-				if not ignored[inventorySlotId] then
-					complete = false
-				end
-			end
-		end
-
-		return complete, false;
+		return true, false
 	end
 end
 local function UpdateEquipmentSetFilters(set)
@@ -1132,6 +1132,15 @@ local function GetEquipmentSet(id)
 	else
 		return BtWLoadoutsSets.equipment[id];
 	end
+end
+local function GetSetsForCharacter(tbl, slug)
+	tbl = tbl or {}
+	for _,set in pairs(BtWLoadoutsSets.equipment) do
+		if type(set) == "table" and set.character == slug then
+			tbl[#tbl+1] = set
+		end
+	end
+	return tbl
 end
 -- returns isValid and isValidForPlayer
 local function EquipmentSetIsValid(set)
@@ -1190,7 +1199,6 @@ local function RefreshEquipmentSet(set)
 
 		-- We want this to supersede the other 2, but need those for fallback still
 		set.data[inventorySlotId] = set.equipment[inventorySlotId] and EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite) or nil
-		debug(inventorySlotId, set.data[inventorySlotId])
 		if set.setID then -- Only do this for previously created sets
 			UpdateSetItemInMapData(set, inventorySlotId, previousLocation, set.locations[inventorySlotId])
 		end
@@ -1294,6 +1302,7 @@ local function CombineEquipmentSets(result, state, ...)
 
     if state then
 		state.noCombatSwap = true
+		state.blockedByJailersChains = true
 
 		if result.ignored[INVSLOT_NECK] then
 			state.heartEquipped = GetInventoryItemID("player", INVSLOT_NECK) == 158075
@@ -1307,8 +1316,13 @@ local function CombineEquipmentSets(result, state, ...)
 	return result;
 end
 local function DeleteEquipmentSet(id)
-	Internal.DeleteSet(BtWLoadoutsSets.equipment, id);
-	RemoveSetFromMapData(GetEquipmentSet(id))
+	do
+		local set = GetEquipmentSet(id)
+		if set.character == Internal.GetCharacterSlug() and set.locations then
+			RemoveSetFromMapData(set)
+		end
+	end
+	Internal.DeleteSet(BtWLoadoutsSets.equipment, id)
 
 	if type(id) == "table" then
 		id = id.setID;
@@ -2079,8 +2093,6 @@ do
 			end
 		end
 	})
-	_G['BtWLoadoutsLocationItems'] = locationItems
-	_G['BtWLoadoutsLocationSets'] = locationSets
 
 	function AddSetToMapData(set)
 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
@@ -2147,13 +2159,9 @@ do
 				locationItems[newLocation] = locationItems[newLocation] or data
 				locationSets[newLocation][(set.setID .. ":" .. inventorySlotId)] = true
 			elseif force then
-				debug(set.setID, inventorySlotId, oldLocation, newLocation)
-				debug(locationItems[newLocation], data)
 				locationItems[newLocation] = locationItems[newLocation] or data
 				locationSets[newLocation][(set.setID .. ":" .. inventorySlotId)] = true
 			else
-				debug(set.setID, inventorySlotId, oldLocation, newLocation)
-				debug(locationItems[newLocation], data)
 				error("ERROR")
 			end
 		end
@@ -2315,17 +2323,12 @@ do
 
 			ScanDataMapForMissingItems(newLocationItems, newLocationSets, missingItemDatas)
 
-			-- debug("UpdateLocations", next(newLocationItems))
-			-- debug("UpdateLocations", next(newLocationSets))
-			debug("UpdateLocations", next(missingItemDatas))
-
 			if next(missingItemDatas) ~= nil then
 				for inventorySlotId in pairs(inventorySlots) do
 					if next(missingItemDatas) == nil then
 						break
 					end
 
-					debug("Slot", inventorySlotId)
 					local newLocation = PackLocation(nil, inventorySlotId)
 					UpdateLocation(newLocation)
 				end
@@ -2337,7 +2340,6 @@ do
 						break
 					end
 
-					debug("Bag", bagId)
 					for slotId=1,GetContainerNumSlots(bagId) do
 						if next(missingItemDatas) == nil then
 							break
@@ -2351,8 +2353,6 @@ do
 
 			locationItems, newLocationItems = newLocationItems, locationItems
 			locationSets, newLocationSets = newLocationSets, locationSets
-			_G['BtWLoadoutsLocationItems'] = locationItems
-			_G['BtWLoadoutsLocationSets'] = locationSets
 		end
 		function UpdateAllLocations(skipInventory, skipBags, skipBank, includeMissingLocations)
 			wipe(newLocationItems)
@@ -2470,12 +2470,7 @@ do
 
 			locationItems, newLocationItems = newLocationItems, locationItems
 			locationSets, newLocationSets = newLocationSets, locationSets
-			_G['BtWLoadoutsLocationItems'] = locationItems
-			_G['BtWLoadoutsLocationSets'] = locationSets
 		end
-
-		_G["BtWLoadoutsMissingItemDatas"] = missingItemDatas
-		_G["BtWLoadoutsUpdateAllLocations"] = UpdateAllLocations
 	end
 
 	do -- Event handling for inventory changes
@@ -2648,6 +2643,7 @@ do
 
 		result = result or {}
 
+		local character = GetCharacterSlug()
 		local sets = BtWLoadoutsSets.equipment
 		for _,set in pairs(sets) do
 			if type(set) == "table" and set.character == character and not set.disabled then
@@ -2681,8 +2677,6 @@ do
 		local extras = GetExtrasForItemLocation(itemLocation)
 		local itemData = EncodeItemData(itemLink, extras and extras.azerite)
 
-		debug(location, itemData, locationItems[location])
-
 		if itemData ~= locationItems[location] then -- Item has actually changed
 			locationItems[location] = itemData
 
@@ -2692,6 +2686,7 @@ do
 				setID, setSlot = tonumber(setID), tonumber(setSlot)
 
 				local set = GetEquipmentSet(setID)
+				set.data[setSlot] = itemData
 				set.equipment[setSlot] = itemLink
 				set.extras[setSlot] = extras
 			end
@@ -2703,9 +2698,9 @@ do
 	end
 	-- Triggered by the ITEM_CHANGED, followed by a BAG_UPDATE_DELAYED or UNIT_INVENTORY_CHANGED
 	local function RuneforgeItemUpdated(previousHyperlink, newHyperlink)
-		local previousItemData, newItemData = EncodeItemData(previousHyperlink), EncodeItemData(newHyperlink)
+		local previousItemData, newItemData = DeEnchantItemLink(previousHyperlink), DeEnchantItemLink(newHyperlink)
 		for location,itemData in pairs(locationItems) do
-			if itemData == previousItemData and GetEncodedItemDataForLocation(location) == newItemData then
+			if DeEnchantItemLink(itemData) == previousItemData and DeEnchantItemLink(GetEncodedItemDataForLocation(location)) == newItemData then
 				UpdateItemAtLocation(location)
 				return
 			end
@@ -2733,7 +2728,6 @@ do
 		local itemLocation = ItemLocation:CreateEmpty();
 		local function GemApplied()
 			if itemLocation:HasAnyLocation() and itemLocation:IsValid() then
-				debug("GemApplied", GetLocationFromItemLocation(itemLocation))
 				UpdateItemAtLocation(GetLocationFromItemLocation(itemLocation))
 				itemLocation:Clear()
 			end
@@ -2778,8 +2772,58 @@ do
 	local tooltipMatch = "^" .. string.gsub(EQUIPMENT_SETS, "%%s", "(.*)") .. "$"
 	local tooltipSellMatch = "^" .. SELL_PRICE .. ": .*$"
 	local location
+
+	--[[
+		Searches an item tooltip looking for important lines, like Equipment Sets, Sell Price and similar
+
+		returns "Equipment Sets: ..." line number, last line number before equipment set line should be added, first line number after equipment set line should be added, any money frame that needs moving
+	]]
+	local equipmentSetPattern = "^" .. string.gsub(EQUIPMENT_SETS, "%%s", "(.*)") .. "$"
+	local itemCreatedPattern = "^" .. (ITEM_CREATED_BY:gsub("%%s", ".*")) .. "$"
+	local durabilityPattern = "^" .. (DURABILITY_TEMPLATE:gsub("%%d", "%%d+"):gsub("%%%d%$d", "%%d+")) .. "$"
+	local sellPricePrefix = string.format("%s:", SELL_PRICE)
+	local function GetTooltipLineNumbers(tooltip)
+		local equipmentSetLine, beforeLine, afterLine, sellPriceFrameResult, sellPriceFrameXOffsetResult
+		local tooltipName = tooltip:GetName()
+
+		local sellPriceFrame, sellPriceFrameAnchor, sellPriceFrameXOffset, _
+		if tooltip.shownMoneyFrames and tooltip.shownMoneyFrames >= 1 then
+			for i=1,tooltip.shownMoneyFrames do
+				local name = tooltipName.."MoneyFrame" .. i
+				local moneyFrame = _G[name];
+				
+				if _G[name .. "PrefixText"]:GetText() == sellPricePrefix then
+					sellPriceFrame = moneyFrame
+					_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPoint("LEFT")
+					break
+				end
+			end
+		end
+
+		for i=1,tooltip:NumLines() do
+			local left, right = _G[tooltipName .. "TextLeft" .. i], _G[tooltipName .. "TextRight" .. i]
+			local leftText = left:GetText()
+			if leftText then
+				if leftText:match(equipmentSetPattern) then
+					equipmentSetLine = i
+					break
+				elseif leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match(itemCreatedPattern) or leftText:match(durabilityPattern) then
+					beforeLine = i
+				elseif left == sellPriceFrameAnchor then
+					afterLine = i
+					sellPriceFrameResult, sellPriceFrameXOffsetResult = sellPriceFrame, sellPriceFrameXOffset
+				elseif leftText == ITEM_UNSELLABLE then
+					afterLine = i
+				end
+			end
+		end
+		if beforeLine and not afterLine then
+			afterLine = beforeLine + 1
+		end
+		return equipmentSetLine, beforeLine, afterLine, sellPriceFrameResult, sellPriceFrameXOffsetResult
+	end
+
 	local function UpdateTooltip(self, location)
-		-- local sets = {Internal.GetEquipmentSets()}
 		local sets = GetSetsForLocation(location, {})
 		if #sets == 0 then
 			return
@@ -2791,134 +2835,50 @@ do
 
 		sets = string.format(EQUIPMENT_SETS, table.concat(sets, ", "))
 
-		local found = false
+		local tooltipName = self:GetName()
+		local equipmentSetLine, beforeLine, afterLine, sellPriceFrame, sellPriceFrameXOffset = GetTooltipLineNumbers(self)
+		if equipmentSetLine then
+			_G[tooltipName .. "TextLeft" .. equipmentSetLine]:SetText(sets)
+		elseif afterLine and afterLine < self:NumLines() then
+			local left, right = _G[tooltipName .. "TextLeft" .. self:NumLines()], _G[tooltipName .. "TextRight" .. self:NumLines()]
+			local leftText, leftR, leftG, leftB  = left:GetText(), left:GetTextColor()
+			local rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
 
-		local R, G, B = NORMAL_FONT_COLOR:GetRGB()
-		local index = 1
-		local frame = _G[self:GetName() .. "TextLeft" .. index]
-		while frame do
-			if frame:GetText() then
-				local match = string.match(frame:GetText(), tooltipMatch)
-				if match then
-					frame:SetText(sets)
-					found = true
-					break
-				end
+			self:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
+
+			for i=self:NumLines()-1,afterLine,-1 do
+				local left, right = _G[tooltipName .. "TextLeft" .. (i - 1)], _G[tooltipName .. "TextRight" .. (i - 1)]
+				local leftNext, rightNext = _G[tooltipName .. "TextLeft" .. i], _G[tooltipName .. "TextRight" .. i]
+				
+				leftNext:SetTextColor(left:GetTextColor())
+				leftNext:SetText(left:GetText())
+				leftNext:SetShown(left:IsShown())
+				rightNext:SetTextColor(right:GetTextColor())
+				rightNext:SetText(right:GetText())
+				rightNext:SetShown(right:IsShown())
 			end
 
-			index = index + 1
-			frame = _G[self:GetName() .. "TextLeft" .. index]
+			left, right = _G[tooltipName .. "TextLeft" .. afterLine], _G[tooltipName .. "TextRight" .. afterLine]
+			left:SetTextColor(NORMAL_FONT_COLOR:GetRGB())
+			left:SetText(sets)
+			right:SetText("")
+
+			if sellPriceFrame then
+				sellPriceFrame:ClearAllPoints()
+				sellPriceFrame:SetPoint("LEFT", _G[tooltipName .. "TextLeft" .. (afterLine + 1)], "LEFT", sellPriceFrameXOffset, 0);
+			end
+		else
+			self:AddLine(sets)
 		end
 
-		if not found then
-			local sellPriceFrame, sellPriceFrameAnchor, sellPriceFrameXOffset, _
-			if self.shownMoneyFrames and self.shownMoneyFrames >= 1 then
-				local index = 1
-				local name = self:GetName().."MoneyFrame" .. index
-				local moneyFrame = _G[name];
-				while moneyFrame do
-					if _G[name .. "PrefixText"]:GetText() == string.format("%s:", SELL_PRICE) then
-						sellPriceFrame = moneyFrame
-						_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPoint("LEFT")
-						break
-					end
-
-					index = index + 1
-					name = self:GetName().."MoneyFrame" .. index
-					moneyFrame = _G[name];
-				end
-			end
-			
-			index = self:NumLines()
-			local left, right = _G[self:GetName() .. "TextLeft" .. index], _G[self:GetName() .. "TextRight" .. index]
-			local leftText = left:GetText()
-			local leftR, leftG, leftB
-			local rightText, rightR, rightG, rightB
-			if leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match((ITEM_CREATED_BY:gsub("%%s", ".*"))) or leftText:match((DURABILITY_TEMPLATE:gsub("%%d", "%%d+"))) then
-				self:AddLine(sets)
-				found = true
-			else
-				leftR, leftG, leftB = left:GetTextColor()
-				rightText, rightR, rightG, rightB = right:GetText(), right:GetTextColor()
-				self:AddDoubleLine(leftText, rightText, leftR, leftG, leftB, rightR, rightG, rightB)
-
-				if left == sellPriceFrameAnchor then
-					sellPriceFrame:ClearAllPoints()
-					sellPriceFrame:SetPoint("LEFT", _G[self:GetName() .. "TextLeft" .. (index + 1)], "LEFT", sellPriceFrameXOffset, 0);
-				end
-				if left == sellPriceFrameAnchor or leftText == SELL_PRICE or leftText == ITEM_UNSELLABLE then
-					left:SetTextColor(R, G, B, 1)
-					right:SetTextColor(R, G, B, 1)
-
-					left:SetText(sets)
-					right:SetText("")
-
-					found = true
-				end
-			end
-
-			if not found then
-				while index > 1 do
-					index = index - 1
-					local leftNext, rightNext = _G[self:GetName() .. "TextLeft" .. index], _G[self:GetName() .. "TextRight" .. index]
-					leftText = leftNext:GetText()
-
-					if leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match((ITEM_CREATED_BY:gsub("%%s", ".*"))) or leftText:match((DURABILITY_TEMPLATE:gsub("%%d", "%%d+"))) then
-						left:SetTextColor(R, G, B, 1)
-						right:SetTextColor(R, G, B, 1)
-
-						left:SetText(sets)
-						right:SetText("")
-
-						found = true
-						break
-					else
-						leftR, leftG, leftB = leftNext:GetTextColor()
-						rightText, rightR, rightG, rightB = rightNext:GetText(), rightNext:GetTextColor()
-
-						left:SetTextColor(leftR, leftG, leftB, 1)
-						left:SetText(leftText)
-						right:SetTextColor(rightR, rightG, rightB, 1)
-						right:SetText(rightText)
-
-						if leftNext == sellPriceFrameAnchor then
-							sellPriceFrame:ClearAllPoints()
-							sellPriceFrame:SetPoint("LEFT", left, "LEFT", sellPriceFrameXOffset, 0);
-						end
-						if leftNext == sellPriceFrameAnchor or leftText == SELL_PRICE or leftText == ITEM_UNSELLABLE then
-							left, right = leftNext, rightNext
-
-							left:SetTextColor(R, G, B, 1)
-							right:SetTextColor(R, G, B, 1)
-	
-							left:SetText(sets)
-							right:SetText("")
-	
-							found = true
-							break
-						end
-					end
-
-					left, right = leftNext, rightNext
-				end
-			end
-
-			if not found then
-				self:AddLine(sets)
-			end
-		end
-
-		self:AddLine(string.format("Location: %d", location))
 		self:Show()
 	end
 	GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
-		-- print("OnTooltipSetItem", ...)
 		if location then
 
 		end
 	end)
 	hooksecurefunc(GameTooltip, "SetInventoryItem", function (self, unit, slot, nameOnly)
-		-- print("SetInventoryItem", ...)
 		if not nameOnly and unit == "player" then
 			location = PackLocation(nil, slot)
 			UpdateTooltip(self, location)
@@ -2927,7 +2887,18 @@ do
 		end
 	end)
 	hooksecurefunc(GameTooltip, "SetBagItem", function (self, bag, slot)
-		-- print("SetBagItem", ...)
+		location = PackLocation(bag, slot)
+		UpdateTooltip(self, location)
+	end)
+	hooksecurefunc(ItemRefTooltip, "SetInventoryItem", function (self, unit, slot, nameOnly)
+		if not nameOnly and unit == "player" then
+			location = PackLocation(nil, slot)
+			UpdateTooltip(self, location)
+		else
+			location = nil
+		end
+	end)
+	hooksecurefunc(ItemRefTooltip, "SetBagItem", function (self, bag, slot)
 		location = PackLocation(bag, slot)
 		UpdateTooltip(self, location)
 	end)
@@ -2980,3 +2951,12 @@ if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
 		end
 	end
 end
+
+-- Character deletion
+Internal.OnEvent("CHARACTER_DELETE", function (event, slug)
+	local sets = GetSetsForCharacter({}, slug)
+	for _,set in ipairs(sets) do
+		DeleteEquipmentSet(set.setID)
+	end
+	return true
+end)
