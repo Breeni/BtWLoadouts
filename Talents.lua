@@ -87,8 +87,10 @@ local function FixTalentSet(set)
 end
 local function UpdateTalentSetFilters(set)
     local specID = set.specID;
-
     local filters = set.filters or {}
+
+    Internal.UpdateRestrictionFilters(set)
+
     filters.spec = specID
     if specID then
         filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
@@ -506,6 +508,11 @@ Internal.AddLoadoutSegment({
 
 BtWLoadoutsTalentsMixin = {}
 function BtWLoadoutsTalentsMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("covenant", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
     self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
     self.talentIDs = {}
     for tier=1,MAX_TALENT_TIERS do
@@ -673,6 +680,11 @@ function BtWLoadoutsTalentsMixin:Update()
 
 		UpdateTalentSetFilters(set)
         sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations()
+		self.RestrictionsButton:SetEnabled(true);
 
         local selected = self.set.talents;
 
@@ -718,6 +730,7 @@ function BtWLoadoutsTalentsMixin:Update()
         addButton.Flash:Hide();
         addButton.FlashAnim:Stop();
     else
+		self.RestrictionsButton:SetEnabled(false);
         self.Name:SetEnabled(false);
         self.SpecDropDown.Button:SetEnabled(false);
         for _,row in ipairs(self.rows) do

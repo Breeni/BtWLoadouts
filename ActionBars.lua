@@ -186,58 +186,7 @@ end
 local function UpdateFilters(set)
 	local filters = set.filters or {}
 
-    if set.restrictions then
-        -- Covenant
-        if set.restrictions.covenant and next(set.restrictions.covenant) then
-            filters.covenant = wipe(filters.covenant or {})
-            local tbl = filters.covenant
-            for covenant in pairs(set.restrictions.covenant) do
-                tbl[#tbl+1] = covenant
-            end
-        else
-            filters.covenant = nil
-        end
-        
-        -- Specialization
-        local roles = {}
-        local classes = {}
-        if set.restrictions.spec and next(set.restrictions.spec) then
-            do
-                filters.spec = wipe(filters.spec or {})
-                local tbl = filters.spec
-                for spec in pairs(set.restrictions.spec) do
-                    local role, class = select(5, GetSpecializationInfoByID(spec))
-
-                    roles[role] = true
-                    classes[class] = true
-
-                    tbl[#tbl+1] = spec
-                end
-            end
-
-            do
-                filters.role = wipe(filters.role or {})
-                local tbl = filters.role
-                for role in pairs(roles) do
-                    tbl[#tbl+1] = role
-                end
-            end
-
-            do
-                filters.class = wipe(filters.class or {})
-                local tbl = filters.class
-                for class in pairs(classes) do
-                    tbl[#tbl+1] = class
-                end
-            end
-        else
-            filters.spec = nil
-            filters.role = nil
-            filters.class = nil
-        end
-    else
-        wipe(filters)
-    end
+    Internal.UpdateRestrictionFilters(set)
 
 	set.filters = filters
 
@@ -1167,51 +1116,62 @@ end
 local function DropDown_Initialize(self, level, menuList)
     local set = BtWLoadoutsFrame.ActionBars.set
     if set then
-        local info = UIDropDownMenu_CreateInfo()
-        info.func = function (self, arg1, arg2, checked)
-            set.settings = set.settings or {}
-            set.settings.adjustCovenant = not checked
+		if (level or 1) == 1 then
+            local info = UIDropDownMenu_CreateInfo()
+            info.func = function (self, arg1, arg2, checked)
+                set.settings = set.settings or {}
+                set.settings.adjustCovenant = not checked
 
-            BtWLoadoutsFrame:Update()
+                BtWLoadoutsFrame:Update()
+            end
+            info.checked = set.settings and set.settings.adjustCovenant
+            info.text = L["Adjust Covenant Abilities"]
+            UIDropDownMenu_AddButton(info, level)
+
+            
+            info.func = function (self, arg1, arg2, checked)
+                set.settings = set.settings or {}
+                set.settings.createMissingMacros = not checked
+                set.settings.createMissingMacrosCharacter = false
+
+                BtWLoadoutsFrame:Update()
+            end
+            info.checked = set.settings and set.settings.createMissingMacros
+            info.text = L["Create Missing Macros"]
+            UIDropDownMenu_AddButton(info, level)
+
+            
+            info.func = function (self, arg1, arg2, checked)
+                set.settings = set.settings or {}
+                set.settings.createMissingMacrosCharacter = not checked
+                set.settings.createMissingMacros = false
+
+                BtWLoadoutsFrame:Update()
+            end
+            info.checked = set.settings and set.settings.createMissingMacrosCharacter
+            info.text = L["Create Missing Macros (Character Only)"]
+            UIDropDownMenu_AddButton(info, level)
+
+            UIDropDownMenu_AddSeparator()
+
+            info.isTitle, info.notCheckable, info.checked, info.func = true, true, false, nil
+            info.text = L["Restrictions"]
+            UIDropDownMenu_AddButton(info, level)
         end
-        info.checked = set.settings and set.settings.adjustCovenant
-        info.text = L["Adjust Covenant Abilities"]
-        UIDropDownMenu_AddButton(info, level)
 
-        
-        info.func = function (self, arg1, arg2, checked)
-            set.settings = set.settings or {}
-            set.settings.createMissingMacros = not checked
-            set.settings.createMissingMacrosCharacter = false
-
-            BtWLoadoutsFrame:Update()
-        end
-        info.checked = set.settings and set.settings.createMissingMacros
-        info.text = L["Create Missing Macros"]
-        UIDropDownMenu_AddButton(info, level)
-
-        
-        info.func = function (self, arg1, arg2, checked)
-            set.settings = set.settings or {}
-            set.settings.createMissingMacrosCharacter = not checked
-            set.settings.createMissingMacros = false
-
-            BtWLoadoutsFrame:Update()
-        end
-        info.checked = set.settings and set.settings.createMissingMacrosCharacter
-        info.text = L["Create Missing Macros (Character Only)"]
-        UIDropDownMenu_AddButton(info, level)
+        self.OrigInitFunc(self, level, menuList)
     end
 end
 BtWLoadoutsActionBarsMixin = {}
 function BtWLoadoutsActionBarsMixin:OnLoad()
-    self.RestrictionsDropDown:SetSupportedTypes("covenant", "spec", "race")
-    self.RestrictionsDropDown:SetScript("OnChange", function ()
+    self.SettingsDropDown:SetSupportedTypes("covenant", "spec", "race")
+    self.SettingsDropDown:SetScript("OnChange", function ()
         self:Update()
     end)
 end
 function BtWLoadoutsActionBarsMixin:OnShow()
     if not self.initialized then
+        self.SettingsDropDown.OrigInitFunc = self.SettingsDropDown.initialize
         UIDropDownMenu_Initialize(self.SettingsDropDown, DropDown_Initialize, "MENU");
         self.initialized = true
     end
@@ -1344,7 +1304,6 @@ function BtWLoadoutsActionBarsMixin:Update()
 
 	if self.set ~= nil then
 		self.SettingsButton:SetEnabled(true);
-		self.RestrictionsButton:SetEnabled(true);
 
 		local set = self.set;
 		local slots = set.actions;
@@ -1353,7 +1312,9 @@ function BtWLoadoutsActionBarsMixin:Update()
 		sidebar:Update()
 
         set.restrictions = set.restrictions or {}
-        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.SettingsDropDown:SetSelections(set.restrictions)
+        self.SettingsDropDown:SetLimitations()
+		self.SettingsButton:SetEnabled(true);
 
 		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
@@ -1401,7 +1362,6 @@ function BtWLoadoutsActionBarsMixin:Update()
         end
 	else
 		self.SettingsButton:SetEnabled(false);
-		self.RestrictionsButton:SetEnabled(false);
 
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");

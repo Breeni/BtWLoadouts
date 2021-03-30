@@ -12,6 +12,9 @@ local format = string.format
 
 local function UpdateEssenceSetFilters(set)
 	local filters = set.filters or {}
+
+    Internal.UpdateRestrictionFilters(set)
+	
 	filters.role = set.role
 
 	-- Rebuild character list
@@ -567,6 +570,11 @@ end
 
 BtWLoadoutsEssencesMixin = {}
 function BtWLoadoutsEssencesMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
 	self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
 	self.pending = nil;
 end
@@ -719,8 +727,14 @@ function BtWLoadoutsEssencesMixin:Update()
 
 		UpdateEssenceSetFilters(set)
 		sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations("role", set.role)
+		self.RestrictionsButton:SetEnabled(true);
 
 		self.Name:SetEnabled(true);
+		self.RestrictionsButton:SetEnabled(true);
 		self.RoleDropDown.Button:SetEnabled(true);
 		self.MajorSlot:SetEnabled(true);
 		self.MinorSlot1:SetEnabled(true);
@@ -780,6 +794,7 @@ function BtWLoadoutsEssencesMixin:Update()
 		addButton.Flash:Hide();
 		addButton.FlashAnim:Stop();
 	else
+		self.RestrictionsButton:SetEnabled(false);
 		self.Name:SetEnabled(false);
 		self.RoleDropDown.Button:SetEnabled(false);
 		self.MajorSlot:SetEnabled(false);

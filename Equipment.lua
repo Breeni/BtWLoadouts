@@ -1121,6 +1121,9 @@ do
 end
 local function UpdateEquipmentSetFilters(set)
 	local filters = set.filters or {}
+	
+    Internal.UpdateRestrictionFilters(set)
+
 	filters.character = set.character
 	set.filters = filters
 
@@ -1812,6 +1815,12 @@ GameTooltip:HookScript("OnTooltipSetItem", function (self)
 end)
 
 BtWLoadoutsEquipmentMixin = {}
+function BtWLoadoutsEquipmentMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+end
 function BtWLoadoutsEquipmentMixin:ChangeSet(set)
     self.set = set
     self:Update()
@@ -1946,6 +1955,11 @@ function BtWLoadoutsEquipmentMixin:Update()
 
 		UpdateEquipmentSetFilters(set)
 		sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+		self.RestrictionsButton:SetEnabled(true);
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations("character", set.character)
 
 		local errors = CheckEquipmentSetForIssues(set)
 
@@ -2037,6 +2051,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 			end
 		end
 	else
+		self.RestrictionsButton:SetEnabled(false)
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");
 

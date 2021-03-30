@@ -95,6 +95,8 @@ local function UpdateSetFilters(set)
 	local filters = set.filters or {}
     wipe(filters)
     
+    Internal.UpdateRestrictionFilters(set)
+
 	filters.soulbind = set.soulbindID
     
     local soulbindData = GetSoulbindData(set.soulbindID)
@@ -512,6 +514,11 @@ end
 
 BtWLoadoutsSoulbindsMixin = {}
 function BtWLoadoutsSoulbindsMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
     self.temp = {}
     self.nodes = CreateFramePool("BUTTON", self, "BtWLoadoutsSoulbindNodeTemplate");
     self.links = CreateFramePool("FRAME", self, "BtWLoadoutsSoulbindTreeNodeLinkTemplate");
@@ -669,6 +676,11 @@ function BtWLoadoutsSoulbindsMixin:Update()
 
 		UpdateSetFilters(set)
         sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations()
+		self.RestrictionsButton:SetEnabled(true);
 
         if not self.Name:HasFocus() then
             self.Name:SetText(self.set.name or "");
@@ -753,6 +765,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
     else
         self.nodes:ReleaseAll()
         self.links:ReleaseAll()
+		self.RestrictionsButton:SetEnabled(false);
         self.Name:SetEnabled(false);
         UIDropDownMenu_DisableDropDown(self.SoulbindDropDown);
         -- self.SoulbindDropDown.Button:SetEnabled(false);

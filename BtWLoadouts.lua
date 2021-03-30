@@ -51,6 +51,7 @@ BTWLOADOUTS_SPECIALIZATION = L["Specialization"]
 BTWLOADOUTS_ENABLED = L["Enabled"]
 BTWLOADOUTS_UPDATE = L["Update"]
 BTWLOADOUTS_LOG = L["Log"]
+BTWLOADOUTS_RESTRICTIONS = L["Restrictions"]
 
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
@@ -546,9 +547,21 @@ do
 		},
 		spec = {
 			name = L["Specialization"],
-			enumerate = function ()
+			enumerate = function (limitations)
+				local role, classFile = limitations.role
+				if limitations.character then
+					local characterData = Internal.GetCharacterInfo(limitations.character)
+					classFile = characterData.class
+				end
+
 				return function (tbl, index)
-					index = index + 1
+					repeat
+						index = index + 1
+					until not tbl[index] or (
+						(classFile == nil or classFile == (select(6, GetSpecializationInfoByID(tbl[index])))) and
+						(role == nil or role == (select(5, GetSpecializationInfoByID(tbl[index]))))
+					)
+
 					if tbl[index] then
 						local _, specName, _, _, _, classFile, className = GetSpecializationInfoByID(tbl[index])
 						local classColor = C_ClassColor.GetClassColor(classFile);
@@ -645,13 +658,13 @@ do
 
 	BtWLoadoutsRestrictionsDropDownMixin = {}
 	function BtWLoadoutsRestrictionsDropDownMixin:OnLoad()
-		self.InitFunc = DropDownInit
 		self.selected = {}
 		self.supportedTypes = {}
+		self.limitations = {}
 	end
 	function BtWLoadoutsRestrictionsDropDownMixin:OnShow()
 		if not self.initialized then
-			UIDropDownMenu_Initialize(self, self.InitFunc, "MENU")
+			UIDropDownMenu_Initialize(self, DropDownInit, "MENU")
 			self.initialized = true
 		end
 	end
@@ -675,8 +688,20 @@ do
 			end
 		end, selected, 0
 	end
+	local selectionTemp = {}
 	function BtWLoadoutsRestrictionsDropDownMixin:SetSelections(tbl)
 		assert(type(tbl) == "table", "Expected table")
+
+		-- Clean up tbl based on available types
+		wipe(selectionTemp)
+		for _,t in ipairs(self.supportedTypes) do
+			selectionTemp[t] = tbl[t]
+		end
+		wipe(tbl)
+		for k,v in pairs(selectionTemp) do
+			tbl[k] = v
+		end
+
 		self.selected = tbl
 	end
 	function BtWLoadoutsRestrictionsDropDownMixin:ClearSelected()
@@ -705,6 +730,15 @@ do
 			self.supportedTypes[i] = type
 		end
 	end
+	-- Allow limiting some supported types, like characters to limit spec or role to limit spec.
+	function BtWLoadoutsRestrictionsDropDownMixin:SetLimitations(...)
+		wipe(self.limitations)
+
+		for i=1,select('#', ...),2 do
+			local k,v = select(i, ...)
+			self.limitations[k] = v
+		end
+	end
 	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateSupportedTypes()
 		return function (tbl, index)
 			index = index + 1
@@ -715,13 +749,70 @@ do
 		end, self.supportedTypes, 0
 	end
 	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateType(type)
-		return types[type].enumerate()
+		return types[type].enumerate(self.limitations)
 	end
 	function BtWLoadoutsRestrictionsDropDownMixin:SetScript(scriptType, handler)
 		if scriptType == "OnChange" then
 			self.onchange = handler
 		else
 			getmetatable(self).SetScript(self, scriptType, handler)
+		end
+	end
+
+	function Internal.UpdateRestrictionFilters(set)
+		if set.restrictions then
+			local filters = set.filters
+			
+			-- Covenant
+			if set.restrictions.covenant and next(set.restrictions.covenant) then
+				filters.covenant = wipe(filters.covenant or {})
+				local tbl = filters.covenant
+				for covenant in pairs(set.restrictions.covenant) do
+					tbl[#tbl+1] = covenant
+				end
+			else
+				filters.covenant = nil
+			end
+			
+			-- Specialization
+			local roles = {}
+			local classes = {}
+			if set.restrictions.spec and next(set.restrictions.spec) then
+				do
+					filters.spec = wipe(filters.spec or {})
+					local tbl = filters.spec
+					for spec in pairs(set.restrictions.spec) do
+						local role, class = select(5, GetSpecializationInfoByID(spec))
+
+						roles[role] = true
+						classes[class] = true
+
+						tbl[#tbl+1] = spec
+					end
+				end
+
+				do
+					filters.role = wipe(filters.role or {})
+					local tbl = filters.role
+					for role in pairs(roles) do
+						tbl[#tbl+1] = role
+					end
+				end
+
+				do
+					filters.class = wipe(filters.class or {})
+					local tbl = filters.class
+					for class in pairs(classes) do
+						tbl[#tbl+1] = class
+					end
+				end
+			else
+				filters.spec = nil
+				filters.role = nil
+				filters.class = nil
+			end
+		else
+			wipe(filters)
 		end
 	end
 end
@@ -1163,14 +1254,14 @@ do
 
 			if sidebar:GetSupportedFilters() then
 				info.isTitle = true
-				info.isCheckable = false
+				info.notCheckable = true
 				info.checked = false
 				info.text = L["Categories"]
 				UIDropDownMenu_AddButton(info, level)
 
 				info.isTitle = false
 				info.disabled = false
-				info.isCheckable = true
+				info.notCheckable = false
 				info.checked = true
 				info.func = function (self, arg1)
 					sidebar:RemoveCategory(arg1)
