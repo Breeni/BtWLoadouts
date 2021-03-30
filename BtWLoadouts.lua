@@ -778,7 +778,7 @@ do
 			local roles = {}
 			local classes = {}
 			if set.restrictions.spec and next(set.restrictions.spec) then
-				do
+				if filters.spec == nil or type(filters.spec) == "table" then
 					filters.spec = wipe(filters.spec or {})
 					local tbl = filters.spec
 					for spec in pairs(set.restrictions.spec) do
@@ -791,7 +791,7 @@ do
 					end
 				end
 
-				do
+				if filters.role == nil or type(filters.role) == "table" then
 					filters.role = wipe(filters.role or {})
 					local tbl = filters.role
 					for role in pairs(roles) do
@@ -799,7 +799,7 @@ do
 					end
 				end
 
-				do
+				if filters.class == nil or type(filters.class) == "table" then
 					filters.class = wipe(filters.class or {})
 					local tbl = filters.class
 					for class in pairs(classes) do
@@ -811,8 +811,6 @@ do
 				filters.role = nil
 				filters.class = nil
 			end
-		else
-			wipe(filters)
 		end
 	end
 end
