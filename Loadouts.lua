@@ -746,6 +746,9 @@ do
 	function Internal.GetLoadoutSegment(id)
 		return loadoutSegmentsByID[id]
 	end
+	function Internal.SetLoadoutSegmentEnabled(id, value)
+		loadoutSegmentsByID[id].enabled = value and true or false
+	end
 end
 function Internal.IsActivatingLoadout()
     return target.active

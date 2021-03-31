@@ -831,3 +831,6 @@ function BtWLoadoutsEssencesMixin:Update()
 
 	EssenceScrollFrameUpdate(self.EssenceList);
 end
+function BtWLoadoutsEssencesMixin:SetEnabled(value)
+	BtWLoadoutsTabFrame_SetEnabled(self, value)
+end
