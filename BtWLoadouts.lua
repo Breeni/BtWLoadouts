@@ -1,24 +1,21 @@
 --[[@TODO
-	Minimap icon should show progress texture and help box
+	Loadout and condition restrictions like character
+	Update condition filtering
+	Update set dropdowns to use sidebar filtering
+	New user UI, each tab should have a cleaner ui before creaitng a set
+	-- 1.0.0 breakpoint
 	Equipment flyout
-	Equipment sets should store location? Check what events are fired with upgrading items
 	Equipment sets should store transmog?
 	Loadout keybindings
 	Conditions need to support arena comp?
-	Localization
 	Update new set text button based on tab?
-	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
-	Better info for why a profile is disabled
 	When combining sets, adjust sets for the current player,
 	  eg moving essences because the character missing a ring/essence
-	Better condition loadout list display, show specs
-	Better issue handling
 	Set save button?
-	Show changes for the conditions
+	Show what will change when activating a condition
 	Zone Specific conditions
-	Loadout restrictions like class/character
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
