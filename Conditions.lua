@@ -239,6 +239,7 @@ local function AddConditionSet()
 		type = CONDITION_TYPE_WORLD,
 		map = {},
     };
+	RefreshConditionFilters(set)
     BtWLoadoutsSets.conditions[set.setID] = set;
     return set;
 end
