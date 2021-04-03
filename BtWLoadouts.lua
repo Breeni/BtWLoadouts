@@ -1582,6 +1582,12 @@ do
 		self.categories = value
 	end
 	function BtWLoadoutsSidebarMixin:SetFilters(value)
+		for k in pairs(value) do
+			if not self:SupportsFilters(k) then
+				value[k] = nil
+			end
+		end
+
 		self.filters = value
 	end
 	function BtWLoadoutsSidebarMixin:SetSelected(selected)
