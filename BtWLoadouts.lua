@@ -1039,7 +1039,7 @@ do
 					return true
 				end
 			end
-		elseif tbl == value then
+		elseif (tbl or 0) == value then
 			return true
 		end
 		return false
@@ -1276,20 +1276,20 @@ do
 			return ipairs(instanceTypeEnumeratorList)
 		end
 	end
-	local EnabledEnumerator
+	local DisabledEnumerator
 	do
-		local enabledEnumeratorList = {
+		local disabledEnumeratorList = {
 			{
-				id = 1,
+				id = 0,
 				name = L["Enabled"],
 			},
 			{
-				id = 0,
+				id = 1,
 				name = L["Disabled"],
 			},
 		}
-		function EnabledEnumerator()
-			return ipairs(enabledEnumeratorList)
+		function DisabledEnumerator()
+			return ipairs(disabledEnumeratorList)
 		end
 	end
 	local function FilterEnumerator(filter)
@@ -1305,8 +1305,8 @@ do
 			return CharacterFilterEnumerator()
 		elseif filter == "instanceType" then
 			return InstanceTypeEnumerator()
-		elseif filter == "enabled" then
-			return EnabledEnumerator()
+		elseif filter == "disabled" then
+			return DisabledEnumerator()
 		else
 			error(format("Unsupported filter type %s", filter))
 		end
@@ -1468,10 +1468,10 @@ do
 				info.text = L["Current Character Only"]
 				UIDropDownMenu_AddButton(info, level)
 			end
-			if sidebar:SupportsFilters("enabled") then
-				info.checked = sidebar:GetFilter("enabled") == 1
-				info.arg1 = "enabled"
-				info.arg2 = 1
+			if sidebar:SupportsFilters("disabled") then
+				info.checked = sidebar:GetFilter("disabled") == 0
+				info.arg1 = "disabled"
+				info.arg2 = 0
 				info.text = L["Enabled Sets Only"]
 				UIDropDownMenu_AddButton(info, level)
 			end
@@ -1530,7 +1530,7 @@ do
 			["role"] = L["Role"],
 			["character"] = L["Character"],
 			["instanceType"] = L["Instance Type"],
-			["enabled"] = L["Enabled"],
+			["disabled"] = L["Enabled"],
 		}
 		self.supportedFilters = {}
 	end

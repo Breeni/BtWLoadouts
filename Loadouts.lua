@@ -284,6 +284,8 @@ local function UpdateLoadoutFilters(set)
 		end
 	end
 
+	filters.disabled = set.disabled ~= true and 0 or 1
+
 	set.filters = filters
 
     return set
@@ -1284,7 +1286,7 @@ function BtWLoadoutsProfilesMixin:Update()
 	self:GetParent().TitleText:SetText(L["Profiles"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "disabled")
 	sidebar:SetSets(BtWLoadoutsSets.profiles)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.profiles)
 	sidebar:SetCategories(BtWLoadoutsCategories.profiles)
