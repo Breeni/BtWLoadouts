@@ -1244,10 +1244,6 @@ do
 	do
 		local instanceTypeEnumeratorList = {
 			{
-				id = "none",
-				name = L["World"],
-			},
-			{
 				id = "party",
 				name = L["Dungeon"],
 			},
@@ -1266,6 +1262,10 @@ do
 			{
 				id = "scenario",
 				name = L["Scenarios"],
+			},
+			{
+				id = "none",
+				name = L["World"],
 			},
 			{
 				id = 0,
