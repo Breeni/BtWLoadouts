@@ -240,6 +240,9 @@ function frame:ADDON_LOADED(...)
         if not BtWLoadoutsHelpTipFlags["MINIMAP_ICON"] then
             BtWLoadoutsMinimapButton.FirstTimeAnim:Play();
         end
+
+        Internal.SetLoadoutSegmentEnabled("essences", Internal.Settings.essences)
+        BtWLoadoutsFrame.Essences:SetEnabled(Internal.Settings.essences)
     end
 end
 function frame:PLAYER_LOGIN(...)

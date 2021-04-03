@@ -41,8 +41,10 @@ local function FixPvPTalentSet(set)
 end
 local function UpdatePvPTalentSetFilters(set)
     local specID = set.specID;
-
 	local filters = set.filters or {}
+
+    Internal.UpdateRestrictionFilters(set)
+
 	filters.spec = specID
 	if specID then
 		filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
@@ -237,9 +239,11 @@ local function CombinePvPTalentSets(result, state, ...)
 
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		for talentID in pairs(set.talents) do
-			if result.talents[talentID] == nil then
-				result.talents[talentID] = true;
+		if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+			for talentID in pairs(set.talents) do
+				if result.talents[talentID] == nil then
+					result.talents[talentID] = true;
+				end
 			end
 		end
 	end
@@ -280,6 +284,10 @@ local function CheckErrors(errorState, set)
     if errorState.specID ~= set.specID then
         return L["Incompatible Specialization"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.FixPvPTalentSet = FixPvPTalentSet
@@ -468,6 +476,11 @@ end
 
 BtWLoadoutsPvPTalentsMixin = {}
 function BtWLoadoutsPvPTalentsMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("covenant", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
 	self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
 	self.GridPool = CreateFramePool("FRAME", self, "BtWLoadoutsTalentSelectionTemplate")
 end
@@ -629,6 +642,11 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 
 		UpdatePvPTalentSetFilters(set)
 		sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations()
+		self.RestrictionsButton:SetEnabled(true);
 
 		local selected = self.set.talents;
 

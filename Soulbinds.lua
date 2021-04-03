@@ -92,8 +92,17 @@ end
 --[[ SET HANDLING ]]
 
 local function UpdateSetFilters(set)
-    set.filters = set.filters or {}
-    wipe(set.filters)
+	local filters = set.filters or {}
+    wipe(filters)
+    
+    Internal.UpdateRestrictionFilters(set)
+
+	filters.soulbind = set.soulbindID
+    
+    local soulbindData = GetSoulbindData(set.soulbindID)
+    filters.covenant = soulbindData.covenantID
+    
+	set.filters = filters
 
     return set
 end
@@ -198,7 +207,7 @@ local function CombineSets(result, state, ...)
         for i=1,select('#', ...) do
             local set = select(i, ...);
             local soulbindData = GetSoulbindData(set.soulbindID)
-            if soulbindData.covenantID == covenantID and soulbindData.unlocked then
+            if soulbindData.covenantID == covenantID and soulbindData.unlocked and Internal.AreRestrictionsValidForPlayer(set.restrictions) then
                 result.soulbindID = set.soulbindID
                 result.nodes = set.nodes
             end
@@ -236,6 +245,13 @@ local function ActivateSet(set, state)
     end
 
 	return complete
+end
+local function CheckErrors(errorState, set)
+    set = GetSet(set)
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 local function DropDown_OnClick(self, arg1, arg2, checked)
@@ -328,6 +344,7 @@ Internal.AddLoadoutSegment({
     isActive = IsSetActive,
 	activate = ActivateSet,
 	dropdowninit = DropDownInit,
+	checkerrors = CheckErrors,
 })
 
 -- [[ TAB UI ]]
@@ -505,6 +522,11 @@ end
 
 BtWLoadoutsSoulbindsMixin = {}
 function BtWLoadoutsSoulbindsMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
     self.temp = {}
     self.nodes = CreateFramePool("BUTTON", self, "BtWLoadoutsSoulbindNodeTemplate");
     self.links = CreateFramePool("FRAME", self, "BtWLoadoutsSoulbindTreeNodeLinkTemplate");
@@ -642,7 +664,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
     self:GetParent().TitleText:SetText(L["Soulbinds"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters()
+	sidebar:SetSupportedFilters("covenant")
 	sidebar:SetSets(BtWLoadoutsSets.soulbinds)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.soulbinds)
 	sidebar:SetCategories(BtWLoadoutsCategories.soulbinds)
@@ -662,6 +684,11 @@ function BtWLoadoutsSoulbindsMixin:Update()
 
 		UpdateSetFilters(set)
         sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations()
+		self.RestrictionsButton:SetEnabled(true);
 
         if not self.Name:HasFocus() then
             self.Name:SetText(self.set.name or "");
@@ -746,6 +773,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
     else
         self.nodes:ReleaseAll()
         self.links:ReleaseAll()
+		self.RestrictionsButton:SetEnabled(false);
         self.Name:SetEnabled(false);
         UIDropDownMenu_DisableDropDown(self.SoulbindDropDown);
         -- self.SoulbindDropDown.Button:SetEnabled(false);

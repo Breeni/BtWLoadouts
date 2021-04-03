@@ -12,6 +12,9 @@ local format = string.format
 
 local function UpdateEssenceSetFilters(set)
 	local filters = set.filters or {}
+
+    Internal.UpdateRestrictionFilters(set)
+	
 	filters.role = set.role
 
 	-- Rebuild character list
@@ -180,8 +183,10 @@ local function CombineEssenceSets(result, state, ...)
 	if CanActivateEssences() and (not state or state.heartEquipped) then -- Check if essences have been unlocked and we will have the heart equipped
 		for i=1,select('#', ...) do
 			local set = select(i, ...);
-			for milestoneID, essenceID in pairs(set.essences) do
-				result.essences[milestoneID] = essenceID;
+			if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+				for milestoneID, essenceID in pairs(set.essences) do
+					result.essences[milestoneID] = essenceID;
+				end
 			end
 		end
 
@@ -254,6 +259,10 @@ local function CheckErrors(errorState, set)
     if errorState.role ~= set.role then
         return L["Incompatible Role"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.GetEssenceSets = GetEssenceSets
@@ -567,6 +576,11 @@ end
 
 BtWLoadoutsEssencesMixin = {}
 function BtWLoadoutsEssencesMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
 	self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
 	self.pending = nil;
 end
@@ -719,8 +733,14 @@ function BtWLoadoutsEssencesMixin:Update()
 
 		UpdateEssenceSetFilters(set)
 		sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations("role", set.role)
+		self.RestrictionsButton:SetEnabled(true);
 
 		self.Name:SetEnabled(true);
+		self.RestrictionsButton:SetEnabled(true);
 		self.RoleDropDown.Button:SetEnabled(true);
 		self.MajorSlot:SetEnabled(true);
 		self.MinorSlot1:SetEnabled(true);
@@ -780,6 +800,7 @@ function BtWLoadoutsEssencesMixin:Update()
 		addButton.Flash:Hide();
 		addButton.FlashAnim:Stop();
 	else
+		self.RestrictionsButton:SetEnabled(false);
 		self.Name:SetEnabled(false);
 		self.RoleDropDown.Button:SetEnabled(false);
 		self.MajorSlot:SetEnabled(false);
@@ -830,4 +851,7 @@ function BtWLoadoutsEssencesMixin:Update()
 	end
 
 	EssenceScrollFrameUpdate(self.EssenceList);
+end
+function BtWLoadoutsEssencesMixin:SetEnabled(value)
+	BtWLoadoutsTabFrame_SetEnabled(self, value)
 end

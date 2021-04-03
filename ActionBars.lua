@@ -183,6 +183,16 @@ do
     hooksecurefunc("EditMacro", EditMacroHook)
 end
 
+local function UpdateFilters(set)
+	local filters = set.filters or {}
+
+    Internal.UpdateRestrictionFilters(set)
+
+	set.filters = filters
+
+    return set
+end
+
 local covenantClassAbilities = {
     [313347] = false, -- Zone ability base spell
 
@@ -674,7 +684,7 @@ local function RefreshActionBarSet(set)
 
     set.actions = actions
 
-    return set
+    return UpdateFilters(set)
 end
 local function AddActionBarSet()
     local classFile = select(2, UnitClass("player"))
@@ -725,14 +735,16 @@ local function CombineActionBarSets(result, state, ...)
 
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		for slot=1,120 do
-            if not set.ignored[slot] then
-                result.ignored[slot] = false
-                if PickupActionTable(set.actions[slot], true, set.settings, state ~= nil) or result.actions[slot] == nil then
-                    result.actions[slot] = set.actions[slot]
+        if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+            for slot=1,120 do
+                if not set.ignored[slot] then
+                    result.ignored[slot] = false
+                    if PickupActionTable(set.actions[slot], true, set.settings, state ~= nil) or result.actions[slot] == nil then
+                        result.actions[slot] = set.actions[slot]
+                    end
                 end
             end
-		end
+        end
     end
     
     if state then
@@ -762,6 +774,13 @@ local function DeleteActionBarSet(id)
 	if set.setID == id then
 		frame.set = nil
 		BtWLoadoutsFrame:Update()
+	end
+end
+local function CheckErrors(errorState, set)
+    set = GetActionBarSet(set)
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
 	end
 end
 
@@ -886,6 +905,7 @@ Internal.AddLoadoutSegment({
     isActive = IsActionBarSetActive,
     activate = ActivateActionBarSet,
     dropdowninit = ActionBarDropDownInit,
+	checkerrors = CheckErrors,
 })
 
 BtWLoadoutsActionButtonMixin = {}
@@ -1078,45 +1098,62 @@ end
 local function DropDown_Initialize(self, level, menuList)
     local set = BtWLoadoutsFrame.ActionBars.set
     if set then
-        local info = UIDropDownMenu_CreateInfo()
-        info.func = function (self, arg1, arg2, checked)
-            set.settings = set.settings or {}
-            set.settings.adjustCovenant = not checked
+		if (level or 1) == 1 then
+            local info = UIDropDownMenu_CreateInfo()
+            info.func = function (self, arg1, arg2, checked)
+                set.settings = set.settings or {}
+                set.settings.adjustCovenant = not checked
 
-            BtWLoadoutsFrame:Update()
+                BtWLoadoutsFrame:Update()
+            end
+            info.checked = set.settings and set.settings.adjustCovenant
+            info.text = L["Adjust Covenant Abilities"]
+            UIDropDownMenu_AddButton(info, level)
+
+            
+            info.func = function (self, arg1, arg2, checked)
+                set.settings = set.settings or {}
+                set.settings.createMissingMacros = not checked
+                set.settings.createMissingMacrosCharacter = false
+
+                BtWLoadoutsFrame:Update()
+            end
+            info.checked = set.settings and set.settings.createMissingMacros
+            info.text = L["Create Missing Macros"]
+            UIDropDownMenu_AddButton(info, level)
+
+            
+            info.func = function (self, arg1, arg2, checked)
+                set.settings = set.settings or {}
+                set.settings.createMissingMacrosCharacter = not checked
+                set.settings.createMissingMacros = false
+
+                BtWLoadoutsFrame:Update()
+            end
+            info.checked = set.settings and set.settings.createMissingMacrosCharacter
+            info.text = L["Create Missing Macros (Character Only)"]
+            UIDropDownMenu_AddButton(info, level)
+
+            UIDropDownMenu_AddSeparator()
+
+            info.isTitle, info.notCheckable, info.checked, info.func = true, true, false, nil
+            info.text = L["Restrictions"]
+            UIDropDownMenu_AddButton(info, level)
         end
-        info.checked = set.settings and set.settings.adjustCovenant
-        info.text = L["Adjust Covenant Abilities"]
-        UIDropDownMenu_AddButton(info, level)
 
-        
-        info.func = function (self, arg1, arg2, checked)
-            set.settings = set.settings or {}
-            set.settings.createMissingMacros = not checked
-            set.settings.createMissingMacrosCharacter = false
-
-            BtWLoadoutsFrame:Update()
-        end
-        info.checked = set.settings and set.settings.createMissingMacros
-        info.text = L["Create Missing Macros"]
-        UIDropDownMenu_AddButton(info, level)
-
-        
-        info.func = function (self, arg1, arg2, checked)
-            set.settings = set.settings or {}
-            set.settings.createMissingMacrosCharacter = not checked
-            set.settings.createMissingMacros = false
-
-            BtWLoadoutsFrame:Update()
-        end
-        info.checked = set.settings and set.settings.createMissingMacrosCharacter
-        info.text = L["Create Missing Macros (Character Only)"]
-        UIDropDownMenu_AddButton(info, level)
+        self.OrigInitFunc(self, level, menuList)
     end
 end
 BtWLoadoutsActionBarsMixin = {}
+function BtWLoadoutsActionBarsMixin:OnLoad()
+    self.SettingsDropDown:SetSupportedTypes("covenant", "spec", "race")
+    self.SettingsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+end
 function BtWLoadoutsActionBarsMixin:OnShow()
     if not self.initialized then
+        self.SettingsDropDown.OrigInitFunc = self.SettingsDropDown.initialize
         UIDropDownMenu_Initialize(self.SettingsDropDown, DropDown_Initialize, "MENU");
         self.initialized = true
     end
@@ -1237,7 +1274,7 @@ function BtWLoadoutsActionBarsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters()
+	sidebar:SetSupportedFilters("covenant", "spec", "class", "role")
 	sidebar:SetSets(BtWLoadoutsSets.actionbars)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.actionbars)
 	sidebar:SetCategories(BtWLoadoutsCategories.actionbars)
@@ -1248,8 +1285,18 @@ function BtWLoadoutsActionBarsMixin:Update()
 	self.set = sidebar:GetSelected()
 
 	if self.set ~= nil then
+		self.SettingsButton:SetEnabled(true);
+
 		local set = self.set;
 		local slots = set.actions;
+
+		UpdateFilters(set)
+		sidebar:Update()
+
+        set.restrictions = set.restrictions or {}
+        self.SettingsDropDown:SetSelections(set.restrictions)
+        self.SettingsDropDown:SetLimitations()
+		self.SettingsButton:SetEnabled(true);
 
 		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
@@ -1296,6 +1343,8 @@ function BtWLoadoutsActionBarsMixin:Update()
             helpTipBox:Hide();
         end
 	else
+		self.SettingsButton:SetEnabled(false);
+
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");
 

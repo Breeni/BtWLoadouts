@@ -1121,6 +1121,9 @@ do
 end
 local function UpdateEquipmentSetFilters(set)
 	local filters = set.filters or {}
+	
+    Internal.UpdateRestrictionFilters(set)
+
 	filters.character = set.character
 	set.filters = filters
 
@@ -1267,7 +1270,7 @@ local function CombineEquipmentSets(result, state, ...)
 	end
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		if set.character == playerCharacter then -- Skip other characters
+		if set.character == playerCharacter and Internal.AreRestrictionsValidForPlayer(set.restrictions) then -- Skip other characters
 			if set.managerID then -- Just making sure everything is up to date
 				local ignored = C_EquipmentSet.GetIgnoredSlots(set.managerID);
 				local locations = C_EquipmentSet.GetItemLocations(set.managerID);
@@ -1369,6 +1372,10 @@ local function CheckErrors(errorState, set)
 	if errorState.class ~= characterInfo.class then
         return L["Incompatible Class"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.GetEquipmentSet = GetEquipmentSet
@@ -1812,6 +1819,12 @@ GameTooltip:HookScript("OnTooltipSetItem", function (self)
 end)
 
 BtWLoadoutsEquipmentMixin = {}
+function BtWLoadoutsEquipmentMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+end
 function BtWLoadoutsEquipmentMixin:ChangeSet(set)
     self.set = set
     self:Update()
@@ -1931,7 +1944,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 	self:GetParent().TitleText:SetText(L["Equipment"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("character")
+	sidebar:SetSupportedFilters("spec", "character")
 	sidebar:SetSets(BtWLoadoutsSets.equipment)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.equipment)
 	sidebar:SetCategories(BtWLoadoutsCategories.equipment)
@@ -1946,6 +1959,11 @@ function BtWLoadoutsEquipmentMixin:Update()
 
 		UpdateEquipmentSetFilters(set)
 		sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+		self.RestrictionsButton:SetEnabled(true);
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations("character", set.character)
 
 		local errors = CheckEquipmentSetForIssues(set)
 
@@ -2037,6 +2055,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 			end
 		end
 	else
+		self.RestrictionsButton:SetEnabled(false)
 		self.Name:SetEnabled(false);
 		self.Name:SetText("");
 

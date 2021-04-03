@@ -1,24 +1,21 @@
 --[[@TODO
-	Minimap icon should show progress texture and help box
+	Loadout and condition restrictions like character
+	Update condition filtering
+	Update set dropdowns to use sidebar filtering
+	New user UI, each tab should have a cleaner ui before creaitng a set
+	-- 1.0.0 breakpoint
 	Equipment flyout
-	Equipment sets should store location? Check what events are fired with upgrading items
 	Equipment sets should store transmog?
 	Loadout keybindings
 	Conditions need to support arena comp?
-	Localization
 	Update new set text button based on tab?
-	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
-	Better info for why a profile is disabled
 	When combining sets, adjust sets for the current player,
 	  eg moving essences because the character missing a ring/essence
-	Better condition loadout list display, show specs
-	Better issue handling
 	Set save button?
-	Show changes for the conditions
+	Show what will change when activating a condition
 	Zone Specific conditions
-	Loadout restrictions like class/character
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
@@ -52,6 +49,7 @@ BTWLOADOUTS_ENABLED = L["Enabled"]
 BTWLOADOUTS_UPDATE = L["Update"]
 BTWLOADOUTS_LOG = L["Log"]
 BTWLOADOUTS_CHARACTER_RESTRICTIONS = L["Character Restrictions"]
+BTWLOADOUTS_RESTRICTIONS = L["Restrictions"]
 
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
@@ -69,11 +67,9 @@ local function SettingsCreate(options)
 	local mt = {};
 	function mt:__call (tbl)
 		setmetatable(tbl, {__index = defaults});
-		-- local mt = getmetatable(self);
 		mt.__index = tbl;
 	end
 	function mt:__newindex (key, value)
-		-- local mt = getmetatable(self);
 		mt.__index[key] = value;
 
 		local option = optionsByKey[key];
@@ -116,6 +112,16 @@ local Settings = SettingsCreate({
         name = L["Filter chat spam while changing loadouts"],
         key = "filterChatSpam",
         default = false,
+    },
+    {
+        name = L["Enable Essences"],
+        key = "essences",
+        onChange = function (id, value)
+			BtWLoadoutsFrame.Essences:SetEnabled(value)
+			Internal.SetLoadoutSegmentEnabled(id, value)
+			BtWLoadoutsFrame:Update()
+        end,
+        default = true,
     },
 });
 Internal.Settings = Settings;
@@ -495,6 +501,377 @@ function BtWLoadoutsSpecDropDownMixin:OnShow()
 	end
 end
 
+-- Restrictions Drop Down, used by sets to handle limit activation
+do
+	--
+	local races = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 22, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37}
+	local classes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+	local specializations = {}
+	do -- Build Spec List
+		for classIndex=1,GetNumClasses() do
+			local _, _, classID = GetClassInfo(classIndex)
+			for specIndex=1,GetNumSpecializationsForClassID(classID) do
+				local specID = GetSpecializationInfoForClassID(classID, specIndex);
+				specializations[#specializations+1] = specID
+			end
+		end
+	end
+	local charaterEnumertorList = {}
+	local types = {
+		covenant = {
+			name = L["Covenant"],
+			enumerate = function ()
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, tbl[index], C_Covenants.GetCovenantData(tbl[index]).name
+					end
+				end, C_Covenants.GetCovenantIDs(), 0
+			end,
+		},
+		race = {
+			name = L["Race"],
+			enumerate = function ()
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, tbl[index], GetFactionColor(C_CreatureInfo.GetFactionInfo(tbl[index]).groupTag):WrapTextInColorCode(C_CreatureInfo.GetRaceInfo(tbl[index]).raceName)
+					end
+				end, races, 0
+			end,
+		},
+		class = {
+			name = L["Class"],
+			enumerate = function ()
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, tbl[index], C_CreatureInfo.GetClassInfo(tbl[index]).className
+					end
+				end, classes, 0
+			end,
+		},
+		spec = {
+			name = L["Specialization"],
+			enumerate = function (limitations, includeLimitations)
+				local limitRole, limitClassFile
+				if limitations then
+					limitRole = limitations.role
+					if limitations.character then
+						local characterData = Internal.GetCharacterInfo(limitations.character)
+						limitClassFile = characterData.class
+					end
+				end
+
+				return function (tbl, index)
+					repeat
+						index = index + 1
+					until not tbl[index] or includeLimitations or (
+						(limitClassFile == nil or limitClassFile == (select(6, GetSpecializationInfoByID(tbl[index])))) and
+						(limitRole == nil or limitRole == (select(5, GetSpecializationInfoByID(tbl[index]))))
+					)
+
+					if tbl[index] then
+						local _, specName, _, _, role, classFile, className = GetSpecializationInfoByID(tbl[index])
+						local classColor = C_ClassColor.GetClassColor(classFile);
+						local name = format("%s - %s", classColor:WrapTextInColorCode(className), specName)
+
+						return index, tbl[index], name, not (
+							(limitClassFile == nil or limitClassFile == classFile) and
+							(limitRole == nil or limitRole == role)
+						)
+					end
+				end, specializations, 0
+			end,
+		},
+		character = {
+			name = L["Character"],
+			enumerate = function ()
+				wipe(charaterEnumertorList)
+	
+				local name = UnitName("player")
+				local character = GetCharacterSlug();
+				local characterInfo = GetCharacterInfo(character);
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+					name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+				end
+				charaterEnumertorList[#charaterEnumertorList+1] = {character, name}
+	
+				local playerCharacter = character
+				for _,character in Internal.CharacterIterator() do
+					if playerCharacter ~= character then
+						local characterInfo = GetCharacterInfo(character);
+						if characterInfo then
+							local classColor = C_ClassColor.GetClassColor(characterInfo.class);
+							name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
+						end
+						charaterEnumertorList[#charaterEnumertorList+1] = {character,name}
+					end
+				end
+	
+				return function (tbl, index)
+					index = index + 1
+					if tbl[index] then
+						return index, unpack(tbl[index])
+					end
+				end, charaterEnumertorList, 0
+			end,
+		},
+	}
+
+	local function DropDown_OnClick(self, arg1, arg2, checked)
+	end
+	local function DropDownInit(self, level, menuList)
+		local function OnClick(_, arg1, arg2, checked)
+			self:ToggleSelected(arg1, arg2)
+		end
+
+		local info = UIDropDownMenu_CreateInfo()
+		if (level or 1) == 1 then
+			local hasSelected = false
+
+			info.func = OnClick
+			info.checked = true
+			info.keepShownOnClick = true
+			for _,type,key,name, restricted in self:EnumerateSelected() do
+				info.text = restricted and string.format("|CFFFF8080%s|r", name) or name
+				info.arg1 = type
+				info.arg2 = key
+
+				info.tooltipOnButton = restricted
+				if restricted then
+					info.tooltipTitle = name
+					info.tooltipText = L["Incompatible Restrictions"]
+				else
+					info.tooltipTitle = nil
+					info.tooltipText = nil
+				end
+
+				UIDropDownMenu_AddButton(info, level)
+
+				hasSelected = true
+			end
+			
+			info.tooltipOnButton = false
+			info.tooltipTitle = nil
+			info.tooltipText = nil
+
+			if hasSelected then
+				UIDropDownMenu_AddSeparator()
+			end
+			
+			info.func = nil
+			info.checked = nil
+			for _,type,name in self:EnumerateSupportedTypes() do
+				info.text = name
+				info.hasArrow, info.menuList = true, type
+				info.notCheckable = true
+				UIDropDownMenu_AddButton(info, level)
+			end
+		else
+			info.func = OnClick
+			info.keepShownOnClick = true
+			for _,key,name in self:EnumerateType(menuList) do
+				info.text = name
+				info.arg1 = menuList
+				info.arg2 = key
+				info.checked = self:IsSelected(menuList, key)
+				UIDropDownMenu_AddButton(info, level)
+			end
+		end
+	end
+
+	BtWLoadoutsRestrictionsDropDownMixin = {}
+	function BtWLoadoutsRestrictionsDropDownMixin:OnLoad()
+		self.selected = {}
+		self.supportedTypes = {}
+		self.limitations = {}
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:OnShow()
+		if not self.initialized then
+			UIDropDownMenu_Initialize(self, DropDownInit, "MENU")
+			self.initialized = true
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateSelected()
+		local selected = {}
+
+		for _,type,typeName in self:EnumerateSupportedTypes() do
+			if self.selected[type] and next(self.selected[type]) then
+				for _,key,name,restricted in self:EnumerateType(type, true) do
+					if self:IsSelected(type, key) then
+						selected[#selected+1] = {type, key, string.format("%s: %s", typeName, name), restricted}
+					end
+				end
+			end
+		end
+
+		return function (tbl, index)
+			index = index + 1
+			if tbl[index] then
+				return index, unpack(tbl[index])
+			end
+		end, selected, 0
+	end
+	local selectionTemp = {}
+	function BtWLoadoutsRestrictionsDropDownMixin:SetSelections(tbl)
+		assert(type(tbl) == "table", "Expected table")
+
+		-- Clean up tbl based on available types
+		wipe(selectionTemp)
+		for _,t in ipairs(self.supportedTypes) do
+			selectionTemp[t] = tbl[t]
+		end
+		wipe(tbl)
+		for k,v in pairs(selectionTemp) do
+			tbl[k] = v
+		end
+
+		self.selected = tbl
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:ClearSelected()
+		wipe(self.selected)
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:IsSelected(type, key)
+		return self.selected[type] and self.selected[type][key]
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:ToggleSelected(type, key)
+		self.selected[type] = self.selected[type] or {}
+		if self.selected[type][key] then
+			self.selected[type][key] = nil
+		else
+			self.selected[type][key] = true
+		end
+
+		if self.onchange then
+			self:onchange(type, key)
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:SetSupportedTypes(...)
+		wipe(self.supportedTypes)
+		for i=1,select('#', ...) do
+			local type = strlower(select(i, ...))
+			assert(types[type] ~= nil, "Unavailable type " .. type)
+			self.supportedTypes[i] = type
+		end
+	end
+	-- Allow limiting some supported types, like characters to limit spec or role to limit spec.
+	function BtWLoadoutsRestrictionsDropDownMixin:SetLimitations(...)
+		wipe(self.limitations)
+
+		for i=1,select('#', ...),2 do
+			local k,v = select(i, ...)
+			self.limitations[k] = v
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateSupportedTypes()
+		return function (tbl, index)
+			index = index + 1
+			local type = tbl[index]
+			if type then
+				return index, type, types[type].name
+			end
+		end, self.supportedTypes, 0
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateType(type, includeLimitations)
+		return types[type].enumerate(self.limitations, includeLimitations)
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:SetScript(scriptType, handler)
+		if scriptType == "OnChange" then
+			self.onchange = handler
+		else
+			getmetatable(self).SetScript(self, scriptType, handler)
+		end
+	end
+
+	function Internal.UpdateRestrictionFilters(set)
+		if set.restrictions then
+			local filters = set.filters
+			
+			-- Covenant
+			if set.restrictions.covenant and next(set.restrictions.covenant) then
+				filters.covenant = wipe(filters.covenant or {})
+				local tbl = filters.covenant
+				for covenant in pairs(set.restrictions.covenant) do
+					tbl[#tbl+1] = covenant
+				end
+			else
+				filters.covenant = nil
+			end
+			
+			-- Specialization
+			local roles = {}
+			local classes = {}
+			if set.restrictions.spec and next(set.restrictions.spec) then
+				if filters.spec == nil or type(filters.spec) == "table" then
+					filters.spec = wipe(filters.spec or {})
+					local tbl = filters.spec
+					for spec in pairs(set.restrictions.spec) do
+						local role, class = select(5, GetSpecializationInfoByID(spec))
+
+						roles[role] = true
+						classes[class] = true
+
+						tbl[#tbl+1] = spec
+					end
+				end
+
+				if filters.role == nil or type(filters.role) == "table" then
+					filters.role = wipe(filters.role or {})
+					local tbl = filters.role
+					for role in pairs(roles) do
+						tbl[#tbl+1] = role
+					end
+				end
+
+				if filters.class == nil or type(filters.class) == "table" then
+					filters.class = wipe(filters.class or {})
+					local tbl = filters.class
+					for class in pairs(classes) do
+						tbl[#tbl+1] = class
+					end
+				end
+			else
+				filters.spec = nil
+				filters.role = nil
+				filters.class = nil
+			end
+		end
+	end
+	function Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
+		if restrictions then
+			if restrictions.spec and specID ~= nil then
+				if not restrictions.spec[specID] then
+					return false
+				end
+			end
+			
+			if restrictions.covenant and covenantID ~= nil then
+				if not restrictions.covenant[covenantID] then
+					return false
+				end
+			end
+			
+			if restrictions.race and raceID ~= nil then
+				if not restrictions.race[id] then
+					return false
+				end
+			end
+		end
+	
+		return true
+	end
+	-- Used by combine functions to check set restrictions
+	function Internal.AreRestrictionsValidForPlayer(restrictions)
+		local specID = GetSpecializationInfo(GetSpecialization()) or false
+		local covenantID = C_Covenants.GetActiveCovenantID() or false
+		local raceID = select(3, UnitRace("player")) or false
+	
+		return Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
+	end
+end
+
 --[[
 	Character selection drop down menu
 ]]
@@ -683,6 +1060,30 @@ do
 		end
 
 		return result
+	end
+	local CovenantFilterEnumerator
+	do
+		local tbl
+		function CovenantFilterEnumerator()
+			if tbl == nil then
+				tbl = {}
+
+				for _,id in ipairs(C_Covenants.GetCovenantIDs()) do
+					local data = C_Covenants.GetCovenantData(id)
+					tbl[#tbl+1] = {
+						id = id,
+						name = data.name,
+					}
+				end
+				
+				tbl[#tbl+1] = {
+					id = 0,
+					name = L["Other"],
+				}
+			end
+
+			return ipairs(tbl)
+		end
 	end
 	local SpecFilterEnumerator
 	do
@@ -876,7 +1277,9 @@ do
 		end
 	end
 	local function FilterEnumerator(filter)
-		if filter == "spec" then
+		if filter == "covenant" then
+			return CovenantFilterEnumerator()
+		elseif filter == "spec" then
 			return SpecFilterEnumerator()
 		elseif filter == "class" then
 			return ClassFilterEnumerator()
@@ -886,7 +1289,7 @@ do
 			return CharacterFilterEnumerator()
 		elseif filter == "instanceType" then
 			return InstanceTypeEnumerator()
-		else -- @TODO Character, role
+		else
 			error(format("Unsupported filter type %s", filter))
 		end
 	end
@@ -1050,14 +1453,14 @@ do
 
 			if sidebar:GetSupportedFilters() then
 				info.isTitle = true
-				info.isCheckable = false
+				info.notCheckable = true
 				info.checked = false
 				info.text = L["Categories"]
 				UIDropDownMenu_AddButton(info, level)
 
 				info.isTitle = false
 				info.disabled = false
-				info.isCheckable = true
+				info.notCheckable = false
 				info.checked = true
 				info.func = function (self, arg1)
 					sidebar:RemoveCategory(arg1)
@@ -1096,6 +1499,7 @@ do
 	BtWLoadoutsSidebarMixin = {}
 	function BtWLoadoutsSidebarMixin:OnLoad()
 		self.names = {
+			["covenant"] = L["Covenant"],
 			["spec"] = L["Specialization"],
 			["class"] = L["Class"],
 			["role"] = L["Role"],
@@ -1253,6 +1657,36 @@ do
 		end
 		PanelTemplates_UpdateTabs(frame);
 	end
+	function BtWLoadoutsTabFrame_SetEnabled(self, value)
+		self.enabled = value and true or false
+		BtWLoadoutsTabFrame_ReanchorTabs(self)
+	end
+	function BtWLoadoutsTabFrame_ReanchorTabs(self)
+		local frame = self:GetParent()
+		local Tabs = frame.Tabs
+		local TabFrames = frame.TabFrames
+
+		local index = self:GetID() - 1
+		local previous = Tabs[index]
+		while previous and not previous:IsShown() do
+			index = index - 1
+			previous = Tabs[index]
+		end
+		for i=self:GetID(),#Tabs do
+			local tab = Tabs[i]
+			local tabFrame = TabFrames[i]
+
+			tab:SetShown(tabFrame.enabled ~= false)
+			if tabFrame.enabled ~= false then
+				if previous then
+					tab:SetPoint("LEFT", previous, "RIGHT", -16, 0)
+				else
+					tab:SetPoint("BOTTOMLEFT", 7, -30)
+				end
+				previous = tab
+			end
+		end
+	end
 
 	BtWLoadoutsFrameMixin = {};
 	function BtWLoadoutsFrameMixin:OnLoad()
@@ -1323,6 +1757,11 @@ do
 	end
 	function BtWLoadoutsFrameMixin:Update()
 		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1
+		if self.TabFrames[selectedTab].enabled == false then
+			selectedTab = 1
+			PanelTemplates_SetTab(self, selectedTab)
+		end
+
 		for id,frame in ipairs(self.TabFrames) do
 			frame:SetShown(id == selectedTab)
 		end
