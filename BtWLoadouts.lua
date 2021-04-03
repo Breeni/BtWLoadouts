@@ -1276,6 +1276,22 @@ do
 			return ipairs(instanceTypeEnumeratorList)
 		end
 	end
+	local EnabledEnumerator
+	do
+		local enabledEnumeratorList = {
+			{
+				id = 1,
+				name = L["Enabled"],
+			},
+			{
+				id = 0,
+				name = L["Disabled"],
+			},
+		}
+		function EnabledEnumerator()
+			return ipairs(enabledEnumeratorList)
+		end
+	end
 	local function FilterEnumerator(filter)
 		if filter == "covenant" then
 			return CovenantFilterEnumerator()
@@ -1289,6 +1305,8 @@ do
 			return CharacterFilterEnumerator()
 		elseif filter == "instanceType" then
 			return InstanceTypeEnumerator()
+		elseif filter == "enabled" then
+			return EnabledEnumerator()
 		else
 			error(format("Unsupported filter type %s", filter))
 		end
@@ -1450,6 +1468,13 @@ do
 				info.text = L["Current Character Only"]
 				UIDropDownMenu_AddButton(info, level)
 			end
+			if sidebar:SupportsFilters("enabled") then
+				info.checked = sidebar:GetFilter("enabled") == 1
+				info.arg1 = "enabled"
+				info.arg2 = 1
+				info.text = L["Enabled Sets Only"]
+				UIDropDownMenu_AddButton(info, level)
+			end
 
 			if sidebar:GetSupportedFilters() then
 				info.isTitle = true
@@ -1505,6 +1530,7 @@ do
 			["role"] = L["Role"],
 			["character"] = L["Character"],
 			["instanceType"] = L["Instance Type"],
+			["enabled"] = L["Enabled"],
 		}
 		self.supportedFilters = {}
 	end
