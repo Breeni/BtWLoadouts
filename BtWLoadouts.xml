@@ -10,7 +10,6 @@
 
 	<Frame name="BtWLoadoutsCharacterDropDownTemplate" mixin="BtWLoadoutsCharacterDropDownMixin" inherits="UIDropDownMenuTemplate" enableMouse="true" virtual="true">
 		<Scripts>
-			<OnLoad method="OnLoad"/>
 			<OnShow method="OnShow"/>
 		</Scripts>
 	</Frame>
