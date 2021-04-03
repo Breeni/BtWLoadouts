@@ -157,6 +157,7 @@ local function IsConditionEnabled(set)
 end
 local function RefreshConditionFilters(set)
 	local filters = set.filters or {}
+
 	local specID
 	if set.profileSet then
 		local profile = Internal.GetProfile(set.profileSet)
@@ -181,7 +182,7 @@ local function RefreshConditionFilters(set)
 	else
 		local class = filters.class
 		for _,character in Internal.CharacterIterator() do
-			if class == Internal.GetCharacterInfo(character).class then
+			if class == nil or class == Internal.GetCharacterInfo(character).class then
 				characters[#characters+1] = character
 			end
 		end
