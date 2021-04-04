@@ -890,7 +890,7 @@ do
 			info.keepShownOnClick = true;
 			info.notCheckable = true;
 
-			for _,key,name,restricted in Internal.Filters[filter].enumerate() do
+			for _,key,name,restricted in Internal.Filters[filter].enumerate(nil, false, true) do
 				if menuList[key] then
 					info.text = name
 					info.menuList = menuList[key]--(menuList and (menuList .. ".") or "") .. key
@@ -899,7 +899,17 @@ do
 			end
 		else
 			info.func = OnClick;
+			Internal.SortSets(menuList)
+
+			local hasPreItems = false
 			for k,set in pairs(menuList) do
+				if hasPreItems and (set.order or 0) >= 0 then
+					UIDropDownMenu_AddSeparator(level)
+					hasPreItems = false
+				elseif not hasPreItems and set.order and set.order < 0 then
+					hasPreItems = true
+				end
+
 				info.text = set.name ~= "" and set.name or L["Unnamed"];
 				info.arg1 = set.setID;
 				info.func = OnClick;

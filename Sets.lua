@@ -246,8 +246,11 @@ local function SortSets(o)
 		return #dec > 0 and ("%.12f"):format(d) or ("%s%03d%s"):format(dec, #n, n)
 	end
 	table.sort(o, function(a,b)
-		  return tostring(a.name):gsub("%.?%d+", padnum)..("%3d"):format(#b.name)
-			 < tostring(b.name):gsub("%.?%d+", padnum)..("%3d"):format(#a.name)
+		if (a.order or 0) == (b.order or 0) then
+			return tostring(a.name):gsub("%.?%d+", padnum)..("%3d"):format(#b.name)
+				 < tostring(b.name):gsub("%.?%d+", padnum)..("%3d"):format(#a.name)
+		end
+		return (a.order or 0) < (b.order or 0)
 	end)
 	return o
 end
