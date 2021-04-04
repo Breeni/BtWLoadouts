@@ -718,6 +718,17 @@ do
 				filters.role = nil
 				filters.class = nil
 			end
+			
+			-- Race
+			if set.restrictions.race and next(set.restrictions.race) then
+				filters.race = wipe(filters.race or {})
+				local tbl = filters.race
+				for race in pairs(set.restrictions.race) do
+					tbl[#tbl+1] = race
+				end
+			else
+				filters.race = nil
+			end
 		end
 	end
 	function Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
