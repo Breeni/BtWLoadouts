@@ -304,7 +304,7 @@ Internal.GetPvPTalentSets = GetPvPTalentSets
 
 -- Initializes the set dropdown menu for the Loadouts page
 local function SetDropDownInit(self, set, index)
-    Internal.SetDropDownInit(self, set, index, "actionbars", BtWLoadoutsFrame.ActionBars)
+    Internal.SetDropDownInit(self, set, index, "pvptalents", BtWLoadoutsFrame.PvPTalents)
 end
 
 Internal.AddLoadoutSegment({
