@@ -59,6 +59,7 @@ function frame:ADDON_LOADED(...)
             pvptalents = {"spec"},
             essences = {"role"},
             equipment = {"character"},
+            soulbinds = {"covenant"},
             actionbars = {},
             conditions = {},
         }, {
