@@ -733,19 +733,19 @@ do
 	end
 	function Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
 		if restrictions then
-			if restrictions.spec and specID ~= nil then
+			if restrictions.spec and next(restrictions.spec) and specID ~= nil then
 				if not restrictions.spec[specID] then
 					return false
 				end
 			end
 			
-			if restrictions.covenant and covenantID ~= nil then
+			if restrictions.covenant and next(restrictions.covenant) and covenantID ~= nil then
 				if not restrictions.covenant[covenantID] then
 					return false
 				end
 			end
 			
-			if restrictions.race and raceID ~= nil then
+			if restrictions.race and next(restrictions.race) and raceID ~= nil then
 				if not restrictions.race[id] then
 					return false
 				end
