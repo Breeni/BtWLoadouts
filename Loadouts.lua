@@ -260,7 +260,7 @@ local function IsLoadoutActivatable(set)
 	return true
 end
 
-local function UpdateLoadoutFilters(set)
+local function UpdateSetFilters(set)
 	local specID = set.specID
 
 	local filters = set.filters or {}
@@ -301,7 +301,7 @@ local function AddProfile()
 		set[segment.id] = {}
 	end
 
-    return AddSet("profiles", UpdateLoadoutFilters(set))
+    return AddSet("profiles", UpdateSetFilters(set))
 end
 local function GetProfile(id)
     return BtWLoadoutsSets.profiles[id];
@@ -944,9 +944,26 @@ function BtWLoadoutsSetsScrollListItemMixin:OnClick()
 		local DropDown = self:GetParent():GetParent().DropDown
 		local index = self.index
 		local segment = self.type
-		UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-			return Internal.GetLoadoutSegment(segment).dropdowninit(self, level, menuList, index)
-		end)
+
+		local tab = BtWLoadoutsFrame.Profiles
+
+		Internal.GetLoadoutSegment(segment).dropdowninit(DropDown, tab.set, index)
+		
+		-- DropDown:SetSelected(tab.set[segment][index])
+		-- DropDown:SetSets(BtWLoadoutsSets[segment])
+		-- DropDown:SetCategories(BtWLoadoutsCategories[segment])
+		-- DropDown:OnChange(function (newSetID)
+		-- 	local previousSetID = tab.set[segment][index]
+		-- 	print(previousSetID, newSetID)
+		-- 	if set.talents[index] then
+		-- 		local subset = Internal.GetTalentSet(set.talents[index]);
+		-- 		subset.useCount = (subset.useCount or 1) - 1;
+		-- 	end
+		-- end)
+
+		-- UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+		-- 	return Internal.GetLoadoutSegment(segment).dropdowninit(self, level, menuList, index)
+		-- end)
 
 		ToggleDropDownMenu(nil, nil, DropDown, self, 0, 0)
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
@@ -1004,7 +1021,10 @@ end
 function BtWLoadoutsSetsScrollListItemMixin:Add(button)
 	local DropDown = self:GetParent():GetParent().DropDown
 	
-	UIDropDownMenu_SetInitializeFunction(DropDown, Internal.GetLoadoutSegment(self.type).dropdowninit)
+	local segment = self.type
+	local tab = BtWLoadoutsFrame.Profiles
+
+	Internal.GetLoadoutSegment(segment).dropdowninit(DropDown, tab.set)
 
 	ToggleDropDownMenu(nil, nil, DropDown, button, 0, 0)
 	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
@@ -1313,7 +1333,7 @@ function BtWLoadoutsProfilesMixin:Update()
 
 		local set = self.set
 
-		UpdateLoadoutFilters(set)
+		UpdateSetFilters(set)
 		sidebar:Update()
 		
 		if specID == nil or specID == 0 then

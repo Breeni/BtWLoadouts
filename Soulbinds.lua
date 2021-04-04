@@ -334,16 +334,22 @@ local function DropDownInit(self, level, menuList, index)
     end
 end
 
+-- Initializes the set dropdown menu for the Loadouts page
+local function SetDropDownInit(self, set, index)
+    Internal.SetDropDownInit(self, set, index, "soulbinds", BtWLoadoutsFrame.Soulbinds)
+end
+
 Internal.AddLoadoutSegment({
     id = "soulbinds",
     name = L["Soulbinds"],
     events = "SOULBIND_ACTIVATED",
     enabled = BTWLOADOUTS_SOULBINDS_ACTIVE,
+    add = AddSet,
     get = GetSets,
     combine = CombineSets,
     isActive = IsSetActive,
 	activate = ActivateSet,
-	dropdowninit = DropDownInit,
+    dropdowninit = SetDropDownInit,
 	checkerrors = CheckErrors,
 })
 

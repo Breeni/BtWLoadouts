@@ -155,7 +155,7 @@ local function IsConditionEnabled(set)
 
 	return true
 end
-local function RefreshConditionFilters(set)
+local function UpdateSetFilters(set)
 	local filters = set.filters or {}
 
 	local specID
@@ -193,6 +193,8 @@ local function RefreshConditionFilters(set)
 	filters.disabled = set.disabled ~= true and 0 or 1
 
 	set.filters = filters
+
+	return set
 end
 -- Update a condition set with current active conditions
 local function RefreshConditionSet(set)
@@ -227,7 +229,7 @@ local function RefreshConditionSet(set)
 		set.bossID = Internal.GetCurrentBoss()
 	end
 
-	RefreshConditionFilters(set)
+	UpdateSetFilters(set)
 
 	return set
 end
@@ -240,7 +242,7 @@ local function AddConditionSet()
 		type = CONDITION_TYPE_WORLD,
 		map = {},
     };
-	RefreshConditionFilters(set)
+	UpdateSetFilters(set)
     BtWLoadoutsSets.conditions[set.setID] = set;
     return set;
 end
@@ -452,7 +454,7 @@ function Internal.TriggerConditions()
 end
 
 Internal.IsConditionEnabled = IsConditionEnabled
-Internal.RefreshConditionFilters = RefreshConditionFilters
+Internal.UpdateConditionFilters = UpdateSetFilters
 Internal.AddConditionSet = AddConditionSet
 Internal.RefreshConditionSet = RefreshConditionSet
 Internal.GetConditionSet = GetConditionSet
@@ -1117,7 +1119,7 @@ function BtWLoadoutsConditionsMixin:Update()
 		end
 
 		-- Refresh filters
-		RefreshConditionFilters(set)
+		UpdateSetFilters(set)
 		sidebar:Update()
 
 		if IsConditionEnabled(set) then

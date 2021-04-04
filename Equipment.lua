@@ -1119,7 +1119,7 @@ do
 		return true, false
 	end
 end
-local function UpdateEquipmentSetFilters(set)
+local function UpdateSetFilters(set)
 	local filters = set.filters or {}
 	
     Internal.UpdateRestrictionFilters(set)
@@ -1165,6 +1165,7 @@ local function AddBlankEquipmentSet()
 		filters = {character = GetCharacterSlug()},
 		useCount = 0,
     };
+	UpdateSetFilters(set)
     BtWLoadoutsSets.equipment[set.setID] = set;
     return set;
 end
@@ -1212,7 +1213,7 @@ local function RefreshEquipmentSet(set)
 		C_EquipmentSet.SaveEquipmentSet(set.managerID)
 	end
 
-	return UpdateEquipmentSetFilters(set)
+	return UpdateSetFilters(set)
 end
 local function AddEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
@@ -1417,169 +1418,21 @@ do
 	end
 end
 
-local setsFiltered = {};
-local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-    CloseDropDownMenus();
-    local set = tab.set;
-	local index = arg2 or (#set.equipment + 1)
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.equipment, index);
-	else
-		set.equipment[index] = arg1;
-	end
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.equipment + 1)
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddEquipmentSet();
-	set.equipment[index] = newSet.setID;
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.Equipment.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Equipment:GetID());
-
-	BtWLoadoutsFrame:Update();
-end
-local function EquipmentDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.equipment then
-        return;
-    end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.equipment and set.equipment[index];
-
-	info.arg2 = index
-
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = EquipmentDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.equipment;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.character] = true;
-			end
-		end
-
-		local characters = {};
-		for character in pairs(setsFiltered) do
-			characters[#characters+1] = character;
-		end
-		sort(characters, function (a,b)
-			return a < b;
-		end)
-
-		local character = GetCharacterSlug();
-		if setsFiltered[character] then
-			local name = character;
-			local characterInfo = GetCharacterInfo(character);
-			if characterInfo then
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-			end
-
-			info.text = name;
-			info.hasArrow, info.menuList = true, character;
-			info.keepShownOnClick = true;
-			info.notCheckable = true;
-			UIDropDownMenu_AddButton(info, level);
-		end
-
-		local playerCharacter = character;
-		for _,character in ipairs(characters) do
-			if character ~= playerCharacter then
-				if setsFiltered[character] then
-					local name = character;
-					local characterInfo = GetCharacterInfo(character);
-					if characterInfo then
-						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					end
-
-					info.text = name;
-					info.hasArrow, info.menuList = true, character;
-					info.keepShownOnClick = true;
-					info.notCheckable = true;
-					UIDropDownMenu_AddButton(info, level);
-				end
-			end
-		end
-
-		info.text = L["New Set"];
-		info.func = EquipmentDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local character = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.equipment;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.character == character then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-        for _,setID in ipairs(setsFiltered) do
-            info.text = sets[setID].name .. (sets[setID].managerID ~= nil and " (*)" or "");
-            info.arg1 = setID;
-            info.func = EquipmentDropDown_OnClick;
-            info.checked = selected == setID;
-            UIDropDownMenu_AddButton(info, level);
-		end
-	end
+-- Initializes the set dropdown menu for the Loadouts page
+local function SetDropDownInit(self, set, index)
+    Internal.SetDropDownInit(self, set, index, "equipment", BtWLoadoutsFrame.Equipment)
 end
 
 Internal.AddLoadoutSegment({
     id = "equipment",
     name = L["Equipment"],
     events = "PLAYER_EQUIPMENT_CHANGED",
+    add = AddEquipmentSet,
     get = GetEquipmentSets,
     combine = CombineEquipmentSets,
     isActive = IsEquipmentSetActive,
 	activate = ActivateEquipmentSet,
-	dropdowninit = EquipmentDropDownInit,
+	dropdowninit = SetDropDownInit,
 	checkerrors = CheckErrors,
 })
 
@@ -1957,7 +1810,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 	if self.set ~= nil then
 		local set = self.set
 
-		UpdateEquipmentSetFilters(set)
+		UpdateSetFilters(set)
 		sidebar:Update()
         
         set.restrictions = set.restrictions or {}

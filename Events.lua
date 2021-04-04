@@ -233,7 +233,7 @@ function frame:ADDON_LOADED(...)
                     BtWLoadoutsSets.profiles[set.profileSet].useCount = BtWLoadoutsSets.profiles[set.profileSet].useCount + 1;
                 end
 
-                Internal.RefreshConditionFilters(set)
+                Internal.UpdateConditionFilters(set)
             end
         end
 

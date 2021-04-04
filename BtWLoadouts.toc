@@ -18,10 +18,10 @@ Localizations.zhTW.lua
 
 Characters.lua
 Instances.lua
+Sets.lua
 
 BtWLoadouts.xml
 
-Sets.lua
 Loadouts.xml
 Talents.xml
 PvPTalents.xml

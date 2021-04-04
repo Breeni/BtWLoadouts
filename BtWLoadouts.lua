@@ -503,125 +503,6 @@ end
 
 -- Restrictions Drop Down, used by sets to handle limit activation
 do
-	--
-	local races = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 22, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37}
-	local classes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
-	local specializations = {}
-	do -- Build Spec List
-		for classIndex=1,GetNumClasses() do
-			local _, _, classID = GetClassInfo(classIndex)
-			for specIndex=1,GetNumSpecializationsForClassID(classID) do
-				local specID = GetSpecializationInfoForClassID(classID, specIndex);
-				specializations[#specializations+1] = specID
-			end
-		end
-	end
-	local charaterEnumertorList = {}
-	local types = {
-		covenant = {
-			name = L["Covenant"],
-			enumerate = function ()
-				return function (tbl, index)
-					index = index + 1
-					if tbl[index] then
-						return index, tbl[index], C_Covenants.GetCovenantData(tbl[index]).name
-					end
-				end, C_Covenants.GetCovenantIDs(), 0
-			end,
-		},
-		race = {
-			name = L["Race"],
-			enumerate = function ()
-				return function (tbl, index)
-					index = index + 1
-					if tbl[index] then
-						return index, tbl[index], GetFactionColor(C_CreatureInfo.GetFactionInfo(tbl[index]).groupTag):WrapTextInColorCode(C_CreatureInfo.GetRaceInfo(tbl[index]).raceName)
-					end
-				end, races, 0
-			end,
-		},
-		class = {
-			name = L["Class"],
-			enumerate = function ()
-				return function (tbl, index)
-					index = index + 1
-					if tbl[index] then
-						return index, tbl[index], C_CreatureInfo.GetClassInfo(tbl[index]).className
-					end
-				end, classes, 0
-			end,
-		},
-		spec = {
-			name = L["Specialization"],
-			enumerate = function (limitations, includeLimitations)
-				local limitRole, limitClassFile
-				if limitations then
-					limitRole = limitations.role
-					if limitations.character then
-						local characterData = Internal.GetCharacterInfo(limitations.character)
-						limitClassFile = characterData.class
-					end
-				end
-
-				return function (tbl, index)
-					repeat
-						index = index + 1
-					until not tbl[index] or includeLimitations or (
-						(limitClassFile == nil or limitClassFile == (select(6, GetSpecializationInfoByID(tbl[index])))) and
-						(limitRole == nil or limitRole == (select(5, GetSpecializationInfoByID(tbl[index]))))
-					)
-
-					if tbl[index] then
-						local _, specName, _, _, role, classFile, className = GetSpecializationInfoByID(tbl[index])
-						local classColor = C_ClassColor.GetClassColor(classFile);
-						local name = format("%s - %s", classColor:WrapTextInColorCode(className), specName)
-
-						return index, tbl[index], name, not (
-							(limitClassFile == nil or limitClassFile == classFile) and
-							(limitRole == nil or limitRole == role)
-						)
-					end
-				end, specializations, 0
-			end,
-		},
-		character = {
-			name = L["Character"],
-			enumerate = function ()
-				wipe(charaterEnumertorList)
-	
-				local name = UnitName("player")
-				local character = GetCharacterSlug();
-				local characterInfo = GetCharacterInfo(character);
-				if characterInfo then
-					local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-					name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-				end
-				charaterEnumertorList[#charaterEnumertorList+1] = {character, name}
-	
-				local playerCharacter = character
-				for _,character in Internal.CharacterIterator() do
-					if playerCharacter ~= character then
-						local characterInfo = GetCharacterInfo(character);
-						if characterInfo then
-							local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-							name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-						end
-						charaterEnumertorList[#charaterEnumertorList+1] = {character,name}
-					end
-				end
-	
-				return function (tbl, index)
-					index = index + 1
-					if tbl[index] then
-						return index, unpack(tbl[index])
-					end
-				end, charaterEnumertorList, 0
-			end,
-		},
-	}
-
-	local function DropDown_OnClick(self, arg1, arg2, checked)
-	end
 	local function DropDownInit(self, level, menuList)
 		local function OnClick(_, arg1, arg2, checked)
 			self:ToggleSelected(arg1, arg2)
@@ -752,7 +633,7 @@ do
 		wipe(self.supportedTypes)
 		for i=1,select('#', ...) do
 			local type = strlower(select(i, ...))
-			assert(types[type] ~= nil, "Unavailable type " .. type)
+			assert(Internal.Filters[type] ~= nil, "Unavailable type " .. type)
 			self.supportedTypes[i] = type
 		end
 	end
@@ -770,12 +651,12 @@ do
 			index = index + 1
 			local type = tbl[index]
 			if type then
-				return index, type, types[type].name
+				return index, type, Internal.Filters[type].name
 			end
 		end, self.supportedTypes, 0
 	end
 	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateType(type, includeLimitations)
-		return types[type].enumerate(self.limitations, includeLimitations)
+		return Internal.Filters[type].enumerate(self.limitations, includeLimitations)
 	end
 	function BtWLoadoutsRestrictionsDropDownMixin:SetScript(scriptType, handler)
 		if scriptType == "OnChange" then
@@ -978,353 +859,126 @@ do
 	end
 end
 
+-- Sets Drop Down menu
+do
+	-- local filtered
+	local function DropDownInit(self, level, menuList)
+		local function OnClick(_, arg1, arg2, checked)
+			self:callback(arg1)
+		end
+		
+		local info = UIDropDownMenu_CreateInfo()
+
+		local selected = self:GetSelected()
+
+		if (level or 1) == 1 and self:IncludeNone() then
+			info.text = NONE;
+			info.func = OnClick;
+			info.arg1 = "none";
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		if not menuList then
+			menuList = Internal.CategoriesSets(self:GetSets(), self:GetCategories())
+		end
+		
+		local filter = self.categories[level or 1]
+		if filter then
+			info.func = nil;
+			info.hasArrow = true;
+			info.keepShownOnClick = true;
+			info.notCheckable = true;
+
+			for _,key,name,restricted in Internal.Filters[filter].enumerate() do
+				if menuList[key] then
+					info.text = name
+					info.menuList = menuList[key]--(menuList and (menuList .. ".") or "") .. key
+					UIDropDownMenu_AddButton(info, level);
+				end
+			end
+		else
+			info.func = OnClick;
+			for k,set in pairs(menuList) do
+				info.text = set.name ~= "" and set.name or L["Unnamed"];
+				info.arg1 = set.setID;
+				info.func = OnClick;
+				info.checked = selected == set.setID;
+				
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+
+		if (level or 1) == 1 and self:IncludeNewSet() then
+			info.text = L["New Set"];
+			info.func = OnClick;
+			info.arg1 = "new";
+			info.hasArrow, info.menuList = false, nil;
+			info.keepShownOnClick = false;
+			info.notCheckable = true;
+			info.checked = false;
+
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+
+	BtWLoadoutsSetDropDownMixin = {}
+	function BtWLoadoutsSetDropDownMixin:OnLoad()
+		self.categories = {}
+		self.sets = {}
+	end
+	function BtWLoadoutsSetDropDownMixin:Init()
+		UIDropDownMenu_Initialize(self, DropDownInit, "MENU");
+	end
+	function BtWLoadoutsSetDropDownMixin:OnShow()
+		if not self.initialized then
+			self.initialized = true
+			self:Init()
+		end
+	end
+	function BtWLoadoutsSetDropDownMixin:SetSelected(value)
+		self.selected = value
+	end
+	function BtWLoadoutsSetDropDownMixin:SetSets(value)
+		self.sets = value
+	end
+	function BtWLoadoutsSetDropDownMixin:SetCategories(value)
+		self.categories = value
+	end
+	function BtWLoadoutsSetDropDownMixin:GetCategories()
+		return unpack(self.categories)
+	end
+	function BtWLoadoutsSetDropDownMixin:GetSets()
+		return self.sets
+	end
+	function BtWLoadoutsSetDropDownMixin:GetSelected()
+		return self.selected
+	end
+	function BtWLoadoutsSetDropDownMixin:IncludeNewSet()
+		return true
+	end
+	function BtWLoadoutsSetDropDownMixin:IncludeNone()
+		return self.includeNone
+	end
+	function BtWLoadoutsSetDropDownMixin:SetIncludeNone(value)
+		self.includeNone = not not value
+	end
+	function BtWLoadoutsSetDropDownMixin:OnItemClick(callback)
+		self.callback = callback
+	end
+end
+
 --[[
 	BtWLoadoutsSidebarMixin, sidebar display with filtering
 ]]
 do
-	local function OrganiseSetsByFilter(result, sets, filter)
-		if filter == nil then
-			for _,set in pairs(sets) do
-				if type(set) == "table" then
-					result[#result+1] = set;
-				end
-			end
-	
-			return result
-		else
-			for setID,set in pairs(sets) do
-				if type(set) == "table" then
-					local value = set.filters and set.filters[filter] or 0
-					if type(value) == "table" then
-						for _,v in pairs(value) do
-							result[v] = result[v] or {};
-							result[v][#result[v] + 1] = set;
-						end
-					else
-						result[value] = result[value] or {};
-						result[value][#result[value] + 1] = set;
-					end
-				end
-			end
-			return result
-		end
-	end
-	--[[
-		... is a list of filters, eg spec, role, class, character, instanceType, etc.
-	]]
-	local function CategoriesSets(sets, ...)
-		local tbl = OrganiseSetsByFilter({}, sets, ...)
-		if select('#', ...) > 1 then
-			for k,v in pairs(tbl) do
-				tbl[k] = CategoriesSets(v, select(2, ...))
-			end
-		end
-		return tbl
-	end
-	local function FilterSetsBySearch(result, query, sets)
-		for _,set in pairs(sets) do
-			if type(set) == "table" then
-				if query == nil or set.name:lower():find(query) ~= nil then
-					result[#result+1] = set;
-				end
-			end
-		end
-
-		return result
-	end
-	local function ContainsOrMatches(tbl, value)
-		if type(tbl) == "table" then
-			for _,v in pairs(tbl) do
-				if v == value then
-					return true
-				end
-			end
-		elseif (tbl or 0) == value then
-			return true
-		end
-		return false
-	end
-	local function FiltersMatch(filters, setFilters)
-		for filter,value in pairs(filters) do
-			if not ContainsOrMatches(setFilters[filter], value) then
-				return false
-			end
-		end
-		return true
-	end
-	local function FilterSets(result, filters, sets)
-		for _,set in pairs(sets) do
-			if type(set) == "table" and FiltersMatch(filters, set.filters) then
-				result[#result+1] = set;
-			end
-		end
-
-		return result
-	end
-	local CovenantFilterEnumerator
-	do
-		local tbl
-		function CovenantFilterEnumerator()
-			if tbl == nil then
-				tbl = {}
-
-				for _,id in ipairs(C_Covenants.GetCovenantIDs()) do
-					local data = C_Covenants.GetCovenantData(id)
-					tbl[#tbl+1] = {
-						id = id,
-						name = data.name,
-					}
-				end
-				
-				tbl[#tbl+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(tbl)
-		end
-	end
-	local SpecFilterEnumerator
-	do
-		local specEnumertorList
-		function SpecFilterEnumerator()
-			if specEnumertorList == nil then
-				specEnumertorList = {}
-
-				local className, classFile, classID = UnitClass("player");
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					specEnumertorList[#specEnumertorList+1] = {
-						id = specID,
-						name = format("%s: %s", className, specName),
-					}
-				end
-
-				local playerClassID = classID;
-				for classID=1,GetNumClasses() do
-					if classID ~= playerClassID then
-						local className, classFile = GetClassInfo(classID);
-						local classColor = C_ClassColor.GetClassColor(classFile);
-						className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-						for specIndex=1,GetNumSpecializationsForClassID(classID) do
-							local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-							specEnumertorList[#specEnumertorList+1] = {
-								id = specID,
-								name = format("%s: %s", className, specName),
-							}
-						end
-					end
-				end
-				
-				specEnumertorList[#specEnumertorList+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(specEnumertorList)
-		end
-	end
-	local ClassFilterEnumerator
-	do
-		local classEnumertorList
-		function ClassFilterEnumerator()
-			if classEnumertorList == nil then
-				classEnumertorList = {}
-
-				local className, classFile, classID = UnitClass("player");
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-				classEnumertorList[#classEnumertorList+1] = {
-					id = classFile,
-					name = className,
-				}
-
-				local playerClassID = classID;
-				for classID=1,GetNumClasses() do
-					if classID ~= playerClassID then
-						local className, classFile = GetClassInfo(classID);
-						local classColor = C_ClassColor.GetClassColor(classFile);
-						className = classColor and classColor:WrapTextInColorCode(className) or className;
-						classEnumertorList[#classEnumertorList+1] = {
-							id = classFile,
-							name = className,
-						}
-					end
-				end
-				
-				classEnumertorList[#classEnumertorList+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(classEnumertorList)
-		end
-	end
-	local RoleFilterEnumerator
-	do
-		local roleEnumertorList
-		function RoleFilterEnumerator()
-			if roleEnumertorList == nil then
-				roleEnumertorList = {}
-
-				local role = select(5, GetSpecializationInfo(GetSpecialization()));
-				roleEnumertorList[#roleEnumertorList+1] = {
-					id = role,
-					name = _G[role],
-				}
-
-				local playerRole = role;
-				for _,role in Internal.Roles() do
-					if role ~= playerRole then
-						roleEnumertorList[#roleEnumertorList+1] = {
-							id = role,
-							name = _G[role],
-						}
-					end
-				end
-				
-				roleEnumertorList[#roleEnumertorList+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(roleEnumertorList)
-		end
-	end
-	local CharacterFilterEnumerator
-	do
-		local charaterEnumertorList = {}
-		function CharacterFilterEnumerator()
-			wipe(charaterEnumertorList)
-
-			local name = UnitName("player")
-			local character = GetCharacterSlug();
-			local characterInfo = GetCharacterInfo(character);
-			if characterInfo then
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-			end
-			charaterEnumertorList[#charaterEnumertorList+1] = {
-				id = character,
-				name = name,
-			};
-
-			local playerCharacter = character
-			for _,character in Internal.CharacterIterator() do
-				if playerCharacter ~= character then
-					local characterInfo = GetCharacterInfo(character);
-					if characterInfo then
-						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					end
-					charaterEnumertorList[#charaterEnumertorList+1] = {
-						id = character,
-						name = name,
-					};
-				end
-			end
-
-			charaterEnumertorList[#charaterEnumertorList+1] = {
-				id = 0,
-				name = L["Other"],
-			};
-
-			return ipairs(charaterEnumertorList)
-		end
-	end
-	local InstanceTypeEnumerator
-	do
-		local instanceTypeEnumeratorList = {
-			{
-				id = "party",
-				name = L["Dungeon"],
-			},
-			{
-				id = "raid",
-				name = L["Raid"],
-			},
-			{
-				id = "arena",
-				name = L["Arena"],
-			},
-			{
-				id = "pvp",
-				name = L["Battleground"],
-			},
-			{
-				id = "scenario",
-				name = L["Scenarios"],
-			},
-			{
-				id = "none",
-				name = L["World"],
-			},
-			{
-				id = 0,
-				name = L["Other"],
-			}
-		}
-		function InstanceTypeEnumerator()
-			return ipairs(instanceTypeEnumeratorList)
-		end
-	end
-	local DisabledEnumerator
-	do
-		local disabledEnumeratorList = {
-			{
-				id = 0,
-				name = L["Enabled"],
-			},
-			{
-				id = 1,
-				name = L["Disabled"],
-			},
-		}
-		function DisabledEnumerator()
-			return ipairs(disabledEnumeratorList)
-		end
-	end
-	local function FilterEnumerator(filter)
-		if filter == "covenant" then
-			return CovenantFilterEnumerator()
-		elseif filter == "spec" then
-			return SpecFilterEnumerator()
-		elseif filter == "class" then
-			return ClassFilterEnumerator()
-		elseif filter == "role" then
-			return RoleFilterEnumerator()
-		elseif filter == "character" then
-			return CharacterFilterEnumerator()
-		elseif filter == "instanceType" then
-			return InstanceTypeEnumerator()
-		elseif filter == "disabled" then
-			return DisabledEnumerator()
-		else
-			error(format("Unsupported filter type %s", filter))
-		end
-	end
-	local function alphanumsort(o)
-		local function padnum(d)
-			local dec, n = string.match(d, "(%.?)0*(.+)")
-			return #dec > 0 and ("%.12f"):format(d) or ("%s%03d%s"):format(dec, #n, n)
-		end
-		table.sort(o, function(a,b)
-		  	return tostring(a.name):gsub("%.?%d+", padnum)..("%3d"):format(#b.name)
-			     < tostring(b.name):gsub("%.?%d+", padnum)..("%3d"):format(#a.name)
-		end)
-		return o
-	end
+	local FilterSetsBySearch = Internal.FilterSetsBySearch
+	local FilterSets = Internal.FilterSets
+	local CategoriesSets = Internal.CategoriesSets
+	local SortSets = Internal.SortSets
 	local function BuildList(items, depth, selected, filtered, collapsed, ...)
 		if select('#', ...) == 0 then
-			alphanumsort(filtered)
+			SortSets(filtered)
 
 			for _,set in ipairs(filtered) do
 				selected = selected or set
@@ -1340,20 +994,20 @@ do
 		else
 			local filter = ...
 			collapsed.children = collapsed.children or {}
-			for _,filterItem in FilterEnumerator(filter) do
-				if filtered[filterItem.id] then
-					local isCollapsed = collapsed[filterItem.id] and true or false
+			for _,key,name,restricted in Internal.Filters[filter].enumerate(nil, nil, true) do
+				if filtered[key] then
+					local isCollapsed = collapsed[key] and true or false
 					items[#items+1] = {
-						id = filterItem.id,
+						id = key,
 						type = filter,
 						isHeader = true,
 						isCollapsed = isCollapsed,
 						collapsed = collapsed,
-						name = filterItem.name,
+						name = name,
 						depth = depth,
 					};
 					if not isCollapsed then
-						selected = BuildList(items, depth + 1, selected, filtered[filterItem.id], collapsed.children, select(2, ...))
+						selected = BuildList(items, depth + 1, selected, filtered[key], collapsed.children, select(2, ...))
 					end
 				end
 			end
@@ -1523,15 +1177,6 @@ do
 	end
 	BtWLoadoutsSidebarMixin = {}
 	function BtWLoadoutsSidebarMixin:OnLoad()
-		self.names = {
-			["covenant"] = L["Covenant"],
-			["spec"] = L["Specialization"],
-			["class"] = L["Class"],
-			["role"] = L["Role"],
-			["character"] = L["Character"],
-			["instanceType"] = L["Instance Type"],
-			["disabled"] = L["Enabled"],
-		}
 		self.supportedFilters = {}
 	end
 	function BtWLoadoutsSidebarMixin:Init()
@@ -1569,7 +1214,7 @@ do
 		return unpack(self.supportedFilters)
 	end
 	function BtWLoadoutsSidebarMixin:GetFilterName(key)
-		return self.names[key] or key
+		return Internal.Filters[key].name or key
 	end
 	
 	function BtWLoadoutsSidebarMixin:SetSets(value)
