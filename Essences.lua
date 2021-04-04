@@ -591,7 +591,7 @@ function BtWLoadoutsEssencesMixin:Update()
 	self:GetParent().TitleText:SetText(L["Essences"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("role", "character")
+	sidebar:SetSupportedFilters("role", "character", "spec", "class", "race")
 	sidebar:SetSets(BtWLoadoutsSets.essences)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.essences)
 	sidebar:SetCategories(BtWLoadoutsCategories.essences)

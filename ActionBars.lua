@@ -1180,7 +1180,7 @@ function BtWLoadoutsActionBarsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Action Bars"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("covenant", "spec", "class", "role")
+	sidebar:SetSupportedFilters("covenant", "spec", "class", "role", "race")
 	sidebar:SetSets(BtWLoadoutsSets.actionbars)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.actionbars)
 	sidebar:SetCategories(BtWLoadoutsCategories.actionbars)

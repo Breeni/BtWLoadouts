@@ -670,7 +670,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
     self:GetParent().TitleText:SetText(L["Soulbinds"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("covenant")
+	sidebar:SetSupportedFilters("covenant", "spec", "class", "role", "race")
 	sidebar:SetSets(BtWLoadoutsSets.soulbinds)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.soulbinds)
 	sidebar:SetCategories(BtWLoadoutsCategories.soulbinds)

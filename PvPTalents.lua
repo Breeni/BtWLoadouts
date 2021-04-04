@@ -481,7 +481,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 	self:GetParent().TitleText:SetText(L["PvP Talents"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "covenant", "race")
 	sidebar:SetSets(BtWLoadoutsSets.pvptalents)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.pvptalents)
 	sidebar:SetCategories(BtWLoadoutsCategories.pvptalents)

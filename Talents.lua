@@ -524,7 +524,7 @@ function BtWLoadoutsTalentsMixin:Update()
     self:GetParent().TitleText:SetText(L["Talents"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "covenant", "race")
 	sidebar:SetSets(BtWLoadoutsSets.talents)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.talents)
 	sidebar:SetCategories(BtWLoadoutsCategories.talents)
