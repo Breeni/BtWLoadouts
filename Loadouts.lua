@@ -1397,7 +1397,7 @@ function BtWLoadoutsProfilesMixin:Update()
 		end
 
 		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(not hasErrors and IsLoadoutActivatable(self.set));
+		activateButton:SetEnabled(IsLoadoutActivatable(self.set));
 
 		local deleteButton =  self:GetParent().DeleteButton;
 		deleteButton:SetEnabled(true);
