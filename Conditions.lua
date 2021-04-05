@@ -23,7 +23,6 @@ local UIDropDownMenu_CreateInfo = UIDropDownMenu_CreateInfo;
 
 local sort = table.sort
 
-
 local instanceBosses = Internal.instanceBosses;
 local scenarioInfo = Internal.scenarioInfo;
 local dungeonDifficultiesAll = Internal.dungeonDifficultiesAll;
@@ -146,10 +145,22 @@ local function IsConditionEnabled(set)
 		return false
 	end
 
-	if set.character ~= nil and next(set.character) ~= nil then
-		local name, realm = UnitFullName("player")
-		local character = realm .. "-" .. name
+	-- Set Defaults
+	if type(set.character) ~= "table" then
+		set.character = {inherit = true}
+	end
+	if set.character["inherit"] then
+		local character = Internal.GetCharacterSlug()
+		local loadout = Internal.GetProfile(set.profileSet)
 
+		-- Set Loadout Defaults too
+		if loadout and type(loadout.character) ~= "table" then
+			loadout.character = {}
+		end
+
+		return loadout and (next(loadout.character) == nil or loadout.character[character] ~= nil)
+	elseif next(set.character) ~= nil then
+		local character = Internal.GetCharacterSlug()
 		return set.character[character] ~= nil
 	end
 
@@ -176,8 +187,24 @@ local function RefreshConditionFilters(set)
 	wipe(characters)
 
 	if type(set.character) == "table" and next(set.character) ~= nil then
-		for character in pairs(set.character) do
-			characters[#characters+1] = character
+		if set.character.inherit then
+			local loadout = Internal.GetProfile(set.profileSet)
+			if loadout and type(loadout.character) == "table" and next(loadout.character) ~= nil then
+				for character in pairs(loadout.character) do
+					characters[#characters+1] = character
+				end
+			else
+				local class = filters.class
+				for _,character in Internal.CharacterIterator() do
+					if class == nil or class == Internal.GetCharacterInfo(character).class then
+						characters[#characters+1] = character
+					end
+				end
+			end
+		else
+			for character in pairs(set.character) do
+				characters[#characters+1] = character
+			end
 		end
 	else
 		local class = filters.class
@@ -962,7 +989,7 @@ function BtWLoadoutsConditionsMixin:OnShow()
 			local frame = self:GetParent()
 
 			if type(frame.set.character) ~= "table" then
-				frame.set.character = {}
+				frame.set.character = {inherit = true}
 			end
 
 			return frame.set and frame.set.character
@@ -970,10 +997,20 @@ function BtWLoadoutsConditionsMixin:OnShow()
 		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
 			local frame = self:GetParent()
 			if frame.set then
-				if frame.set.character[arg1] then
-					frame.set.character[arg1] = nil
+				if arg1 == "inherit" then
+					if frame.set.character[arg1] then
+						frame.set.character[arg1] = nil
+					else
+						wipe(frame.set.character)
+						frame.set.character[arg1] = true
+					end
 				else
-					frame.set.character[arg1] = true
+					frame.set.character["inherit"] = nil
+					if frame.set.character[arg1] then
+						frame.set.character[arg1] = nil
+					else
+						frame.set.character[arg1] = true
+					end
 				end
 
 				BtWLoadoutsFrame:Update()

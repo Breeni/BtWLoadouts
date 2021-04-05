@@ -426,7 +426,13 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local set = tab.set;
 
 	if selectedTab == TAB_PROFILES then
+		local classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
+		tab.temp[classFile or "NONE"] = set.character
+
 		set.specID = arg1;
+
+		classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
+		set.character = tab.temp[classFile or "NONE"]
 	elseif selectedTab == TAB_TALENTS or selectedTab == TAB_PVP_TALENTS then
 		local temp = tab.temp;
 		-- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
@@ -899,48 +905,62 @@ do
 		if self.includeNone then
 			info.text = L["None"];
 			info.arg1 = nil
-			info.checked = selected == nil;
+			info.checked = next(selected) == nil;
+			UIDropDownMenu_AddButton(info, level);
+		end
+		if self.includeInherit then
+			info.text = L["Inherit"];
+			info.arg1 = "inherit"
+			info.checked = selected["inherit"];
 			UIDropDownMenu_AddButton(info, level);
 		end
 
-		local name, realm = UnitFullName("player")
-		local character = realm .. "-" .. name
-		local characterInfo = GetCharacterInfo(character)
-		if characterInfo then
-			local classColor = C_ClassColor.GetClassColor(characterInfo.class)
-			name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
-		end
+		local character = Internal.GetCharacterSlug()
+		local classFile = select(2, UnitClass("player"));
+		if self.classFile == nil or self.classFile == classFile then
+			local name, realm = UnitFullName("player")
+			local characterInfo = GetCharacterInfo(character)
+			if characterInfo then
+				local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+			end
 
-		info.text = name
-		info.arg1 = character
-		if self.multiple then
-			info.checked = selected[character]
-		else
-			info.checked = selected == character;
-		end
+			info.text = name
+			info.arg1 = character
+			if self.multiple then
+				info.checked = selected[character]
+			else
+				info.checked = selected == character;
+			end
 
-		UIDropDownMenu_AddButton(info, level);
+			UIDropDownMenu_AddButton(info, level);
+		end
 
 		local playerCharacter = character
 		for _,character in Internal.CharacterIterator() do
 			if playerCharacter ~= character then
 				characterInfo = GetCharacterInfo(character)
-				if characterInfo then
-					local classColor = C_ClassColor.GetClassColor(characterInfo.class)
-					name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
-				end
+				if self.classFile == nil or self.classFile == characterInfo.class then
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+					end
 
-				info.text = name
-				info.arg1 = character
-				if self.multiple then
-					info.checked = selected[character]
-				else
-					info.checked = selected == character;
+					info.text = name
+					info.arg1 = character
+					if self.multiple then
+						info.checked = selected[character]
+					else
+						info.checked = selected == character;
+					end
+					
+					UIDropDownMenu_AddButton(info, level);
 				end
-				
-				UIDropDownMenu_AddButton(info, level);
 			end
 		end
+	end
+	function BtWLoadoutsCharacterDropDownMixin:SetClass(classFile)
+		self.classFile = classFile
 	end
 	function BtWLoadoutsCharacterDropDownMixin:UpdateName()
 		if not self.GetValue then
@@ -952,7 +972,9 @@ do
 		if self.multiple then
 			local first = next(character)
 			if first == nil then
-				UIDropDownMenu_SetText(self, L["None"]);
+				UIDropDownMenu_SetText(self, L["Any"]);
+			elseif first == "inherit" then
+				UIDropDownMenu_SetText(self, L["Inherit"]);
 			elseif next(character, first) == nil then
 				local characterInfo = Internal.GetCharacterInfo(first);
 				if characterInfo then
@@ -966,6 +988,8 @@ do
 		else
 			if character == nil then
 				UIDropDownMenu_SetText(self, L["None"]);
+			elseif character == "inherit" then
+				UIDropDownMenu_SetText(self, L["Inherit"]);
 			else
 				local characterInfo = Internal.GetCharacterInfo(character);
 				if characterInfo then

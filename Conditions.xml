@@ -103,6 +103,7 @@
                 </Anchors>
                 <KeyValues>
                     <KeyValue key="multiple" type="boolean" value="true"/>
+                    <KeyValue key="includeInherit" type="boolean" value="true"/>
                 </KeyValues>
             </Frame>
             <Frame parentKey="ConditionTypeDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">

@@ -141,9 +141,16 @@
                     <Color r="0.75" g="0.61" b="0"/>
                 </FontString>
                 <FontString parentKey="SpecTitle" text="BTWLOADOUTS_SPECIALIZATION" inherits="GameFontNormalLeft">
-                    <Size x="175" y="0"/>
+                    <Size x="225" y="0"/>
                     <Anchors>
                         <Anchor point="TOPLEFT" x="10" y="-60"/>
+                    </Anchors>
+                    <Color r="0.75" g="0.61" b="0"/>
+                </FontString>
+                <FontString parentKey="CharacterRestrictionsTitle" text="BTWLOADOUTS_CHARACTER_RESTRICTIONS" inherits="GameFontNormalLeft">
+                    <Size x="175" y="0"/>
+                    <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.SpecTitle" relativePoint="RIGHT" x="0" y="0"/>
                     </Anchors>
                     <Color r="0.75" g="0.61" b="0"/>
                 </FontString>
@@ -196,6 +203,14 @@
                 <Anchors>
                     <Anchor point="TOPLEFT" relativeKey="$parent.SpecTitle" relativePoint="BOTTOMLEFT" x="0" y="-5"/>
                 </Anchors>
+            </Frame>
+            <Frame parentKey="CharacterDropDown" inherits="BtWLoadoutsCharacterDropDownTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.SpecDropDown" relativePoint="RIGHT" x="0" y="0"/>
+                </Anchors>
+                <KeyValues>
+                    <KeyValue key="multiple" type="boolean" value="true"/>
+                </KeyValues>
             </Frame>
 
             <ScrollFrame parentKey="SetsScroll" inherits="HybridScrollFrameTemplate">
