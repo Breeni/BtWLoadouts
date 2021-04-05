@@ -4,6 +4,7 @@
 	Update set dropdowns to use sidebar filtering
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	-- 1.0.0 breakpoint
+	Show restrictions for subsets within the loadout list?
 	Equipment flyout
 	Equipment sets should store transmog?
 	Loadout keybindings
