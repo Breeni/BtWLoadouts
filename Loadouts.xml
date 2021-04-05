@@ -210,6 +210,7 @@
                 </Anchors>
                 <KeyValues>
                     <KeyValue key="multiple" type="boolean" value="true"/>
+                    <KeyValue key="includeAny" type="boolean" value="true"/>
                 </KeyValues>
             </Frame>
 

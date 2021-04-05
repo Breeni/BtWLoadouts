@@ -913,16 +913,24 @@ do
 			ToggleDropDownMenu(nil, nil, self)
 		end
 
-		if self.includeNone then
-			info.text = L["None"];
+		if self.includeAny then
+			info.text = L["Any"];
 			info.arg1 = nil
-			info.checked = next(selected) == nil;
+			if self.multiple then
+				info.checked = next(selected) == nil
+			else
+				info.checked = selected == nil
+			end
 			UIDropDownMenu_AddButton(info, level);
 		end
 		if self.includeInherit then
 			info.text = L["Inherit"];
 			info.arg1 = "inherit"
-			info.checked = selected["inherit"];
+			if self.multiple then
+				info.checked = selected["inherit"];
+			else
+				info.checked = selected == "inherit"
+			end
 			UIDropDownMenu_AddButton(info, level);
 		end
 

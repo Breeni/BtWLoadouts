@@ -1016,7 +1016,9 @@ function BtWLoadoutsConditionsMixin:OnShow()
 		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
 			local frame = self:GetParent()
 			if frame.set then
-				if arg1 == "inherit" then
+				if arg1 == nil then
+					wipe(frame.set.character)
+				elseif arg1 == "inherit" then
 					if frame.set.character[arg1] then
 						frame.set.character[arg1] = nil
 					else

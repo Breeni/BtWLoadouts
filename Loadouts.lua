@@ -1194,7 +1194,9 @@ function BtWLoadoutsProfilesMixin:OnShow()
 		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
 			local frame = self:GetParent()
 			if frame.set then
-				if frame.set.character[arg1] then
+				if arg1 == nil then
+					wipe(frame.set.character)
+				elseif frame.set.character[arg1] then
 					frame.set.character[arg1] = nil
 				else
 					frame.set.character[arg1] = true
