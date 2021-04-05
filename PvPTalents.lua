@@ -494,6 +494,7 @@ function BtWLoadoutsPvPTalentsMixin:OnShow()
 end
 function BtWLoadoutsPvPTalentsMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsPvPTalentsMixin:UpdateSetName(value)

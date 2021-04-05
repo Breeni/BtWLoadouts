@@ -418,6 +418,14 @@ function Internal.DropDownSetOnChange(self, func)
 	self.OnChange = func;
 end
 
+local function shallowcopy(tbl)
+	local result = {}
+	for k,v in pairs(tbl) do
+		result[k] = v
+	end
+	return result
+end
+
 local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
 	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
@@ -432,7 +440,7 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 		set.specID = arg1;
 
 		classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
-		set.character = tab.temp[classFile or "NONE"]
+		set.character = tab.temp[classFile or "NONE"] or shallowcopy(set.character)
 	elseif selectedTab == TAB_TALENTS or selectedTab == TAB_PVP_TALENTS then
 		local temp = tab.temp;
 		-- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
@@ -1778,6 +1786,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetProfile(set)
 		self.Profiles.set = set;
+		wipe(self.Profiles.temp);
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:SetTalentSet(set)
@@ -1805,6 +1814,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetConditionSet(set)
 		self.Conditions.set = set;
+		wipe(self.Conditions.temp);
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:GetCurrentTab()

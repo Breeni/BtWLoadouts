@@ -1211,6 +1211,7 @@ function BtWLoadoutsProfilesMixin:OnShow()
 end
 function BtWLoadoutsProfilesMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsProfilesMixin:UpdateSetEnabled(value)
@@ -1357,7 +1358,7 @@ function BtWLoadoutsProfilesMixin:Update()
 		end
 
 		specID = self.set.specID;
-		local classFile = select(6, GetSpecializationInfoByID(specID))
+		local classFile = specID and select(6, GetSpecializationInfoByID(specID))
 
 		local set = self.set
 
@@ -1373,6 +1374,15 @@ function BtWLoadoutsProfilesMixin:Update()
 			UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 		end
 
+		if classFile and type(set.character) == "table" and not set.character["inherit"] then
+			-- Filter out any characters that are not valid for the selected spec
+			for character in pairs(set.character) do
+				local characterData = Internal.GetCharacterInfo(character)
+				if not characterData or characterData.class ~= classFile then
+					set.character[character] = nil
+				end
+			end
+		end
 		self.CharacterDropDown:SetClass(classFile)
 		self.CharacterDropDown:UpdateName()
 		

@@ -485,6 +485,14 @@ Internal.RefreshConditionSet = RefreshConditionSet
 Internal.GetConditionSet = GetConditionSet
 Internal.DeleteConditionSet = DeleteConditionSet
 
+local function shallowcopy(tbl)
+	local result = {}
+	for k,v in pairs(tbl) do
+		result[k] = v
+	end
+	return result
+end
+
 local setsFiltered = {} -- Used to filter sets in various parts of the file
 local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Conditions
@@ -495,6 +503,11 @@ local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	if set.profileSet then
 		local subset = Internal.GetProfile(set.profileSet);
 		subset.useCount = (subset.useCount or 1) - 1;
+		
+		local classFile = subset.specID and select(6, GetSpecializationInfoByID(subset.specID))
+		tab.temp[classFile or "NONE"] = set.character
+	else
+		tab.temp["NONE"] = set.character
 	end
 
 	set.profileSet = arg1;
@@ -502,6 +515,11 @@ local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	if set.profileSet then
 		local subset = Internal.GetProfile(set.profileSet);
 		subset.useCount = (subset.useCount or 0) + 1;
+	
+		local classFile = subset.specID and select(6, GetSpecializationInfoByID(subset.specID))
+		set.character = tab.temp[classFile or "NONE"] or shallowcopy(set.character)
+	else
+		set.character = tab.temp["NONE"] or shallowcopy(set.character)
 	end
 
 	BtWLoadoutsFrame:Update();
@@ -978,6 +996,7 @@ end
 
 BtWLoadoutsConditionsMixin = {}
 function BtWLoadoutsConditionsMixin:OnLoad()
+	self.temp = {} -- Stores character restrictions for unselected specs
 end
 function BtWLoadoutsConditionsMixin:OnShow()
 	if not self.initialized then
@@ -1050,6 +1069,7 @@ function BtWLoadoutsConditionsMixin:OnShow()
 end
 function BtWLoadoutsConditionsMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsConditionsMixin:UpdateSetEnabled(value)
@@ -1185,6 +1205,29 @@ function BtWLoadoutsConditionsMixin:Update()
 			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
 		end
 
+		if set.profileSet ~= nil then
+			local profile = Internal.GetProfile(set.profileSet)
+			local classFile = profile.specID and select(6, GetSpecializationInfoByID(profile.specID))
+			if classFile and type(set.character) == "table" and not set.character["inherit"] then
+				-- Filter out any characters that are not valid for the selected loadout spec
+				local changed = false
+				for character in pairs(set.character) do
+					local characterData = Internal.GetCharacterInfo(character)
+					if not characterData or characterData.class ~= classFile then
+						set.character[character] = nil
+						changed = true
+					end
+				end
+				if changed then -- If we filtered out everything just default to inherit
+					if next(set.character) == nil then
+						set.character["inherit"] = true
+					end
+				end
+			end
+			self.CharacterDropDown:SetClass(classFile)
+		else
+			self.CharacterDropDown:SetClass(nil)
+		end
 		self.CharacterDropDown:UpdateName()
 
 		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[self.set.type]);
