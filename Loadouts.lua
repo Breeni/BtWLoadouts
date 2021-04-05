@@ -1116,7 +1116,7 @@ local function BuildSubSetItems(type, header, getcallback, sets, items, index, i
 						item.name = format("%s |cFFD5D5D5(%s)|r", subset.name, subset.character);
 					end
 				else
-					item.name = subset.name;
+					item.name = subset.name ~= "" and subset.name or L["Unnamed"];
 				end
 	
 				item.error = errors[i]
