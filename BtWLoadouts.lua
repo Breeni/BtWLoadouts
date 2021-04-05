@@ -4,6 +4,7 @@
 	Update set dropdowns to use sidebar filtering
 	New user UI, each tab should have a cleaner ui before creaitng a set
 	-- 1.0.0 breakpoint
+	Show restrictions for subsets within the loadout list?
 	Equipment flyout
 	Equipment sets should store transmog?
 	Loadout keybindings
@@ -418,6 +419,14 @@ function Internal.DropDownSetOnChange(self, func)
 	self.OnChange = func;
 end
 
+local function shallowcopy(tbl)
+	local result = {}
+	for k,v in pairs(tbl) do
+		result[k] = v
+	end
+	return result
+end
+
 local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
 	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
@@ -426,7 +435,13 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local set = tab.set;
 
 	if selectedTab == TAB_PROFILES then
+		local classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
+		tab.temp[classFile or "NONE"] = set.character
+
 		set.specID = arg1;
+
+		classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
+		set.character = tab.temp[classFile or "NONE"] or shallowcopy(set.character)
 	elseif selectedTab == TAB_TALENTS or selectedTab == TAB_PVP_TALENTS then
 		local temp = tab.temp;
 		-- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
@@ -786,53 +801,77 @@ do
 		info.keepShownOnClick = true
 		info.func = function (button, arg1, arg2, checked)
 			self:SetValue(button, arg1, arg2, checked)
+			CloseDropDownMenus()
+			ToggleDropDownMenu(nil, nil, self)
 		end
 
-		if self.includeNone then
-			info.text = L["None"];
+		if self.includeAny then
+			info.text = L["Any"];
 			info.arg1 = nil
-			info.checked = selected == nil;
+			if self.multiple then
+				info.checked = next(selected) == nil
+			else
+				info.checked = selected == nil
+			end
+			UIDropDownMenu_AddButton(info, level);
+		end
+		if self.includeInherit then
+			info.text = L["Inherit"];
+			info.arg1 = "inherit"
+			if self.multiple then
+				info.checked = selected["inherit"];
+			else
+				info.checked = selected == "inherit"
+			end
 			UIDropDownMenu_AddButton(info, level);
 		end
 
-		local name, realm = UnitFullName("player")
-		local character = realm .. "-" .. name
-		local characterInfo = GetCharacterInfo(character)
-		if characterInfo then
-			local classColor = C_ClassColor.GetClassColor(characterInfo.class)
-			name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
-		end
+		local character = Internal.GetCharacterSlug()
+		local classFile = select(2, UnitClass("player"));
+		if self.classFile == nil or self.classFile == classFile then
+			local name, realm = UnitFullName("player")
+			local characterInfo = GetCharacterInfo(character)
+			if characterInfo then
+				local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+			end
 
-		info.text = name
-		info.arg1 = character
-		if self.multiple then
-			info.checked = selected[character]
-		else
-			info.checked = selected == character;
-		end
+			info.text = name
+			info.arg1 = character
+			if self.multiple then
+				info.checked = selected[character]
+			else
+				info.checked = selected == character;
+			end
 
-		UIDropDownMenu_AddButton(info, level);
+			UIDropDownMenu_AddButton(info, level);
+		end
 
 		local playerCharacter = character
 		for _,character in Internal.CharacterIterator() do
 			if playerCharacter ~= character then
 				characterInfo = GetCharacterInfo(character)
-				if characterInfo then
-					local classColor = C_ClassColor.GetClassColor(characterInfo.class)
-					name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
-				end
+				if self.classFile == nil or self.classFile == characterInfo.class then
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+					end
 
-				info.text = name
-				info.arg1 = character
-				if self.multiple then
-					info.checked = selected[character]
-				else
-					info.checked = selected == character;
+					info.text = name
+					info.arg1 = character
+					if self.multiple then
+						info.checked = selected[character]
+					else
+						info.checked = selected == character;
+					end
+					
+					UIDropDownMenu_AddButton(info, level);
 				end
-				
-				UIDropDownMenu_AddButton(info, level);
 			end
 		end
+	end
+	function BtWLoadoutsCharacterDropDownMixin:SetClass(classFile)
+		self.classFile = classFile
 	end
 	function BtWLoadoutsCharacterDropDownMixin:UpdateName()
 		if not self.GetValue then
@@ -844,7 +883,9 @@ do
 		if self.multiple then
 			local first = next(character)
 			if first == nil then
-				UIDropDownMenu_SetText(self, L["None"]);
+				UIDropDownMenu_SetText(self, L["Any"]);
+			elseif first == "inherit" then
+				UIDropDownMenu_SetText(self, L["Inherit"]);
 			elseif next(character, first) == nil then
 				local characterInfo = Internal.GetCharacterInfo(first);
 				if characterInfo then
@@ -858,6 +899,8 @@ do
 		else
 			if character == nil then
 				UIDropDownMenu_SetText(self, L["None"]);
+			elseif character == "inherit" then
+				UIDropDownMenu_SetText(self, L["Inherit"]);
 			else
 				local characterInfo = Internal.GetCharacterInfo(character);
 				if characterInfo then
@@ -1420,6 +1463,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetProfile(set)
 		self.Profiles.set = set;
+		wipe(self.Profiles.temp);
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:SetTalentSet(set)
@@ -1447,6 +1491,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetConditionSet(set)
 		self.Conditions.set = set;
+		wipe(self.Conditions.temp);
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:GetCurrentTab()

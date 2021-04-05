@@ -23,7 +23,6 @@ local UIDropDownMenu_CreateInfo = UIDropDownMenu_CreateInfo;
 
 local sort = table.sort
 
-
 local instanceBosses = Internal.instanceBosses;
 local scenarioInfo = Internal.scenarioInfo;
 local dungeonDifficultiesAll = Internal.dungeonDifficultiesAll;
@@ -146,10 +145,22 @@ local function IsConditionEnabled(set)
 		return false
 	end
 
-	if set.character ~= nil and next(set.character) ~= nil then
-		local name, realm = UnitFullName("player")
-		local character = realm .. "-" .. name
+	-- Set Defaults
+	if type(set.character) ~= "table" then
+		set.character = {inherit = true}
+	end
+	if set.character["inherit"] then
+		local character = Internal.GetCharacterSlug()
+		local loadout = Internal.GetProfile(set.profileSet)
 
+		-- Set Loadout Defaults too
+		if loadout and type(loadout.character) ~= "table" then
+			loadout.character = {}
+		end
+
+		return loadout and (next(loadout.character) == nil or loadout.character[character] ~= nil)
+	elseif next(set.character) ~= nil then
+		local character = Internal.GetCharacterSlug()
 		return set.character[character] ~= nil
 	end
 
@@ -176,8 +187,24 @@ local function UpdateSetFilters(set)
 	wipe(characters)
 
 	if type(set.character) == "table" and next(set.character) ~= nil then
-		for character in pairs(set.character) do
-			characters[#characters+1] = character
+		if set.character.inherit then
+			local loadout = Internal.GetProfile(set.profileSet)
+			if loadout and type(loadout.character) == "table" and next(loadout.character) ~= nil then
+				for character in pairs(loadout.character) do
+					characters[#characters+1] = character
+				end
+			else
+				local class = filters.class
+				for _,character in Internal.CharacterIterator() do
+					if class == nil or class == Internal.GetCharacterInfo(character).class then
+						characters[#characters+1] = character
+					end
+				end
+			end
+		else
+			for character in pairs(set.character) do
+				characters[#characters+1] = character
+			end
 		end
 	else
 		local class = filters.class
@@ -460,6 +487,14 @@ Internal.RefreshConditionSet = RefreshConditionSet
 Internal.GetConditionSet = GetConditionSet
 Internal.DeleteConditionSet = DeleteConditionSet
 
+local function shallowcopy(tbl)
+	local result = {}
+	for k,v in pairs(tbl) do
+		result[k] = v
+	end
+	return result
+end
+
 local setsFiltered = {} -- Used to filter sets in various parts of the file
 local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Conditions
@@ -470,6 +505,11 @@ local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	if set.profileSet then
 		local subset = Internal.GetProfile(set.profileSet);
 		subset.useCount = (subset.useCount or 1) - 1;
+		
+		local classFile = subset.specID and select(6, GetSpecializationInfoByID(subset.specID))
+		tab.temp[classFile or "NONE"] = set.character
+	else
+		tab.temp["NONE"] = set.character
 	end
 
 	set.profileSet = arg1;
@@ -477,6 +517,11 @@ local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	if set.profileSet then
 		local subset = Internal.GetProfile(set.profileSet);
 		subset.useCount = (subset.useCount or 0) + 1;
+	
+		local classFile = subset.specID and select(6, GetSpecializationInfoByID(subset.specID))
+		set.character = tab.temp[classFile or "NONE"] or shallowcopy(set.character)
+	else
+		set.character = tab.temp["NONE"] or shallowcopy(set.character)
 	end
 
 	BtWLoadoutsFrame:Update();
@@ -953,6 +998,7 @@ end
 
 BtWLoadoutsConditionsMixin = {}
 function BtWLoadoutsConditionsMixin:OnLoad()
+	self.temp = {} -- Stores character restrictions for unselected specs
 end
 function BtWLoadoutsConditionsMixin:OnShow()
 	if not self.initialized then
@@ -964,7 +1010,7 @@ function BtWLoadoutsConditionsMixin:OnShow()
 			local frame = self:GetParent()
 
 			if type(frame.set.character) ~= "table" then
-				frame.set.character = {}
+				frame.set.character = {inherit = true}
 			end
 
 			return frame.set and frame.set.character
@@ -972,10 +1018,22 @@ function BtWLoadoutsConditionsMixin:OnShow()
 		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
 			local frame = self:GetParent()
 			if frame.set then
-				if frame.set.character[arg1] then
-					frame.set.character[arg1] = nil
+				if arg1 == nil then
+					wipe(frame.set.character)
+				elseif arg1 == "inherit" then
+					if frame.set.character[arg1] then
+						frame.set.character[arg1] = nil
+					else
+						wipe(frame.set.character)
+						frame.set.character[arg1] = true
+					end
 				else
-					frame.set.character[arg1] = true
+					frame.set.character["inherit"] = nil
+					if frame.set.character[arg1] then
+						frame.set.character[arg1] = nil
+					else
+						frame.set.character[arg1] = true
+					end
 				end
 
 				BtWLoadoutsFrame:Update()
@@ -1015,6 +1073,7 @@ function BtWLoadoutsConditionsMixin:OnShow()
 end
 function BtWLoadoutsConditionsMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsConditionsMixin:UpdateSetEnabled(value)
@@ -1150,6 +1209,29 @@ function BtWLoadoutsConditionsMixin:Update()
 			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
 		end
 
+		if set.profileSet ~= nil then
+			local profile = Internal.GetProfile(set.profileSet)
+			local classFile = profile.specID and select(6, GetSpecializationInfoByID(profile.specID))
+			if classFile and type(set.character) == "table" and not set.character["inherit"] then
+				-- Filter out any characters that are not valid for the selected loadout spec
+				local changed = false
+				for character in pairs(set.character) do
+					local characterData = Internal.GetCharacterInfo(character)
+					if not characterData or characterData.class ~= classFile then
+						set.character[character] = nil
+						changed = true
+					end
+				end
+				if changed then -- If we filtered out everything just default to inherit
+					if next(set.character) == nil then
+						set.character["inherit"] = true
+					end
+				end
+			end
+			self.CharacterDropDown:SetClass(classFile)
+		else
+			self.CharacterDropDown:SetClass(nil)
+		end
 		self.CharacterDropDown:UpdateName()
 
 		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[self.set.type]);

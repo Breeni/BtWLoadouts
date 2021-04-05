@@ -477,6 +477,7 @@ function BtWLoadoutsEssencesMixin:OnShow()
 end
 function BtWLoadoutsEssencesMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsEssencesMixin:UpdateSetName(value)

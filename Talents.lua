@@ -396,6 +396,7 @@ function BtWLoadoutsTalentsMixin:OnShow()
 end
 function BtWLoadoutsTalentsMixin:ChangeSet(set)
     self.set = set
+    wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsTalentsMixin:UpdateSetName(value)

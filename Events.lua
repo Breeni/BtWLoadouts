@@ -211,8 +211,6 @@ function frame:ADDON_LOADED(...)
                     set.version = 2
                 end
 
-                set.character = nil -- Loadouts are no longer character restricted
-
                 for _,segment in Internal.EnumerateLoadoutSegments() do
                     local id = segment.id
                     set[id] = set[id] or {}

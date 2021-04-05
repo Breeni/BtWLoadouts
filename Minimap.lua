@@ -133,7 +133,7 @@ function BtWLoadoutsMinimapMenu_Init(self, level, menuList)
         wipe(items)
         for id, set in pairs(BtWLoadoutsSets.profiles) do
             if type(set) == "table" then
-                if not set.disabled and Internal.IsLoadoutActivatable(set) then
+                if Internal.IsLoadoutEnabled(set) and Internal.IsLoadoutActivatable(set) then
                     items[#items+1] = set
                 end
             end
