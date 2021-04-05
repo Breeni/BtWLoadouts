@@ -909,6 +909,8 @@ do
 		info.keepShownOnClick = true
 		info.func = function (button, arg1, arg2, checked)
 			self:SetValue(button, arg1, arg2, checked)
+			CloseDropDownMenus()
+			ToggleDropDownMenu(nil, nil, self)
 		end
 
 		if self.includeNone then
