@@ -934,7 +934,8 @@ do
 		end
 
 		if not menuList then
-			menuList = Internal.CategoriesSets(self:GetSets(), self:GetCategories())
+			menuList = Internal.FilterSets({}, self.filters, self:GetSets())
+			menuList = Internal.CategoriesSets(menuList, self:GetCategories())
 		end
 		
 		local filter = self.categories[level or 1]
@@ -1011,6 +1012,16 @@ do
 	end
 	function BtWLoadoutsSetDropDownMixin:GetCategories()
 		return unpack(self.categories)
+	end
+	function BtWLoadoutsSetDropDownMixin:SetFilters(value)
+		self.filters = value
+	end
+	function BtWLoadoutsSetDropDownMixin:GetFilters()
+		local temp = {}
+		for k in pairs(self.filters) do
+			temp[#temp+1] = k
+		end
+		return unpack(temp)
 	end
 	function BtWLoadoutsSetDropDownMixin:GetSets()
 		return self.sets

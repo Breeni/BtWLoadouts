@@ -282,6 +282,7 @@ local function SetDropDownInit(self, set, index)
     end
     self:SetSelected(index and set.soulbinds[index] or nil)
     self:SetSets(temp)
+    self:SetFilters(BtWLoadoutsFilters.soulbinds)
     self:SetCategories(BtWLoadoutsCategories.soulbinds)
 	self:SetIncludeNone(index ~= nil)
     self:OnItemClick(function (self, setID)

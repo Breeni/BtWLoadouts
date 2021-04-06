@@ -123,6 +123,7 @@ Internal.DeleteSet = DeleteSet;
 local function SetDropDownInit(self, set, index, segment, tab)
     self:SetSelected(index and set[segment][index] or nil)
     self:SetSets(BtWLoadoutsSets[segment])
+    self:SetFilters(BtWLoadoutsFilters[segment])
     self:SetCategories(BtWLoadoutsCategories[segment])
 	self:SetIncludeNone(index ~= nil)
     self:OnItemClick(function (self, setID)
