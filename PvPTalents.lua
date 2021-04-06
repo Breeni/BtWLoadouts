@@ -737,17 +737,6 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 		end
 
 		local helpTipBox = self:GetParent().HelpTipBox;
-		-- Tutorial stuff
-		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
-			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
-
-			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
-
-			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-		else
-			helpTipBox.closeFlag = nil;
-			helpTipBox:Hide();
-		end
+		helpTipBox:Hide();
 	end
 end
