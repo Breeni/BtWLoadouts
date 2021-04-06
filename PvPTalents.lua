@@ -200,7 +200,11 @@ local function RefreshPvPTalentSet(set)
     return UpdatePvPTalentSetFilters(set)
 end
 local function AddPvPTalentSet()
-    local specID, specName = GetSpecializationInfo(GetSpecialization());
+    local specIndex = GetSpecialization()
+    if specIndex == 5 then
+        specIndex = 1
+    end
+    local specID, specName = GetSpecializationInfo(specIndex);
     return AddSet("pvptalents", RefreshPvPTalentSet({
         specID = specID,
 		name = format(L["New %s Set"], specName),
@@ -616,21 +620,17 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
+	local set = self.set
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["PvP Talents"], L["Create different talent layouts for the type of content you wish to do."])
 
-	if self.set ~= nil then
-		self.Name:SetEnabled(true);
-		self.SpecDropDown.Button:SetEnabled(true);
-		-- self.trinkets:SetShown(true);
-		-- self.others:SetShown(true);
+	self:GetParent().DeleteButton:SetEnabled(true);
 
-		local specID = self.set.specID;
-
-		local set = self.set
+	if not showingNPE then
+		local specID = set.specID
 
 		UpdatePvPTalentSetFilters(set)
 		sidebar:Update()
-
-		local selected = self.set.talents;
 
 		if not self.Name:HasFocus() then
 			self.Name:SetText(self.set.name or "");
@@ -639,13 +639,8 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
 		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
 		local classColor = GetClassColor(classID);
+        UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
 		UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
-
-		if self.set.inUse then
-			UIDropDownMenu_DisableDropDown(self.SpecDropDown);
-		else
-			UIDropDownMenu_EnableDropDown(self.SpecDropDown);
-		end
 
 		do
 			self.GridPool:ReleaseAll()
@@ -685,38 +680,61 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 
         local playerSpecIndex = GetSpecialization()
         self:GetParent().RefreshButton:SetEnabled(playerSpecIndex and specID == GetSpecializationInfo(playerSpecIndex))
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(classID == select(2, UnitClass("player")));
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(true);
+		self:GetParent().ActivateButton:SetEnabled(classID == select(2, UnitClass("player")));
 
 		local helpTipBox = self:GetParent().HelpTipBox;
 		helpTipBox:Hide();
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Hide();
-		addButton.FlashAnim:Stop();
 	else
-		self.Name:SetEnabled(false);
-		self.SpecDropDown.Button:SetEnabled(false);
-		-- self.trinkets:SetShown(false);
-		-- self.others:SetShown(false);
+        local specIndex = GetSpecialization()
+        if not specIndex or specIndex == 5 then
+            specIndex = 1
+        end
 
-		self.Name:SetText("");
+        local specID, specName = GetSpecializationInfo(specIndex);
 
-        self:GetParent().RefreshButton:SetEnabled(false)
+        self.Name:SetText(format(L["New %s Set"], specName));
+        
+        local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
+        local className = LOCALIZED_CLASS_NAMES_MALE[classID];
+        local classColor = GetClassColor(classID);
+        UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
+        UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(false);
+		do
+			self.GridPool:ReleaseAll()
 
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(false);
+			local previous
+			local index = 1
+			local slotInfo = GetPvpTalentSlotInfoForSpecID(specID, index)
+			while slotInfo do
+				local slotGrid
 
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Show();
-		addButton.FlashAnim:Play();
+				for grid in self.GridPool:EnumerateActive() do
+					if CompareTalentList(grid.talents, slotInfo.availableTalentIDs) then
+						grid:SetMaxSelections(grid:GetMaxSelections() + 1)
+						slotGrid = grid
+					end
+				end
+
+				if not slotGrid then
+					slotGrid = self.GridPool:Acquire()
+					slotGrid:SetTalents(slotInfo.availableTalentIDs, true)
+					slotGrid:SetMaxSelections(1)
+
+					if previous then
+						slotGrid:SetPoint("TOP", previous, "BOTTOM")
+					else
+						slotGrid:SetPoint("TOPLEFT", 0, -38)
+					end
+					slotGrid:Show()
+
+					previous = slotGrid
+				end
+
+				index = index + 1
+				slotInfo = GetPvpTalentSlotInfoForSpecID(specID, index)
+			end
+		end
 
 		local helpTipBox = self:GetParent().HelpTipBox;
 		-- Tutorial stuff

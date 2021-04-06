@@ -168,12 +168,15 @@ local function ActivateTalentSet(set, state)
 end
 local function RefreshTalentSet(set)
     local talents = set.talents or {}
-    wipe(talents)
-	for tier=1,MAX_TALENT_TIERS do
-        local _, column = GetTalentTierInfo(tier, 1);
-        local talentID = GetTalentInfo(tier, column, 1);
-        if talentID then
-            talents[talentID] = true;
+    local specID, specName = GetSpecializationInfo(GetSpecialization());
+    if specID == set.specID then
+        wipe(talents)
+        for tier=1,MAX_TALENT_TIERS do
+            local _, column = GetTalentTierInfo(tier, 1);
+            local talentID = GetTalentInfo(tier, column, 1);
+            if talentID then
+                talents[talentID] = true;
+            end
         end
     end
     set.talents = talents
@@ -181,11 +184,15 @@ local function RefreshTalentSet(set)
     return UpdateTalentSetFilters(set)
 end
 local function AddTalentSet()
-    local specID, specName = GetSpecializationInfo(GetSpecialization());
+    local specIndex = GetSpecialization()
+    if specIndex == 5 then
+        specIndex = 1
+    end
+    local specID, specName = GetSpecializationInfo(specIndex);
     return AddSet("talents", RefreshTalentSet({
         specID = specID,
-		name = format(L["New %s Set"], specName),
-		useCount = 0,
+        name = format(L["New %s Set"], specName),
+        useCount = 0,
         talents = {},
     }))
 end
@@ -659,25 +666,22 @@ function BtWLoadoutsTalentsMixin:Update()
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
+	local set = self.set
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Talents"], L["Create different talent layouts for the type of content you wish to do. Leave rows blank to skip the tier."])
+        
+    self:GetParent().DeleteButton:SetEnabled(true);
 
-    if self.set ~= nil then
-        self.Name:SetEnabled(true);
-        self.SpecDropDown.Button:SetEnabled(true);
-        for _,row in ipairs(self.rows) do
-            row:SetShown(true);
-        end
-
-        local specID = self.set.specID;
-
-		local set = self.set
+    if not showingNPE then
+        local specID = set.specID
 
 		UpdateTalentSetFilters(set)
         sidebar:Update()
 
-        local selected = self.set.talents;
+        local selected = set.talents;
 
         if not self.Name:HasFocus() then
-            self.Name:SetText(self.set.name or "");
+            self.Name:SetText(set.name or "");
         end
 
         local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
@@ -685,12 +689,6 @@ function BtWLoadoutsTalentsMixin:Update()
         local classColor = GetClassColor(classID);
         UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
         UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
-
-        if self.set.inUse then
-            UIDropDownMenu_DisableDropDown(self.SpecDropDown);
-        else
-            UIDropDownMenu_EnableDropDown(self.SpecDropDown);
-        end
 
         for tier=1,MAX_TALENT_TIERS do
             local row = self.talentIDs[tier]
@@ -704,39 +702,37 @@ function BtWLoadoutsTalentsMixin:Update()
 
         local playerSpecIndex = GetSpecialization()
         self:GetParent().RefreshButton:SetEnabled(playerSpecIndex and specID == GetSpecializationInfo(playerSpecIndex))
-
-        local activateButton = self:GetParent().ActivateButton;
-        activateButton:SetEnabled(classID == select(2, UnitClass("player")));
-
-        local deleteButton =  self:GetParent().DeleteButton;
-        deleteButton:SetEnabled(true);
+        self:GetParent().ActivateButton:SetEnabled(classID == select(2, UnitClass("player")));
 
         local helpTipBox = self:GetParent().HelpTipBox;
         helpTipBox:Hide();
-
-        local addButton = self:GetParent().AddButton;
-        addButton.Flash:Hide();
-        addButton.FlashAnim:Stop();
+        
+	    BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] = true;
     else
-        self.Name:SetEnabled(false);
-        self.SpecDropDown.Button:SetEnabled(false);
-        for _,row in ipairs(self.rows) do
-            row:SetShown(false);
+        local specIndex = GetSpecialization()
+        if not specIndex or specIndex == 5 then
+            specIndex = 1
         end
 
-        self.Name:SetText("");
+        local specID, specName = GetSpecializationInfo(specIndex);
 
-        self:GetParent().RefreshButton:SetEnabled(false)
+        self.Name:SetText(format(L["New %s Set"], specName));
+        
+        local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
+        local className = LOCALIZED_CLASS_NAMES_MALE[classID];
+        local classColor = GetClassColor(classID);
+        UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
+        UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 
-        local activateButton = self:GetParent().ActivateButton;
-        activateButton:SetEnabled(false);
+        for tier=1,MAX_TALENT_TIERS do
+            local row = self.talentIDs[tier]
+            wipe(row)
+            for column=1,3 do
+                row[column] = GetTalentInfoForSpecID(specID, tier, column)
+            end
 
-        local deleteButton =  self:GetParent().DeleteButton;
-        deleteButton:SetEnabled(false);
-
-        local addButton = self:GetParent().AddButton;
-        addButton.Flash:Show();
-        addButton.FlashAnim:Play();
+            self.rows[tier]:SetTalents(row);
+        end
 
         local helpTipBox = self:GetParent().HelpTipBox;
         -- Tutorial stuff

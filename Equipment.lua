@@ -1782,9 +1782,9 @@ end
 function BtWLoadoutsItemSlotButtonMixin:Update()
 	local set = self:GetParent().set;
 	local slot = self:GetID();
-	local ignored = set.ignored[slot];
-	local errors = set.errors[slot];
-	local itemLink = set.equipment[slot];
+	local ignored = set and set.ignored[slot] or false;
+	local errors = set and set.errors[slot];
+	local itemLink = set and set.equipment[slot] or GetInventoryItemLink("player", slot);
 	if itemLink then
 		local itemID = GetItemInfoInstant(itemLink);
 		local _, _, quality, _, _, _, _, _, _, texture = GetItemInfo(itemLink);
@@ -1940,10 +1940,11 @@ function BtWLoadoutsEquipmentMixin:Update()
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
+	local set = self.set
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Equipment"], L["Create gear sets or use the Blizzard equipment set manager."])
 
-	if self.set ~= nil then
-		local set = self.set
-
+	if not showingNPE then
 		UpdateEquipmentSetFilters(set)
 		sidebar:Update()
 
@@ -1965,7 +1966,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 		end
 
 		if not self.Name:HasFocus() then
-			self.Name:SetText(self.set.name or "");
+			self.Name:SetText(set.name or "");
 		end
 		self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
 
@@ -1987,16 +1988,8 @@ function BtWLoadoutsEquipmentMixin:Update()
 		end
 
 		self:GetParent().RefreshButton:SetEnabled(set.character == GetCharacterSlug())
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(character == playerCharacter);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(set.managerID == nil);
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Hide();
-		addButton.FlashAnim:Stop();
+		self:GetParent().ActivateButton:SetEnabled(character == playerCharacter);
+		self:GetParent().DeleteButton:SetEnabled(set.managerID == nil);
 
 		local helpTipBox = self:GetParent().HelpTipBox;
 		if character ~= playerCharacter then
@@ -2037,24 +2030,15 @@ function BtWLoadoutsEquipmentMixin:Update()
 			end
 		end
 	else
-		self.Name:SetEnabled(false);
-		self.Name:SetText("");
+		local characterName = UnitFullName("player");
+		self.Name:SetText(format(L["New %s Equipment Set"], characterName))
+
+		local model = self.Model;
+		model:SetUnit("player");
 
 		for _,item in pairs(self.Slots) do
-			item:SetEnabled(false);
+			item:Update()
 		end
-
-        self:GetParent().RefreshButton:SetEnabled(false)
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(false);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(false);
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Show();
-		addButton.FlashAnim:Play();
 
 		local helpTipBox = self:GetParent().HelpTipBox;
 		-- Tutorial stuff
