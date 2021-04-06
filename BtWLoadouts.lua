@@ -1639,6 +1639,24 @@ do
 		end
 		Internal.TriggerConditions();
 	end
+	function BtWLoadoutsFrameMixin:SetNPEShown(show, title, message)
+		show = not not show
+		
+		self.AddButton:SetShown(not show)
+		self.RefreshButton:SetShown(not show)
+		self.ActivateButton:SetShown(not show)
+		self.DeleteButton:SetShown(not show)
+
+		self.NPE:SetShown(show)
+
+		if show then
+			self.NPE.Title:SetText(title)
+			self.NPE.Message:SetText(message)
+			self.NPE.AddButton.FlashAnim:Play()
+		end
+
+		return show
+	end
 end
 
 BtWLoadoutsTalentButtonMixin = {};

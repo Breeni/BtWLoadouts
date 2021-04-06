@@ -414,36 +414,35 @@ do
 		local pending = self:GetParent().pending;
 		local set = self:GetParent().set;
 		local buttons = self.buttons;
-		if set then
-			local role = set.role;
-			local selected = set.essences;
 
-			local offset = HybridScrollFrame_GetOffset(self);
-			for i,item in ipairs(buttons) do
-				local index = offset + i;
-				local essence = Internal.GetEssenceInfoForRole(role, index);
+		local role = set and set.role or select(5, GetSpecializationInfo(GetSpecialization()));
+		local selected = set and set.essences;
 
-				if essence then
-					item.id = essence.ID;
-					item.Name:SetText(essence.name);
-					item.Icon:SetTexture(essence.icon);
+		local offset = HybridScrollFrame_GetOffset(self);
+		for i,item in ipairs(buttons) do
+			local index = offset + i;
+			local essence = Internal.GetEssenceInfoForRole(role, index);
+
+			if essence then
+				item.id = essence.ID;
+				item.Name:SetText(essence.name);
+				item.Icon:SetTexture(essence.icon);
+				if selected then
 					item.ActivatedMarkerMain:SetShown(selected[115] == essence.ID);
 					item.ActivatedMarkerPassive:SetShown((selected[116] == essence.ID) or (selected[117] == essence.ID));
-					item.PendingGlow:SetShown(pending == essence.ID);
-
-					item:Show();
 				else
-					item:Hide();
+					item.ActivatedMarkerMain:SetShown(false);
+					item.ActivatedMarkerPassive:SetShown(false);
 				end
-			end
-			local totalHeight = MAX_ESSENCES * (41 + 1) + 3 * 2;
-			HybridScrollFrame_Update(self, totalHeight, self:GetHeight());
-		else
-			for i,item in ipairs(buttons) do
+				item.PendingGlow:SetShown(pending == essence.ID);
+
+				item:Show();
+			else
 				item:Hide();
 			end
-			HybridScrollFrame_Update(self, 0, self:GetHeight());
 		end
+		local totalHeight = MAX_ESSENCES * (41 + 1) + 3 * 2;
+		HybridScrollFrame_Update(self, totalHeight, self:GetHeight());
 	end
 end
 
@@ -601,11 +600,14 @@ function BtWLoadoutsEssencesMixin:Update()
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
+	local set = self.set
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Essences"], L["Create sets for the Battle for Azeroth artifact neck."])
 
-	if self.set ~= nil then
-		local set = self.set
+    self:GetParent().DeleteButton:SetEnabled(true);
 
-		UpdateSetFilters(set)
+	if not showingNPE then
+		UpdateEssenceSetFilters(set)
 		sidebar:Update()
         
         set.restrictions = set.restrictions or {}
@@ -613,31 +615,15 @@ function BtWLoadoutsEssencesMixin:Update()
         self.RestrictionsDropDown:SetLimitations("role", set.role)
 		self.RestrictionsButton:SetEnabled(true);
 
-		self.Name:SetEnabled(true);
-		self.RestrictionsButton:SetEnabled(true);
-		self.RoleDropDown.Button:SetEnabled(true);
-		self.MajorSlot:SetEnabled(true);
-		self.MinorSlot1:SetEnabled(true);
-		self.MinorSlot2:SetEnabled(true);
-		self.MinorSlot3:SetEnabled(true);
-
-		local role = self.set.role;
-		local selected = self.set.essences;
-
-		UIDropDownMenu_SetText(self.RoleDropDown, _G[self.set.role]);
-
-		if self.set.inUse then
-			UIDropDownMenu_DisableDropDown(self.RoleDropDown);
-		else
-			UIDropDownMenu_EnableDropDown(self.RoleDropDown);
-		end
+		local role = set.role;
+		UIDropDownMenu_SetText(self.RoleDropDown, _G[role]);
 
 		if not self.Name:HasFocus() then
-			self.Name:SetText(self.set.name or "");
+			self.Name:SetText(set.name or "");
 		end
 
 		for milestoneID,item in pairs(self.Slots) do
-			local essenceID = self.set.essences[milestoneID];
+			local essenceID = set.essences[milestoneID];
 			item.milestoneID = milestoneID;
 
 			if essenceID then
@@ -660,57 +646,27 @@ function BtWLoadoutsEssencesMixin:Update()
 
         local playerSpecIndex = GetSpecialization()
 		self:GetParent().RefreshButton:SetEnabled(playerSpecIndex and role == select(5, GetSpecializationInfo(playerSpecIndex)))
-		
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(role == select(5, GetSpecializationInfo(GetSpecialization())));
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(true);
+		self:GetParent().ActivateButton:SetEnabled(role == select(5, GetSpecializationInfo(GetSpecialization())));
 
 		local helpTipBox = self:GetParent().HelpTipBox;
 		helpTipBox:Hide();
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Hide();
-		addButton.FlashAnim:Stop();
 	else
-		self.RestrictionsButton:SetEnabled(false);
-		self.Name:SetEnabled(false);
-		self.RoleDropDown.Button:SetEnabled(false);
-		self.MajorSlot:SetEnabled(false);
-		self.MinorSlot1:SetEnabled(false);
-		self.MinorSlot2:SetEnabled(false);
-		self.MinorSlot3:SetEnabled(false);
+		local role = select(5, GetSpecializationInfo(GetSpecialization()))
+		UIDropDownMenu_SetText(self.RoleDropDown, _G[role]);
+		
+        self.Name:SetText(format(L["New %s Set"], _G[role]));
 
-		self.MajorSlot.EmptyGlow:Hide();
-		self.MinorSlot1.EmptyGlow:Hide();
-		self.MinorSlot2.EmptyGlow:Hide();
-		self.MinorSlot3.EmptyGlow:Hide();
-		self.MajorSlot.EmptyIcon:Hide();
-		self.MinorSlot1.EmptyIcon:Hide();
-		self.MinorSlot2.EmptyIcon:Hide();
-		self.MinorSlot3.EmptyIcon:Hide();
-		self.MajorSlot.Icon:Hide();
-		self.MinorSlot1.Icon:Hide();
-		self.MinorSlot2.Icon:Hide();
-		self.MinorSlot3.Icon:Hide();
+		for milestoneID,item in pairs(self.Slots) do
+			item.milestoneID = milestoneID;
 
-		self.Name:SetText("");
+			item.id = nil;
+			item.Icon:Hide();
+			item.EmptyGlow:Hide();
+			item.EmptyIcon:Show();
+		end
 
-        self:GetParent().RefreshButton:SetEnabled(false)
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(false);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(false);
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Show();
-		addButton.FlashAnim:Play();
-
-		local helpTipBox = self:GetParent().HelpTipBox;
 		-- Tutorial stuff
+		local helpTipBox = self:GetParent().HelpTipBox;
 		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 

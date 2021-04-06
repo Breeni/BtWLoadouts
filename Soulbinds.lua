@@ -120,7 +120,10 @@ local function RefreshSet(set)
     return UpdateSetFilters(set)
 end
 local function AddSet()
-    local soulbindID = GetActiveSoulbindID() or 7 -- Default to pelagos because why not
+    local soulbindID = GetActiveSoulbindID()
+    if soulbindID == 0 then
+        soulbindID = 7 -- Default to pelagos because why not
+    end
     local soulbindData = GetSoulbindData(soulbindID)
     return Internal.AddSet("soulbinds", RefreshSet({
         soulbindID = soulbindID,
@@ -659,14 +662,15 @@ function BtWLoadoutsSoulbindsMixin:Update()
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
+	local set = self.set
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Soulbinds"], L["Create soulbind trees for switching between soulbind paths, leave rows blank to not skip them. Conduits are not affected."])
 
-    if self.set ~= nil then
-        self.Name:SetEnabled(true);
+    self:GetParent().DeleteButton:SetEnabled(true);
 
-        local soulbindID = self.set.soulbindID;
+    if not showingNPE then
+        local soulbindID = set.soulbindID;
         local soulbindData = GetSoulbindData(soulbindID)
-
-		local set = self.set
 
 		UpdateSetFilters(set)
         sidebar:Update()
@@ -677,17 +681,16 @@ function BtWLoadoutsSoulbindsMixin:Update()
 		self.RestrictionsButton:SetEnabled(true);
 
         if not self.Name:HasFocus() then
-            self.Name:SetText(self.set.name or "");
+            self.Name:SetText(set.name or "");
         end
 
         UIDropDownMenu_SetSelectedValue(self.SoulbindDropDown, soulbindID);
         UIDropDownMenu_SetText(self.SoulbindDropDown, soulbindData.name);
         UIDropDownMenu_EnableDropDown(self.SoulbindDropDown);
         
-        local selected = self.set.nodes;
+        local selected = set.nodes;
         self.nodes:ReleaseAll()
         self.links:ReleaseAll()
-        -- wipe(self.nodesByRow)
         for _,node in ipairs(soulbindData.tree.nodes) do
             local nodeFrame = self.nodes:Acquire()
             nodeFrame:SetFrameLevel(4)
@@ -743,46 +746,34 @@ function BtWLoadoutsSoulbindsMixin:Update()
         local playerCovenantID = GetActiveCovenantID()
         local playerSoulbindID = GetActiveSoulbindID()
         self:GetParent().RefreshButton:SetEnabled(soulbindID == playerSoulbindID)
-
-        local activateButton = self:GetParent().ActivateButton;
-        activateButton:SetEnabled(soulbindData.covenantID == playerCovenantID and soulbindData.unlocked);
-
-        local deleteButton =  self:GetParent().DeleteButton;
-        deleteButton:SetEnabled(true);
+        self:GetParent().ActivateButton:SetEnabled(soulbindData.covenantID == playerCovenantID and soulbindData.unlocked);
 
         local helpTipBox = self:GetParent().HelpTipBox;
         helpTipBox:Hide();
-
-        local addButton = self:GetParent().AddButton;
-        addButton.Flash:Hide();
-        addButton.FlashAnim:Stop();
     else
+        local soulbindID = GetActiveSoulbindID()
+        if soulbindID == 0 then
+            soulbindID = 7 -- Default to pelagos because why not
+        end
+        local soulbindData = GetSoulbindData(soulbindID)
+        
+        self.Name:SetText(format(L["New %s Set"], soulbindData.name));
+
         self.nodes:ReleaseAll()
         self.links:ReleaseAll()
-		self.RestrictionsButton:SetEnabled(false);
-        self.Name:SetEnabled(false);
-        UIDropDownMenu_DisableDropDown(self.SoulbindDropDown);
-        -- self.SoulbindDropDown.Button:SetEnabled(false);
-        -- for _,row in ipairs(self.rows) do
-        --     row:SetShown(false);
-        -- end
+        for _,node in ipairs(soulbindData.tree.nodes) do
+            local nodeFrame = self.nodes:Acquire()
+            nodeFrame:SetFrameLevel(4)
+            nodeFrame:SetPoint("TOP", self.Inset, "TOP", (node.column - 1) * (nodeFrame:GetWidth() + 30), -node.row * (nodeFrame:GetHeight() + 12) - 17)
+            nodeFrame:SetNode(node)
+            nodeFrame:SetSelected(false)
+            nodeFrame:Show()
 
-        self.Name:SetText("");
+            self.nodesByID[node.ID] = nodeFrame
+        end
 
-        self:GetParent().RefreshButton:SetEnabled(false)
-
-        local activateButton = self:GetParent().ActivateButton;
-        activateButton:SetEnabled(false);
-
-        local deleteButton =  self:GetParent().DeleteButton;
-        deleteButton:SetEnabled(false);
-
-        local addButton = self:GetParent().AddButton;
-        addButton.Flash:Show();
-        addButton.FlashAnim:Play();
-
-        local helpTipBox = self:GetParent().HelpTipBox;
         -- Tutorial stuff
+        local helpTipBox = self:GetParent().HelpTipBox;
         if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
             helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 

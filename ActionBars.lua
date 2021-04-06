@@ -5,8 +5,6 @@ local ADDON_NAME,Internal = ...
 local L = Internal.L
 
 local UnitClass = UnitClass
-local GetSpecialization = GetSpecialization
-local GetSpecializationInfo = GetSpecializationInfo
 local GetActionInfo = GetActionInfo
 local GetMacroBody = GetMacroBody
 local trim = strtrim
@@ -914,8 +912,8 @@ function BtWLoadoutsActionButtonMixin:Update()
 	local set = self:GetParent().set;
 	local slot = self:GetID();
 	local errors = nil
-	local ignored = set.ignored[slot];
-	local tbl = set.actions[slot];
+	local ignored = set and set.ignored[slot];
+	local tbl = set and set.actions[slot];
 	if tbl and tbl.type ~= nil then
         if not ignored then
             local success, msg = Internal.PickupActionTable(tbl, true, set.settings)
@@ -1189,52 +1187,30 @@ function BtWLoadoutsActionBarsMixin:Update()
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
+	local set = self.set
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Action Bars"], L["Create different action bar layouts, including stealth, form, and stance bars. You can ignore specific action buttons or entire bars."])
+        
+    self:GetParent().RefreshButton:SetEnabled(true)
+    self:GetParent().ActivateButton:SetEnabled(true);
+    self:GetParent().DeleteButton:SetEnabled(true);
 
-	if self.set ~= nil then
-		self.SettingsButton:SetEnabled(true);
-
-		local set = self.set;
+	if set ~= nil then
 		local slots = set.actions;
 
-		UpdateSetFilters(set)
-		sidebar:Update()
-
-        set.restrictions = set.restrictions or {}
-        self.SettingsDropDown:SetSelections(set.restrictions)
-        self.SettingsDropDown:SetLimitations()
-		self.SettingsButton:SetEnabled(true);
-
-		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
-			self.Name:SetText(self.set.name or "");
+			self.Name:SetText(set.name or "");
 		end
 
         for slot,item in pairs(self.Slots) do
             item:SetID(slot)
             item:Update();
-			item:SetEnabled(true);
 
             local icon = item.Icon:GetTexture()
             if icon ~= nil and icon ~= 134400 then
                 slots[slot].icon = icon
             end
 		end
-        for i=1,10 do
-            local item = self["IgnoreBar" .. i]
-			item:SetEnabled(true);
-		end
-
-        self:GetParent().RefreshButton:SetEnabled(true)
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(true);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(true);
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Hide();
-		addButton.FlashAnim:Stop();
 
 		local helpTipBox = self:GetParent().HelpTipBox;
         if not BtWLoadoutsHelpTipFlags["ACTIONBAR_IGNORE"] then
@@ -1249,33 +1225,15 @@ function BtWLoadoutsActionBarsMixin:Update()
             helpTipBox:Hide();
         end
 	else
-		self.SettingsButton:SetEnabled(false);
+		self.Name:SetText(L["New Set"]);
 
-		self.Name:SetEnabled(false);
-		self.Name:SetText("");
-
-		for _,item in pairs(self.Slots) do
-			item:SetEnabled(false);
-		end
-        for i=1,10 do
-            local item = self["IgnoreBar" .. i]
-			item:SetEnabled(true);
+        for slot,item in pairs(self.Slots) do
+            item:SetID(slot)
+            item:Update();
 		end
 
-        self:GetParent().RefreshButton:SetEnabled(false)
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(false);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(false);
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Show();
-		addButton.FlashAnim:Play();
-
-		local helpTipBox = self:GetParent().HelpTipBox;
 		-- Tutorial stuff
+		local helpTipBox = self:GetParent().HelpTipBox;
 		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 

@@ -1245,6 +1245,7 @@ end
 function BtWLoadoutsProfilesMixin:UpdateSetName(value)
 	if self.set and self.set.name ~= not value then
 		self.set.name = value;
+		BtWLoadoutsHelpTipFlags["TUTORIAL_RENAME_SET"] = true
 		self:Update();
 	end
 end
@@ -1364,25 +1365,21 @@ function BtWLoadoutsProfilesMixin:Update()
 	
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
-
-	self.Name:SetEnabled(self.set ~= nil);
-	self.SpecDropDown.Button:SetEnabled(self.set ~= nil);
-	self.CharacterDropDown.Button:SetEnabled(self.set ~= nil);
+	local set = self.set
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Profiles"], L["Add sets of one or more types (Talents, Soulbinds, etc.) to your profiles to swap them together."])
 
 	self:GetParent().RefreshButton:SetEnabled(false)
 
 	self.Collapsed = self.Collapsed or {}
 
-	if self.set ~= nil then
-		local hasErrors, errors, specID = GetLoadoutErrors(errors, self.set)
-		if type(specID) == "number" and self.set.specID == nil then
-			self.set.specID = specID
+	if not showingNPE then
+		local hasErrors, errors, specID = GetLoadoutErrors(errors, set)
+		if type(specID) == "number" and set.specID == nil then
+			set.specID = specID
 		end
 
-		specID = self.set.specID;
-		local classFile = specID and select(6, GetSpecializationInfoByID(specID))
-
-		local set = self.set
+		specID = set.specID;
 
 		UpdateSetFilters(set)
 		sidebar:Update()
@@ -1408,28 +1405,17 @@ function BtWLoadoutsProfilesMixin:Update()
 		self.CharacterDropDown:SetClass(classFile)
 		self.CharacterDropDown:UpdateName()
 		
-		self.Enabled:SetEnabled(true);
-		self.Enabled:SetChecked(not self.set.disabled);
+		self.Enabled:SetChecked(not set.disabled);
 
-		self.SetsScroll.items = BuildSetItems(self.set, self.SetsScroll.items or {}, self.Collapsed, errors)
+		self.SetsScroll.items = BuildSetItems(set, self.SetsScroll.items or {}, self.Collapsed, errors)
 		SetsScrollFrameUpdate(self.SetsScroll)
 		
 		if not self.Name:HasFocus() then
-			self.Name:SetText(self.set.name or "");
+			self.Name:SetText(set.name or "");
 		end
 
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(IsLoadoutActivatable(self.set));
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(true);
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Hide();
-		addButton.FlashAnim:Stop();
-
-		local helpTipBox = self:GetParent().HelpTipBox;
 		-- Tutorial stuff
+		local helpTipBox = self:GetParent().HelpTipBox;
 		if not BtWLoadoutsHelpTipFlags["TUTORIAL_RENAME_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_RENAME_SET";
 
@@ -1440,14 +1426,14 @@ function BtWLoadoutsProfilesMixin:Update()
 		elseif not BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_CREATE_TALENT_SET";
 
-			HelpTipBox_Anchor(helpTipBox, "TOP", self.TalentsDropDown);
+			HelpTipBox_Anchor(helpTipBox, "TOP", self.SetsScroll);
 
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["Create a talent set for your new profile."]);
 		elseif not BtWLoadoutsHelpTipFlags["TUTORIAL_ACTIVATE_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_ACTIVATE_SET";
 
-			HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+			HelpTipBox_Anchor(helpTipBox, "TOP", self:GetParent().ActivateButton);
 
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["Activate your profile."]);
@@ -1456,28 +1442,21 @@ function BtWLoadoutsProfilesMixin:Update()
 			helpTipBox:Hide();
 		end
 	else
-		self.Name:SetText("");
+		self.Name:SetText("New Profile");
 
-		self.SetsScroll.items = self.SetsScroll.items or {}
-		wipe(self.SetsScroll.items)
+		self.SetsScroll.items = BuildSetItems({}, self.SetsScroll.items or {}, self.Collapsed, {})
 		SetsScrollFrameUpdate(self.SetsScroll)
+		
+		self.Enabled:SetChecked(true)
+		
+		UIDropDownMenu_SetText(self.SpecDropDown, L["None"])
 
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(false);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(false);
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Show();
-		addButton.FlashAnim:Play();
-
-		local helpTipBox = self:GetParent().HelpTipBox;
 		-- Tutorial stuff
+		local helpTipBox = self:GetParent().HelpTipBox;
 		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
 
-			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
+			HelpTipBox_Anchor(helpTipBox, "BOTTOM", self:GetParent().NPE.AddButton);
 
 			helpTipBox:Show();
 			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);

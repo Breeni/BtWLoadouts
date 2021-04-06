@@ -429,7 +429,7 @@
 				</KeyValues>
 				<Size x="80" y="22"/>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeKey="$parent.BodyInset" relativePoint="BOTTOMLEFT" x="0" y="-2"/>
+					<Anchor point="BOTTOMRIGHT" x="-499" y="4"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -443,7 +443,7 @@
 				</KeyValues>
 				<Size x="120" y="22"/>
 				<Anchors>
-					<Anchor point="TOP" relativeKey="$parent.BodyInset" relativePoint="BOTTOM" x="0" y="-2"/>
+					<Anchor point="BOTTOMRIGHT" x="-234" y="4"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -457,7 +457,7 @@
 				</KeyValues>
 				<Size x="80" y="22"/>
 				<Anchors>
-					<Anchor point="TOPRIGHT" relativeKey="$parent.BodyInset" relativePoint="BOTTOMRIGHT" x="0" y="-2"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="4"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -487,6 +487,67 @@
 						</Scripts>
 					</Button>
 					<Frame parentKey="Arrow" inherits="GlowBoxArrowTemplate" />
+				</Frames>
+			</Frame>
+			<Frame parentKey="NPE" hidden="true" frameLevel="20">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="10" y="-30"/>
+					<Anchor point="BOTTOMRIGHT" x="-10" y="28"/>
+				</Anchors>
+				<Layers>
+					<Layer level="ARTWORK">
+						<FontString parentKey="Message" text="BTWLOADOUTS_SPECIALIZATION" inherits="GameFontHighlight" justifyH="LEFT">
+							<Size x="400" y="0"/>
+							<Anchors>
+								<Anchor point="CENTER" x="0" y="0"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+						<FontString parentKey="Title" text="BTWLOADOUTS_NAME" inherits="BossEmoteNormalHuge" justifyH="LEFT">
+							<Size x="400" y="0"/>
+							<Anchors>
+								<Anchor point="BOTTOM" relativeKey="$parent.Message" relativePoint="TOP" x="0" y="10"/>
+							</Anchors>
+							<Color r="0.75" g="0.61" b="0"/>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<Frame parentKey="Inset" useParentLevel="true" inherits="InsetFrameTemplate" alpha="0.85" enableMouse="true">
+						<Anchors>
+							<Anchor point="TOPLEFT" x="-6" y="4" />
+							<Anchor point="BOTTOMRIGHT" x="4" y="-2" />
+						</Anchors>
+					</Frame>
+					<Button parentKey="AddButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_NEW_SET">
+						<KeyValues>
+							<KeyValue type="boolean" key="isAdd" value="true"/>
+						</KeyValues>
+						<Size x="120" y="22"/>
+						<Anchors>
+							<Anchor point="TOP" relativeKey="$parent.Message" relativePoint="BOTTOM" x="0" y="-10"/>
+						</Anchors>
+						<Layers>
+							<Layer level="OVERLAY">
+								<Texture file="Interface\Buttons\UI-Panel-Button-Glow" alphaMode="ADD" parentKey="Flash">
+									<Size x="184" y="60"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" x="-7" y="7"/>
+									</Anchors>
+								</Texture>
+							</Layer>
+						</Layers>
+						<Animations>
+							<AnimationGroup parentKey="FlashAnim" looping="BOUNCE">
+								<Alpha childKey="Flash" fromAlpha="0.75" toAlpha="0" duration="1.0" smoothing="IN_OUT" order="1"/>
+							</AnimationGroup>
+						</Animations>
+						<Scripts>
+							<OnClick>
+								BtWLoadoutsFrame:OnButtonClick(self);
+							</OnClick>
+						</Scripts>
+					</Button>
 				</Frames>
 			</Frame>
 		</Frames>

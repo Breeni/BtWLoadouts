@@ -1135,10 +1135,15 @@ function BtWLoadoutsConditionsMixin:Update()
 
 	sidebar:Update()
 	self.set = sidebar:GetSelected()
+	local set = self.set;
+	
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Conditions"], L["Create conditions to notify you to change sets under specific circumstances, including raid bosses and mythic keystone dungeon affixes."])
 
-	if self.set ~= nil then
-		local set = self.set;
+	self:GetParent().RefreshButton:SetEnabled(true)
+	self:GetParent().ActivateButton:SetEnabled(false)
+	self:GetParent().DeleteButton:SetEnabled(true)
 
+    if not showingNPE then
 		-- 8 is M+ and 23 is Mythic, since we cant change specs inside a M+ we need to check trigger within the mythic but still,
 		-- show in the editor as Mythic Keystone whatever.
 		if set.difficultyID == 8 then
@@ -1187,20 +1192,11 @@ function BtWLoadoutsConditionsMixin:Update()
 			RemoveConditionFromMap(set);
 		end
 
-		self.Name:SetEnabled(true);
 		if not self.Name:HasFocus() then
 			self.Name:SetText(set.name or "");
 		end
 
-		self.Enabled:SetEnabled(true);
 		self.Enabled:SetChecked(not set.disabled);
-
-		self.ProfileDropDown.Button:SetEnabled(true);
-		self.CharacterDropDown.Button:SetEnabled(true);
-		self.ConditionTypeDropDown.Button:SetEnabled(true);
-		self.InstanceDropDown.Button:SetEnabled(true);
-		self.DifficultyDropDown.Button:SetEnabled(true);
-		self.ScenarioDropDown.Button:SetEnabled(true);
 
 		if set.profileSet == nil then
 			UIDropDownMenu_SetText(self.ProfileDropDown, L["None"]);
@@ -1209,32 +1205,7 @@ function BtWLoadoutsConditionsMixin:Update()
 			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
 		end
 
-		if set.profileSet ~= nil then
-			local profile = Internal.GetProfile(set.profileSet)
-			local classFile = profile.specID and select(6, GetSpecializationInfoByID(profile.specID))
-			if classFile and type(set.character) == "table" and not set.character["inherit"] then
-				-- Filter out any characters that are not valid for the selected loadout spec
-				local changed = false
-				for character in pairs(set.character) do
-					local characterData = Internal.GetCharacterInfo(character)
-					if not characterData or characterData.class ~= classFile then
-						set.character[character] = nil
-						changed = true
-					end
-				end
-				if changed then -- If we filtered out everything just default to inherit
-					if next(set.character) == nil then
-						set.character["inherit"] = true
-					end
-				end
-			end
-			self.CharacterDropDown:SetClass(classFile)
-		else
-			self.CharacterDropDown:SetClass(nil)
-		end
-		self.CharacterDropDown:UpdateName()
-
-		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[self.set.type]);
+		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[set.type]);
 		self.InstanceDropDown:SetShown(set.type == CONDITION_TYPE_DUNGEONS or set.type == CONDITION_TYPE_RAIDS);
 		if set.instanceID == nil then
 			UIDropDownMenu_SetText(self.InstanceDropDown, L["Any"]);
@@ -1286,50 +1257,23 @@ function BtWLoadoutsConditionsMixin:Update()
 			end
 		end
 
-		self:GetParent().RefreshButton:SetEnabled(true)
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(false);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(true);
-
 		local helpTipBox = self:GetParent().HelpTipBox;
 		helpTipBox:Hide();
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Hide();
-		addButton.FlashAnim:Stop();
 	else
-		self.Name:SetEnabled(false);
-		self.Name:SetText("");
+		self.Name:SetText(L["New Condition Set"]);
+
+		self.Enabled:SetChecked(true);
 		
-		self.Enabled:SetEnabled(false);
-		self.Enabled:SetChecked(false);
+		UIDropDownMenu_SetText(self.ProfileDropDown, L["None"]);
+		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES["world"]);
 
-		self.ProfileDropDown.Button:SetEnabled(false);
-		self.CharacterDropDown.Button:SetEnabled(false);
-		self.ConditionTypeDropDown.Button:SetEnabled(false);
-		self.InstanceDropDown.Button:SetEnabled(false);
-		self.DifficultyDropDown.Button:SetEnabled(false);
-		self.BossDropDown.Button:SetEnabled(false);
-		self.ScenarioDropDown.Button:SetEnabled(false);
-		self.ScenarioDropDown:Hide();
-		self.AffixesDropDown:Hide();
-
-		self:GetParent().RefreshButton:SetEnabled(false)
-
-		local activateButton = self:GetParent().ActivateButton;
-		activateButton:SetEnabled(false);
-
-		local deleteButton =  self:GetParent().DeleteButton;
-		deleteButton:SetEnabled(false);
+		self.InstanceDropDown:SetShown(false);
+		self.DifficultyDropDown:SetShown(false);
+		self.BossDropDown:SetShown(false);
+		self.AffixesDropDown:SetShown(false);
+		self.ScenarioDropDown:SetShown(false);
 
 		local helpTipBox = self:GetParent().HelpTipBox;
 		helpTipBox:Hide();
-
-		local addButton = self:GetParent().AddButton;
-		addButton.Flash:Show();
-		addButton.FlashAnim:Play();
 	end
 end
