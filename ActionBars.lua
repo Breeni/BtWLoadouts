@@ -1232,18 +1232,7 @@ function BtWLoadoutsActionBarsMixin:Update()
             item:Update();
 		end
 
-		-- Tutorial stuff
-		local helpTipBox = self:GetParent().HelpTipBox;
-		if not BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] then
-			helpTipBox.closeFlag = "TUTORIAL_NEW_SET";
-
-			HelpTipBox_Anchor(helpTipBox, "TOP", addButton);
-
-			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["To begin, create a new set."]);
-		else
-			helpTipBox.closeFlag = nil;
-			helpTipBox:Hide();
-		end
+        local helpTipBox = self:GetParent().HelpTipBox;
+        helpTipBox:Hide();
 	end
 end
