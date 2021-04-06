@@ -341,7 +341,8 @@ Internal.Filters = {
 			return function (tbl, index)
 				index = index + 1
 				if tbl[index] then
-					return index, tbl[index], C_CreatureInfo.GetClassInfo(tbl[index]).className
+					local classInfo = C_CreatureInfo.GetClassInfo(tbl[index])
+					return index, classInfo.classFile, classInfo.className
 				elseif includeOther and index == #tbl + 1 then
 					return index, 0, L["Other"]
 				end
