@@ -761,7 +761,7 @@ do
 			end
 			
 			if restrictions.race and next(restrictions.race) and raceID ~= nil then
-				if not restrictions.race[id] then
+				if not restrictions.race[raceID] then
 					return false
 				end
 			end
