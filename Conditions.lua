@@ -409,7 +409,7 @@ function Internal.TriggerConditions()
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
 		if type(set) == "table" and set.profileSet ~= nil and not set.disabled then
 			local profile = Internal.GetProfile(set.profileSet);
-			if (not Settings.noSpecSwitch or profile.specID == specID) and Internal.IsLoadoutActivatable(profile) then
+			if (not Settings.noSpecSwitch or profile.specID == specID or profile.specID == nil) and Internal.IsLoadoutActivatable(profile) then
 				local match = IsConditionActive(set);
 				if match then
 					activeConditions[profile] = set;
