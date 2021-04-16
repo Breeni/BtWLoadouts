@@ -1464,6 +1464,48 @@ end
 local gameTooltipErrorLink;
 local gameTooltipErrorText;
 
+local equipLocToInvSlot = {
+	["INVTYPE_HEAD"]			=	{[1]  = true},
+	["INVTYPE_NECK"]			=	{[2]  = true},
+	["INVTYPE_SHOULDER"]		=	{[3]  = true},
+	["INVTYPE_BODY"]			=	{[4]  = true},
+	["INVTYPE_CHEST"]			=	{[5]  = true},
+	["INVTYPE_ROBE"]			=	{[5]  = true},
+	["INVTYPE_WAIST"]			=	{[6]  = true},
+	["INVTYPE_LEGS"]			=	{[7]  = true},
+	["INVTYPE_FEET"]			=	{[8]  = true},
+	["INVTYPE_WRIST"]			=	{[9]  = true},
+	["INVTYPE_HAND"]			=	{[10] = true},
+	["INVTYPE_FINGER"]			=	{[11] = true, [12] = true},
+	["INVTYPE_TRINKET"]			=	{[13] = true, [14] = true},
+	["INVTYPE_CLOAK"]			=	{[15] = true},
+	["INVTYPE_RANGED"]			=	{[16] = true},
+	["INVTYPE_2HWEAPON"]		=	{[16] = true},
+	["INVTYPE_WEAPONMAINHAND"]	=	{[16] = true},
+	["INVTYPE_WEAPONOFFHAND"]	=	{[16] = true},
+	["INVTYPE_THROWN"]			=	{[16] = true},
+	["INVTYPE_RANGEDRIGHT"]		=	{[16] = true},
+	["INVTYPE_WEAPON"]			=	{[16] = true},
+	["INVTYPE_SHIELD"]			=	{[17] = true},
+	["INVTYPE_HOLDABLE"]		=	{[17] = true},
+	["INVTYPE_TABARD"]			=	{[19] = true},
+	-- ["INVTYPE_BAG"]
+	-- ["INVTYPE_AMMO"]
+	-- ["INVTYPE_QUIVER"]
+	-- ["INVTYPE_RELIC"]
+}
+local function IsItemValidForSlot(itemLink, invSlot, classID)
+	local _, _, _, itemEquipLoc = GetItemInfoInstant(itemLink)
+
+	if itemEquipLoc == "INVTYPE_2HWEAPON" and invSlot == 17 and classID == 1 then -- Double 2 handers for fury
+		return true
+	elseif itemEquipLoc == "INVTYPE_WEAPON" and invSlot == 17 and (classID == 1 or classID == 4 or classID == 6 or classID == 7 or classID == 10 or classID == 11 or classID == 12) then -- Duel Weilders
+		return true
+	end
+
+	return (equipLocToInvSlot[itemEquipLoc] and equipLocToInvSlot[itemEquipLoc][invSlot]) and true or false
+end
+
 BtWLoadoutsItemSlotButtonMixin = {};
 function BtWLoadoutsItemSlotButtonMixin:OnLoad()
 	self:RegisterForClicks("LeftButtonUp", "RightButtonUp");
@@ -1591,8 +1633,7 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 		self:Update();
 		return true;
 	else
-		local _, _, quality, _, _, _, _, _, itemEquipLoc, texture, _, itemClassID, itemSubClassID = GetItemInfo(itemLink);
-		if self.invType == itemEquipLoc then
+		if IsItemValidForSlot(itemLink, self:GetID(), select(3, UnitClass("player"))) then
 			local previousLocation = set.locations[self:GetID()]
 
 			set.equipment[self:GetID()] = itemLink;
