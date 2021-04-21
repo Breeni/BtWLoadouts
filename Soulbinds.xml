@@ -250,6 +250,28 @@
 					</OnMouseUp>
 				</Scripts>
 			</DropDownToggleButton>
+			<ScrollFrame parentKey="Scroll" clipChildren="true" inherits="UIPanelScrollFrameCodeTemplate">
+				<Anchors>
+                    <Anchor point="TOPLEFT" x="-4" y="-34" />
+                    <Anchor point="BOTTOMRIGHT" x="4" y="0" />
+				</Anchors>
+				<Frames>
+					<Slider name="$parentScrollBar" inherits="UIPanelScrollBarTemplate" parentKey="ScrollBar">
+						<Anchors>
+							<Anchor point="TOPRIGHT" x="-4.5" y="-16"/>
+							<Anchor point="BOTTOMRIGHT" x="-4.5" y="15"/>
+						</Anchors>
+					</Slider>
+				</Frames>
+				<ScrollChild>
+					<Frame>
+						<Size x="577" y="100"/>
+						<Anchors>
+							<Anchor point="TOPLEFT" x="0" y="0"/>
+						</Anchors>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
         </Frames>
         <Scripts>
             <OnLoad inherit="prepend" method="OnLoad"/>

@@ -389,7 +389,7 @@ function BtWLoadoutsSoulbindNodeMixin:SetSelected(selected)
 	end
 end
 function BtWLoadoutsSoulbindNodeMixin:OnClick()
-    local container = self:GetParent()
+    local container = self:GetParent():GetParent():GetParent()
     local node = self.node
     local nodes = container.set.nodes
     local selected = not nodes[node.ID]
@@ -520,8 +520,8 @@ function BtWLoadoutsSoulbindsMixin:OnLoad()
     end)
 
     self.temp = {}
-    self.nodes = CreateFramePool("BUTTON", self, "BtWLoadoutsSoulbindNodeTemplate");
-    self.links = CreateFramePool("FRAME", self, "BtWLoadoutsSoulbindTreeNodeLinkTemplate");
+    self.nodes = CreateFramePool("BUTTON", self.Scroll:GetScrollChild(), "BtWLoadoutsSoulbindNodeTemplate");
+    self.links = CreateFramePool("FRAME", self.Scroll, "BtWLoadoutsSoulbindTreeNodeLinkTemplate");
     self.nodesByID = {}
 end
 function BtWLoadoutsSoulbindsMixin:OnShow()
@@ -696,8 +696,8 @@ function BtWLoadoutsSoulbindsMixin:Update()
         self.links:ReleaseAll()
         for _,node in ipairs(soulbindData.tree.nodes) do
             local nodeFrame = self.nodes:Acquire()
-            nodeFrame:SetFrameLevel(4)
-            nodeFrame:SetPoint("TOP", self.Inset, "TOP", (node.column - 1) * (nodeFrame:GetWidth() + 30), -node.row * (nodeFrame:GetHeight() + 12) - 17)
+            nodeFrame:SetFrameLevel(6)
+            nodeFrame:SetPoint("TOP", (node.column - 1) * (nodeFrame:GetWidth() + 30), -node.row * (nodeFrame:GetHeight() + 12) - 17)
             nodeFrame:SetNode(node)
             nodeFrame:SetSelected(selected[node.ID])
             nodeFrame:Show()
@@ -712,6 +712,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
                     linkToFrame.node.childNodeIDs[#linkToFrame.node.childNodeIDs+1] = linkFromFrame.node.ID
 
                     local linkFrame = self.links:Acquire()
+                    linkFrame:SetFrameLevel(2)
 
 					local toColumn = linkToFrame.node.column;
 					local fromColumn = linkFromFrame.node.column;
@@ -766,7 +767,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
         self.links:ReleaseAll()
         for _,node in ipairs(soulbindData.tree.nodes) do
             local nodeFrame = self.nodes:Acquire()
-            nodeFrame:SetFrameLevel(4)
+            nodeFrame:SetFrameLevel(6)
             nodeFrame:SetPoint("TOP", self.Inset, "TOP", (node.column - 1) * (nodeFrame:GetWidth() + 30), -node.row * (nodeFrame:GetHeight() + 12) - 17)
             nodeFrame:SetNode(node)
             nodeFrame:SetSelected(false)
