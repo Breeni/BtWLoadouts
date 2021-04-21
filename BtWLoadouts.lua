@@ -1,24 +1,22 @@
 --[[@TODO
-	Minimap icon should show progress texture and help box
+	Loadout and condition restrictions like character
+	Update condition filtering
+	Update set dropdowns to use sidebar filtering
+	New user UI, each tab should have a cleaner ui before creaitng a set
+	-- 1.0.0 breakpoint
+	Show restrictions for subsets within the loadout list?
 	Equipment flyout
-	Equipment sets should store location? Check what events are fired with upgrading items
 	Equipment sets should store transmog?
 	Loadout keybindings
 	Conditions need to support arena comp?
-	Localization
 	Update new set text button based on tab?
-	New user UI, each tab should have a cleaner ui before creaitng a set
 	Set icons
 	Import/Export and custom links
-	Better info for why a profile is disabled
 	When combining sets, adjust sets for the current player,
 	  eg moving essences because the character missing a ring/essence
-	Better condition loadout list display, show specs
-	Better issue handling
 	Set save button?
-	Show changes for the conditions
+	Show what will change when activating a condition
 	Zone Specific conditions
-	Loadout restrictions like class/character
 	Conditions should support multiple bosses/affix combos?
 	Conditions level support
 	Option to show minimap menu on mouse over
@@ -51,6 +49,8 @@ BTWLOADOUTS_SPECIALIZATION = L["Specialization"]
 BTWLOADOUTS_ENABLED = L["Enabled"]
 BTWLOADOUTS_UPDATE = L["Update"]
 BTWLOADOUTS_LOG = L["Log"]
+BTWLOADOUTS_CHARACTER_RESTRICTIONS = L["Character Restrictions"]
+BTWLOADOUTS_RESTRICTIONS = L["Restrictions"]
 
 BINDING_HEADER_BTWLOADOUTS = L["BtWLoadouts"]
 BINDING_NAME_TOGGLE_BTWLOADOUTS = L["Toggle BtWLoadouts"]
@@ -419,6 +419,14 @@ function Internal.DropDownSetOnChange(self, func)
 	self.OnChange = func;
 end
 
+local function shallowcopy(tbl)
+	local result = {}
+	for k,v in pairs(tbl) do
+		result[k] = v
+	end
+	return result
+end
+
 local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
 	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
@@ -427,7 +435,13 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local set = tab.set;
 
 	if selectedTab == TAB_PROFILES then
+		local classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
+		tab.temp[classFile or "NONE"] = set.character
+
 		set.specID = arg1;
+
+		classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
+		set.character = tab.temp[classFile or "NONE"] or shallowcopy(set.character)
 	elseif selectedTab == TAB_TALENTS or selectedTab == TAB_PVP_TALENTS then
 		local temp = tab.temp;
 		-- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
@@ -502,271 +516,544 @@ function BtWLoadoutsSpecDropDownMixin:OnShow()
 	end
 end
 
+-- Restrictions Drop Down, used by sets to handle limit activation
+do
+	local function DropDownInit(self, level, menuList)
+		local function OnClick(_, arg1, arg2, checked)
+			self:ToggleSelected(arg1, arg2)
+		end
+
+		local info = UIDropDownMenu_CreateInfo()
+		if (level or 1) == 1 then
+			local hasSelected = false
+
+			info.func = OnClick
+			info.checked = true
+			info.keepShownOnClick = true
+			for _,type,key,name, restricted in self:EnumerateSelected() do
+				info.text = restricted and string.format("|CFFFF8080%s|r", name) or name
+				info.arg1 = type
+				info.arg2 = key
+
+				info.tooltipOnButton = restricted
+				if restricted then
+					info.tooltipTitle = name
+					info.tooltipText = L["Incompatible Restrictions"]
+				else
+					info.tooltipTitle = nil
+					info.tooltipText = nil
+				end
+
+				UIDropDownMenu_AddButton(info, level)
+
+				hasSelected = true
+			end
+			
+			info.tooltipOnButton = false
+			info.tooltipTitle = nil
+			info.tooltipText = nil
+
+			if hasSelected then
+				UIDropDownMenu_AddSeparator()
+			end
+			
+			info.func = nil
+			info.checked = nil
+			for _,type,name in self:EnumerateSupportedTypes() do
+				info.text = name
+				info.hasArrow, info.menuList = true, type
+				info.notCheckable = true
+				UIDropDownMenu_AddButton(info, level)
+			end
+		else
+			info.func = OnClick
+			info.keepShownOnClick = true
+			for _,key,name in self:EnumerateType(menuList) do
+				info.text = name
+				info.arg1 = menuList
+				info.arg2 = key
+				info.checked = self:IsSelected(menuList, key)
+				UIDropDownMenu_AddButton(info, level)
+			end
+		end
+	end
+
+	BtWLoadoutsRestrictionsDropDownMixin = {}
+	function BtWLoadoutsRestrictionsDropDownMixin:OnLoad()
+		self.selected = {}
+		self.supportedTypes = {}
+		self.limitations = {}
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:OnShow()
+		if not self.initialized then
+			UIDropDownMenu_Initialize(self, DropDownInit, "MENU")
+			self.initialized = true
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateSelected()
+		local selected = {}
+
+		for _,type,typeName in self:EnumerateSupportedTypes() do
+			if self.selected[type] and next(self.selected[type]) then
+				for _,key,name,restricted in self:EnumerateType(type, true) do
+					if self:IsSelected(type, key) then
+						selected[#selected+1] = {type, key, string.format("%s: %s", typeName, name), restricted}
+					end
+				end
+			end
+		end
+
+		return function (tbl, index)
+			index = index + 1
+			if tbl[index] then
+				return index, unpack(tbl[index])
+			end
+		end, selected, 0
+	end
+	local selectionTemp = {}
+	function BtWLoadoutsRestrictionsDropDownMixin:SetSelections(tbl)
+		assert(type(tbl) == "table", "Expected table")
+
+		-- Clean up tbl based on available types
+		wipe(selectionTemp)
+		for _,t in ipairs(self.supportedTypes) do
+			selectionTemp[t] = tbl[t]
+		end
+		wipe(tbl)
+		for k,v in pairs(selectionTemp) do
+			tbl[k] = v
+		end
+
+		self.selected = tbl
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:ClearSelected()
+		wipe(self.selected)
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:IsSelected(type, key)
+		return self.selected[type] and self.selected[type][key]
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:ToggleSelected(type, key)
+		self.selected[type] = self.selected[type] or {}
+		if self.selected[type][key] then
+			self.selected[type][key] = nil
+		else
+			self.selected[type][key] = true
+		end
+
+		if self.onchange then
+			self:onchange(type, key)
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:SetSupportedTypes(...)
+		wipe(self.supportedTypes)
+		for i=1,select('#', ...) do
+			local type = strlower(select(i, ...))
+			assert(Internal.Filters[type] ~= nil, "Unavailable type " .. type)
+			self.supportedTypes[i] = type
+		end
+	end
+	-- Allow limiting some supported types, like characters to limit spec or role to limit spec.
+	function BtWLoadoutsRestrictionsDropDownMixin:SetLimitations(...)
+		wipe(self.limitations)
+
+		for i=1,select('#', ...),2 do
+			local k,v = select(i, ...)
+			self.limitations[k] = v
+		end
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateSupportedTypes()
+		return function (tbl, index)
+			index = index + 1
+			local type = tbl[index]
+			if type then
+				return index, type, Internal.Filters[type].name
+			end
+		end, self.supportedTypes, 0
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:EnumerateType(type, includeLimitations)
+		return Internal.Filters[type].enumerate(self.limitations, includeLimitations)
+	end
+	function BtWLoadoutsRestrictionsDropDownMixin:SetScript(scriptType, handler)
+		if scriptType == "OnChange" then
+			self.onchange = handler
+		else
+			getmetatable(self).SetScript(self, scriptType, handler)
+		end
+	end
+
+	function Internal.UpdateRestrictionFilters(set)
+		if set.restrictions then
+			local filters = set.filters
+			
+			-- Covenant
+			if set.restrictions.covenant and next(set.restrictions.covenant) then
+				filters.covenant = wipe(filters.covenant or {})
+				local tbl = filters.covenant
+				for covenant in pairs(set.restrictions.covenant) do
+					tbl[#tbl+1] = covenant
+				end
+			else
+				filters.covenant = nil
+			end
+			
+			-- Specialization
+			local roles = {}
+			local classes = {}
+			if set.restrictions.spec and next(set.restrictions.spec) then
+				if filters.spec == nil or type(filters.spec) == "table" then
+					filters.spec = wipe(filters.spec or {})
+					local tbl = filters.spec
+					for spec in pairs(set.restrictions.spec) do
+						local role, class = select(5, GetSpecializationInfoByID(spec))
+
+						roles[role] = true
+						classes[class] = true
+
+						tbl[#tbl+1] = spec
+					end
+				end
+
+				if filters.role == nil or type(filters.role) == "table" then
+					filters.role = wipe(filters.role or {})
+					local tbl = filters.role
+					for role in pairs(roles) do
+						tbl[#tbl+1] = role
+					end
+				end
+
+				if filters.class == nil or type(filters.class) == "table" then
+					filters.class = wipe(filters.class or {})
+					local tbl = filters.class
+					for class in pairs(classes) do
+						tbl[#tbl+1] = class
+					end
+				end
+			else
+				filters.spec = nil
+				filters.role = nil
+				filters.class = nil
+			end
+			
+			-- Race
+			if set.restrictions.race and next(set.restrictions.race) then
+				filters.race = wipe(filters.race or {})
+				local tbl = filters.race
+				for race in pairs(set.restrictions.race) do
+					tbl[#tbl+1] = race
+				end
+			else
+				filters.race = nil
+			end
+		end
+	end
+	function Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
+		if restrictions then
+			if restrictions.spec and next(restrictions.spec) and specID ~= nil then
+				if not restrictions.spec[specID] then
+					return false
+				end
+			end
+			
+			if restrictions.covenant and next(restrictions.covenant) and covenantID ~= nil then
+				if not restrictions.covenant[covenantID] then
+					return false
+				end
+			end
+			
+			if restrictions.race and next(restrictions.race) and raceID ~= nil then
+				if not restrictions.race[raceID] then
+					return false
+				end
+			end
+		end
+	
+		return true
+	end
+	-- Used by combine functions to check set restrictions
+	function Internal.AreRestrictionsValidForPlayer(restrictions)
+		local specID = GetSpecializationInfo(GetSpecialization()) or false
+		local covenantID = C_Covenants.GetActiveCovenantID() or false
+		local raceID = select(3, UnitRace("player")) or false
+	
+		return Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
+	end
+end
+
+--[[
+	Character selection drop down menu
+]]
+do
+	BtWLoadoutsCharacterDropDownMixin = {}
+	function BtWLoadoutsCharacterDropDownMixin:OnShow()
+		if not self.initialized then
+			UIDropDownMenu_Initialize(self, self.Init);
+			self.initialized = true
+		end
+	end
+	function BtWLoadoutsCharacterDropDownMixin:Init()
+		if not self.GetValue then
+			return
+		end
+
+		local info = UIDropDownMenu_CreateInfo();
+		local selected = self:GetValue()
+
+		info.keepShownOnClick = true
+		info.func = function (button, arg1, arg2, checked)
+			self:SetValue(button, arg1, arg2, checked)
+			CloseDropDownMenus()
+			ToggleDropDownMenu(nil, nil, self)
+		end
+
+		if self.includeAny then
+			info.text = L["Any"];
+			info.arg1 = nil
+			if self.multiple then
+				info.checked = next(selected) == nil
+			else
+				info.checked = selected == nil
+			end
+			UIDropDownMenu_AddButton(info, level);
+		end
+		if self.includeInherit then
+			info.text = L["Inherit"];
+			info.arg1 = "inherit"
+			if self.multiple then
+				info.checked = selected["inherit"];
+			else
+				info.checked = selected == "inherit"
+			end
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		local character = Internal.GetCharacterSlug()
+		local classFile = select(2, UnitClass("player"));
+		if self.classFile == nil or self.classFile == classFile then
+			local name, realm = UnitFullName("player")
+			local characterInfo = GetCharacterInfo(character)
+			if characterInfo then
+				local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+			end
+
+			info.text = name
+			info.arg1 = character
+			if self.multiple then
+				info.checked = selected[character]
+			else
+				info.checked = selected == character;
+			end
+
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		local playerCharacter = character
+		for _,character in Internal.CharacterIterator() do
+			if playerCharacter ~= character then
+				characterInfo = GetCharacterInfo(character)
+				if self.classFile == nil or self.classFile == characterInfo.class then
+					if characterInfo then
+						local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+					end
+
+					info.text = name
+					info.arg1 = character
+					if self.multiple then
+						info.checked = selected[character]
+					else
+						info.checked = selected == character;
+					end
+					
+					UIDropDownMenu_AddButton(info, level);
+				end
+			end
+		end
+	end
+	function BtWLoadoutsCharacterDropDownMixin:SetClass(classFile)
+		self.classFile = classFile
+	end
+	function BtWLoadoutsCharacterDropDownMixin:UpdateName()
+		if not self.GetValue then
+			return
+		end
+
+		local character = self:GetValue()
+
+		if self.multiple then
+			local first = next(character)
+			if first == nil then
+				UIDropDownMenu_SetText(self, L["Any"]);
+			elseif first == "inherit" then
+				UIDropDownMenu_SetText(self, L["Inherit"]);
+			elseif next(character, first) == nil then
+				local characterInfo = Internal.GetCharacterInfo(first);
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+					first = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+				end
+				UIDropDownMenu_SetText(self, first);
+			else
+				UIDropDownMenu_SetText(self, L["Multiple"]);
+			end
+		else
+			if character == nil then
+				UIDropDownMenu_SetText(self, L["None"]);
+			elseif character == "inherit" then
+				UIDropDownMenu_SetText(self, L["Inherit"]);
+			else
+				local characterInfo = Internal.GetCharacterInfo(character);
+				if characterInfo then
+					local classColor = C_ClassColor.GetClassColor(characterInfo.class)
+					character = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm)
+				end
+				UIDropDownMenu_SetText(self, character);
+			end
+		end
+	end
+end
+
+-- Sets Drop Down menu
+do
+	-- local filtered
+	local function DropDownInit(self, level, menuList)
+		local function OnClick(_, arg1, arg2, checked)
+			self:callback(arg1)
+		end
+		
+		local info = UIDropDownMenu_CreateInfo()
+
+		local selected = self:GetSelected()
+
+		if (level or 1) == 1 and self:IncludeNone() then
+			info.text = NONE;
+			info.func = OnClick;
+			info.arg1 = "none";
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		if not menuList then
+			menuList = Internal.FilterSets({}, self.filters, self:GetSets())
+			menuList = Internal.CategoriesSets(menuList, self:GetCategories())
+		end
+		
+		local filter = self.categories[level or 1]
+		if filter then
+			info.func = nil;
+			info.hasArrow = true;
+			info.keepShownOnClick = true;
+			info.notCheckable = true;
+
+			for _,key,name,restricted in Internal.Filters[filter].enumerate(nil, false, true) do
+				if menuList[key] then
+					info.text = name
+					info.menuList = menuList[key]--(menuList and (menuList .. ".") or "") .. key
+					UIDropDownMenu_AddButton(info, level);
+				end
+			end
+		else
+			info.func = OnClick;
+			Internal.SortSets(menuList)
+
+			local hasPreItems = false
+			for k,set in pairs(menuList) do
+				if hasPreItems and (set.order or 0) >= 0 then
+					UIDropDownMenu_AddSeparator(level)
+					hasPreItems = false
+				elseif not hasPreItems and set.order and set.order < 0 then
+					hasPreItems = true
+				end
+
+				info.text = set.name ~= "" and set.name or L["Unnamed"];
+				info.arg1 = set.setID;
+				info.func = OnClick;
+				info.checked = selected == set.setID;
+				
+				UIDropDownMenu_AddButton(info, level);
+			end
+		end
+
+		if (level or 1) == 1 and self:IncludeNewSet() then
+			info.text = L["New Set"];
+			info.func = OnClick;
+			info.arg1 = "new";
+			info.hasArrow, info.menuList = false, nil;
+			info.keepShownOnClick = false;
+			info.notCheckable = true;
+			info.checked = false;
+
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+
+	BtWLoadoutsSetDropDownMixin = {}
+	function BtWLoadoutsSetDropDownMixin:OnLoad()
+		self.categories = {}
+		self.sets = {}
+	end
+	function BtWLoadoutsSetDropDownMixin:Init()
+		UIDropDownMenu_Initialize(self, DropDownInit, "MENU");
+	end
+	function BtWLoadoutsSetDropDownMixin:OnShow()
+		if not self.initialized then
+			self.initialized = true
+			self:Init()
+		end
+	end
+	function BtWLoadoutsSetDropDownMixin:SetSelected(value)
+		self.selected = value
+	end
+	function BtWLoadoutsSetDropDownMixin:SetSets(value)
+		self.sets = value
+	end
+	function BtWLoadoutsSetDropDownMixin:SetCategories(value)
+		self.categories = value
+	end
+	function BtWLoadoutsSetDropDownMixin:GetCategories()
+		return unpack(self.categories)
+	end
+	function BtWLoadoutsSetDropDownMixin:SetFilters(value)
+		self.filters = value
+	end
+	function BtWLoadoutsSetDropDownMixin:GetFilters()
+		local temp = {}
+		for k in pairs(self.filters) do
+			temp[#temp+1] = k
+		end
+		return unpack(temp)
+	end
+	function BtWLoadoutsSetDropDownMixin:GetSets()
+		return self.sets
+	end
+	function BtWLoadoutsSetDropDownMixin:GetSelected()
+		return self.selected
+	end
+	function BtWLoadoutsSetDropDownMixin:IncludeNewSet()
+		return true
+	end
+	function BtWLoadoutsSetDropDownMixin:IncludeNone()
+		return self.includeNone
+	end
+	function BtWLoadoutsSetDropDownMixin:SetIncludeNone(value)
+		self.includeNone = not not value
+	end
+	function BtWLoadoutsSetDropDownMixin:OnItemClick(callback)
+		self.callback = callback
+	end
+end
+
 --[[
 	BtWLoadoutsSidebarMixin, sidebar display with filtering
 ]]
 do
-	local function OrganiseSetsByFilter(result, sets, filter)
-		if filter == nil then
-			for _,set in pairs(sets) do
-				if type(set) == "table" then
-					result[#result+1] = set;
-				end
-			end
-	
-			return result
-		else
-			for setID,set in pairs(sets) do
-				if type(set) == "table" then
-					local value = set.filters and set.filters[filter] or 0
-					if type(value) == "table" then
-						for _,v in pairs(value) do
-							result[v] = result[v] or {};
-							result[v][#result[v] + 1] = set;
-						end
-					else
-						result[value] = result[value] or {};
-						result[value][#result[value] + 1] = set;
-					end
-				end
-			end
-			return result
-		end
-	end
-	--[[
-		... is a list of filters, eg spec, role, class, character, instanceType, etc.
-	]]
-	local function CategoriesSets(sets, ...)
-		local tbl = OrganiseSetsByFilter({}, sets, ...)
-		if select('#', ...) > 1 then
-			for k,v in pairs(tbl) do
-				tbl[k] = CategoriesSets(v, select(2, ...))
-			end
-		end
-		return tbl
-	end
-	local function FilterSetsBySearch(result, query, sets)
-		for _,set in pairs(sets) do
-			if type(set) == "table" then
-				if query == nil or set.name:lower():find(query) ~= nil then
-					result[#result+1] = set;
-				end
-			end
-		end
-
-		return result
-	end
-	local function ContainsOrMatches(tbl, value)
-		if type(tbl) == "table" then
-			for _,v in pairs(tbl) do
-				if v == value then
-					return true
-				end
-			end
-		elseif tbl == value then
-			return true
-		end
-		return false
-	end
-	local function FiltersMatch(filters, setFilters)
-		for filter,value in pairs(filters) do
-			if not ContainsOrMatches(setFilters[filter], value) then
-				return false
-			end
-		end
-		return true
-	end
-	local function FilterSets(result, filters, sets)
-		for _,set in pairs(sets) do
-			if type(set) == "table" and FiltersMatch(filters, set.filters) then
-				result[#result+1] = set;
-			end
-		end
-
-		return result
-	end
-	local SpecFilterEnumerator
-	do
-		local specEnumertorList
-		function SpecFilterEnumerator()
-			if specEnumertorList == nil then
-				specEnumertorList = {}
-
-				local className, classFile, classID = UnitClass("player");
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					specEnumertorList[#specEnumertorList+1] = {
-						id = specID,
-						name = format("%s: %s", className, specName),
-					}
-				end
-
-				local playerClassID = classID;
-				for classID=1,GetNumClasses() do
-					if classID ~= playerClassID then
-						local className, classFile = GetClassInfo(classID);
-						local classColor = C_ClassColor.GetClassColor(classFile);
-						className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-						for specIndex=1,GetNumSpecializationsForClassID(classID) do
-							local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-							specEnumertorList[#specEnumertorList+1] = {
-								id = specID,
-								name = format("%s: %s", className, specName),
-							}
-						end
-					end
-				end
-				
-				specEnumertorList[#specEnumertorList+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(specEnumertorList)
-		end
-	end
-	local ClassFilterEnumerator
-	do
-		local classEnumertorList
-		function ClassFilterEnumerator()
-			if classEnumertorList == nil then
-				classEnumertorList = {}
-
-				local className, classFile, classID = UnitClass("player");
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-				classEnumertorList[#classEnumertorList+1] = {
-					id = classFile,
-					name = className,
-				}
-
-				local playerClassID = classID;
-				for classID=1,GetNumClasses() do
-					if classID ~= playerClassID then
-						local className, classFile = GetClassInfo(classID);
-						local classColor = C_ClassColor.GetClassColor(classFile);
-						className = classColor and classColor:WrapTextInColorCode(className) or className;
-						classEnumertorList[#classEnumertorList+1] = {
-							id = classFile,
-							name = className,
-						}
-					end
-				end
-				
-				classEnumertorList[#classEnumertorList+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(classEnumertorList)
-		end
-	end
-	local RoleFilterEnumerator
-	do
-		local roleEnumertorList
-		function RoleFilterEnumerator()
-			if roleEnumertorList == nil then
-				roleEnumertorList = {}
-
-				local role = select(5, GetSpecializationInfo(GetSpecialization()));
-				roleEnumertorList[#roleEnumertorList+1] = {
-					id = role,
-					name = _G[role],
-				}
-
-				local playerRole = role;
-				for _,role in Internal.Roles() do
-					if role ~= playerRole then
-						roleEnumertorList[#roleEnumertorList+1] = {
-							id = role,
-							name = _G[role],
-						}
-					end
-				end
-				
-				roleEnumertorList[#roleEnumertorList+1] = {
-					id = 0,
-					name = L["Other"],
-				}
-			end
-
-			return ipairs(roleEnumertorList)
-		end
-	end
-	local CharacterFilterEnumerator
-	do
-		local charaterEnumertorList = {}
-		function CharacterFilterEnumerator()
-			wipe(charaterEnumertorList)
-
-			local name = UnitName("player")
-			local character = GetCharacterSlug();
-			local characterInfo = GetCharacterInfo(character);
-			if characterInfo then
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-			end
-			charaterEnumertorList[#charaterEnumertorList+1] = {
-				id = character,
-				name = name,
-			};
-
-			local playerCharacter = character
-			for _,character in Internal.CharacterIterator() do
-				if playerCharacter ~= character then
-					local characterInfo = GetCharacterInfo(character);
-					if characterInfo then
-						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					end
-					charaterEnumertorList[#charaterEnumertorList+1] = {
-						id = character,
-						name = name,
-					};
-				end
-			end
-
-			charaterEnumertorList[#charaterEnumertorList+1] = {
-				id = 0,
-				name = L["Other"],
-			};
-
-			return ipairs(charaterEnumertorList)
-		end
-	end
-	local function FilterEnumerator(filter)
-		if filter == "spec" then
-			return SpecFilterEnumerator()
-		elseif filter == "class" then
-			return ClassFilterEnumerator()
-		elseif filter == "role" then
-			return RoleFilterEnumerator()
-		elseif filter == "character" then
-			return CharacterFilterEnumerator()
-		else -- @TODO Character, role
-			error(format("Unsupported filter type %s", filter))
-		end
-	end
-	local function alphanumsort(o)
-		local function padnum(d)
-			local dec, n = string.match(d, "(%.?)0*(.+)")
-			return #dec > 0 and ("%.12f"):format(d) or ("%s%03d%s"):format(dec, #n, n)
-		end
-		table.sort(o, function(a,b)
-		  	return tostring(a.name):gsub("%.?%d+", padnum)..("%3d"):format(#b.name)
-			     < tostring(b.name):gsub("%.?%d+", padnum)..("%3d"):format(#a.name)
-		end)
-		return o
-	end
+	local FilterSetsBySearch = Internal.FilterSetsBySearch
+	local FilterSets = Internal.FilterSets
+	local CategoriesSets = Internal.CategoriesSets
+	local SortSets = Internal.SortSets
 	local function BuildList(items, depth, selected, filtered, collapsed, ...)
 		if select('#', ...) == 0 then
-			alphanumsort(filtered)
+			SortSets(filtered)
 
 			for _,set in ipairs(filtered) do
 				selected = selected or set
@@ -782,20 +1069,20 @@ do
 		else
 			local filter = ...
 			collapsed.children = collapsed.children or {}
-			for _,filterItem in FilterEnumerator(filter) do
-				if filtered[filterItem.id] then
-					local isCollapsed = collapsed[filterItem.id] and true or false
+			for _,key,name,restricted in Internal.Filters[filter].enumerate(nil, nil, true) do
+				if filtered[key] then
+					local isCollapsed = collapsed[key] and true or false
 					items[#items+1] = {
-						id = filterItem.id,
+						id = key,
 						type = filter,
 						isHeader = true,
 						isCollapsed = isCollapsed,
 						collapsed = collapsed,
-						name = filterItem.name,
+						name = name,
 						depth = depth,
 					};
 					if not isCollapsed then
-						selected = BuildList(items, depth + 1, selected, filtered[filterItem.id], collapsed.children, select(2, ...))
+						selected = BuildList(items, depth + 1, selected, filtered[key], collapsed.children, select(2, ...))
 					end
 				end
 			end
@@ -910,17 +1197,24 @@ do
 				info.text = L["Current Character Only"]
 				UIDropDownMenu_AddButton(info, level)
 			end
+			if sidebar:SupportsFilters("disabled") then
+				info.checked = sidebar:GetFilter("disabled") == 0
+				info.arg1 = "disabled"
+				info.arg2 = 0
+				info.text = L["Enabled Sets Only"]
+				UIDropDownMenu_AddButton(info, level)
+			end
 
 			if sidebar:GetSupportedFilters() then
 				info.isTitle = true
-				info.isCheckable = false
+				info.notCheckable = true
 				info.checked = false
 				info.text = L["Categories"]
 				UIDropDownMenu_AddButton(info, level)
 
 				info.isTitle = false
 				info.disabled = false
-				info.isCheckable = true
+				info.notCheckable = false
 				info.checked = true
 				info.func = function (self, arg1)
 					sidebar:RemoveCategory(arg1)
@@ -958,12 +1252,6 @@ do
 	end
 	BtWLoadoutsSidebarMixin = {}
 	function BtWLoadoutsSidebarMixin:OnLoad()
-		self.names = {
-			["spec"] = L["Specialization"],
-			["class"] = L["Class"],
-			["role"] = L["Role"],
-			["character"] = L["Character"],
-		}
 		self.supportedFilters = {}
 	end
 	function BtWLoadoutsSidebarMixin:Init()
@@ -1001,7 +1289,7 @@ do
 		return unpack(self.supportedFilters)
 	end
 	function BtWLoadoutsSidebarMixin:GetFilterName(key)
-		return self.names[key] or key
+		return Internal.Filters[key].name or key
 	end
 	
 	function BtWLoadoutsSidebarMixin:SetSets(value)
@@ -1014,6 +1302,12 @@ do
 		self.categories = value
 	end
 	function BtWLoadoutsSidebarMixin:SetFilters(value)
+		for k in pairs(value) do
+			if not self:SupportsFilters(k) then
+				value[k] = nil
+			end
+		end
+
 		self.filters = value
 	end
 	function BtWLoadoutsSidebarMixin:SetSelected(selected)
@@ -1180,6 +1474,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetProfile(set)
 		self.Profiles.set = set;
+		wipe(self.Profiles.temp);
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:SetTalentSet(set)
@@ -1207,6 +1502,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetConditionSet(set)
 		self.Conditions.set = set;
+		wipe(self.Conditions.temp);
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:GetCurrentTab()

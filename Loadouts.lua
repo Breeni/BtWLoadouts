@@ -260,7 +260,7 @@ local function IsLoadoutActivatable(set)
 	return true
 end
 
-local function UpdateLoadoutFilters(set)
+local function UpdateSetFilters(set)
 	local specID = set.specID
 
 	local filters = set.filters or {}
@@ -277,12 +277,20 @@ local function UpdateLoadoutFilters(set)
 	end
 	local characters = filters.character
 	wipe(characters)
-	local class = filters.class
-	for _,character in Internal.CharacterIterator() do
-		if class == Internal.GetCharacterInfo(character).class or specID == nil then
+	if type(set.character) == "table" and next(set.character) ~= nil then
+		for character in pairs(set.character) do
 			characters[#characters+1] = character
 		end
+	else
+		local class = filters.class
+		for _,character in Internal.CharacterIterator() do
+			if class == Internal.GetCharacterInfo(character).class or specID == nil then
+				characters[#characters+1] = character
+			end
+		end
 	end
+
+	filters.disabled = set.disabled ~= true and 0 or 1
 
 	set.filters = filters
 
@@ -299,7 +307,7 @@ local function AddProfile()
 		set[segment.id] = {}
 	end
 
-    return AddSet("profiles", UpdateLoadoutFilters(set))
+    return AddSet("profiles", UpdateSetFilters(set))
 end
 local function GetProfile(id)
     return BtWLoadoutsSets.profiles[id];
@@ -460,6 +468,18 @@ do
 		end
 	end
 end
+local function IsLoadoutEnabled(set)
+	if set.disabled then
+		return false
+	end
+
+	if set.character ~= nil and next(set.character) ~= nil then
+		local character = Internal.GetCharacterSlug()
+		return set.character[character] ~= nil
+	end
+
+	return true
+end
 
 local function GetActiveProfiles()
 	if target.active then
@@ -472,7 +492,7 @@ local function GetActiveProfiles()
 
 	local activeProfiles = {}
 	for _,profile in pairs(BtWLoadoutsSets.profiles) do
-		if type(profile) == "table" and not profile.disabled and IsProfileActive(profile) then
+		if type(profile) == "table" and IsLoadoutEnabled(profile) and IsProfileActive(profile) then
 			activeProfiles[#activeProfiles+1] = profile.name
 		end
 	end
@@ -782,6 +802,7 @@ Internal.IsLoadoutActivatable = IsLoadoutActivatable
 Internal.IsProfileActive = IsProfileActive
 Internal.AddProfile = AddProfile
 Internal.DeleteProfile = DeleteProfile
+Internal.IsLoadoutEnabled = IsLoadoutEnabled
 
 -- [[ External API ]]
 -- Return: id, name, specID, character
@@ -942,9 +963,26 @@ function BtWLoadoutsSetsScrollListItemMixin:OnClick()
 		local DropDown = self:GetParent():GetParent().DropDown
 		local index = self.index
 		local segment = self.type
-		UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
-			return Internal.GetLoadoutSegment(segment).dropdowninit(self, level, menuList, index)
-		end)
+
+		local tab = BtWLoadoutsFrame.Profiles
+
+		Internal.GetLoadoutSegment(segment).dropdowninit(DropDown, tab.set, index)
+		
+		-- DropDown:SetSelected(tab.set[segment][index])
+		-- DropDown:SetSets(BtWLoadoutsSets[segment])
+		-- DropDown:SetCategories(BtWLoadoutsCategories[segment])
+		-- DropDown:OnChange(function (newSetID)
+		-- 	local previousSetID = tab.set[segment][index]
+		-- 	print(previousSetID, newSetID)
+		-- 	if set.talents[index] then
+		-- 		local subset = Internal.GetTalentSet(set.talents[index]);
+		-- 		subset.useCount = (subset.useCount or 1) - 1;
+		-- 	end
+		-- end)
+
+		-- UIDropDownMenu_SetInitializeFunction(DropDown, function (self, level, menuList)
+		-- 	return Internal.GetLoadoutSegment(segment).dropdowninit(self, level, menuList, index)
+		-- end)
 
 		ToggleDropDownMenu(nil, nil, DropDown, self, 0, 0)
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
@@ -1002,7 +1040,10 @@ end
 function BtWLoadoutsSetsScrollListItemMixin:Add(button)
 	local DropDown = self:GetParent():GetParent().DropDown
 	
-	UIDropDownMenu_SetInitializeFunction(DropDown, Internal.GetLoadoutSegment(self.type).dropdowninit)
+	local segment = self.type
+	local tab = BtWLoadoutsFrame.Profiles
+
+	Internal.GetLoadoutSegment(segment).dropdowninit(DropDown, tab.set)
 
 	ToggleDropDownMenu(nil, nil, DropDown, button, 0, 0)
 	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
@@ -1095,7 +1136,7 @@ local function BuildSubSetItems(type, header, getcallback, sets, items, index, i
 						item.name = format("%s |cFFD5D5D5(%s)|r", subset.name, subset.character);
 					end
 				else
-					item.name = subset.name;
+					item.name = subset.name ~= "" and subset.name or L["Unnamed"];
 				end
 	
 				item.error = errors[i]
@@ -1147,6 +1188,8 @@ function BtWLoadoutsProfilesMixin:OnLoad()
 
 	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
 	self.SetsScroll.update = SetsScrollFrameUpdate;
+
+	self.temp = {} -- Stores character restrictions for unselected specs
 end
 function BtWLoadoutsProfilesMixin:OnEvent()
 	if self.SetsScroll:GetScrollChild().currentDrag  ~= nil then
@@ -1156,13 +1199,41 @@ end
 function BtWLoadoutsProfilesMixin:OnShow()
 	if not self.initialized then
 		self.SpecDropDown.includeNone = true;
-		UIDropDownMenu_SetWidth(self.SpecDropDown, 300);
+		UIDropDownMenu_SetWidth(self.SpecDropDown, 175);
 		UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+
+		self.CharacterDropDown.GetValue = function (self)
+			local frame = self:GetParent()
+
+			if type(frame.set.character) ~= "table" then
+				frame.set.character = {}
+			end
+
+			return frame.set and frame.set.character
+		end
+		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
+			local frame = self:GetParent()
+			if frame.set then
+				if arg1 == nil then
+					wipe(frame.set.character)
+				elseif frame.set.character[arg1] then
+					frame.set.character[arg1] = nil
+				else
+					frame.set.character[arg1] = true
+				end
+
+				BtWLoadoutsFrame:Update()
+			end
+		end
+		UIDropDownMenu_SetWidth(self.CharacterDropDown, 175);
+		UIDropDownMenu_JustifyText(self.CharacterDropDown, "LEFT");
+
 		self.initialized = true;
 	end
 end
 function BtWLoadoutsProfilesMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsProfilesMixin:UpdateSetEnabled(value)
@@ -1285,7 +1356,7 @@ function BtWLoadoutsProfilesMixin:Update()
 	self:GetParent().TitleText:SetText(L["Profiles"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "disabled")
 	sidebar:SetSets(BtWLoadoutsSets.profiles)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.profiles)
 	sidebar:SetCategories(BtWLoadoutsCategories.profiles)
@@ -1310,9 +1381,10 @@ function BtWLoadoutsProfilesMixin:Update()
 
 		specID = set.specID;
 
-		UpdateLoadoutFilters(set)
+		UpdateSetFilters(set)
 		sidebar:Update()
 		
+		local classFile = specID and select(6, GetSpecializationInfoByID(specID))
 		if specID == nil or specID == 0 then
 			UIDropDownMenu_SetText(self.SpecDropDown, L["None"]);
 		else
@@ -1321,6 +1393,18 @@ function BtWLoadoutsProfilesMixin:Update()
 			local classColor = GetClassColor(classID);
 			UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 		end
+
+		if classFile and type(set.character) == "table" and not set.character["inherit"] then
+			-- Filter out any characters that are not valid for the selected spec
+			for character in pairs(set.character) do
+				local characterData = Internal.GetCharacterInfo(character)
+				if not characterData or characterData.class ~= classFile then
+					set.character[character] = nil
+				end
+			end
+		end
+		self.CharacterDropDown:SetClass(classFile)
+		self.CharacterDropDown:UpdateName()
 		
 		self.Enabled:SetChecked(not set.disabled);
 

@@ -1119,8 +1119,11 @@ do
 		return true, false
 	end
 end
-local function UpdateEquipmentSetFilters(set)
+local function UpdateSetFilters(set)
 	local filters = set.filters or {}
+	
+    Internal.UpdateRestrictionFilters(set)
+
 	filters.character = set.character
 	set.filters = filters
 
@@ -1162,6 +1165,7 @@ local function AddBlankEquipmentSet()
 		filters = {character = GetCharacterSlug()},
 		useCount = 0,
     };
+	UpdateSetFilters(set)
     BtWLoadoutsSets.equipment[set.setID] = set;
     return set;
 end
@@ -1209,7 +1213,7 @@ local function RefreshEquipmentSet(set)
 		C_EquipmentSet.SaveEquipmentSet(set.managerID)
 	end
 
-	return UpdateEquipmentSetFilters(set)
+	return UpdateSetFilters(set)
 end
 local function AddEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
@@ -1267,7 +1271,7 @@ local function CombineEquipmentSets(result, state, ...)
 	end
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		if set.character == playerCharacter then -- Skip other characters
+		if set.character == playerCharacter and Internal.AreRestrictionsValidForPlayer(set.restrictions) then -- Skip other characters
 			if set.managerID then -- Just making sure everything is up to date
 				local ignored = C_EquipmentSet.GetIgnoredSlots(set.managerID);
 				local locations = C_EquipmentSet.GetItemLocations(set.managerID);
@@ -1369,6 +1373,10 @@ local function CheckErrors(errorState, set)
 	if errorState.class ~= characterInfo.class then
         return L["Incompatible Class"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.GetEquipmentSet = GetEquipmentSet
@@ -1410,169 +1418,21 @@ do
 	end
 end
 
-local setsFiltered = {};
-local function EquipmentDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-    CloseDropDownMenus();
-    local set = tab.set;
-	local index = arg2 or (#set.equipment + 1)
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.equipment, index);
-	else
-		set.equipment[index] = arg1;
-	end
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function EquipmentDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.equipment + 1)
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddEquipmentSet();
-	set.equipment[index] = newSet.setID;
-
-	if set.equipment[index] then
-		local subset = Internal.GetEquipmentSet(set.equipment[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.Equipment.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Equipment:GetID());
-
-	BtWLoadoutsFrame:Update();
-end
-local function EquipmentDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.equipment then
-        return;
-    end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.equipment and set.equipment[index];
-
-	info.arg2 = index
-
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = EquipmentDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.equipment;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.character] = true;
-			end
-		end
-
-		local characters = {};
-		for character in pairs(setsFiltered) do
-			characters[#characters+1] = character;
-		end
-		sort(characters, function (a,b)
-			return a < b;
-		end)
-
-		local character = GetCharacterSlug();
-		if setsFiltered[character] then
-			local name = character;
-			local characterInfo = GetCharacterInfo(character);
-			if characterInfo then
-				local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-				name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-			end
-
-			info.text = name;
-			info.hasArrow, info.menuList = true, character;
-			info.keepShownOnClick = true;
-			info.notCheckable = true;
-			UIDropDownMenu_AddButton(info, level);
-		end
-
-		local playerCharacter = character;
-		for _,character in ipairs(characters) do
-			if character ~= playerCharacter then
-				if setsFiltered[character] then
-					local name = character;
-					local characterInfo = GetCharacterInfo(character);
-					if characterInfo then
-						local classColor = C_ClassColor.GetClassColor(characterInfo.class);
-						name = format("%s - %s", classColor:WrapTextInColorCode(characterInfo.name), characterInfo.realm);
-					end
-
-					info.text = name;
-					info.hasArrow, info.menuList = true, character;
-					info.keepShownOnClick = true;
-					info.notCheckable = true;
-					UIDropDownMenu_AddButton(info, level);
-				end
-			end
-		end
-
-		info.text = L["New Set"];
-		info.func = EquipmentDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local character = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.equipment;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.character == character then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-        for _,setID in ipairs(setsFiltered) do
-            info.text = sets[setID].name .. (sets[setID].managerID ~= nil and " (*)" or "");
-            info.arg1 = setID;
-            info.func = EquipmentDropDown_OnClick;
-            info.checked = selected == setID;
-            UIDropDownMenu_AddButton(info, level);
-		end
-	end
+-- Initializes the set dropdown menu for the Loadouts page
+local function SetDropDownInit(self, set, index)
+    Internal.SetDropDownInit(self, set, index, "equipment", BtWLoadoutsFrame.Equipment)
 end
 
 Internal.AddLoadoutSegment({
     id = "equipment",
     name = L["Equipment"],
     events = "PLAYER_EQUIPMENT_CHANGED",
+    add = AddEquipmentSet,
     get = GetEquipmentSets,
     combine = CombineEquipmentSets,
     isActive = IsEquipmentSetActive,
 	activate = ActivateEquipmentSet,
-	dropdowninit = EquipmentDropDownInit,
+	dropdowninit = SetDropDownInit,
 	checkerrors = CheckErrors,
 })
 
@@ -1603,6 +1463,48 @@ end
 
 local gameTooltipErrorLink;
 local gameTooltipErrorText;
+
+local equipLocToInvSlot = {
+	["INVTYPE_HEAD"]			=	{[1]  = true},
+	["INVTYPE_NECK"]			=	{[2]  = true},
+	["INVTYPE_SHOULDER"]		=	{[3]  = true},
+	["INVTYPE_BODY"]			=	{[4]  = true},
+	["INVTYPE_CHEST"]			=	{[5]  = true},
+	["INVTYPE_ROBE"]			=	{[5]  = true},
+	["INVTYPE_WAIST"]			=	{[6]  = true},
+	["INVTYPE_LEGS"]			=	{[7]  = true},
+	["INVTYPE_FEET"]			=	{[8]  = true},
+	["INVTYPE_WRIST"]			=	{[9]  = true},
+	["INVTYPE_HAND"]			=	{[10] = true},
+	["INVTYPE_FINGER"]			=	{[11] = true, [12] = true},
+	["INVTYPE_TRINKET"]			=	{[13] = true, [14] = true},
+	["INVTYPE_CLOAK"]			=	{[15] = true},
+	["INVTYPE_RANGED"]			=	{[16] = true},
+	["INVTYPE_2HWEAPON"]		=	{[16] = true},
+	["INVTYPE_WEAPONMAINHAND"]	=	{[16] = true},
+	["INVTYPE_WEAPONOFFHAND"]	=	{[16] = true},
+	["INVTYPE_THROWN"]			=	{[16] = true},
+	["INVTYPE_RANGEDRIGHT"]		=	{[16] = true},
+	["INVTYPE_WEAPON"]			=	{[16] = true},
+	["INVTYPE_SHIELD"]			=	{[17] = true},
+	["INVTYPE_HOLDABLE"]		=	{[17] = true},
+	["INVTYPE_TABARD"]			=	{[19] = true},
+	-- ["INVTYPE_BAG"]
+	-- ["INVTYPE_AMMO"]
+	-- ["INVTYPE_QUIVER"]
+	-- ["INVTYPE_RELIC"]
+}
+local function IsItemValidForSlot(itemLink, invSlot, classID)
+	local _, _, _, itemEquipLoc = GetItemInfoInstant(itemLink)
+
+	if itemEquipLoc == "INVTYPE_2HWEAPON" and invSlot == 17 and classID == 1 then -- Double 2 handers for fury
+		return true
+	elseif itemEquipLoc == "INVTYPE_WEAPON" and invSlot == 17 and (classID == 1 or classID == 4 or classID == 6 or classID == 7 or classID == 10 or classID == 11 or classID == 12) then -- Duel Weilders
+		return true
+	end
+
+	return (equipLocToInvSlot[itemEquipLoc] and equipLocToInvSlot[itemEquipLoc][invSlot]) and true or false
+end
 
 BtWLoadoutsItemSlotButtonMixin = {};
 function BtWLoadoutsItemSlotButtonMixin:OnLoad()
@@ -1731,8 +1633,7 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 		self:Update();
 		return true;
 	else
-		local _, _, quality, _, _, _, _, _, itemEquipLoc, texture, _, itemClassID, itemSubClassID = GetItemInfo(itemLink);
-		if self.invType == itemEquipLoc then
+		if IsItemValidForSlot(itemLink, self:GetID(), select(3, UnitClass("player"))) then
 			local previousLocation = set.locations[self:GetID()]
 
 			set.equipment[self:GetID()] = itemLink;
@@ -1812,6 +1713,12 @@ GameTooltip:HookScript("OnTooltipSetItem", function (self)
 end)
 
 BtWLoadoutsEquipmentMixin = {}
+function BtWLoadoutsEquipmentMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+end
 function BtWLoadoutsEquipmentMixin:ChangeSet(set)
     self.set = set
     self:Update()
@@ -1931,7 +1838,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 	self:GetParent().TitleText:SetText(L["Equipment"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("character")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character")
 	sidebar:SetSets(BtWLoadoutsSets.equipment)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.equipment)
 	sidebar:SetCategories(BtWLoadoutsCategories.equipment)
@@ -1945,8 +1852,13 @@ function BtWLoadoutsEquipmentMixin:Update()
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Equipment"], L["Create gear sets or use the Blizzard equipment set manager."])
 
 	if not showingNPE then
-		UpdateEquipmentSetFilters(set)
+		UpdateSetFilters(set)
 		sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+		self.RestrictionsButton:SetEnabled(true);
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations("character", set.character)
 
 		local errors = CheckEquipmentSetForIssues(set)
 

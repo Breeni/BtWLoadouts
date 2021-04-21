@@ -23,7 +23,6 @@ local UIDropDownMenu_CreateInfo = UIDropDownMenu_CreateInfo;
 
 local sort = table.sort
 
-
 local instanceBosses = Internal.instanceBosses;
 local scenarioInfo = Internal.scenarioInfo;
 local dungeonDifficultiesAll = Internal.dungeonDifficultiesAll;
@@ -141,6 +140,89 @@ local function IsConditionActive(condition)
 
 	return matchCount;
 end
+local function IsConditionEnabled(set)
+	if set.disabled then
+		return false
+	end
+
+	-- Set Defaults
+	if type(set.character) ~= "table" then
+		set.character = {inherit = true}
+	end
+	if set.character["inherit"] then
+		local character = Internal.GetCharacterSlug()
+		local loadout = Internal.GetProfile(set.profileSet)
+
+		-- Set Loadout Defaults too
+		if loadout and type(loadout.character) ~= "table" then
+			loadout.character = {}
+		end
+
+		return loadout and (next(loadout.character) == nil or loadout.character[character] ~= nil)
+	elseif next(set.character) ~= nil then
+		local character = Internal.GetCharacterSlug()
+		return set.character[character] ~= nil
+	end
+
+	return true
+end
+local function UpdateSetFilters(set)
+	local filters = set.filters or {}
+
+	local specID
+	if set.profileSet then
+		local profile = Internal.GetProfile(set.profileSet)
+		specID = profile.specID
+	end
+	filters.spec = specID
+	if specID then
+		filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
+	else
+		filters.role, filters.class = nil, nil
+	end
+
+	-- Rebuild character list
+	filters.character = filters.character or {}
+	local characters = filters.character
+	wipe(characters)
+
+	if type(set.character) == "table" and next(set.character) ~= nil then
+		if set.character.inherit then
+			local loadout = Internal.GetProfile(set.profileSet)
+			if loadout and type(loadout.character) == "table" and next(loadout.character) ~= nil then
+				for character in pairs(loadout.character) do
+					characters[#characters+1] = character
+				end
+			else
+				local class = filters.class
+				for _,character in Internal.CharacterIterator() do
+					if class == nil or class == Internal.GetCharacterInfo(character).class then
+						characters[#characters+1] = character
+					end
+				end
+			end
+		else
+			for character in pairs(set.character) do
+				characters[#characters+1] = character
+			end
+		end
+	else
+		local class = filters.class
+		for _,character in Internal.CharacterIterator() do
+			if class == nil or class == Internal.GetCharacterInfo(character).class then
+				characters[#characters+1] = character
+			end
+		end
+	end
+
+	filters.instanceType = set.type
+
+	filters.disabled = set.disabled ~= true and 0 or 1
+
+	set.filters = filters
+
+	return set
+end
 -- Update a condition set with current active conditions
 local function RefreshConditionSet(set)
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
@@ -174,6 +256,8 @@ local function RefreshConditionSet(set)
 		set.bossID = Internal.GetCurrentBoss()
 	end
 
+	UpdateSetFilters(set)
+
 	return set
 end
 local function AddConditionSet()
@@ -185,6 +269,7 @@ local function AddConditionSet()
 		type = CONDITION_TYPE_WORLD,
 		map = {},
     };
+	UpdateSetFilters(set)
     BtWLoadoutsSets.conditions[set.setID] = set;
     return set;
 end
@@ -324,7 +409,7 @@ function Internal.TriggerConditions()
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
 		if type(set) == "table" and set.profileSet ~= nil and not set.disabled then
 			local profile = Internal.GetProfile(set.profileSet);
-			if (not Settings.noSpecSwitch or profile.specID == specID) and Internal.IsLoadoutActivatable(profile) then
+			if (not Settings.noSpecSwitch or profile.specID == specID or profile.specID == nil) and Internal.IsLoadoutActivatable(profile) then
 				local match = IsConditionActive(set);
 				if match then
 					activeConditions[profile] = set;
@@ -395,10 +480,20 @@ function Internal.TriggerConditions()
 	end
 end
 
+Internal.IsConditionEnabled = IsConditionEnabled
+Internal.UpdateConditionFilters = UpdateSetFilters
 Internal.AddConditionSet = AddConditionSet
 Internal.RefreshConditionSet = RefreshConditionSet
 Internal.GetConditionSet = GetConditionSet
 Internal.DeleteConditionSet = DeleteConditionSet
+
+local function shallowcopy(tbl)
+	local result = {}
+	for k,v in pairs(tbl) do
+		result[k] = v
+	end
+	return result
+end
 
 local setsFiltered = {} -- Used to filter sets in various parts of the file
 local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
@@ -410,6 +505,11 @@ local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	if set.profileSet then
 		local subset = Internal.GetProfile(set.profileSet);
 		subset.useCount = (subset.useCount or 1) - 1;
+		
+		local classFile = subset.specID and select(6, GetSpecializationInfoByID(subset.specID))
+		tab.temp[classFile or "NONE"] = set.character
+	else
+		tab.temp["NONE"] = set.character
 	end
 
 	set.profileSet = arg1;
@@ -417,6 +517,11 @@ local function ProfilesDropDown_OnClick(self, arg1, arg2, checked)
 	if set.profileSet then
 		local subset = Internal.GetProfile(set.profileSet);
 		subset.useCount = (subset.useCount or 0) + 1;
+	
+		local classFile = subset.specID and select(6, GetSpecializationInfoByID(subset.specID))
+		set.character = tab.temp[classFile or "NONE"] or shallowcopy(set.character)
+	else
+		set.character = tab.temp["NONE"] or shallowcopy(set.character)
 	end
 
 	BtWLoadoutsFrame:Update();
@@ -546,6 +651,7 @@ local function ProfilesDropDownInit(self, level, menuList)
 		end
 	end
 end
+
 
 local function ConditionTypeDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Conditions
@@ -892,12 +998,49 @@ end
 
 BtWLoadoutsConditionsMixin = {}
 function BtWLoadoutsConditionsMixin:OnLoad()
+	self.temp = {} -- Stores character restrictions for unselected specs
 end
 function BtWLoadoutsConditionsMixin:OnShow()
 	if not self.initialized then
-		UIDropDownMenu_SetWidth(self.ProfileDropDown, 400);
+		UIDropDownMenu_SetWidth(self.ProfileDropDown, 175);
 		UIDropDownMenu_Initialize(self.ProfileDropDown, ProfilesDropDownInit);
 		UIDropDownMenu_JustifyText(self.ProfileDropDown, "LEFT");
+
+		self.CharacterDropDown.GetValue = function (self)
+			local frame = self:GetParent()
+
+			if type(frame.set.character) ~= "table" then
+				frame.set.character = {inherit = true}
+			end
+
+			return frame.set and frame.set.character
+		end
+		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
+			local frame = self:GetParent()
+			if frame.set then
+				if arg1 == nil then
+					wipe(frame.set.character)
+				elseif arg1 == "inherit" then
+					if frame.set.character[arg1] then
+						frame.set.character[arg1] = nil
+					else
+						wipe(frame.set.character)
+						frame.set.character[arg1] = true
+					end
+				else
+					frame.set.character["inherit"] = nil
+					if frame.set.character[arg1] then
+						frame.set.character[arg1] = nil
+					else
+						frame.set.character[arg1] = true
+					end
+				end
+
+				BtWLoadoutsFrame:Update()
+			end
+		end
+		UIDropDownMenu_SetWidth(self.CharacterDropDown, 175);
+		UIDropDownMenu_JustifyText(self.CharacterDropDown, "LEFT");
 
 		UIDropDownMenu_SetWidth(self.ConditionTypeDropDown, 400);
 		UIDropDownMenu_Initialize(self.ConditionTypeDropDown, ConditionTypeDropDownInit);
@@ -930,6 +1073,7 @@ function BtWLoadoutsConditionsMixin:OnShow()
 end
 function BtWLoadoutsConditionsMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsConditionsMixin:UpdateSetEnabled(value)
@@ -982,7 +1126,7 @@ function BtWLoadoutsConditionsMixin:Update()
 	self:GetParent().TitleText:SetText(L["Conditions"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters()
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "instanceType", "disabled")
 	sidebar:SetSets(BtWLoadoutsSets.conditions)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.conditions)
 	sidebar:SetCategories(BtWLoadoutsCategories.conditions)
@@ -1038,10 +1182,14 @@ function BtWLoadoutsConditionsMixin:Update()
 			set.map.affixID4 = (affixID4 ~= 0 and affixID4 or nil)
 		end
 
-		if set.disabled then
-			RemoveConditionFromMap(set);
-		else
+		-- Refresh filters
+		UpdateSetFilters(set)
+		sidebar:Update()
+
+		if IsConditionEnabled(set) then
 			AddConditionToMap(set);
+		else
+			RemoveConditionFromMap(set);
 		end
 
 		if not self.Name:HasFocus() then
@@ -1056,6 +1204,31 @@ function BtWLoadoutsConditionsMixin:Update()
 			local subset = Internal.GetProfile(set.profileSet);
 			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
 		end
+
+		if set.profileSet ~= nil then
+			local profile = Internal.GetProfile(set.profileSet)
+			local classFile = profile.specID and select(6, GetSpecializationInfoByID(profile.specID))
+			if classFile and type(set.character) == "table" and not set.character["inherit"] then
+				-- Filter out any characters that are not valid for the selected loadout spec
+				local changed = false
+				for character in pairs(set.character) do
+					local characterData = Internal.GetCharacterInfo(character)
+					if not characterData or characterData.class ~= classFile then
+						set.character[character] = nil
+						changed = true
+					end
+				end
+				if changed then -- If we filtered out everything just default to inherit
+					if next(set.character) == nil then
+						set.character["inherit"] = true
+					end
+				end
+			end
+			self.CharacterDropDown:SetClass(classFile)
+		else
+			self.CharacterDropDown:SetClass(nil)
+		end
+		self.CharacterDropDown:UpdateName()
 
 		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[set.type]);
 		self.InstanceDropDown:SetShown(set.type == CONDITION_TYPE_DUNGEONS or set.type == CONDITION_TYPE_RAIDS);

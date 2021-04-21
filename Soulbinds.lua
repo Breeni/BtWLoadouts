@@ -95,8 +95,17 @@ end
 --[[ SET HANDLING ]]
 
 local function UpdateSetFilters(set)
-    set.filters = set.filters or {}
-    wipe(set.filters)
+	local filters = set.filters or {}
+    wipe(filters)
+    
+    Internal.UpdateRestrictionFilters(set)
+
+	filters.soulbind = set.soulbindID
+    
+    local soulbindData = GetSoulbindData(set.soulbindID)
+    filters.covenant = soulbindData.covenantID
+    
+	set.filters = filters
 
     return set
 end
@@ -204,7 +213,7 @@ local function CombineSets(result, state, ...)
         for i=1,select('#', ...) do
             local set = select(i, ...);
             local soulbindData = GetSoulbindData(set.soulbindID)
-            if soulbindData.covenantID == covenantID and soulbindData.unlocked then
+            if soulbindData.covenantID == covenantID and soulbindData.unlocked and Internal.AreRestrictionsValidForPlayer(set.restrictions) then
                 result.soulbindID = set.soulbindID
                 result.nodes = set.nodes
             end
@@ -243,85 +252,77 @@ local function ActivateSet(set, state)
 
 	return complete
 end
+local function CheckErrors(errorState, set)
+    set = GetSet(set)
 
-local function DropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-    CloseDropDownMenus();
-    local set = tab.set;
-    set.soulbinds = set.soulbinds or {}
-
-    local index = arg2 or (#set.soulbinds + 1)
-
-	if arg1 == nil then
-		table.remove(set.soulbinds, index);
-	else
-		set.soulbinds[index] = arg1;
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
 	end
-
-	BtWLoadoutsFrame:Update();
 end
-local setsFiltered = {}
-local function DropDownInit(self, level, menuList, index)
-	local info = UIDropDownMenu_CreateInfo();
 
-	local tab = BtWLoadoutsFrame.Profiles
+local genericSoulbindSets = {}
+for _,covenantID in ipairs(GetCovenantIDs()) do
+    local covenantData = GetCovenantData(covenantID)
+    for index,soulbindID in ipairs(covenantData.soulbindIDs) do
+        local soulbindData = GetSoulbindData(soulbindID)
 
-	local set = tab.set;
-	local selected = set and set.soulbinds and set.soulbinds[index];
-
-    info.arg2 = index
-
-    if (level or 1) == 1 then
-		info.text = NONE;
-        info.func = DropDown_OnClick;
-		info.checked = selected == nil;
-        UIDropDownMenu_AddButton(info, level);
-
-        for _,covenantID in ipairs(GetCovenantIDs()) do
-            local covenantData = GetCovenantData(covenantID)
-
-            info.text = covenantData.name;
-            info.hasArrow, info.menuList = true, covenantData.ID;
-            info.keepShownOnClick = true;
-            info.notCheckable = true;
-            UIDropDownMenu_AddButton(info, level);
-        end
-    else
-        local covenantData = GetCovenantData(menuList)
-        for _,soulbindID in ipairs(covenantData.soulbindIDs) do
-            local soulbindData = GetSoulbindData(soulbindID)
-
-            info.text = soulbindData.name;
-			info.arg1 = -soulbindData.ID;
-            info.func = DropDown_OnClick;
-            info.checked = selected == -soulbindData.ID;
-            UIDropDownMenu_AddButton(info, level);
-        end
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.soulbinds;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and GetSoulbindData(subset.soulbindID).covenantID == menuList then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-        end)
-
-        if #setsFiltered > 0 then
-            UIDropDownMenu_AddSeparator(level)
-
-            for _,setID in ipairs(setsFiltered) do
-                info.text = sets[setID].name;
-                info.arg1 = setID;
-                info.func = DropDown_OnClick;
-                info.checked = selected == setID;
-                UIDropDownMenu_AddButton(info, level);
-            end
+        genericSoulbindSets[#genericSoulbindSets+1] = UpdateSetFilters({
+            setID = -soulbindData.ID,
+            name = soulbindData.name,
+            soulbindID = soulbindData.ID,
+            covenantID = covenantID,
+            order = -20 + (index * 4 + covenantID),
+        })
+    end
+end
+-- Initializes the set dropdown menu for the Loadouts page
+local function SetDropDownInit(self, set, index)
+    local temp = {}
+    for _,set in pairs(genericSoulbindSets) do
+        temp[set.setID] = set
+    end
+    for _,set in pairs(BtWLoadoutsSets.soulbinds) do
+        if type(set) == "table" then
+            temp[set.setID] = set
         end
     end
+    self:SetSelected(index and set.soulbinds[index] or nil)
+    self:SetSets(temp)
+    self:SetFilters(BtWLoadoutsFilters.soulbinds)
+    self:SetCategories(BtWLoadoutsCategories.soulbinds)
+	self:SetIncludeNone(index ~= nil)
+    self:OnItemClick(function (self, setID)
+		local index = index or (#set.soulbinds + 1)
+
+    	if set.soulbinds[index] then
+    		local subset = GetSet(set.soulbinds[index]);
+    		subset.useCount = (subset.useCount or 1) - 1;
+    	end
+
+        if setID == "none" then
+			table.remove(set.soulbinds, index);
+        elseif setID == "new" then
+            local subset = AddSet();
+            set.soulbinds[index] = subset.setID;
+
+            BtWLoadoutsFrame.Soulbinds.set = subset;
+            PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.Soulbinds:GetID());
+        
+            BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] = true;
+        else -- Change to a specific set
+            set.soulbinds[index] = setID;
+        end
+    
+        if set.soulbinds[index] then
+            local subset = GetSet(set.soulbinds[index]);
+            subset.useCount = (subset.useCount or 0) + 1;
+        end
+
+		self:SetSelected(set.soulbinds[index])
+
+		CloseDropDownMenus()
+        BtWLoadoutsFrame:Update();
+    end)
 end
 
 Internal.AddLoadoutSegment({
@@ -329,11 +330,13 @@ Internal.AddLoadoutSegment({
     name = L["Soulbinds"],
     events = "SOULBIND_ACTIVATED",
     enabled = BTWLOADOUTS_SOULBINDS_ACTIVE,
+    add = AddSet,
     get = GetSets,
     combine = CombineSets,
     isActive = IsSetActive,
 	activate = ActivateSet,
-	dropdowninit = DropDownInit,
+    dropdowninit = SetDropDownInit,
+	checkerrors = CheckErrors,
 })
 
 -- [[ TAB UI ]]
@@ -511,6 +514,11 @@ end
 
 BtWLoadoutsSoulbindsMixin = {}
 function BtWLoadoutsSoulbindsMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("spec", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
     self.temp = {}
     self.nodes = CreateFramePool("BUTTON", self, "BtWLoadoutsSoulbindNodeTemplate");
     self.links = CreateFramePool("FRAME", self, "BtWLoadoutsSoulbindTreeNodeLinkTemplate");
@@ -648,7 +656,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
     self:GetParent().TitleText:SetText(L["Soulbinds"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters()
+	sidebar:SetSupportedFilters("covenant", "spec", "class", "role", "race")
 	sidebar:SetSets(BtWLoadoutsSets.soulbinds)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.soulbinds)
 	sidebar:SetCategories(BtWLoadoutsCategories.soulbinds)
@@ -669,6 +677,11 @@ function BtWLoadoutsSoulbindsMixin:Update()
 
 		UpdateSetFilters(set)
         sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations()
+		self.RestrictionsButton:SetEnabled(true);
 
         if not self.Name:HasFocus() then
             self.Name:SetText(set.name or "");

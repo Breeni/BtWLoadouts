@@ -164,7 +164,7 @@
 					<OnEnterPressed function="EditBox_ClearFocus"/>
 				</Scripts>
 			</EditBox>
-			<Frame parentKey="SettingsDropDown" inherits="UIDropDownMenuTemplate"/>
+			<Frame parentKey="SettingsDropDown" inherits="BtWLoadoutsRestrictionsDropDownTemplate"/>
 			<DropDownToggleButton parentKey="SettingsButton">
 				<Size x="22" y="22"/>
 				<Anchors>
@@ -894,6 +894,7 @@
 			</Button>
 		</Frames>
 		<Scripts>
+			<OnLoad inherit="append" method="OnLoad"/>
 			<OnShow method="OnShow"/>
 		</Scripts>
 	</Frame>

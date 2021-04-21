@@ -39,10 +39,12 @@ local function FixPvPTalentSet(set)
     end
     return changed
 end
-local function UpdatePvPTalentSetFilters(set)
+local function UpdateSetFilters(set)
     local specID = set.specID;
-
 	local filters = set.filters or {}
+
+    Internal.UpdateRestrictionFilters(set)
+
 	filters.spec = specID
 	if specID then
 		filters.role, filters.class = select(5, GetSpecializationInfoByID(specID))
@@ -197,7 +199,7 @@ local function RefreshPvPTalentSet(set)
 
     set.talents = talents
 
-    return UpdatePvPTalentSetFilters(set)
+    return UpdateSetFilters(set)
 end
 local function AddPvPTalentSet()
     local specIndex = GetSpecialization()
@@ -241,9 +243,11 @@ local function CombinePvPTalentSets(result, state, ...)
 
 	for i=1,select('#', ...) do
 		local set = select(i, ...);
-		for talentID in pairs(set.talents) do
-			if result.talents[talentID] == nil then
-				result.talents[talentID] = true;
+		if Internal.AreRestrictionsValidForPlayer(set.restrictions) then
+			for talentID in pairs(set.talents) do
+				if result.talents[talentID] == nil then
+					result.talents[talentID] = true;
+				end
 			end
 		end
 	end
@@ -284,6 +288,10 @@ local function CheckErrors(errorState, set)
     if errorState.specID ~= set.specID then
         return L["Incompatible Specialization"]
     end
+
+	if not Internal.AreRestrictionsValidFor(set.restrictions, errorState.specID) then
+        return L["Incompatible Restrictions"]
+	end
 end
 
 Internal.FixPvPTalentSet = FixPvPTalentSet
@@ -298,149 +306,9 @@ Internal.IsPvPTalentSetActive = IsPvPTalentSetActive
 Internal.CombinePvPTalentSets = CombinePvPTalentSets
 Internal.GetPvPTalentSets = GetPvPTalentSets
 
-local setsFiltered = {};
-local function PvPTalentsDropDown_OnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.pvptalents + 1)
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	if arg1 == nil then
-		table.remove(set.pvptalents, index);
-	else
-		set.pvptalents[index] = arg1;
-	end
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame:Update();
-end
-local function PvPTalentsDropDown_NewOnClick(self, arg1, arg2, checked)
-	local tab = BtWLoadoutsFrame.Profiles
-
-	CloseDropDownMenus();
-	local set = tab.set;
-	local index = arg2 or (#set.pvptalents + 1)
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 1) - 1;
-	end
-
-	local newSet = Internal.AddPvPTalentSet();
-	set.pvptalents[index] = newSet.setID;
-
-	if set.pvptalents[index] then
-		local subset = Internal.GetPvPTalentSet(set.pvptalents[index]);
-		subset.useCount = (subset.useCount or 0) + 1;
-	end
-
-	BtWLoadoutsFrame.PvPTalents.set = newSet;
-	PanelTemplates_SetTab(BtWLoadoutsFrame, BtWLoadoutsFrame.PvPTalents:GetID());
-
-	BtWLoadoutsFrame:Update();
-end
-local function PvPTalentsDropDownInit(self, level, menuList, index)
-    if not BtWLoadoutsSets or not BtWLoadoutsSets.pvptalents then
-        return;
-	end
-
-	local info = UIDropDownMenu_CreateInfo();
-
-	local tab = BtWLoadoutsFrame.Profiles
-
-	local set = tab.set;
-	local selected = set and set.pvptalents and set.pvptalents[index];
-
-	info.arg2 = index
-
-	if (level or 1) == 1 then
-		info.text = NONE;
-		info.func = PvPTalentsDropDown_OnClick;
-		info.checked = selected == nil;
-		UIDropDownMenu_AddButton(info, level);
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.pvptalents;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" then
-				setsFiltered[subset.specID] = true;
-			end
-		end
-
-		local className, classFile, classID = UnitClass("player");
-		local classColor = C_ClassColor.GetClassColor(classFile);
-		className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-		for specIndex=1,GetNumSpecializationsForClassID(classID) do
-			local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-			if setsFiltered[specID] then
-				info.text = format("%s: %s", className, specName);
-				info.hasArrow, info.menuList = true, specID;
-				info.keepShownOnClick = true;
-				info.notCheckable = true;
-				UIDropDownMenu_AddButton(info, level);
-			end
-		end
-
-		local playerClassID = classID;
-		for classID=1,GetNumClasses() do
-			if classID ~= playerClassID then
-				local className, classFile = GetClassInfo(classID);
-				local classColor = C_ClassColor.GetClassColor(classFile);
-				className = classColor and classColor:WrapTextInColorCode(className) or className;
-
-				for specIndex=1,GetNumSpecializationsForClassID(classID) do
-					local specID, specName, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
-					if setsFiltered[specID] then
-						info.text = format("%s: %s", className, specName);
-						info.hasArrow, info.menuList = true, specID;
-						info.keepShownOnClick = true;
-						info.notCheckable = true;
-						UIDropDownMenu_AddButton(info, level);
-					end
-				end
-			end
-		end
-
-		info.text = L["New Set"];
-		info.func = PvPTalentsDropDown_NewOnClick;
-		info.hasArrow, info.menuList = false, nil;
-		info.keepShownOnClick = false;
-		info.notCheckable = true;
-		info.checked = false;
-		UIDropDownMenu_AddButton(info, level);
-	else
-		local specID = menuList;
-
-		wipe(setsFiltered);
-		local sets = BtWLoadoutsSets.pvptalents;
-		for setID,subset in pairs(sets) do
-			if type(subset) == "table" and subset.specID == specID then
-				setsFiltered[#setsFiltered+1] = setID;
-			end
-		end
-		sort(setsFiltered, function (a,b)
-			return sets[a].name < sets[b].name;
-		end)
-
-		for _,setID in ipairs(setsFiltered) do
-			info.text = sets[setID].name;
-			info.arg1 = setID;
-			info.func = PvPTalentsDropDown_OnClick;
-			info.checked = selected == setID;
-			UIDropDownMenu_AddButton(info, level);
-		end
-	end
+-- Initializes the set dropdown menu for the Loadouts page
+local function SetDropDownInit(self, set, index)
+    Internal.SetDropDownInit(self, set, index, "pvptalents", BtWLoadoutsFrame.PvPTalents)
 end
 
 Internal.AddLoadoutSegment({
@@ -448,11 +316,12 @@ Internal.AddLoadoutSegment({
     name = L["PvP Talents"],
     after = "essences", -- Essences can give pvp talents
     events = "PLAYER_PVP_TALENT_UPDATE",
+    add = AddPvPTalentSet,
     get = GetPvPTalentSets,
     combine = CombinePvPTalentSets,
     isActive = IsPvPTalentSetActive,
 	activate = ActivatePvPTalentSet,
-	dropdowninit = PvPTalentsDropDownInit,
+	dropdowninit = SetDropDownInit,
     checkerrors = CheckErrors,
 })
 
@@ -472,6 +341,11 @@ end
 
 BtWLoadoutsPvPTalentsMixin = {}
 function BtWLoadoutsPvPTalentsMixin:OnLoad()
+    self.RestrictionsDropDown:SetSupportedTypes("covenant", "race")
+    self.RestrictionsDropDown:SetScript("OnChange", function ()
+        self:Update()
+    end)
+
 	self.temp = {}; -- Stores talents for currently unselected specs incase the user switches to them
 	self.GridPool = CreateFramePool("FRAME", self, "BtWLoadoutsTalentSelectionTemplate")
 end
@@ -485,6 +359,7 @@ function BtWLoadoutsPvPTalentsMixin:OnShow()
 end
 function BtWLoadoutsPvPTalentsMixin:ChangeSet(set)
     self.set = set
+	wipe(self.temp);
     self:Update()
 end
 function BtWLoadoutsPvPTalentsMixin:UpdateSetName(value)
@@ -611,7 +486,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 	self:GetParent().TitleText:SetText(L["PvP Talents"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("spec", "class", "role", "character")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "covenant", "race")
 	sidebar:SetSets(BtWLoadoutsSets.pvptalents)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.pvptalents)
 	sidebar:SetCategories(BtWLoadoutsCategories.pvptalents)
@@ -629,8 +504,13 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 	if not showingNPE then
 		local specID = set.specID
 
-		UpdatePvPTalentSetFilters(set)
+		UpdateSetFilters(set)
 		sidebar:Update()
+        
+        set.restrictions = set.restrictions or {}
+        self.RestrictionsDropDown:SetSelections(set.restrictions)
+        self.RestrictionsDropDown:SetLimitations()
+		self.RestrictionsButton:SetEnabled(true);
 
 		if not self.Name:HasFocus() then
 			self.Name:SetText(self.set.name or "");

@@ -59,6 +59,7 @@ function frame:ADDON_LOADED(...)
             pvptalents = {"spec"},
             essences = {"role"},
             equipment = {"character"},
+            soulbinds = {"covenant"},
             actionbars = {},
             conditions = {},
         }, {
@@ -99,7 +100,7 @@ function frame:ADDON_LOADED(...)
 
                     -- Refresh filtering
                     set.filters = set.filters or {}
-                    if set.character then
+                    if set.character and type(set.character) == "string" then
                         set.filters.character = set.character
                         local characterInfo = Internal.GetCharacterInfo(set.character)
                         if characterInfo then
@@ -210,8 +211,6 @@ function frame:ADDON_LOADED(...)
                     set.version = 2
                 end
 
-                set.character = nil -- Loadouts are no longer character restricted
-
                 for _,segment in Internal.EnumerateLoadoutSegments() do
                     local id = segment.id
                     set[id] = set[id] or {}
@@ -232,6 +231,8 @@ function frame:ADDON_LOADED(...)
                 if set.profileSet and BtWLoadoutsSets.profiles[set.profileSet] then
                     BtWLoadoutsSets.profiles[set.profileSet].useCount = BtWLoadoutsSets.profiles[set.profileSet].useCount + 1;
                 end
+
+                Internal.UpdateConditionFilters(set)
             end
         end
 
@@ -293,7 +294,7 @@ function frame:PLAYER_LOGIN(...)
                 set.profileSet = nil
             end
 
-			if not set.disabled then
+			if Internal.IsConditionEnabled(set) then
                 Internal.AddConditionToMap(set);
             end
         end
