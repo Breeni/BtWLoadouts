@@ -694,6 +694,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
         local selected = set.nodes;
         self.nodes:ReleaseAll()
         self.links:ReleaseAll()
+        wipe(self.nodesByID)
         for _,node in ipairs(soulbindData.tree.nodes) do
             local nodeFrame = self.nodes:Acquire()
             nodeFrame:SetFrameLevel(6)
