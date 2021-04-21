@@ -255,6 +255,9 @@
                     <Anchor point="TOPLEFT" x="-4" y="-34" />
                     <Anchor point="BOTTOMRIGHT" x="4" y="0" />
 				</Anchors>
+				<KeyValues>
+					<KeyValue key="scrollBarHideable" value="true" type="boolean"/>
+				</KeyValues>
 				<Frames>
 					<Slider name="$parentScrollBar" inherits="UIPanelScrollBarTemplate" parentKey="ScrollBar">
 						<Anchors>
