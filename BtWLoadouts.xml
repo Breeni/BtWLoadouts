@@ -407,7 +407,7 @@
 						<Texture file="Interface\Buttons\UI-Panel-Button-Glow" alphaMode="ADD" parentKey="Flash" hidden="true">
 							<Size x="184" y="60"/>
 							<Anchors>
-								<Anchor point="TOPLEFT" x="-7" y="7"/>
+								<Anchor point="TOPLEFT" x="-9" y="7"/>
 							</Anchors>
 						</Texture>
 					</Layer>
@@ -532,7 +532,7 @@
 								<Texture file="Interface\Buttons\UI-Panel-Button-Glow" alphaMode="ADD" parentKey="Flash">
 									<Size x="184" y="60"/>
 									<Anchors>
-										<Anchor point="TOPLEFT" x="-7" y="7"/>
+										<Anchor point="TOPLEFT" x="-9" y="7"/>
 									</Anchors>
 								</Texture>
 							</Layer>
