@@ -271,10 +271,12 @@ Internal.SortSets = SortSets
 ]]
 --
 local races = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 22, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37}
-local classes = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+local classes = {}
 local specializations = {}
 do -- Build Spec List
 	local className, classFile, classID = UnitClass("player")
+
+	classes[#classes+1] = classID
 
 	for specIndex=1,GetNumSpecializationsForClassID(classID) do
 		specializations[#specializations+1] = (GetSpecializationInfoForClassID(classID, specIndex))
@@ -283,6 +285,8 @@ do -- Build Spec List
 	local playerClassID = classID;
 	for classIndex=1,GetNumClasses() do
 		if classIndex ~= playerClassID then
+			classes[#classes+1] = classIndex
+
 			local _, _, classID = GetClassInfo(classIndex)
 			for specIndex=1,GetNumSpecializationsForClassID(classID) do
 				local specID = GetSpecializationInfoForClassID(classID, specIndex);
@@ -343,7 +347,8 @@ Internal.Filters = {
 				index = index + 1
 				if tbl[index] then
 					local classInfo = C_CreatureInfo.GetClassInfo(tbl[index])
-					return index, classInfo.classFile, classInfo.className
+					local classColor = C_ClassColor.GetClassColor(classInfo.classFile)
+					return index, classInfo.classFile, classColor:WrapTextInColorCode(classInfo.className)
 				elseif includeOther and index == #tbl + 1 then
 					return index, 0, L["Other"]
 				end
