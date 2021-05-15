@@ -497,7 +497,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 	self.set = sidebar:GetSelected()
 	local set = self.set
 	
-	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["PvP Talents"], L["Create different talent layouts for the type of content you wish to do."])
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["PvP Talents"], L["Create different pvp talent layouts for the type of content you wish to do."])
 
 	self:GetParent().DeleteButton:SetEnabled(true);
 
