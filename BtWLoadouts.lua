@@ -32,8 +32,8 @@ _G[ADDON_NAME] = External
 local GetCharacterInfo = Internal.GetCharacterInfo
 local GetCharacterSlug = Internal.GetCharacterSlug
 
-BTWLOADOUTS_PROFILE = L["Profile"]
-BTWLOADOUTS_PROFILES = L["Profiles"]
+BTWLOADOUTS_LOADOUT = L["Loadout"]
+BTWLOADOUTS_LOADOUTS = L["Loadouts"]
 BTWLOADOUTS_TALENTS = L["Talents"]
 BTWLOADOUTS_PVP_TALENTS = L["PvP Talents"]
 BTWLOADOUTS_ESSENCES = L["Essences"]
@@ -169,7 +169,7 @@ end);
 
 StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATE"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["Activate profile %s?"],
+	text = L["Activate loadout %s?"],
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self, data)
@@ -180,7 +180,7 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATE"] = {
 };
 StaticPopupDialogs["BTWLOADOUTS_REQUESTMULTIACTIVATE"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["Activate the following profile?\n"],
+	text = L["Activate the following loadout?\n"],
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self, data)
@@ -326,7 +326,7 @@ StaticPopupDialogs["BTWLOADOUTS_DELETESET"] = {
 };
 StaticPopupDialogs["BTWLOADOUTS_DELETEINUSESET"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more profiles. This cannot be reversed."],
+	text = L["Are you sure you wish to delete the set \"%s\", this set is in use by one or more loadouts. This cannot be reversed."],
 	button1 = YES,
 	button2 = NO,
 	OnAccept = function(self, data)
@@ -404,7 +404,7 @@ function Internal.HelpTipBox_SetText(self, text)
 end
 
 local NUM_TABS = 7;
-local TAB_PROFILES = 1;
+local TAB_LOADOUTS = 1;
 local TAB_TALENTS = 2;
 local TAB_PVP_TALENTS = 3;
 local TAB_ESSENCES = 4;
@@ -434,7 +434,7 @@ local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	CloseDropDownMenus();
 	local set = tab.set;
 
-	if selectedTab == TAB_PROFILES then
+	if selectedTab == TAB_LOADOUTS then
 		local classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
 		tab.temp[classFile or "NONE"] = set.character
 
@@ -1448,7 +1448,7 @@ do
 		self.Tabs = {}
 		self.TabPool = CreateFramePool("Button", self, "BtWLoadoutsTabTemplate")
 
-		self.TitleText:SetText(PROFILES)
+		self.TitleText:SetText(LOADOUTS)
 		self.TitleText:SetHeight(24)
 	end
 	function BtWLoadoutsFrameMixin:OnDragStart()
@@ -1472,9 +1472,9 @@ do
 	function BtWLoadoutsFrameMixin:OnLeave()
 		SetCursor(nil);
 	end
-	function BtWLoadoutsFrameMixin:SetProfile(set)
-		self.Profiles.set = set;
-		wipe(self.Profiles.temp);
+	function BtWLoadoutsFrameMixin:SetLoadout(set)
+		self.Loadouts.set = set;
+		wipe(self.Loadouts.temp);
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:SetTalentSet(set)
@@ -1924,7 +1924,7 @@ function Internal.Call(event, ...)
 end
 
 -- [[ Slash Command ]]
--- /btwloadouts activate profile Raid
+-- /btwloadouts activate loadout Raid
 -- /btwloadouts activate talents Outlaw: Mythic Plus
 SLASH_BTWLOADOUTS1 = "/btwloadouts"
 SLASH_BTWLOADOUTS2 = "/btwl"
@@ -2171,9 +2171,9 @@ if OneRingLib then
 			if set.specID then
 				local _, specName, _, _, _, classFile = GetSpecializationInfoByID(set.specID)
 				local classColor = C_ClassColor.GetClassColor(classFile);
-				category = format("%s - %s", L["Profile"], classColor:WrapTextInColorCode(specName))
+				category = format("%s - %s", L["Loadout"], classColor:WrapTextInColorCode(specName))
 			else
-				category = L["Profile"]
+				category = L["Loadout"]
 			end
 
 			return category, set.name, nil

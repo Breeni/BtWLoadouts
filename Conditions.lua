@@ -1002,9 +1002,9 @@ function BtWLoadoutsConditionsMixin:OnLoad()
 end
 function BtWLoadoutsConditionsMixin:OnShow()
 	if not self.initialized then
-		UIDropDownMenu_SetWidth(self.ProfileDropDown, 175);
-		UIDropDownMenu_Initialize(self.ProfileDropDown, ProfilesDropDownInit);
-		UIDropDownMenu_JustifyText(self.ProfileDropDown, "LEFT");
+		UIDropDownMenu_SetWidth(self.LoadoutDropDown, 175);
+		UIDropDownMenu_Initialize(self.LoadoutDropDown, ProfilesDropDownInit);
+		UIDropDownMenu_JustifyText(self.LoadoutDropDown, "LEFT");
 
 		self.CharacterDropDown.GetValue = function (self)
 			local frame = self:GetParent()
@@ -1199,10 +1199,10 @@ function BtWLoadoutsConditionsMixin:Update()
 		self.Enabled:SetChecked(not set.disabled);
 
 		if set.profileSet == nil then
-			UIDropDownMenu_SetText(self.ProfileDropDown, L["None"]);
+			UIDropDownMenu_SetText(self.LoadoutDropDown, L["None"]);
 		else
 			local subset = Internal.GetProfile(set.profileSet);
-			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
+			UIDropDownMenu_SetText(self.LoadoutDropDown, subset.name);
 		end
 
 		if set.profileSet ~= nil then
@@ -1289,7 +1289,7 @@ function BtWLoadoutsConditionsMixin:Update()
 
 		self.Enabled:SetChecked(true);
 		
-		UIDropDownMenu_SetText(self.ProfileDropDown, L["None"]);
+		UIDropDownMenu_SetText(self.LoadoutDropDown, L["None"]);
 		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES["world"]);
 
 		self.InstanceDropDown:SetShown(false);

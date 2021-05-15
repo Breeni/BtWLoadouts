@@ -298,7 +298,7 @@ local function UpdateSetFilters(set)
 end
 local function AddProfile()
 	local set = {
-		name = L["New Profile"],
+		name = L["New Loadout"],
 		version = 2,
 		useCount = 0,
 	}
@@ -345,7 +345,7 @@ local function DeleteProfile(id)
 	end
 	DeleteSet(BtWLoadoutsSets.profiles, id);
 
-	local frame = BtWLoadoutsFrame.Profiles;
+	local frame = BtWLoadoutsFrame.Loadouts;
 	local set = frame.set;
 	if set == id or set.setID == id then
 		frame.set = nil;--select(2,next(BtWLoadoutsSets.profiles)) or {};
@@ -964,7 +964,7 @@ function BtWLoadoutsSetsScrollListItemMixin:OnClick()
 		local index = self.index
 		local segment = self.type
 
-		local tab = BtWLoadoutsFrame.Profiles
+		local tab = BtWLoadoutsFrame.Loadouts
 
 		Internal.GetLoadoutSegment(segment).dropdowninit(DropDown, tab.set, index)
 		
@@ -1041,7 +1041,7 @@ function BtWLoadoutsSetsScrollListItemMixin:Add(button)
 	local DropDown = self:GetParent():GetParent().DropDown
 	
 	local segment = self.type
-	local tab = BtWLoadoutsFrame.Profiles
+	local tab = BtWLoadoutsFrame.Loadouts
 
 	Internal.GetLoadoutSegment(segment).dropdowninit(DropDown, tab.set)
 
@@ -1182,8 +1182,8 @@ end
 -- Stores errors for currently viewed set
 local errors = {}
 
-BtWLoadoutsProfilesMixin = {}
-function BtWLoadoutsProfilesMixin:OnLoad()
+BtWLoadoutsLoadoutsMixin = {}
+function BtWLoadoutsLoadoutsMixin:OnLoad()
 	self:RegisterEvent("GLOBAL_MOUSE_UP")
 
 	HybridScrollFrame_CreateButtons(self.SetsScroll, "BtWLoadoutsSetsScrollListItemTemplate", 4, -3, "TOPLEFT", "TOPLEFT", 0, -1, "TOP", "BOTTOM");
@@ -1191,12 +1191,12 @@ function BtWLoadoutsProfilesMixin:OnLoad()
 
 	self.temp = {} -- Stores character restrictions for unselected specs
 end
-function BtWLoadoutsProfilesMixin:OnEvent()
+function BtWLoadoutsLoadoutsMixin:OnEvent()
 	if self.SetsScroll:GetScrollChild().currentDrag  ~= nil then
 		self:GetParent():Update()
 	end
 end
-function BtWLoadoutsProfilesMixin:OnShow()
+function BtWLoadoutsLoadoutsMixin:OnShow()
 	if not self.initialized then
 		self.SpecDropDown.includeNone = true;
 		UIDropDownMenu_SetWidth(self.SpecDropDown, 175);
@@ -1231,25 +1231,25 @@ function BtWLoadoutsProfilesMixin:OnShow()
 		self.initialized = true;
 	end
 end
-function BtWLoadoutsProfilesMixin:ChangeSet(set)
+function BtWLoadoutsLoadoutsMixin:ChangeSet(set)
     self.set = set
 	wipe(self.temp);
     self:Update()
 end
-function BtWLoadoutsProfilesMixin:UpdateSetEnabled(value)
+function BtWLoadoutsLoadoutsMixin:UpdateSetEnabled(value)
 	if self.set and self.set.disabled ~= not value then
 		self.set.disabled = not value;
 		self:Update();
 	end
 end
-function BtWLoadoutsProfilesMixin:UpdateSetName(value)
+function BtWLoadoutsLoadoutsMixin:UpdateSetName(value)
 	if self.set and self.set.name ~= not value then
 		self.set.name = value;
 		BtWLoadoutsHelpTipFlags["TUTORIAL_RENAME_SET"] = true
 		self:Update();
 	end
 end
-function BtWLoadoutsProfilesMixin:OnButtonClick(button)
+function BtWLoadoutsLoadoutsMixin:OnButtonClick(button)
 	CloseDropDownMenus()
 	if button.isAdd then
 		BtWLoadoutsHelpTipFlags["TUTORIAL_NEW_SET"] = true;
@@ -1283,7 +1283,7 @@ function BtWLoadoutsProfilesMixin:OnButtonClick(button)
 		self:Update()
 	end
 end
-function BtWLoadoutsProfilesMixin:OnSidebarItemClick(button)
+function BtWLoadoutsLoadoutsMixin:OnSidebarItemClick(button)
 	CloseDropDownMenus()
 	if button.isHeader then
 		button.collapsed[button.id] = not button.collapsed[button.id]
@@ -1297,7 +1297,7 @@ function BtWLoadoutsProfilesMixin:OnSidebarItemClick(button)
 		end
 	end
 end
-function BtWLoadoutsProfilesMixin:OnSidebarItemDoubleClick(button)
+function BtWLoadoutsLoadoutsMixin:OnSidebarItemDoubleClick(button)
 	CloseDropDownMenus()
 	if button.isHeader then
 		return
@@ -1305,7 +1305,7 @@ function BtWLoadoutsProfilesMixin:OnSidebarItemDoubleClick(button)
 
 	ActivateProfile(GetProfile(button.id));
 end
-function BtWLoadoutsProfilesMixin:OnSidebarItemDragStart(button)
+function BtWLoadoutsLoadoutsMixin:OnSidebarItemDragStart(button)
 	CloseDropDownMenus()
 	if button.isHeader then
 		return
@@ -1313,7 +1313,7 @@ function BtWLoadoutsProfilesMixin:OnSidebarItemDragStart(button)
 
 	local icon = "INV_Misc_QuestionMark";
 	local set = GetProfile(button.id);
-	local command = format("/btwloadouts activate profile %d", button.id);
+	local command = format("/btwloadouts activate loadout %d", button.id);
 	if set.specID then
 		icon = select(4, GetSpecializationInfoByID(set.specID));
 	end
@@ -1352,8 +1352,8 @@ function BtWLoadoutsProfilesMixin:OnSidebarItemDragStart(button)
 		end
 	end
 end
-function BtWLoadoutsProfilesMixin:Update()
-	self:GetParent().TitleText:SetText(L["Profiles"]);
+function BtWLoadoutsLoadoutsMixin:Update()
+	self:GetParent().TitleText:SetText(L["Loadouts"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
 	sidebar:SetSupportedFilters("spec", "class", "role", "character", "disabled")
@@ -1367,7 +1367,7 @@ function BtWLoadoutsProfilesMixin:Update()
 	self.set = sidebar:GetSelected()
 	local set = self.set
 	
-	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Profiles"], L["Add sets of one or more types (Talents, Soulbinds, etc.) to your profiles to swap them together."])
+	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Loadouts"], L["Add sets of one or more types (Talents, Soulbinds, etc.) to your loadouts to swap them together."])
 
 	self:GetParent().RefreshButton:SetEnabled(false)
 
@@ -1423,27 +1423,27 @@ function BtWLoadoutsProfilesMixin:Update()
 			HelpTipBox_Anchor(helpTipBox, "TOP", self.Name);
 
 			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["Change the name of your new profile."]);
+			HelpTipBox_SetText(helpTipBox, L["Change the name of your new loadout."]);
 		elseif not BtWLoadoutsHelpTipFlags["TUTORIAL_CREATE_TALENT_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_CREATE_TALENT_SET";
 
 			HelpTipBox_Anchor(helpTipBox, "TOP", self.SetsScroll);
 
 			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["Create a talent set for your new profile."]);
+			HelpTipBox_SetText(helpTipBox, L["Create a talent set for your new loadout."]);
 		elseif not BtWLoadoutsHelpTipFlags["TUTORIAL_ACTIVATE_SET"] then
 			helpTipBox.closeFlag = "TUTORIAL_ACTIVATE_SET";
 
 			HelpTipBox_Anchor(helpTipBox, "TOP", self:GetParent().ActivateButton);
 
 			helpTipBox:Show();
-			HelpTipBox_SetText(helpTipBox, L["Activate your profile."]);
+			HelpTipBox_SetText(helpTipBox, L["Activate your loadout."]);
 		else
 			helpTipBox.closeFlag = nil;
 			helpTipBox:Hide();
 		end
 	else
-		self.Name:SetText("New Profile");
+		self.Name:SetText(L["New Loadout"]);
 
 		self.SetsScroll.items = BuildSetItems({}, self.SetsScroll.items or {}, self.Collapsed, {})
 		SetsScrollFrameUpdate(self.SetsScroll)

@@ -127,9 +127,9 @@
 		</Scripts>
 	</Button>
 
-    <Frame name="$parentProfiles" parentKey="Profiles" mixin="BtWLoadoutsProfilesMixin" inherits="BtWLoadoutsTabFrameTemplate">
+    <Frame name="$parentLoadouts" parentKey="Loadouts" mixin="BtWLoadoutsLoadoutsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
-            <KeyValue key="name" value="BTWLOADOUTS_PROFILES" type="global"/>
+            <KeyValue key="name" value="BTWLOADOUTS_LOADOUTS" type="global"/>
         </KeyValues>
         <Layers>
             <Layer level="ARTWORK">

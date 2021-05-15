@@ -7,7 +7,7 @@ local L = Internal.L
 
 L["Action Bars"] = "动作条"
 L["Activate"] = "激活"
-L["Activate profile %s?"] = "激活配置%s？"
+L["Activate loadout %s?"] = "激活配置%s？"
 L[ [=[Activate spec %s?
 This set will require a tome or rested to activate]=] ] = "激活%s专精？\\n需要使用一个书卷或在休息区执行。"
 L[ [=[Activate spec %s?
@@ -29,10 +29,10 @@ L["Equipment"] = "装备"
 L["Equipment set missing"] = "装备设置不存在"
 L["Log"] = "日志"
 L["Mists of Pandaria"] = "熊猫人之谜"
-L["New Profile"] = "新配置"
+L["New Loadout"] = "新配置"
 L["Panda"] = "熊猫人之谜"
-L["Profile"] = "配置"
-L["Profiles"] = "配置"
+L["Loadout"] = "配置"
+L["Loadouts"] = "配置"
 L["Settings"] = "设置"
 L["Shadowlands"] = "暗影国度"
 L["TBC"] = "燃烧的远征"

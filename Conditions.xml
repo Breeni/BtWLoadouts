@@ -26,7 +26,7 @@
                     </Anchors>
                     <Color r="0.75" g="0.61" b="0"/>
                 </FontString>
-                <FontString parentKey="ProfileTitle" text="BTWLOADOUTS_PROFILE" inherits="GameFontNormalLeft">
+                <FontString parentKey="LoadoutTitle" text="BTWLOADOUTS_LOADOUT" inherits="GameFontNormalLeft">
                     <Size x="225" y="0"/>
                     <Anchors>
                         <Anchor point="TOPLEFT" x="10" y="-70"/>
@@ -36,7 +36,7 @@
                 <FontString parentKey="CharacterRestrictionsTitle" text="BTWLOADOUTS_CHARACTER_RESTRICTIONS" inherits="GameFontNormalLeft">
                     <Size x="175" y="0"/>
                     <Anchors>
-                    <Anchor point="LEFT" relativeKey="$parent.ProfileTitle" relativePoint="RIGHT" x="0" y="0"/>
+                    <Anchor point="LEFT" relativeKey="$parent.LoadoutTitle" relativePoint="RIGHT" x="0" y="0"/>
                     </Anchors>
                     <Color r="0.75" g="0.61" b="0"/>
                 </FontString>
@@ -92,14 +92,14 @@
                     <OnEnterPressed function="EditBox_ClearFocus"/>
                 </Scripts>
             </EditBox>
-            <Frame parentKey="ProfileDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+            <Frame parentKey="LoadoutDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeKey="$parent.ProfileTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.LoadoutTitle" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
                 </Anchors>
             </Frame>
             <Frame parentKey="CharacterDropDown" inherits="BtWLoadoutsCharacterDropDownTemplate">
                 <Anchors>
-                    <Anchor point="LEFT" relativeKey="$parent.ProfileDropDown" relativePoint="RIGHT" x="0" y="0"/>
+                    <Anchor point="LEFT" relativeKey="$parent.LoadoutDropDown" relativePoint="RIGHT" x="0" y="0"/>
                 </Anchors>
                 <KeyValues>
                     <KeyValue key="multiple" type="boolean" value="true"/>
