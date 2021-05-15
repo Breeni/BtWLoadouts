@@ -1195,8 +1195,15 @@ function BtWLoadoutsActionBarsMixin:Update()
     self:GetParent().ActivateButton:SetEnabled(true);
     self:GetParent().DeleteButton:SetEnabled(true);
 
-	if set ~= nil then
+	if not showingNPE then
 		local slots = set.actions;
+
+		UpdateSetFilters(set)
+		sidebar:Update()
+
+        set.restrictions = set.restrictions or {}
+        self.SettingsDropDown:SetSelections(set.restrictions)
+        self.SettingsDropDown:SetLimitations()
 
 		if not self.Name:HasFocus() then
 			self.Name:SetText(set.name or "");

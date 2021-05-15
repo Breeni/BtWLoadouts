@@ -1205,6 +1205,31 @@ function BtWLoadoutsConditionsMixin:Update()
 			UIDropDownMenu_SetText(self.ProfileDropDown, subset.name);
 		end
 
+		if set.profileSet ~= nil then
+			local profile = Internal.GetProfile(set.profileSet)
+			local classFile = profile.specID and select(6, GetSpecializationInfoByID(profile.specID))
+			if classFile and type(set.character) == "table" and not set.character["inherit"] then
+				-- Filter out any characters that are not valid for the selected loadout spec
+				local changed = false
+				for character in pairs(set.character) do
+					local characterData = Internal.GetCharacterInfo(character)
+					if not characterData or characterData.class ~= classFile then
+						set.character[character] = nil
+						changed = true
+					end
+				end
+				if changed then -- If we filtered out everything just default to inherit
+					if next(set.character) == nil then
+						set.character["inherit"] = true
+					end
+				end
+			end
+			self.CharacterDropDown:SetClass(classFile)
+		else
+			self.CharacterDropDown:SetClass(nil)
+		end
+		self.CharacterDropDown:UpdateName()
+
 		UIDropDownMenu_SetText(self.ConditionTypeDropDown, CONDITION_TYPE_NAMES[set.type]);
 		self.InstanceDropDown:SetShown(set.type == CONDITION_TYPE_DUNGEONS or set.type == CONDITION_TYPE_RAIDS);
 		if set.instanceID == nil then

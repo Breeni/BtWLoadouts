@@ -607,7 +607,7 @@ function BtWLoadoutsEssencesMixin:Update()
     self:GetParent().DeleteButton:SetEnabled(true);
 
 	if not showingNPE then
-		UpdateEssenceSetFilters(set)
+		UpdateSetFilters(set)
 		sidebar:Update()
         
         set.restrictions = set.restrictions or {}

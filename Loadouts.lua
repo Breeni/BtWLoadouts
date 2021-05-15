@@ -1384,6 +1384,7 @@ function BtWLoadoutsProfilesMixin:Update()
 		UpdateSetFilters(set)
 		sidebar:Update()
 		
+		local classFile = specID and select(6, GetSpecializationInfoByID(specID))
 		if specID == nil or specID == 0 then
 			UIDropDownMenu_SetText(self.SpecDropDown, L["None"]);
 		else
