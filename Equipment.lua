@@ -435,20 +435,18 @@ local function GetCompareItemInfo(itemLink)
 	end
 	index = index + numBonusIDs + 1;
 
-	local upgradeTypeIDs = {n = 2};
-	if upgradeTypeID and upgradeTypeID ~= 0 then
+	local numModifiers = tonumber(linkData[index]) or 0;
+	index = index + 1;
+
+	local upgradeTypeIDs = {n = numModifiers};
+	for i=1,numModifiers do
 		local id = tonumber(linkData[index + 1]);
+		local value = tonumber(linkData[index + 2]);
 		if id then
-			upgradeTypeIDs[id] = true
+			upgradeTypeIDs[id] = value
 		end
-		if bit.band(upgradeTypeID, 0x1000000) ~= 0 then
-			id = tonumber(linkData[index + 2]);
-			if id then
-				upgradeTypeIDs[id] = true
-			end
-		end
+		index = index + 2;
 	end
-	index = index + 2;
 
 	local relic1NumBonusIDs = tonumber(linkData[index]) or 0;
 	local relic1BonusIDs = {n = relic1NumBonusIDs};
@@ -537,7 +535,7 @@ do
 		id = nil
 		for i=1,math.max(upgradeTypeIDs.n,locationUpgradeTypeIDs.n) do
 			id = next(upgradeTypeIDs, id)
-			if id and locationUpgradeTypeIDs[id] then
+			if upgradeTypeIDs[id] == locationUpgradeTypeIDs[id] then
 				match = match + 1;
 			end
 		end
