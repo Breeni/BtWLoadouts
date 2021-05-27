@@ -1683,7 +1683,8 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 	local slot = self:GetID();
 	local ignored = set and set.ignored[slot] or false;
 	local errors = set and set.errors[slot];
-	local itemLink = set and set.equipment[slot] or GetInventoryItemLink("player", slot);
+	local itemLink = set and set.equipment[slot];
+
 	if itemLink then
 		local itemID = GetItemInfoInstant(itemLink);
 		local _, _, quality, _, _, _, _, _, _, texture = GetItemInfo(itemLink);
