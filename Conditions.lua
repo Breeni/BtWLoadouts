@@ -25,6 +25,7 @@ local sort = table.sort
 
 local instanceBosses = Internal.instanceBosses;
 local scenarioInfo = Internal.scenarioInfo;
+local battlegroundInfo = Internal.battlegroundInfo;
 local dungeonDifficultiesAll = Internal.dungeonDifficultiesAll;
 local raidDifficultiesAll = Internal.raidDifficultiesAll;
 local instanceDifficulties = Internal.instanceDifficulties;
@@ -926,6 +927,47 @@ local function ScenarioDropDownInit(self, level, menuList)
 	end
 end
 
+local function BattlegroundDropDown_OnClick(self, arg1, arg2, checked)
+	local tab = BtWLoadoutsFrame.Conditions
+
+	CloseDropDownMenus();
+	local set = tab.set;
+
+	set.instanceID = arg1;
+	set.difficultyID = arg2;
+
+	BtWLoadoutsFrame:Update();
+end
+local function BattlegroundDropDownInit(self, level, menuList)
+	local info = UIDropDownMenu_CreateInfo();
+
+	local set = self:GetParent().set;
+	local instanceID = set and set.instanceID;
+
+	if (level or 1) == 1 then
+		info.text = L["Any"];
+		info.func = BattlegroundDropDown_OnClick;
+		info.checked = instanceID == nil;
+		UIDropDownMenu_AddButton(info, level);
+
+	-- 	for expansion,expansionData in ipairs(dungeonInfo) do
+	-- 		info.text = expansionData.name;
+	-- 		info.hasArrow, info.menuList = true, expansion;
+	-- 		info.keepShownOnClick = true;
+	-- 		info.notCheckable = true;
+	-- 		UIDropDownMenu_AddButton(info, level);
+	-- 	end
+	-- else
+		for _,details in ipairs(battlegroundInfo[CURRENT_EXPANSION].instances) do
+			info.text = GetRealZoneText(details);
+			info.arg1 = details;
+			info.func = BattlegroundDropDown_OnClick;
+			info.checked = instanceID == details;
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+end
+
 local function AffixDropDown_OnClick(self, arg1, arg2, checked)
 	local tab = BtWLoadoutsFrame.Conditions
 
@@ -1068,6 +1110,11 @@ function BtWLoadoutsConditionsMixin:OnShow()
 		UIDropDownMenu_SetWidth(self.ScenarioDropDown, 400);
 		UIDropDownMenu_Initialize(self.ScenarioDropDown, ScenarioDropDownInit);
 		UIDropDownMenu_JustifyText(self.ScenarioDropDown, "LEFT");
+
+		UIDropDownMenu_SetWidth(self.BattlegroundDropDown, 400);
+		UIDropDownMenu_Initialize(self.BattlegroundDropDown, BattlegroundDropDownInit);
+		UIDropDownMenu_JustifyText(self.BattlegroundDropDown, "LEFT");
+
 		self.initialized = true;
 	end
 end
@@ -1280,6 +1327,12 @@ function BtWLoadoutsConditionsMixin:Update()
 					UIDropDownMenu_SetText(self.ScenarioDropDown, details[3]);
 				end
 			end
+		end
+		self.BattlegroundDropDown:SetShown(set.type == CONDITION_TYPE_BATTLEGROUND);
+		if set.instanceID == nil then
+			UIDropDownMenu_SetText(self.BattlegroundDropDown, L["Any"]);
+		else
+			UIDropDownMenu_SetText(self.BattlegroundDropDown, GetRealZoneText(set.instanceID));
 		end
 
 		local helpTipBox = self:GetParent().HelpTipBox;

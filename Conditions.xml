@@ -137,6 +137,11 @@
                     <Anchor point="TOPLEFT" relativeKey="$parent.ConditionTypeDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
                 </Anchors>
             </Frame>
+            <Frame parentKey="BattlegroundDropDown" inherits="UIDropDownMenuTemplate" enableMouse="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.ConditionTypeDropDown" relativePoint="BOTTOMLEFT" x="0" y="-10"/>
+                </Anchors>
+            </Frame>
 
             <Button name="BtWLoadoutsConditionsAffixesDropDownList" mixin="BtWLoadoutsConditionsAffixesMixin" toplevel="true" frameStrata="FULLSCREEN_DIALOG" hidden="true">
                 <Size x="400" y="155"/>

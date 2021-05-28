@@ -523,6 +523,66 @@ local scenarioInfo = {
 		},
 	}
 };
+local battlegroundInfo = {
+	{
+		name = L["Classic"],
+		instances = {
+		},
+	},
+	{
+		name = L["TBC"],
+		instances = {
+		},
+	},
+	{
+		name = L["Wrath"],
+		instances = {
+		},
+	},
+	{
+		name = L["Cata"],
+		instances = {
+		},
+	},
+	{
+		name = L["Panda"],
+		instances = {
+		},
+	},
+	{
+		name = L["WoD"],
+		instances = {
+		},
+	},
+	{
+		name = L["Legion"],
+		instances = {
+		},
+	},
+	{
+		name = L["Battle for Azeroth"],
+		instances = {
+		},
+	},
+	{
+		name = L["Shadowlands"],
+		instances = {
+			2106,
+			2107,
+			30,
+			566,
+			628,
+			761,
+			2118,
+			1191,
+			726,
+			727,
+			998,
+			1803,
+			2245,
+		},
+	}
+};
 -- List of bosses within an instance
 local instanceBosses = {
     -- Classic
@@ -2135,6 +2195,7 @@ Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
 Internal.raidInfo = raidInfo;
 Internal.scenarioInfo = scenarioInfo;
+Internal.battlegroundInfo = battlegroundInfo;
 Internal.instanceBosses = instanceBosses;
 Internal.npcIDToBossID = npcIDToBossID;
 Internal.InstanceAreaIDToBossID = InstanceAreaIDToBossID;
