@@ -5,7 +5,6 @@ if GetLocale() ~= "ruRU" then return; end
 local _, Internal = ...
 local L = Internal.L
 
-L = L or {}
 L["A rested area or tome is needed to fully apply your loadout, do you wish to partially continue instead?"] = "Для полного применения снаряжения требуется место для отдыха или время, вы хотите вместо этого частично продолжить?"
 L["A tome is needed to continue equiping your set."] = "Для применения этого набора необходим фолиант."
 L["A tome or rested area is required to fully apply your loadout, do you wish to use a tome or partially continue without one?"] = "Чтобы полностью применить снаряжение, требуется фолиант или зона отдыха. Вы хотите использовать фолиант или частично продолжить без него?"
