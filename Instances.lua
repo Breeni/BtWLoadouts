@@ -567,19 +567,20 @@ local battlegroundInfo = {
 	{
 		name = L["Shadowlands"],
 		instances = {
-			2106,
-			2107,
-			30,
-			566,
-			628,
-			761,
-			2118,
-			1191,
-			726,
-			727,
-			998,
-			1803,
-			2245,
+			2106, -- Warsong Gulch
+			2107, -- Arathi Basin
+			30,   -- Alterac Valley
+			566,  -- Eye of the Storm
+            968,  -- Rated Eye of the Storm
+			628,  -- Isle of Conquest
+			761,  -- The Battle for Gilneas
+			2118, -- Battle for Wintergrasp
+			1191, -- Ashran
+			726,  -- Twin Peaks
+			727,  -- Silvershard Mines
+			998,  -- Temple of Kotmogu
+			1803, -- Seething Shore
+			2245, -- Deepwind Gorge
 		},
 	}
 };
