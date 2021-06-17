@@ -16,7 +16,7 @@
 		<NormalTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
 		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-GearManager-FlyoutButton"/>
 	</Button>
-    <ItemButton name="BtWLoadoutsItemSlotButtonTemplate" parentArray="Slots" motionScriptsWhileDisabled="true" mixin="BtWLoadoutsItemSlotButtonMixin" virtual="true">
+    <ItemButton name="BtWLoadoutsItemSlotButtonTemplate" parentArray="Slots" frameLevel="4" motionScriptsWhileDisabled="true" mixin="BtWLoadoutsItemSlotButtonMixin" virtual="true">
     	<Layers>
 			<Layer level="OVERLAY">
 				<Texture parentKey="ignoreTexture" file="Interface\PaperDollInfoFrame\UI-GearManager-LeaveItem-Transparent">
@@ -170,18 +170,6 @@
 					</OnMouseUp>
 				</Scripts>
 			</DropDownToggleButton>
-            <DressUpModel parentKey="Model" modelScale="1.0" inherits="ModelWithControlsTemplate">
-                <Size>
-                    <AbsDimension x="172" y="400"/>
-                </Size>
-                <Anchors>
-                    <Anchor point="TOPLEFT" x="150" y="-40"/>
-                    <Anchor point="BOTTOMRIGHT" x="-150" y="60"/>
-                </Anchors>
-                <Scripts>
-                    <!-- <OnLoad method="OnLoad" /> -->
-                </Scripts>
-            </DressUpModel>
             <ItemButton parentKey="HeadSlot" inherits="BtWLoadoutsItemSlotButtonLeftTemplate">
                 <KeyValues>
                     <KeyValue type="string" key="slot" value="HeadSlot"/>
@@ -417,6 +405,21 @@
                     </Anchor>
                 </Anchors>
             </ItemButton>
+            <DressUpModel parentKey="Model" modelScale="1.0" inherits="ModelWithControlsTemplate">
+                <Size>
+                    <AbsDimension x="172" y="400"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="3" y="-40"/>
+                    <Anchor point="BOTTOMRIGHT" x="-3" y="5"/>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        self:OnLoad(MODELFRAME_MAX_ZOOM, -0.5, MODELFRAME_DEFAULT_ROTATION);
+                        self:ResetModel();
+                    </OnLoad>
+                </Scripts>
+            </DressUpModel>
         </Frames>
         <Scripts>
             <OnLoad inherit="prepend" method="OnLoad"/>
