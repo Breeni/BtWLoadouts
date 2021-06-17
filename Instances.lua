@@ -2456,7 +2456,7 @@ function Internal.GetCurrentBoss(unitId)
 			local unitGUID = UnitGUID(unitId);
 			if unitGUID and not UnitIsDead(unitId) then
 				local type, zero, serverId, instanceId, zone_uid, npcId, spawn_uid = strsplit("-", unitGUID);
-				if type == "Creature" and tonumber(npcId) then
+				if (type == "Creature" or type == "Vehicle") and tonumber(npcId) then
 					bossID = npcIDToBossID[tonumber(npcId)] or bossID;
 				end
 			end
