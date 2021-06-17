@@ -206,7 +206,9 @@ local instanceDifficulties = {
     [2293] = dungeonDifficultiesAll, -- Theater of Pain
     [2291] = dungeonDifficultiesAll, -- De Other Side
     [2284] = dungeonDifficultiesAll, -- Sanguine Depths
+    [2441] = {23}, -- Tazavesh, the Veiled Market
     [2296] = raidDifficultiesAll, -- Castle Nathria
+    [2450] = raidDifficultiesAll, -- Sanctum of Domination
 }
 Internal.dungeonDifficultiesAll = dungeonDifficultiesAll;
 Internal.raidDifficultiesAll = raidDifficultiesAll;
@@ -369,6 +371,7 @@ local dungeonInfo = {
             2293, -- Theater of Pain
             2291, -- De Other Side
             2284, -- Sanguine Depths
+            2441, -- Tazavesh, the Veiled Market
         }
     },
 }
@@ -462,6 +465,7 @@ local raidInfo = {
         name = L["Shadowlands"],
         instances = {
             2296, -- Castle Nathria
+            2450, -- Sanctum of Domination
         }
     },
 }
@@ -1789,6 +1793,16 @@ local instanceBosses = {
         2421, -- Grand Proctor Beryllia
         2407, -- General Kaal
     },
+    [2441] = { -- Tazavesh, the Veiled Market
+        2437, -- Zo'phex the Sentinel
+        2454, -- The Grand Menagerie
+        2436, -- Mailroom Mayhem
+        2452, -- Myza's Oasis
+        2451, -- So'azmi
+        2448, -- Hylbrande
+        2449, -- Timecap'n Hooktail
+        2455, -- So'leah
+    },
     [2296] = { -- Castle Nathria
         2393, -- Shriekwing
         2429, -- Huntsman Altimor
@@ -1800,6 +1814,18 @@ local instanceBosses = {
         2394, -- Sludgefist
         2425, -- Stone Legion Generals
         2424, -- Sire Denathrius
+    },
+    [2450] = { -- Sanctum of Domination
+        2435, -- The Tarragrue
+        2442, -- The Eye of the Jailer
+        2439, -- The Nine
+        2444, -- Remnant of Ner'zhul
+        2445, -- Soulrender Dormazain
+        2443, -- Painsmith Raznal
+        2446, -- Guardian of the First Ones
+        2447, -- Fatescribe Roh-Kalo
+        2440, -- Kel'Thuzad
+        2441, -- Sylvanas Windrunner
     },
 }
 -- A map of npc ids to boss ids, this might not be the bosses npc id,
@@ -1837,6 +1863,24 @@ local npcIDToBossID = {
     [174733] = 2394, -- Sludgefist
     [165318] = 2425, -- Stone Legion Generals
     [167406] = 2424, -- Sire Denathrius
+
+    -- Sanctum of Domination
+    [152253] = 2435, -- The Tarragrue
+    [175611] = 2435, -- The Tarragrue
+    [175725] = 2442, -- The Eye of the Jailer
+    [180018] = 2442, -- The Eye of the Jailer
+    [177094] = 2439, -- The Nine
+    [178738] = 2439, -- The Nine
+    [175726] = 2439, -- The Nine
+    [175729] = 2444, -- Remnant of Ner'zhul
+    [175727] = 2445, -- Soulrender Dormazain
+    [176523] = 2443, -- Painsmith Raznal
+    [175731] = 2446, -- Guardian of the First Ones
+    [175730] = 2447, -- Fatescribe Roh-Kalo
+    [179390] = 2447, -- Fatescribe Roh-Kalo
+    [175559] = 2440, -- Kel'Thuzad
+    [175732] = 2441, -- Sylvanas Windrunner
+    [180828] = 2441, -- Sylvanas Windrunner
 };
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
@@ -2185,12 +2229,23 @@ local uiMapIDToBossID = {
     [1678] = 2409, -- The Manastorms
     [1677] = 2398, -- Dealer Xy'exa
     [1680] = 2410, -- Mueh'zala
+    -- Tazavesh, the Veiled Market
+    [1990] = 2454, -- The Grand Menagerie
+    [1991] = 2436, -- Mailroom Mayhem
+    [1992] = 2452, -- Myza's Oasis
+    [1997] = 2448, -- Hylbrande
+    [1995] = 2448, -- Hylbrande
+    [1996] = 2449, -- Timecap'n Hooktail
+    [1993] = 2455, -- So'leah
     -- Castle Nathria
     [1746] = 2422, -- Sun King's Salvation
     [1745] = 2418, -- Artificer Xy'mox
     [1744] = 2420, -- Lady Inerva Darkvein
     [1750] = 2426, -- The Council of Blood
     [1748] = 2424, -- Sire Denathrius
+    -- Sanctum of Domination
+    [1998] = 2435, -- The Tarragrue
+    [2002] = 2441, -- Sylvanas Windrunner
 }
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
