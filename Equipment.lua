@@ -164,9 +164,15 @@ do
 end
 Internal.GetExtrasForLocation = GetExtrasForLocation
 
-
+local function GetItemString(itemLink)
+	local itemString = string.match(itemLink, "item[%-?%d:]+Player%-[%d]+%-[%dA-F]+[%-?%d:]+")
+	if itemString == nil then -- Without GUID match
+		itemString = string.match(itemLink, "item[%-?%d:]+")
+	end
+	return itemString;
+end
 local function DeEnchantItemLink(itemLink)
-	local itemString = string.match(itemLink, "item[%-?%d:]+")
+	local itemString = GetItemString(itemLink)
 	return string.format("%s::::::%s:::%s", string.match(itemString, "^(item:%d+):[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:([^:]*:[^:]*):[^:]*:[^:]*:(.*)$"))
 end
 -- Remove parts of the item string that dont reflect item variations
@@ -178,7 +184,7 @@ local function UnsanitiseItemString(itemString)
 	return string.format("%s:%d:%d:%s", a, UnitLevel("player"), (GetSpecializationInfo(GetSpecialization())), b)
 end
 local function EncodeItemData(itemLink, azerite)
-	local itemString = string.match(itemLink, "item[%-?%d:]+")
+	local itemString = GetItemString(itemLink)
 
 	if type(azerite) == "table" then
 		if #azerite == 0 then
@@ -197,7 +203,7 @@ local function GetEncodedItemDataForItemLocation(itemLocation)
 	if itemLocation:IsValid() then
 		local itemLink = C_Item.GetItemLink(itemLocation)
 		if itemLink then -- Some items in inventory dont have item links, keystones, battlepets
-			local itemString = string.match(itemLink, "item[%-?%d:]+")
+			local itemString = GetItemString(itemLink)
 			if itemString then
 				local azerite = GetAzeriteDataForItemLocation(itemLocation)
 
@@ -406,14 +412,11 @@ local function CompareItemLinks(a, b)
 
 	return itemIDA == itemIDB;
 end
-local function CompareItems(itemLinkA, itemLinkB)
-	return CompareItemLinks(itemLinkA, itemLinkB);
-end
 -- item:127454::::::::120::::1:0:
 -- item:127454::::::::120::512::1:5473:120
 -- item:127454::::::::120:268:512:22:2:6314:6313:120:::
 local function GetCompareItemInfo(itemLink)
-	local itemString = string.match(itemLink, "item[%-?%d:]+");
+	local itemString = GetItemString(itemLink)
 	local linkData = {strsplit(":", itemString)};
 
 	local itemID = tonumber(linkData[2]);
@@ -476,9 +479,22 @@ local function GetCompareItemInfo(itemLink)
 			relic3BonusIDs[id] = true;
 		end
 	end
-	-- index = index + relic3NumBonusIDs + 1;
+	index = index + relic3NumBonusIDs + 1;
 
-	return itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs;
+	-- These were added in 9.1, we return false for links that were saved pre-9.1
+	-- When testing these items we check if the saved version is false and then ignore
+	-- comparing these values
+	local crafter = false
+	if linkData[index] ~= nil then
+		crafter = linkData[index]
+	end
+	index = index + 1;
+	local enchantID2 = false
+	if linkData[index] ~= nil then
+		enchantID2 = tonumber(linkData[index])
+	end
+
+	return itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs, crafter, enchantID2;
 end
 local GetBestMatch;
 do
@@ -503,8 +519,8 @@ do
 		-- end
 
 		local match = 0;
-		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
-		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
+		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs, crafter, enchantID2 = GetCompareItemInfo(itemLink);
+		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs, locationCrafter, locationEnchantID2 = GetCompareItemInfo(locationItemLink);
 
 		if enchantID == locationEnchantID then
 			match = match + 1;
@@ -559,6 +575,12 @@ do
 			if id and locationRelic3BonusIDs[id] then
 				match = match + 1;
 			end
+		end
+		if crafter == locationCrafter then
+			match = match + 1;
+		end
+		if enchantID2 == locationEnchantID2 then
+			match = match + 1;
 		end
 
 		if extras and extras.azerite and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
@@ -695,9 +717,9 @@ do
 			return false;
 		end
 
-		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs = GetCompareItemInfo(itemLink);
-		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs = GetCompareItemInfo(locationItemLink);
-		if itemID ~= locationItemID or enchantID ~= locationEnchantID or #gemIDs ~= #locationGemIDs or suffixID ~= locationSuffixID or uniqueID ~= locationUniqueID or upgradeTypeID ~= locationUpgradeTypeID or #bonusIDs ~= #bonusIDs or #relic1BonusIDs ~= #locationRelic1BonusIDs or #relic2BonusIDs ~= #locationRelic2BonusIDs or #relic3BonusIDs ~= #locationRelic3BonusIDs then
+		local itemID, enchantID, gemIDs, suffixID, uniqueID, upgradeTypeID, bonusIDs, upgradeTypeIDs, relic1BonusIDs, relic2BonusIDs, relic3BonusIDs, crafter, enchantID2 = GetCompareItemInfo(itemLink);
+		local locationItemID, locationEnchantID, locationGemIDs, locationSuffixID, locationUniqueID, locationUpgradeTypeID, locationBonusIDs, locationUpgradeTypeIDs, locationRelic1BonusIDs, locationRelic2BonusIDs, locationRelic3BonusIDs, locationCrafter, locationEnchantID2 = GetCompareItemInfo(locationItemLink);
+		if itemID ~= locationItemID or enchantID ~= locationEnchantID or #gemIDs ~= #locationGemIDs or suffixID ~= locationSuffixID or uniqueID ~= locationUniqueID or upgradeTypeID ~= locationUpgradeTypeID or #bonusIDs ~= #bonusIDs or #relic1BonusIDs ~= #locationRelic1BonusIDs or #relic2BonusIDs ~= #locationRelic2BonusIDs or #relic3BonusIDs ~= #locationRelic3BonusIDs or (crafter ~= false and crafter ~= locationCrafter) or (enchantID2 ~= false and enchantID2 ~= locationEnchantID2) then
 			return false;
 		end
 		if not CompareTables(gemIDs, locationGemIDs) then
