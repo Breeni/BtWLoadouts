@@ -175,13 +175,70 @@ local function DeEnchantItemLink(itemLink)
 	local itemString = GetItemString(itemLink)
 	return string.format("%s::::::%s:::%s", string.match(itemString, "^(item:%d+):[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:([^:]*:[^:]*):[^:]*:[^:]*:(.*)$"))
 end
--- Remove parts of the item string that dont reflect item variations
+-- Updates an item string, correcting the number of parts
+local function FixItemString(itemString)
+	local parts = {strsplit(':', itemString)}
+	local count = 14
+
+	local numBonusIDs = tonumber(parts[count])
+	if numBonusIDs then
+		count = count + numBonusIDs
+	end
+	count = count + 1
+
+	local numModifiers = tonumber(parts[count])
+	if numModifiers then
+		count = count + (numModifiers * 2)
+	end
+	count = count + 1
+
+	local relic1NumBonusIDs = tonumber(parts[count])
+	if relic1NumBonusIDs then
+		count = count + relic1NumBonusIDs
+	end
+	count = count + 1
+
+	local relic2NumBonusIDs = tonumber(parts[count])
+	if relic2NumBonusIDs then
+		count = count + relic2NumBonusIDs
+	end
+	count = count + 1
+
+	local relic3NumBonusIDs = tonumber(parts[count])
+	if relic3NumBonusIDs then
+		count = count + relic3NumBonusIDs
+	end
+	count = count + 1
+
+	-- Add crafterGUID, added in 9.1
+	if count > #parts then
+		parts[#parts+1] = ''
+	end
+	count = count + 1
+
+	-- Add extraEnchantID, added in 9.1
+	if count > #parts then
+		parts[#parts+1] = ''
+	end
+	count = count + 1
+
+	return table.concat(parts, ':')
+end
+-- Remove parts of the item string that dont reflect item variations, including linkLevel, specializationID, and crafterGUID
 local function SanitiseItemString(itemString)
-	return string.format("%s:::%s", string.match(itemString, "^(item:%d+:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*):[^:]*:[^:]*:(.*)$"))
+	return string.format("%s:::%s::%s", string.match(FixItemString(itemString), "^(item:%d+:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*):[^:]*:[^:]*:(.*):[^:]*:([^:]*)$"))
 end
 local function UnsanitiseItemString(itemString)
 	local a, b = string.match(itemString, "^(item:%d+:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*):[^:]*:[^:]*:(.*)$")
 	return string.format("%s:%d:%d:%s", a, UnitLevel("player"), (GetSpecializationInfo(GetSpecialization())), b)
+end
+
+local function FixItemData(itemData)
+	local itemString, azeriteString = string.match(itemData, "^(.+)-azerite([^-]+)$")
+	if azeriteString then
+		return FixItemString(itemString) .. "-azerite" .. azeriteString
+	end
+	return FixItemString(itemData)
 end
 local function EncodeItemData(itemLink, azerite)
 	local itemString = GetItemString(itemLink)
@@ -2009,7 +2066,7 @@ do
 				end
 
 				if location and location > 0 then
-					local data = set.data[slot] or EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
+					local data = set.data[slot] and FixItemData(set.data[slot]) or EncodeItemData(set.equipment[slot], set.extras[slot] and set.extras[slot].azerite)
 
 					if locationItems[location] == nil or locationItems[location] == data then
 						locationItems[location] = locationItems[location] or data
