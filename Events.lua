@@ -1463,12 +1463,17 @@ function frame:ITEM_CHANGED(previousHyperlink, newHyperlink)
 end
 local appliedEnchantID
 function frame:UNIT_SPELLCAST_SUCCEEDED(unit, castID, spellID)
+    if spellID == 358498 then -- Remove Domination Gem
+        Internal.CastedSoulFireChisel()
+        return
+    end
     appliedEnchantID = enchantBySpellID[spellID]
     if not appliedEnchantID then
         return
     end
 end
 function frame:BAG_UPDATE_DELAYED()
+    Internal.RemovedDominationGem()
     Internal.GemApplied()
     if itemChangedData[1] then
         Internal.RuneforgeItemUpdated(unpack(itemChangedData))
@@ -1480,6 +1485,7 @@ function frame:BAG_UPDATE_DELAYED()
     end
 end
 function frame:UNIT_INVENTORY_CHANGED()
+    Internal.RemovedDominationGem()
     Internal.GemApplied()
     if itemChangedData[1] then
         Internal.RuneforgeItemUpdated(unpack(itemChangedData))
@@ -1491,7 +1497,7 @@ function frame:UNIT_INVENTORY_CHANGED()
     end
 end
 function frame:SOCKET_INFO_SUCCESS(...)
-    -- Internal.GemApplied()
+    Internal.GemApplied()
 end
 frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");

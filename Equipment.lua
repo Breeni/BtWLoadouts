@@ -1513,31 +1513,6 @@ Internal.AddLoadoutSegment({
 	checkerrors = CheckErrors,
 })
 
-local GetCursorItemSource
-do
-	local currentCursorSource = {};
-	local function Hook_PickupContainerItem(bag, slot)
-		if CursorHasItem() then
-			currentCursorSource.bag = bag;
-			currentCursorSource.slot = slot;
-		else
-			wipe(currentCursorSource);
-		end
-	end
-	hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
-	local function Hook_PickupInventoryItem(slot)
-		if CursorHasItem() then
-			currentCursorSource.slot = slot;
-		else
-			wipe(currentCursorSource);
-		end
-	end
-	hooksecurefunc("PickupInventoryItem", Hook_PickupInventoryItem);
-	function GetCursorItemSource()
-		return currentCursorSource.bag or false, currentCursorSource.slot or false;
-	end
-end
-
 local gameTooltipErrorLink;
 local gameTooltipErrorText;
 
@@ -2688,11 +2663,24 @@ do
 	end
 	Internal.EnchantApplied = EnchantApplied
 	do -- Update items from socketing gems
+		local function HasGem(itemLink)
+			for i=1,3 do
+				local itemLink = GetItemGem(itemLink, i)
+				if itemLink then
+					return true
+				end
+			end
+			return false
+		end
+
 		local itemLocation = ItemLocation:CreateEmpty();
 		local function GemApplied()
 			if itemLocation:HasAnyLocation() and itemLocation:IsValid() then
-				UpdateItemAtLocation(GetLocationFromItemLocation(itemLocation))
-				itemLocation:Clear()
+				local itemLink = C_Item.GetItemLink(itemLocation)
+				if itemLink and HasGem(itemLink) then
+					UpdateItemAtLocation(GetLocationFromItemLocation(itemLocation))
+					itemLocation:Clear()
+				end
 			end
 		end
 		local function hook_SocketInventoryItem(slotId)
@@ -2704,6 +2692,66 @@ do
 		end
 		hooksecurefunc("SocketContainerItem", hook_SocketContainerItem)
 		Internal.GemApplied = GemApplied
+	end
+	do
+		local dominationGems = {
+			[187284] = true,
+			[187295] = true,
+			[187286] = true,
+	
+			[187287] = true,
+			[187288] = true,
+			[187289] = true,
+			
+			[187299] = true,
+	
+			[187308] = true,
+			[187309] = true,
+			[187310] = true,
+		}
+		local function IsDominationGem(itemLink)
+			local itemID = GetItemInfoInstant(itemLink)
+			return dominationGems[itemID] and true or false
+		end
+		local function HasDominationGem(itemLink)
+			for i=1,3 do
+				local itemLink = GetItemGem(itemLink, i)
+				if itemLink and IsDominationGem(itemLink) then
+					return true
+				end
+			end
+			return false
+		end
+
+		local itemLocation = ItemLocation:CreateEmpty();
+		local function hook_PickupInventoryItem(slotId)
+			itemLocation:SetEquipmentSlot(slotId)
+		end
+		hooksecurefunc("PickupInventoryItem", hook_PickupInventoryItem)
+		local function hook_UseContainerItem(bagId, slotId)
+			itemLocation:SetBagAndSlot(bagId, slotId)
+		end
+		hooksecurefunc("UseContainerItem", hook_UseContainerItem)
+		
+		local isRemovingDominationSocket = false
+		function Internal.CastedSoulFireChisel()
+			if itemLocation:HasAnyLocation() and itemLocation:IsValid() then
+				local itemLink = C_Item.GetItemLink(itemLocation)
+				if itemLink and HasDominationGem(itemLink) then
+					isRemovingDominationSocket = true
+					return true
+				end
+			end
+		end
+		function Internal.RemovedDominationGem()
+			if isRemovingDominationSocket then
+				if itemLocation:HasAnyLocation() and itemLocation:IsValid() then
+					UpdateItemAtLocation(GetLocationFromItemLocation(itemLocation))
+				end
+				itemLocation:Clear()
+				isRemovingDominationSocket = false
+			end
+		end
 	end
 	--[[@TODO
 		Handle events for inventory items moving, there is a lot
