@@ -1370,6 +1370,7 @@ function BtWLoadoutsLoadoutsMixin:Update()
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Loadouts"], L["Add sets of one or more types (Talents, Soulbinds, etc.) to your loadouts to swap them together."])
 
 	self:GetParent().RefreshButton:SetEnabled(false)
+	self:GetParent().DeleteButton:SetEnabled(true)
 
 	self.Collapsed = self.Collapsed or {}
 
@@ -1414,6 +1415,8 @@ function BtWLoadoutsLoadoutsMixin:Update()
 		if not self.Name:HasFocus() then
 			self.Name:SetText(set.name or "");
 		end
+
+        self:GetParent().ActivateButton:SetEnabled(classFile == select(2, UnitClass("player")));
 
 		-- Tutorial stuff
 		local helpTipBox = self:GetParent().HelpTipBox;
