@@ -983,7 +983,7 @@ do
 					ignored[inventorySlotId] = true
 				end
 
-				if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] ~= -1 and not expected[inventorySlotId] then
+				if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] > 0 and not expected[inventorySlotId] then
 					expected[inventorySlotId] = GetItemLinkByLocation(locations[inventorySlotId])
 
 					if not expected[inventorySlotId] then
@@ -998,7 +998,7 @@ do
 					local itemLink = expected[inventorySlotId];
 					if itemLink then
 						local location = locations[inventorySlotId];
-						if location and location ~= -1 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
+						if location and location > 0 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
 							local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
 							if player and not bags and slot == inventorySlotId then -- The item is already in the desired location
 								correctSlots[inventorySlotId] = true;
