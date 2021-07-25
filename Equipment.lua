@@ -100,6 +100,13 @@ local function SetItemLocationFromLocation(itemLocation, location)
 	
 	return itemLocation
 end
+local function IsLocationEquipmentSlot(location)
+	local player, bank, bags, voidStorage, slot, bag, tab, voidSlot = EquipmentManager_UnpackLocation(location)
+	if player and not bags then
+		return true
+	end
+	return false
+end
 
 
 -- Get azerite item data from a location
@@ -380,7 +387,7 @@ local function IsLocationLocked(location)
 
 	return locked;
 end
-local function EmptyInventorySlot(inventorySlotId)
+local function EmptyInventorySlot(inventorySlotId, reason)
     local itemBagType = GetItemFamily(GetInventoryItemLink("player", inventorySlotId))
 
     local foundSlot = false
@@ -412,7 +419,11 @@ local function EmptyInventorySlot(inventorySlotId)
 			end
 		end
 
+		Internal.LogMessage("Empty inventory slot %d (%s,%s)", inventorySlotId, reason or "default", complete and "true" or "false")
+
         ClearCursor();
+	else
+		Internal.LogMessage("Empty inventory slot %d (%s,%s)", inventorySlotId, reason or "default", "false")
     end
 
     return complete, foundSlot
@@ -435,7 +446,7 @@ local function GetItemLinkByLocation(location)
 
 	return itemLink;
 end
-local function SwapInventorySlot(inventorySlotId, itemLink, location)
+local function SwapInventorySlot(inventorySlotId, itemLink, location, reason)
 	local complete = false;
 	local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
 	if not voidStorage and not (player and not bags and slot == inventorySlotId) and not IsLocationLocked(location) then
@@ -455,7 +466,7 @@ local function SwapInventorySlot(inventorySlotId, itemLink, location)
 			end
 		end
 
-		Internal.LogMessage("Switching inventory slot %d to %s (%s)", inventorySlotId, GetItemLinkByLocation(location), complete and "true" or "false")
+		Internal.LogMessage("Switching inventory slot %d to %s (%s,%s)", inventorySlotId, GetItemLinkByLocation(location), reason or "default", complete and "true" or "false")
 
 		ClearCursor();
     end
@@ -941,7 +952,6 @@ do
 	local correctSlots = {};
 	local possibleItems = {};
 	local bestMatchForSlot = {};
-	local uniqueFamiliesTemp = {};
 	local uniqueFamilies = {};
 	-- This function is destructive to the set
 	function ActivateEquipmentSet(set, state)
@@ -983,6 +993,7 @@ do
 					ignored[inventorySlotId] = true
 				end
 
+				-- Update the expected item link by location, if the target location is empty than ignore the slot, this does NOT effect the original set
 				if not ignored[inventorySlotId] and locations[inventorySlotId] and locations[inventorySlotId] > 0 and not expected[inventorySlotId] then
 					expected[inventorySlotId] = GetItemLinkByLocation(locations[inventorySlotId])
 
@@ -996,7 +1007,7 @@ do
 					anyLockedSlots = anyLockedSlots or slotLocked
 
 					local itemLink = expected[inventorySlotId];
-					if itemLink then
+					if itemLink then -- Get the location of the best match for the slot
 						local location = locations[inventorySlotId];
 						if location and location > 0 and IsItemInLocation(itemLink, extras[inventorySlotId], location) then
 							local player, bank, bags, voidStorage, slot, bag = EquipmentManager_UnpackLocation(location);
@@ -1085,10 +1096,10 @@ do
 							if uniqueFamilies[uniqueFamily] <= 0 then
 								ignored[inventorySlotId] = true -- To many of the unique items already equipped
 							else
-								uniqueFamiliesTemp[uniqueFamily] = true
+								uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
 							end
-
-							uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
+						else
+							uniqueFamilies[uniqueFamily] = maxEquipped - 1
 						end
 					end
 
@@ -1099,31 +1110,21 @@ do
 							itemID = GetItemInfoInstant(gemLink);
 							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
 
-							if uniqueFamily and uniqueFamilies[uniqueFamily] then
-								uniqueFamiliesTemp[uniqueFamily] = true
-
-								if uniqueFamilies[uniqueFamily] <= 0 then
-									ignored[inventorySlotId] = true -- To many of the unique items already equipped
-									break
+							if uniqueFamily then
+								if uniqueFamilies[uniqueFamily] then
+									if uniqueFamilies[uniqueFamily] <= 0 then
+										ignored[inventorySlotId] = true -- To many of the unique gems already equipped
+									else
+										uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
+									end
 								else
-									uniqueFamiliesTemp[uniqueFamily] = true
+									uniqueFamilies[uniqueFamily] = maxEquipped - 1
 								end
-
-								uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] - 1
 							end
 
 							index = index + 1
 							gemName, gemLink = GetItemGem(itemLink, index)
 						end
-					end
-
-					if ignored[inventorySlotId] then
-						-- uniqueFamiliesTemp is a list of all the unique families that were non-blocking
-						-- because we found 1 that was blocking we will unblock the others
-						for uniqueFamily in pairs(uniqueFamiliesTemp) do
-							uniqueFamilies[uniqueFamily] = uniqueFamilies[uniqueFamily] + 1
-						end
-						wipe(uniqueFamiliesTemp)
 					end
 				end
 			end
@@ -1136,8 +1137,7 @@ do
 					local itemID = GetItemInfoInstant(itemLink);
 					local uniqueFamily, maxEquipped = GetItemUniquenessCached(itemLink)
 
-					local swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
-
+					local swapSlot = uniqueFamilies[uniqueFamily] ~= nil and uniqueFamilies[uniqueFamily] <= 0
 					if not swapSlot then
 						local index = 1
 						local gemName, gemLink = GetItemGem(itemLink, index)
@@ -1145,7 +1145,7 @@ do
 							itemID = GetItemInfoInstant(gemLink)
 							uniqueFamily, maxEquipped = GetItemUniquenessCached(gemLink)
 
-							swapSlot = (uniqueFamily == -1 and uniqueFamilies[itemID] ~= nil) or uniqueFamilies[uniqueFamily] ~= nil
+							swapSlot = uniqueFamilies[uniqueFamily] ~= nil and uniqueFamilies[uniqueFamily] <= 0
 
 							if swapSlot then
 								break
@@ -1157,7 +1157,13 @@ do
 					end
 
 					if swapSlot then
-						if SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId]) then
+						local expectedUniqueFamily = GetItemUniquenessCached(expected[inventorySlotId])
+						-- Under some situations we need to just remove a unique item before equipping its replacement, this is emptying slots more than I'd like
+						if expectedUniqueFamily and expectedUniqueFamily ~= uniqueFamily and not IsLocationEquipmentSlot(bestMatchForSlot[inventorySlotId]) then
+							local complete, foundSlot = EmptyInventorySlot(inventorySlotId, "unique")
+							anyChangedSlots = anyChangedSlots or complete
+							anyFoundFreeSlots = anyFoundFreeSlots or foundSlot
+						elseif SwapInventorySlot(inventorySlotId, expected[inventorySlotId], bestMatchForSlot[inventorySlotId], "unique") then
 							anyChangedSlots = true
 						end
 					end
