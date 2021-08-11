@@ -408,7 +408,7 @@ function Internal.TriggerConditions()
 	wipe(conditionMatchCount);
 	local specID = GetSpecializationInfo(GetSpecialization())
 	for setID,set in pairs(BtWLoadoutsSets.conditions) do
-		if type(set) == "table" and set.profileSet ~= nil and not set.disabled then
+		if type(set) == "table" and set.profileSet ~= nil and IsConditionEnabled(set) then
 			local profile = Internal.GetProfile(set.profileSet);
 			if (not Settings.noSpecSwitch or profile.specID == specID or profile.specID == nil) and Internal.IsLoadoutActivatable(profile) then
 				local match = IsConditionActive(set);
