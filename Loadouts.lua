@@ -858,6 +858,19 @@ do
 		return unpack(loadouts);
 	end
 end
+function External.ActivateLoadout(id)
+	local loadout
+	if type(id) == "number" then
+		loadout = GetProfile(id)
+	else
+		loadout = GetProfileByName(id)
+	end
+	if loadout == nil then
+		error(L["Unknown loadout " .. tostring(id)])
+	end
+
+	ActivateProfile(loadout)
+end
 
 BtWLoadoutsSetsScrollListItemMixin = {}
 function BtWLoadoutsSetsScrollListItemMixin:OnLoad()
