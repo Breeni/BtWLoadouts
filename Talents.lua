@@ -367,6 +367,21 @@ local function SetDropDownInit(self, set, index)
     Internal.SetDropDownInit(self, set, index, "talents", BtWLoadoutsFrame.Talents)
 end
 
+local function CompareSets(a, b)
+    for k in pairs(a.talents) do
+        if not b.talents[k] then
+            return false
+        end
+    end
+    for k in pairs(b.talents) do
+        if not a.talents[k] then
+            return false
+        end
+    end
+
+    return true
+end
+
 Internal.AddLoadoutSegment({
     id = "talents",
     name = L["Talents"],
@@ -378,6 +393,42 @@ Internal.AddLoadoutSegment({
     activate = ActivateTalentSet,
     dropdowninit = SetDropDownInit,
     checkerrors = CheckErrors,
+
+    export = function (set)
+        return {
+            version = 1,
+            name = set.name,
+            specID = set.specID,
+            talents = CopyTable(set.talents)
+        }
+    end,
+    import = function (source, version, name, ...)
+        assert(version == 1)
+
+        local specID = source.specID or ...
+        return AddSet("talents", RefreshTalentSet({
+			specID = specID,
+			name = name or source.name,
+			useCount = 0,
+			talents = source.talents,
+        }))
+    end,
+    getByValue = function (set)
+        return Internal.GetSetByValue(BtWLoadoutsSets.talents, set, CompareSets)
+    end,
+    verify = function (source, ...)
+        local specID = source.specID or ...
+        if type(source.talents) ~= "table" then
+            return false, L["Missing talents"]
+        end
+        if not specID or not GetSpecializationInfoByID(specID) then
+            return false, L["Invalid specialization"]
+        end
+
+        -- @TODO verify talent ids?
+
+        return true
+    end,
 })
 
 BtWLoadoutsTalentsMixin = {}
@@ -440,6 +491,9 @@ function BtWLoadoutsTalentsMixin:OnButtonClick(button)
         local set = self.set;
         RefreshTalentSet(set)
         self:Update()
+	elseif button.isExport then
+		local set = self.set;
+		self:GetParent():SetExport(Internal.Export("talents", set.setID))
 	elseif button.isActivate then
         local set = self.set;
         if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
@@ -545,6 +599,7 @@ function BtWLoadoutsTalentsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Talents"], L["Create different talent layouts for the type of content you wish to do. Leave rows blank to skip the tier."])
         
+	self:GetParent().ExportButton:SetEnabled(true)
     self:GetParent().DeleteButton:SetEnabled(true);
 
     if not showingNPE then
@@ -617,4 +672,7 @@ function BtWLoadoutsTalentsMixin:Update()
         local helpTipBox = self:GetParent().HelpTipBox;
         helpTipBox:Hide();
     end
+end
+function BtWLoadoutsTalentsMixin:SetSetByID(setID)
+	self.set = GetTalentSet(setID)
 end

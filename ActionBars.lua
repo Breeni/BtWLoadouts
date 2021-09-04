@@ -1191,6 +1191,7 @@ function BtWLoadoutsActionBarsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Action Bars"], L["Create different action bar layouts, including stealth, form, and stance bars. You can ignore specific action buttons or entire bars."])
         
+	self:GetParent().ExportButton:SetEnabled(false)
     self:GetParent().RefreshButton:SetEnabled(true)
     self:GetParent().ActivateButton:SetEnabled(true);
     self:GetParent().DeleteButton:SetEnabled(true);

@@ -669,6 +669,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Soulbinds"], L["Create soulbind trees for switching between soulbind paths, leave rows blank to not skip them. Conduits are not affected."])
 
+	self:GetParent().ExportButton:SetEnabled(false)
     self:GetParent().DeleteButton:SetEnabled(true);
 
     if not showingNPE then
