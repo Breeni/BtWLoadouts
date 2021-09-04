@@ -437,6 +437,20 @@
 					</OnClick>
 				</Scripts>
 			</Button>
+			<Button parentKey="ExportButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_EXPORT">
+				<KeyValues>
+					<KeyValue type="boolean" key="isExport" value="true"/>
+				</KeyValues>
+				<Size x="80" y="22"/>
+				<Anchors>
+					<Anchor point="LEFT" relativeKey="$parent.RefreshButton" relativePoint="RIGHT" x="10" y="0"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						BtWLoadoutsFrame:OnButtonClick(self);
+					</OnClick>
+				</Scripts>
+			</Button>
 			<Button parentKey="ActivateButton" inherits="UIPanelButtonTemplate" text="BTWLOADOUTS_ACTIVATE">
 				<KeyValues>
 					<KeyValue type="boolean" key="isActivate" value="true"/>

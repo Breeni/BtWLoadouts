@@ -1910,6 +1910,8 @@ function BtWLoadoutsEquipmentMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Equipment"], L["Create gear sets or use the Blizzard equipment set manager."])
 
+	self:GetParent().ExportButton:SetEnabled(false)
+	
 	if not showingNPE then
 		UpdateSetFilters(set)
 		sidebar:Update()

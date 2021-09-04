@@ -499,6 +499,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["PvP Talents"], L["Create different pvp talent layouts for the type of content you wish to do."])
 
+	self:GetParent().ExportButton:SetEnabled(false)
 	self:GetParent().DeleteButton:SetEnabled(true);
 
 	if not showingNPE then

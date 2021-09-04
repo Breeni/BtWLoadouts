@@ -604,6 +604,7 @@ function BtWLoadoutsEssencesMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Essences"], L["Create sets for the Battle for Azeroth artifact neck."])
 
+	self:GetParent().ExportButton:SetEnabled(false)
     self:GetParent().DeleteButton:SetEnabled(true);
 
 	if not showingNPE then

@@ -33,6 +33,7 @@ Soulbinds.xml
 Equipment.xml
 ActionBars.xml
 Conditions.xml
+Share.xml
 
 Launcher.lua
 Events.lua

@@ -129,6 +129,7 @@
 
     <Frame name="$parentLoadouts" parentKey="Loadouts" mixin="BtWLoadoutsLoadoutsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
+            <KeyValue key="type" value="loadout" type="string"/>
             <KeyValue key="name" value="BTWLOADOUTS_LOADOUTS" type="global"/>
         </KeyValues>
         <Layers>
