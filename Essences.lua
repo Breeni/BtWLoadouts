@@ -297,6 +297,39 @@ Internal.AddLoadoutSegment({
 	activate = ActivateEssenceSet,
 	dropdowninit = SetDropDownInit,
     checkerrors = CheckErrors,
+
+    export = function (set)
+        return {
+            version = 1,
+            name = set.name,
+            role = set.role,
+			essences = CopyTable(set.essences),
+        }
+    end,
+    import = function (source, version, name, ...)
+        assert(version == 1)
+
+        local role = source.role or ...
+        return Internal.AddSet("essences", UpdateSetFilters({
+			role = role,
+			name = name or source.name,
+			useCount = 0,
+			essences = source.essences,
+        }))
+    end,
+    getByValue = function (set)
+		return Internal.GetSetByValue(BtWLoadoutsSets.essences, set, CompareSets)
+    end,
+    verify = function (source, ...)
+        local role = source.role or ...
+        if not role or type(_G[role]) ~= "string" then
+            return false, L["Invalid role"]
+        end
+
+        -- @TODO verify essence ids?
+
+        return true
+    end,
 })
 
 BtWLoadoutsAzeriteMilestoneSlotMixin = {};
@@ -511,6 +544,9 @@ function BtWLoadoutsEssencesMixin:OnButtonClick(button)
 		local set = self.set;
 		RefreshEssenceSet(set)
 		self:Update()
+	elseif button.isExport then
+		local set = self.set;
+		self:GetParent():SetExport(Internal.Export("essences", set.setID))
 	elseif button.isActivate then
 		Internal.ActivateProfile({
 			essences = {self.set.setID}
@@ -604,7 +640,7 @@ function BtWLoadoutsEssencesMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Essences"], L["Create sets for the Battle for Azeroth artifact neck."])
 
-	self:GetParent().ExportButton:SetEnabled(false)
+	self:GetParent().ExportButton:SetEnabled(true)
     self:GetParent().DeleteButton:SetEnabled(true);
 
 	if not showingNPE then
@@ -674,4 +710,7 @@ function BtWLoadoutsEssencesMixin:Update()
 end
 function BtWLoadoutsEssencesMixin:SetEnabled(value)
 	BtWLoadoutsTabFrame_SetEnabled(self, value)
+end
+function BtWLoadoutsEssencesMixin:SetSetByID(setID)
+	self.set = GetEssenceSet(setID)
 end
