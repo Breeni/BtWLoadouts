@@ -406,7 +406,7 @@ Internal.AddLoadoutSegment({
         assert(version == 1)
 
         local specID = source.specID or ...
-        return AddSet("talents", RefreshTalentSet({
+        return AddSet("talents", UpdateSetFilters({
 			specID = specID,
 			name = name or source.name,
 			useCount = 0,
