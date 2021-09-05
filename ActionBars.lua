@@ -47,6 +47,20 @@ local function CompareSets(a, b)
 
     return true
 end
+-- Unlike others, imported sets lack ignored values so need a slightly different comparison function
+local function CompareImportSets(set, import)
+    for slot = 1,120 do
+        if set.ignored[slot] ~= import.ignored[slot] then
+            return false
+        end
+
+        if not set.ignored[slot] and (type(set.actions[slot]) ~= type(import.actions[slot]) or (set.actions[slot] ~= import.actions[slot] and not tCompare(set.actions[slot], import.actions[slot], 10))) then
+            return false
+        end
+    end
+
+    return true
+end
 
 -- Track changes to macros
 do
@@ -851,7 +865,7 @@ Internal.AddLoadoutSegment({
         }))
     end,
     getByValue = function (set)
-        return Internal.GetSetByValue(BtWLoadoutsSets.actionbars, set, CompareSets)
+        return Internal.GetSetByValue(BtWLoadoutsSets.actionbars, set, CompareImportSets)
     end,
     verify = function (source, ...)
         if type(source.actions) ~= "table" then
