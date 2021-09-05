@@ -10,6 +10,17 @@ local AddSet = Internal.AddSet
 
 local format = string.format
 
+local function CompareSets(a, b)
+    if not tCompare(a.essences, b.essences, 10) then
+        return false
+    end
+    if type(a.restrictions) ~= type(b.restrictions) and not tCompare(a.restrictions, b.restrictions, 10) then
+        return false
+    end
+
+    return true
+end
+
 local function UpdateSetFilters(set)
 	local filters = set.filters or {}
 
@@ -303,8 +314,8 @@ Internal.AddLoadoutSegment({
             version = 1,
             name = set.name,
             role = set.role,
-			essences = CopyTable(set.essences),
-            restrictions = set.restrictions and CopyTable(set.restrictions),
+			essences = set.essences,
+            restrictions = set.restrictions,
         }
     end,
     import = function (source, version, name, ...)

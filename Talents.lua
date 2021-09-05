@@ -368,15 +368,11 @@ local function SetDropDownInit(self, set, index)
 end
 
 local function CompareSets(a, b)
-    for k in pairs(a.talents) do
-        if not b.talents[k] then
-            return false
-        end
+    if not tCompare(a.talents, b.talents, 10) then
+        return false
     end
-    for k in pairs(b.talents) do
-        if not a.talents[k] then
-            return false
-        end
+    if type(a.restrictions) ~= type(b.restrictions) and not tCompare(a.restrictions, b.restrictions, 10) then
+        return false
     end
 
     return true
@@ -399,8 +395,8 @@ Internal.AddLoadoutSegment({
             version = 1,
             name = set.name,
             specID = set.specID,
-            talents = CopyTable(set.talents),
-            restrictions = set.restrictions and CopyTable(set.restrictions),
+            talents = set.talents,
+            restrictions = set.restrictions,
         }
     end,
     import = function (source, version, name, ...)
