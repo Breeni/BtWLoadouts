@@ -23,15 +23,11 @@ local function CompareSets(a, b)
         return false
     end
 
-    for k in pairs(a.nodes) do
-        if not b.nodes[k] then
-            return false
-        end
+    if not tCompare(a.nodes, b.nodes, 10) then
+        return false
     end
-    for k in pairs(b.nodes) do
-        if not a.nodes[k] then
-            return false
-        end
+    if type(a.restrictions) ~= type(b.restrictions) and not tCompare(a.restrictions, b.restrictions, 10) then
+        return false
     end
 
     return true
@@ -358,16 +354,13 @@ Internal.AddLoadoutSegment({
 	checkerrors = CheckErrors,
 
     export = function (set)
-        local result = {
+        return {
             version = 1,
             name = set.name,
             soulbindID = set.soulbindID,
-            restrictions = set.restrictions and CopyTable(set.restrictions),
+            nodes = set.nodes,
+            restrictions = set.restrictions,
         }
-        if set.nodes then -- Faux sets dont have node lists
-            result.nodes = CopyTable(set.nodes)
-        end
-        return result
     end,
     import = function (source, version, name, ...)
         assert(version == 1)

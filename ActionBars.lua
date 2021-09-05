@@ -41,6 +41,9 @@ local function CompareSets(a, b)
     if not tCompare(a.ignored, b.ignored, 10) then
         return false
     end
+    if type(a.restrictions) ~= type(b.restrictions) and not tCompare(a.restrictions, b.restrictions, 10) then
+        return false
+    end
 
     return true
 end
@@ -826,9 +829,9 @@ Internal.AddLoadoutSegment({
         return {
             version = 1,
             name = set.name,
-            actions = CopyTable(set.actions),
-            ignored = CopyTable(set.ignored),
-            restrictions = set.restrictions and CopyTable(set.restrictions),
+            actions = set.actions,
+            ignored = set.ignored,
+            restrictions = set.restrictions,
         }
     end,
     import = function (source, version, name, ...)
