@@ -35,19 +35,11 @@ local function compare(a, b)
 end
 
 local function CompareSets(a, b)
-    if a.soulbindID ~= b.soulbindID then
+    if not tCompare(a.actions, b.actions, 10) then
         return false
     end
-
-    for k in pairs(a.nodes) do
-        if not b.nodes[k] then
-            return false
-        end
-    end
-    for k in pairs(b.nodes) do
-        if not a.nodes[k] then
-            return false
-        end
+    if not tCompare(a.ignored, b.ignored, 10) then
+        return false
     end
 
     return true
@@ -859,6 +851,8 @@ Internal.AddLoadoutSegment({
         if type(source.ignored) ~= "table" then
             return false, L["Missing ignored"]
         end
+
+        -- @TODO verify table values?
 
         return true
     end,
