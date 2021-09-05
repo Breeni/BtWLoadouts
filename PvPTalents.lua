@@ -344,7 +344,8 @@ Internal.AddLoadoutSegment({
             version = 1,
             name = set.name,
             specID = set.specID,
-            talents = CopyTable(set.talents)
+            talents = CopyTable(set.talents),
+            restrictions = set.restrictions and CopyTable(set.restrictions),
         }
     end,
     import = function (source, version, name, ...)
@@ -356,6 +357,7 @@ Internal.AddLoadoutSegment({
 			name = name or source.name,
 			useCount = 0,
 			talents = source.talents,
+            restrictions = source.restrictions,
         }))
     end,
     getByValue = function (set)
@@ -363,11 +365,14 @@ Internal.AddLoadoutSegment({
     end,
     verify = function (source, ...)
         local specID = source.specID or ...
+        if not specID or not GetSpecializationInfoByID(specID) then
+            return false, L["Invalid specialization"]
+        end
         if type(source.talents) ~= "table" then
             return false, L["Missing talents"]
         end
-        if not specID or not GetSpecializationInfoByID(specID) then
-            return false, L["Invalid specialization"]
+        if source.restrictions ~= nil and type(source.restrictions) ~= "table" then
+            return false, L["Missing restrictions"]
         end
 
         -- @TODO verify talent ids?

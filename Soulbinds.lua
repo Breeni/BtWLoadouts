@@ -362,6 +362,7 @@ Internal.AddLoadoutSegment({
             version = 1,
             name = set.name,
             soulbindID = set.soulbindID,
+            restrictions = set.restrictions and CopyTable(set.restrictions),
         }
         if set.nodes then -- Faux sets dont have node lists
             result.nodes = CopyTable(set.nodes)
@@ -377,6 +378,7 @@ Internal.AddLoadoutSegment({
 			name = name or source.name,
 			useCount = 0,
 			nodes = source.nodes,
+			restrictions = source.restrictions,
         }))
     end,
     getByValue = function (set)
@@ -391,6 +393,12 @@ Internal.AddLoadoutSegment({
         local soulbindID = source.soulbindID or ...
         if not soulbindID or not GetSoulbindData(soulbindID) then
             return false, L["Invalid soulbind"]
+        end
+        if source.nodes ~= nil and type(source.nodes) ~= "table" then
+            return false, L["Invalid nodes"]
+        end
+        if source.restrictions ~= nil and type(source.restrictions) ~= "table" then
+            return false, L["Missing restrictions"]
         end
 
         -- @TODO verify talent ids?
