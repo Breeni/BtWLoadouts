@@ -196,11 +196,9 @@ do
 end
 
 local function UpdateSetFilters(set)
-	local filters = set.filters or {}
+	set.filters = set.filters or {}
 
     Internal.UpdateRestrictionFilters(set)
-
-	set.filters = filters
 
     return set
 end
@@ -826,13 +824,19 @@ Internal.AddLoadoutSegment({
 	checkerrors = CheckErrors,
 
     export = function (set)
-        return {
+        local result = {
             version = 1,
             name = set.name,
-            actions = set.actions,
+            actions = CopyTable(set.actions),
             ignored = set.ignored,
             restrictions = set.restrictions,
         }
+        for index,ignored in pairs(result.ignored) do
+            if ignored then
+                result.actions[index] = nil
+            end
+        end
+        return result
     end,
     import = function (source, version, name, ...)
         assert(version == 1)
