@@ -1407,6 +1407,10 @@ do
 
 		tab:SetShown(self.enabled ~= false)
 
+		if self.segment then
+			frame.TabSegments[self.segment] = self
+		end
+
 		PanelTemplates_SetNumTabs(frame, id);
 		if id == 1 then
 			PanelTemplates_SetTab(frame, id);
@@ -1450,6 +1454,7 @@ do
 		self:RegisterForDrag("LeftButton");
 
 		self.Tabs = {}
+		self.TabSegments = {}
 		self.TabPool = CreateFramePool("Button", self, "BtWLoadoutsTabTemplate")
 
 		self.TitleText:SetText(LOADOUTS)
@@ -1510,14 +1515,12 @@ do
 		self:Update();
 	end
 	function BtWLoadoutsFrameMixin:SetSetByID(setType, setID)
-		for index,tab in ipairs(self.TabFrames) do
-			if tab.type == setType then
-				PanelTemplates_SetTab(self, index)
-				tab:SetSetByID(setID)
-				break
-			end
+		local frame = setType == "loadout" and self.TabFrames[1] or self.TabSegments[setType]
+		if frame then
+			PanelTemplates_SetTab(self, frame:GetID())
+			frame:SetSetByID(setID)
+			self:Update()
 		end
-		self:Update()
 	end
 	function BtWLoadoutsFrameMixin:GetCurrentTab()
 		local selectedTab = PanelTemplates_GetSelectedTab(self) or 1
