@@ -473,3 +473,6 @@ function BtWLoadoutsImportMixin:Update()
     self:GetParent().DeleteButton:Hide();
     self:GetParent().AddButton:Hide();
 end
+function BtWLoadoutsImportMixin:OnShow()
+    self.Scroll.EditBox:SetFocus()
+end
