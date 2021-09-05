@@ -304,6 +304,7 @@ Internal.AddLoadoutSegment({
             name = set.name,
             role = set.role,
 			essences = CopyTable(set.essences),
+            restrictions = set.restrictions and CopyTable(set.restrictions),
         }
     end,
     import = function (source, version, name, ...)
@@ -315,6 +316,7 @@ Internal.AddLoadoutSegment({
 			name = name or source.name,
 			useCount = 0,
 			essences = source.essences,
+            restrictions = source.restrictions,
         }))
     end,
     getByValue = function (set)
@@ -324,6 +326,9 @@ Internal.AddLoadoutSegment({
         local role = source.role or ...
         if not role or type(_G[role]) ~= "string" then
             return false, L["Invalid role"]
+        end
+        if source.restrictions ~= nil and type(source.restrictions) ~= "table" then
+            return false, L["Missing restrictions"]
         end
 
         -- @TODO verify essence ids?

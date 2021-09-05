@@ -828,6 +828,7 @@ Internal.AddLoadoutSegment({
             name = set.name,
             actions = CopyTable(set.actions),
             ignored = CopyTable(set.ignored),
+            restrictions = set.restrictions and CopyTable(set.restrictions),
         }
     end,
     import = function (source, version, name, ...)
@@ -839,6 +840,7 @@ Internal.AddLoadoutSegment({
 			useCount = 0,
 			actions = source.actions,
 			ignored = source.ignored,
+            restrictions = source.restrictions,
         }))
     end,
     getByValue = function (set)
@@ -850,6 +852,9 @@ Internal.AddLoadoutSegment({
         end
         if type(source.ignored) ~= "table" then
             return false, L["Missing ignored"]
+        end
+        if source.restrictions ~= nil and type(source.restrictions) ~= "table" then
+            return false, L["Missing restrictions"]
         end
 
         -- @TODO verify table values?
