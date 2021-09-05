@@ -18,6 +18,25 @@ local SelectSoulbindNode = C_Soulbinds.SelectNode
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local function CompareSets(a, b)
+    if a.soulbindID ~= b.soulbindID then
+        return false
+    end
+
+    for k in pairs(a.nodes) do
+        if not b.nodes[k] then
+            return false
+        end
+    end
+    for k in pairs(b.nodes) do
+        if not a.nodes[k] then
+            return false
+        end
+    end
+
+    return true
+end
+
 --[[ SOULBIND DROPDOWN ]]
 
 local function SoulbindDropDown_OnClick(self, arg1, arg2, checked)
@@ -337,6 +356,47 @@ Internal.AddLoadoutSegment({
 	activate = ActivateSet,
     dropdowninit = SetDropDownInit,
 	checkerrors = CheckErrors,
+
+    export = function (set)
+        local result = {
+            version = 1,
+            name = set.name,
+            soulbindID = set.soulbindID,
+        }
+        if set.nodes then -- Faux sets dont have node lists
+            result.nodes = CopyTable(set.nodes)
+        end
+        return result
+    end,
+    import = function (source, version, name, ...)
+        assert(version == 1)
+
+        local soulbindID = source.soulbindID or ...
+        return AddSet("soulbinds", UpdateSetFilters({
+			soulbindID = soulbindID,
+			name = name or source.name,
+			useCount = 0,
+			nodes = source.nodes,
+        }))
+    end,
+    getByValue = function (set)
+        -- If the nodes is missing then we just want the faux set
+        if set.nodes == nil then
+            return GetSet(-set.soulbindID)
+        else
+            return Internal.GetSetByValue(BtWLoadoutsSets.soulbinds, set, CompareSets)
+        end
+    end,
+    verify = function (source, ...)
+        local soulbindID = source.soulbindID or ...
+        if not soulbindID or not GetSoulbindData(soulbindID) then
+            return false, L["Invalid soulbind"]
+        end
+
+        -- @TODO verify talent ids?
+
+        return true
+    end,
 })
 
 -- [[ TAB UI ]]
@@ -570,6 +630,9 @@ function BtWLoadoutsSoulbindsMixin:OnButtonClick(button)
         local set = self.set;
         RefreshSet(set)
         self:Update()
+	elseif button.isExport then
+		local set = self.set;
+		self:GetParent():SetExport(Internal.Export("soulbinds", set.setID))
 	elseif button.isActivate then
         local set = self.set;
         Internal.ActivateProfile({
@@ -669,7 +732,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Soulbinds"], L["Create soulbind trees for switching between soulbind paths, leave rows blank to not skip them. Conduits are not affected."])
 
-	self:GetParent().ExportButton:SetEnabled(false)
+	self:GetParent().ExportButton:SetEnabled(true)
     self:GetParent().DeleteButton:SetEnabled(true);
 
     if not showingNPE then
@@ -781,4 +844,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
         local helpTipBox = self:GetParent().HelpTipBox;
         helpTipBox:Hide();
     end
+end
+function BtWLoadoutsSoulbindsMixin:SetSetByID(setID)
+	self.set = GetSet(setID)
 end
