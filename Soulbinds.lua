@@ -372,7 +372,7 @@ Internal.AddLoadoutSegment({
         assert(version == 1)
 
         local soulbindID = source.soulbindID or ...
-        return AddSet("soulbinds", UpdateSetFilters({
+        return Internal.AddSet("soulbinds", UpdateSetFilters({
 			soulbindID = soulbindID,
 			name = name or source.name,
 			useCount = 0,
