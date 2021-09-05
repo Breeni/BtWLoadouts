@@ -179,6 +179,9 @@
                 </ScrollChild>
             </ScrollFrame>
         </Frames>
+        <Scripts>
+            <OnShow method="OnShow"/>
+        </Scripts>
     </Frame>
     <Frame parentKey="Export" parent="BtWLoadoutsFrame" hidden="true">
         <Anchors>
