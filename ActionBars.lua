@@ -34,6 +34,25 @@ local function compare(a, b)
     return true
 end
 
+local function CompareSets(a, b)
+    if a.soulbindID ~= b.soulbindID then
+        return false
+    end
+
+    for k in pairs(a.nodes) do
+        if not b.nodes[k] then
+            return false
+        end
+    end
+    for k in pairs(b.nodes) do
+        if not a.nodes[k] then
+            return false
+        end
+    end
+
+    return true
+end
+
 -- Track changes to macros
 do
     local mapCreated = false
@@ -810,6 +829,39 @@ Internal.AddLoadoutSegment({
     activate = ActivateActionBarSet,
     dropdowninit = SetDropDownInit,
 	checkerrors = CheckErrors,
+
+    export = function (set)
+        return {
+            version = 1,
+            name = set.name,
+            actions = CopyTable(set.actions),
+            ignored = CopyTable(set.ignored),
+        }
+    end,
+    import = function (source, version, name, ...)
+        assert(version == 1)
+
+        return Internal.AddSet("actionbars", UpdateSetFilters({
+			soulbindID = soulbindID,
+			name = name or source.name,
+			useCount = 0,
+			actions = source.actions,
+			ignored = source.ignored,
+        }))
+    end,
+    getByValue = function (set)
+        return Internal.GetSetByValue(BtWLoadoutsSets.actionbars, set, CompareSets)
+    end,
+    verify = function (source, ...)
+        if type(source.actions) ~= "table" then
+            return false, L["Missing actions"]
+        end
+        if type(source.ignored) ~= "table" then
+            return false, L["Missing ignored"]
+        end
+
+        return true
+    end,
 })
 
 BtWLoadoutsActionButtonMixin = {}
@@ -1098,6 +1150,9 @@ function BtWLoadoutsActionBarsMixin:OnButtonClick(button)
         local set = self.set;
         RefreshActionBarSet(set)
         self:Update()
+	elseif button.isExport then
+		local set = self.set;
+		self:GetParent():SetExport(Internal.Export("actionbars", set.setID))
     elseif button.isActivate then
         Internal.ActivateProfile({
             actionbars = {self.set.setID}
@@ -1191,7 +1246,7 @@ function BtWLoadoutsActionBarsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Action Bars"], L["Create different action bar layouts, including stealth, form, and stance bars. You can ignore specific action buttons or entire bars."])
         
-	self:GetParent().ExportButton:SetEnabled(false)
+	self:GetParent().ExportButton:SetEnabled(true)
     self:GetParent().RefreshButton:SetEnabled(true)
     self:GetParent().ActivateButton:SetEnabled(true);
     self:GetParent().DeleteButton:SetEnabled(true);
@@ -1243,4 +1298,7 @@ function BtWLoadoutsActionBarsMixin:Update()
         local helpTipBox = self:GetParent().HelpTipBox;
         helpTipBox:Hide();
 	end
+end
+function BtWLoadoutsActionBarsMixin:SetSetByID(setID)
+	self.set = GetActionBarSet(setID)
 end
