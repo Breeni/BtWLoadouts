@@ -1203,12 +1203,11 @@ do
 	end
 end
 local function UpdateSetFilters(set)
-	local filters = set.filters or {}
+	set.filters = set.filters or {}
 	
     Internal.UpdateRestrictionFilters(set)
 
-	filters.character = set.character
-	set.filters = filters
+	set.filters.character = set.character
 
     return set
 end

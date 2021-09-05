@@ -110,7 +110,9 @@ end
 --[[ SET HANDLING ]]
 
 local function UpdateSetFilters(set)
-	local filters = set.filters or {}
+	set.filters = set.filters or {}
+
+	local filters = set.filters
     wipe(filters)
     
     Internal.UpdateRestrictionFilters(set)

@@ -22,9 +22,11 @@ local function CompareSets(a, b)
 end
 
 local function UpdateSetFilters(set)
-	local filters = set.filters or {}
+	set.filters = set.filters or {}
 
     Internal.UpdateRestrictionFilters(set)
+
+	local filters = set.filters
 	
 	filters.role = set.role
 

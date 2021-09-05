@@ -86,8 +86,10 @@ local function FixTalentSet(set)
     return changed
 end
 local function UpdateSetFilters(set)
+	set.filters = set.filters or {}
+
     local specID = set.specID;
-    local filters = set.filters or {}
+    local filters = set.filters
 
     Internal.UpdateRestrictionFilters(set)
 
