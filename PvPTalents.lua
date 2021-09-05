@@ -27,6 +27,21 @@ local format = string.format;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local function CompareSets(a, b)
+    for k in pairs(a.talents) do
+        if not b.talents[k] then
+            return false
+        end
+    end
+    for k in pairs(b.talents) do
+        if not a.talents[k] then
+            return false
+        end
+    end
+
+    return true
+end
+
 -- Make sure talent sets dont have incorrect id, call from GetTalentSet and the UI?
 local function FixPvPTalentSet(set)
     local changed = false
@@ -323,6 +338,42 @@ Internal.AddLoadoutSegment({
 	activate = ActivatePvPTalentSet,
 	dropdowninit = SetDropDownInit,
     checkerrors = CheckErrors,
+
+    export = function (set)
+        return {
+            version = 1,
+            name = set.name,
+            specID = set.specID,
+            talents = CopyTable(set.talents)
+        }
+    end,
+    import = function (source, version, name, ...)
+        assert(version == 1)
+
+        local specID = source.specID or ...
+        return AddSet("pvptalents", UpdateSetFilters({
+			specID = specID,
+			name = name or source.name,
+			useCount = 0,
+			talents = source.talents,
+        }))
+    end,
+    getByValue = function (set)
+        return Internal.GetSetByValue(BtWLoadoutsSets.pvptalents, set, CompareSets)
+    end,
+    verify = function (source, ...)
+        local specID = source.specID or ...
+        if type(source.talents) ~= "table" then
+            return false, L["Missing talents"]
+        end
+        if not specID or not GetSpecializationInfoByID(specID) then
+            return false, L["Invalid specialization"]
+        end
+
+        -- @TODO verify talent ids?
+
+        return true
+    end,
 })
 
 local function CompareTalentList(a, b)
@@ -394,6 +445,9 @@ function BtWLoadoutsPvPTalentsMixin:OnButtonClick(button)
 		local set = self.set;
 		RefreshPvPTalentSet(set)
 		self:Update()
+	elseif button.isExport then
+		local set = self.set;
+		self:GetParent():SetExport(Internal.Export("pvptalents", set.setID))
 	elseif button.isActivate then
 		local set = self.set;
 		if select(6, GetSpecializationInfoByID(set.specID)) == select(2, UnitClass("player")) then
@@ -499,7 +553,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["PvP Talents"], L["Create different pvp talent layouts for the type of content you wish to do."])
 
-	self:GetParent().ExportButton:SetEnabled(false)
+	self:GetParent().ExportButton:SetEnabled(true)
 	self:GetParent().DeleteButton:SetEnabled(true);
 
 	if not showingNPE then
@@ -620,4 +674,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 		local helpTipBox = self:GetParent().HelpTipBox;
 		helpTipBox:Hide();
 	end
+end
+function BtWLoadoutsTalentsMixin:SetSetByID(setID)
+	self.set = GetPvPTalentSet(setID)
 end
