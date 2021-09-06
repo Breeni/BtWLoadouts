@@ -2041,7 +2041,7 @@ do
 
 	function AddSetToMapData(set)
 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-			if set.equipment[slot] and not set.ignored[slot] then
+			if set.equipment[slot] then
 				local location = set.locations[slot]
 				if location and location <= 0 then
 					location = nil
@@ -2516,8 +2516,14 @@ do
 			for setLocation in pairs(sets) do
 				local setID = tonumber((strsplit(":", setLocation)))
 				if not temp[setID] then
-					result[#result+1] = GetEquipmentSet(setID)
-					temp[setID] = true
+					local set = GetEquipmentSet(setID)
+					for slot,targetLocation in pairs(set.locations) do
+						if location == targetLocation and not set.ignored[slot] then
+							result[#result+1] = set
+							temp[setID] = true
+							break
+						end
+					end
 				end
 			end
 		end
