@@ -6,6 +6,9 @@
 ## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings
 ## SavedVariablesPerCharacter: BtWLoadoutsCollapsed, BtWLoadoutsCategories, BtWLoadoutsFilters
 ## OptionalDeps: OPie, Adibags, Bagnon
+## X-Curse-Project-ID: 336400
+## X-WoWI-ID: 25156
+## X-Wago-ID: J96EOYGg
 
 Localizations.lua
 Localizations.deDE.lua
