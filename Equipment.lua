@@ -2041,7 +2041,7 @@ do
 
 	function AddSetToMapData(set)
 		for slot=INVSLOT_FIRST_EQUIPPED,INVSLOT_LAST_EQUIPPED do
-			if set.equipment[slot] then
+			if set.equipment[slot] and not set.ignored[slot] then
 				local location = set.locations[slot]
 				if location and location <= 0 then
 					location = nil
