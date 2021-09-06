@@ -1,1 +1,0 @@
-Added Import/Export for loadouts, talents, pvp talents, essences, soulbinds, and action bars.

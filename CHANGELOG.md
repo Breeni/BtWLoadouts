@@ -1,3 +1,7 @@
+# v1.4.0
+
+- Added Import/Export for loadouts, talents, pvp talents, essences, soulbinds, and action bars.
+
 # v1.3.1
 
 - Fixed an issue that was causing duplicate sets from the Blizzard Equipment Manager, duplicated sets should be removed
