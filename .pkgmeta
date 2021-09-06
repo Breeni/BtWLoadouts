@@ -1,4 +1,6 @@
 package-as: BtWLoadouts
 wowi-archive-previous: no
 
+manual-changelog: CHANGELOG.txt
+
 enable-nolib-creation: no
