@@ -127,6 +127,19 @@ local Settings = SettingsCreate({
         end,
         default = true,
     },
+    {
+        name = L["Sort classes by name"],
+        key = "sortClassesByName",
+        onChange = function (id, value)
+			if value then
+				Internal.SortClassesByName()
+			else
+				Internal.SortClassesByID()
+			end
+			BtWLoadoutsFrame:Update()
+        end,
+        default = true,
+    },
 });
 Internal.Settings = Settings;
 
