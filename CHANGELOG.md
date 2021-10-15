@@ -1,3 +1,7 @@
+# v1.5.0
+
+- Added option to sort classes by name
+
 # v1.4.0
 
 - Added Import/Export for loadouts, talents, pvp talents, essences, soulbinds, and action bars.
