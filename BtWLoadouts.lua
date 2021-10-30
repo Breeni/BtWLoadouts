@@ -699,7 +699,7 @@ do
 
 	function Internal.UpdateRestrictionFilters(set)
 		if set.restrictions then
-			local filters = set.filters
+			local filters = set.filters or {}
 			
 			-- Covenant
 			if set.restrictions.covenant and next(set.restrictions.covenant) then
