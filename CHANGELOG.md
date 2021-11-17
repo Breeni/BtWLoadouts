@@ -1,3 +1,7 @@
+# v1.5.2
+
+- Fixed incorrect talent and pvp talent information
+
 # v1.5.1
 
 - Updated interface for 9.1.5
