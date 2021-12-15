@@ -210,6 +210,10 @@ local instanceDifficulties = {
     [2296] = raidDifficultiesAll, -- Castle Nathria
     [2450] = raidDifficultiesAll, -- Sanctum of Domination
 }
+if select(4, GetBuildInfo()) >= 90200 then
+    instanceDifficulties[2441] = { 2,  8, 23}, -- Tazavesh, the Veiled Market
+    instanceDifficulties[2481] = raidDifficultiesAll, -- Sepulcher of the First Ones
+end
 Internal.dungeonDifficultiesAll = dungeonDifficultiesAll;
 Internal.raidDifficultiesAll = raidDifficultiesAll;
 local dungeonInfo = {
@@ -469,6 +473,9 @@ local raidInfo = {
         }
     },
 }
+if select(4, GetBuildInfo()) >= 90200 then
+    tInsert(raidInfo[9].instances, 2481) -- Sepulcher of the First Ones
+end
 local scenarioInfo = {
 	{
 		name = L["Classic"],
@@ -1360,7 +1367,7 @@ local instanceBosses = {
          820, -- Primordius
          824, -- Dark Animus
          817, -- Iron Qon
-         829, -- Twin Consorts
+         829, -- Twin Empyreans
          832, -- Lei Shen
          831, -- Ra-den
     },
@@ -1828,6 +1835,21 @@ local instanceBosses = {
         2441, -- Sylvanas Windrunner
     },
 }
+if select(4, GetBuildInfo()) >= 90200 then
+    instanceBosses[2481] = { -- Sepulcher of the First Ones
+        2458, -- Vigilant Guardian
+        2465, -- Skolex, the Insatiable Ravener
+        2470, -- Artificer Xy'mox
+        2459, -- Dausegne, the Fallen Oracle
+        2460, -- Prototype Pantheon
+        2461, -- Lihuvim, Principal Architect
+        2463, -- Halondrus the Reclaimer
+        2469, -- Anduin Wrynn
+        2457, -- Lords of Dread
+        2467, -- Rygelon
+        2464, -- The Jailer, Zovaal
+    }
+end
 -- A map of npc ids to boss ids, this might not be the bosses npc id,
 -- just something that signifies the boss
 local npcIDToBossID = {
