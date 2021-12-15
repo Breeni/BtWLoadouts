@@ -211,8 +211,8 @@ local instanceDifficulties = {
     [2450] = raidDifficultiesAll, -- Sanctum of Domination
 }
 if select(4, GetBuildInfo()) >= 90200 then
-    instanceDifficulties[2441] = { 2,  8, 23}, -- Tazavesh, the Veiled Market
-    instanceDifficulties[2481] = raidDifficultiesAll, -- Sepulcher of the First Ones
+    instanceDifficulties[2441] = { 2,  8, 23} -- Tazavesh, the Veiled Market
+    instanceDifficulties[2481] = raidDifficultiesAll -- Sepulcher of the First Ones
 end
 Internal.dungeonDifficultiesAll = dungeonDifficultiesAll;
 Internal.raidDifficultiesAll = raidDifficultiesAll;
@@ -474,7 +474,7 @@ local raidInfo = {
     },
 }
 if select(4, GetBuildInfo()) >= 90200 then
-    tInsert(raidInfo[9].instances, 2481) -- Sepulcher of the First Ones
+    tinsert(raidInfo[9].instances, 2481) -- Sepulcher of the First Ones
 end
 local scenarioInfo = {
 	{
@@ -1904,6 +1904,20 @@ local npcIDToBossID = {
     [175732] = 2441, -- Sylvanas Windrunner
     [180828] = 2441, -- Sylvanas Windrunner
 };
+if select(4, GetBuildInfo()) >= 90200 then
+    -- Sepulcher of the First Ones
+    -- = 2458 -- Vigilant Guardian
+    npcIDToBossID[183937] = 2465 -- Skolex, the Insatiable Ravener
+    -- = 2470 -- Artificer Xy'mox
+    npcIDToBossID[181224] = 2459 -- Dausegne, the Fallen Oracle
+    npcIDToBossID[181549] = 2460 -- Prototype Pantheon
+    npcIDToBossID[184901] = 2461 -- Lihuvim, Principal Architect
+    npcIDToBossID[184915] = 2463 -- Halondrus the Reclaimer
+    npcIDToBossID[181954] = 2469 -- Anduin Wrynn
+    -- = 2457 -- Lords of Dread
+    npcIDToBossID[182777] = 2467 -- Rygelon
+    npcIDToBossID[183395] = 2464 -- The Jailer, Zovaal
+end
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
 -- the player is so we map area names to area ids and compare with the minimap text
