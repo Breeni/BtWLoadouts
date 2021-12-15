@@ -294,6 +294,9 @@ do
 	BtWLoadoutsImportFrameMixin = {};
 	function BtWLoadoutsImportFrameMixin:OnLoad()
         BackdropTemplateMixin.OnBackdropLoaded(self)
+        if self.TooltipBackdropOnLoad then
+            self:TooltipBackdropOnLoad()
+        end
 
 		tinsert(UISpecialFrames, self:GetName());
 		self:RegisterForDrag("LeftButton");
