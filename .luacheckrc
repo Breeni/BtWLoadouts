@@ -12,20 +12,18 @@ ignore = {
 	'11./BTWLOADOUTS.*', -- Setting an undefined (Keybinding header) global variable
 	'631', -- line is too long
 
-    -- Remove later
+    -- Probably Remove later
 	'211', -- unused local variable
 	'212', -- unused argument
     '213', -- unused loop variable
 	'231', -- local variable never accessed
 	'232', -- argument never accessed
     '233', -- loop variable never accessed
-    '311',
-    '314',
-    '4..', -- Redefining variables
-    '542',
-    '611',
-    '612',
-    '614',
+    '311', -- overwritten variable before use
+    '314', -- overwritten field in table
+    '4..', -- redefining variables
+    '542', -- empty if branch
+    '611', -- lines containing only whitespaces
 }
 
 globals = {
