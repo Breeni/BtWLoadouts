@@ -1968,7 +1968,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 			if not BtWLoadoutsHelpTipFlags["INVALID_PLAYER"] then
 				helpTipBox.closeFlag = "INVALID_PLAYER";
 
-				HelpTipBox_Anchor(helpTipBox, "TOP", activateButton);
+				HelpTipBox_Anchor(helpTipBox, "TOP", self:GetParent().ActivateButton);
 
 				helpTipBox:Show();
 				HelpTipBox_SetText(helpTipBox, L["Can not equip sets for other characters."]);
@@ -2181,8 +2181,8 @@ do
 						local sets = missingItemDatasLocationSets[itemData]
 						for setLocation in pairs(sets) do
 							local setId, slotId = strsplit(":", setLocation)
-							setID, slotId = tonumber(setId), tonumber(slotId)
-							local set = GetEquipmentSet(setID)
+							setId, slotId = tonumber(setId), tonumber(slotId)
+							local set = GetEquipmentSet(setId)
 							assert(set)
 							set.locations[slotId] = newLocation
 						end
@@ -2193,8 +2193,8 @@ do
 						local sets = locationSets[oldLocation]
 						for setLocation in pairs(sets) do
 							local setId, slotId = strsplit(":", setLocation)
-							setID, slotId = tonumber(setId), tonumber(slotId)
-							local set = GetEquipmentSet(setID)
+							setId, slotId = tonumber(setId), tonumber(slotId)
+							local set = GetEquipmentSet(setId)
 							assert(set)
 							set.locations[slotId] = newLocation
 						end

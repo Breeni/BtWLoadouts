@@ -2523,7 +2523,7 @@ function Internal.BossAvailable(bossID)
 end
 
 function Internal.GetCurrentBoss(unitId)
-	local bossID
+	local bossID = nil
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	if instanceType == "party" or instanceType == "raid" then
 		local uiMapID = C_Map.GetBestMapForUnit("player");

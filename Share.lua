@@ -266,7 +266,7 @@ do
 
                     for index,set in ipairs(source[segment.id]) do
                         if type(set) == "table" then
-                            set = AddSource(set, segment.id, 1, name, specID)
+                            set = AddSource(set, segment.id, 1, name)
                             source[segment.id][index] = set
                         end
                         

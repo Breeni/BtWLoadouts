@@ -442,7 +442,7 @@ do
 	local activeLoadoutCache = setmetatable({}, {
 		__index = function(self, key)
 			if type(key) == "number" then
-				local result = activeLoadoutCache[GetProfile(key)]
+				local result = self[GetProfile(key)]
 				self[key] = result
 				return result
 			elseif type(key) == "table" then
