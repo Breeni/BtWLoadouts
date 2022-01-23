@@ -1845,8 +1845,8 @@ if select(4, GetBuildInfo()) >= 90200 then
         2461, -- Lihuvim, Principal Architect
         2463, -- Halondrus the Reclaimer
         2469, -- Anduin Wrynn
-        2457, -- Lords of Dread
-        2467, -- Rygelon
+        -- 2457, -- Lords of Dread
+        -- 2467, -- Rygelon
         2464, -- The Jailer, Zovaal
     }
 end
@@ -1906,17 +1906,20 @@ local npcIDToBossID = {
 };
 if select(4, GetBuildInfo()) >= 90200 then
     -- Sepulcher of the First Ones
-    -- = 2458 -- Vigilant Guardian
-    npcIDToBossID[183937] = 2465 -- Skolex, the Insatiable Ravener
-    -- = 2470 -- Artificer Xy'mox
+    npcIDToBossID[184522] = 2458 -- Vigilant Guardian (Vigilant Custodian)
+    npcIDToBossID[181395] = 2465 -- Skolex, the Insatiable Ravener
+    npcIDToBossID[183501] = 2470 -- Artificer Xy'mox
     npcIDToBossID[181224] = 2459 -- Dausegne, the Fallen Oracle
+    npcIDToBossID[181546] = 2460 -- Prototype Pantheon
+    npcIDToBossID[181548] = 2460 -- Prototype Pantheon
     npcIDToBossID[181549] = 2460 -- Prototype Pantheon
-    npcIDToBossID[184901] = 2461 -- Lihuvim, Principal Architect
-    npcIDToBossID[184915] = 2463 -- Halondrus the Reclaimer
+    npcIDToBossID[181551] = 2460 -- Prototype Pantheon
+    npcIDToBossID[182169] = 2461 -- Lihuvim, Principal Architect
+    npcIDToBossID[180906] = 2463 -- Halondrus the Reclaimer
     npcIDToBossID[181954] = 2469 -- Anduin Wrynn
-    -- = 2457 -- Lords of Dread
-    npcIDToBossID[182777] = 2467 -- Rygelon
-    npcIDToBossID[183395] = 2464 -- The Jailer, Zovaal
+    -- npcIDToBossID[182777] = 2457 -- Lords of Dread
+    -- npcIDToBossID[182777] = 2467 -- Rygelon
+    -- npcIDToBossID[183395] = 2464 -- The Jailer, Zovaal
 end
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
@@ -1977,6 +1980,21 @@ local InstanceAreaIDToBossID = {
         [13435] = 2424, -- Sire Denathrius
     },
 };
+if select(4, GetBuildInfo()) >= 90200 then
+    InstanceAreaIDToBossID[2481] = { -- Sepulcher of the First Ones
+        [13957] = 2458, -- Vigilant Guardian
+        [13962] = 2465, -- Skolex, the Insatiable Ravener
+        [13963] = 2470, -- Artificer Xy'mox
+        [13958] = 2459, -- Dausegne, the Fallen Oracle
+        [13959] = 2460, -- Prototype Pantheon
+        [13960] = 2461, -- Lihuvim, Principal Architect
+        [13964] = 2463, -- Halondrus the Reclaimer
+        [13965] = 2469, -- Anduin Wrynn
+        -- [] = 2457, -- Lords of Dread
+        -- [] = 2467, -- Rygelon
+        -- [] = 2464, -- The Jailer, Zovaal
+    }
+end
 -- This is for bosses that have their own unique world map
 local uiMapIDToBossID = {
     -- Classic
@@ -2283,6 +2301,13 @@ local uiMapIDToBossID = {
     [1998] = 2435, -- The Tarragrue
     [2002] = 2441, -- Sylvanas Windrunner
 }
+if select(4, GetBuildInfo()) >= 90200 then
+    -- Sepulcher of the First Ones
+    uiMapIDToBossID[2047] = 2458 -- Vigilant Guardian
+    uiMapIDToBossID[2048] = 2459 -- Dausegne, the Fallen Oracle
+    uiMapIDToBossID[2050] = 2469 -- Anduin Wrynn
+    uiMapIDToBossID[2051] = 2464 -- The Jailer
+end
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;
 Internal.raidInfo = raidInfo;
