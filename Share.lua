@@ -467,6 +467,8 @@ function BtWLoadoutsImportMixin:Update()
 
     self:GetParent().Sidebar:Hide()
 
+    BtWLoadoutsFrame:SetNPEShown(false);
+
     self.Scroll.EditBox.text = ""
     self.Scroll.EditBox:SetText("")
 
