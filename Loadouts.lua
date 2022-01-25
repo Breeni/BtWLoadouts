@@ -1244,7 +1244,7 @@ function BtWLoadoutsLoadoutsMixin:OnShow()
 			local frame = self:GetParent()
 
 			if frame.set == nil then
-				return
+				return {} -- Needs a table since its a multi select
 			end
 
 			if type(frame.set.character) ~= "table" then
