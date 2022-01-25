@@ -1243,11 +1243,15 @@ function BtWLoadoutsLoadoutsMixin:OnShow()
 		self.CharacterDropDown.GetValue = function (self)
 			local frame = self:GetParent()
 
+			if frame.set == nil then
+				return
+			end
+
 			if type(frame.set.character) ~= "table" then
 				frame.set.character = {}
 			end
 
-			return frame.set and frame.set.character
+			return frame.set.character
 		end
 		self.CharacterDropDown.SetValue = function (self, button, arg1, arg2, checked)
 			local frame = self:GetParent()
