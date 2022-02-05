@@ -1,3 +1,10 @@
+# v1.5.3
+
+- Updated for Eternity's End
+- Fixed an error caused by the loadout character dropdown
+- Fixed an error where the introduction display is not hidden when switching to the import tab
+- Fixed import tooltip background being coloured incorrectly
+
 # v1.5.2
 
 - Fixed incorrect talent and pvp talent information
