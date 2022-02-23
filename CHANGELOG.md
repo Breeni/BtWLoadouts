@@ -1,3 +1,7 @@
+# v1.6.1-beta
+
+- Fixed zone condition checking not always matching correctly
+
 # v1.6.0-beta
 
 - Added an optional zone match for world conditions
