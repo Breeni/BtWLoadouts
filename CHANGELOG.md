@@ -1,3 +1,8 @@
+# v1.6.2-beta
+
+- Fixed showing condition dropdown when all conditions are active
+- Fixed an error with zone condition checking
+
 # v1.6.1-beta
 
 - Fixed zone condition checking not always matching correctly
