@@ -1,3 +1,7 @@
+# v1.6.0-beta
+
+- Added an optional zone match for world conditions
+
 # v1.5.7
 
 - Fixed Unity not working correctly in all slots
