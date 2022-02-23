@@ -1,3 +1,11 @@
+# v1.6.0-beta
+
+- Added an optional zone match for world conditions
+
+# v1.5.4
+
+- Updated for 9.2.0
+
 # v1.5.3
 
 - Updated for Eternity's End
