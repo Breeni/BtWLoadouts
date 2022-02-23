@@ -500,6 +500,17 @@ function Internal.TriggerConditions()
 					return
 				end
 			end
+		else
+			local allActive = true
+			for _,condition in ipairs(sortedActiveConditions) do
+				if not Internal.IsProfileActive(condition.profile) then
+					allActive = false
+					break
+				end
+			end
+			if allActive then
+				return
+			end
 		end
 
 		if not conditionProfilesDropDown.initialized then
