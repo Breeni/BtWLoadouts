@@ -59,6 +59,9 @@ local CONDITION_TYPE_NAMES = {
 }
 
 local function GetMapAncestor(uiMapID, mapType)
+	if not uiMapID then
+		return
+	end
 	local info = C_Map.GetMapInfo(uiMapID)
 	if not info then
 		return nil
