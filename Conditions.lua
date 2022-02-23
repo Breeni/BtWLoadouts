@@ -58,6 +58,27 @@ local CONDITION_TYPE_NAMES = {
 	[CONDITION_TYPE_SCENARIO] = L["Scenarios"]
 }
 
+local function GetMapAncestor(uiMapID, mapType)
+	local info = C_Map.GetMapInfo(uiMapID)
+	if not info then
+		return nil
+	end
+	if info.mapType == mapType or mapType == nil then
+		return info.mapID
+	end
+	return GetMapAncestor(info.parentMapID, mapType)
+end
+
+local function GenerateZoneTables(idToName, nameToID, uiMapID)
+	local maps = C_Map.GetMapChildrenInfo(946, Enum.UIMapType.Zone, true)
+	for _,map in ipairs(maps) do
+		idToName[map.mapID] = map.name
+		nameToID[map.name] = map.mapID
+	end
+	return idToName, nameToID
+end
+local ZoneIDToNameMap, ZoneNameToIDMap = GenerateZoneTables({}, {}, 946)
+
 local activeConditionSelection;
 local previousActiveConditions = {}; -- List of the previously active conditions
 local activeConditions = {}; -- List of the currently active conditions profiles
@@ -234,7 +255,7 @@ local function RefreshConditionSet(set)
 		instanceType = "none"
 		difficultyID = nil
 		instanceID = nil
-		uiMapID = C_Map.GetBestMapForUnit("player")
+		uiMapID = GetMapAncestor(C_Map.GetBestMapForUnit("player"), Enum.UIMapType.Zone)
 	end
 
 	set.type = instanceType
@@ -324,7 +345,7 @@ function Internal.UpdateConditionsForInstance()
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
 	local uiMapID
 	if instanceType == "none" then
-		uiMapID = C_Map.GetBestMapForUnit("player")
+		uiMapID = GetMapAncestor(C_Map.GetBestMapForUnit("player"), Enum.UIMapType.Zone)
 	end
 
 	instanceType = instanceTypeOverride[instanceID] or instanceType
@@ -493,16 +514,6 @@ function Internal.TriggerConditions()
 		}, conditionProfilesDropDown);
 	end
 end
-
-local function GenerateZoneTables(idToName, nameToID, uiMapID)
-	local maps = C_Map.GetMapChildrenInfo(946, Enum.UIMapType.Zone, true)
-	for _,map in ipairs(maps) do
-		idToName[map.mapID] = map.name
-		nameToID[map.name] = map.mapID
-	end
-	return idToName, nameToID
-end
-local ZoneIDToNameMap, ZoneNameToIDMap = GenerateZoneTables({}, {}, 946)
 
 Internal.IsConditionEnabled = IsConditionEnabled
 Internal.UpdateConditionFilters = UpdateSetFilters

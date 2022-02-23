@@ -157,6 +157,7 @@ new_read_globals = {
     'C_EquipmentSet.PickupEquipmentSet',
     'C_EquipmentSet.SaveEquipmentSet',
     'C_Item.GetItemLink',
+    'C_Map.GetMapInfo',
     'C_Map.GetAreaInfo',
     'C_Map.GetBestMapForUnit',
     'C_Map.GetMapChildrenInfo',
