@@ -1,3 +1,7 @@
+# v1.6.0-beta
+
+- Added an optional zone match for world conditions
+
 # v1.5.6
 
 - Fixed Unity legendary not being equipped correctly
