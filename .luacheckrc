@@ -159,6 +159,7 @@ new_read_globals = {
     'C_Item.GetItemLink',
     'C_Map.GetAreaInfo',
     'C_Map.GetBestMapForUnit',
+    'C_Map.GetMapChildrenInfo',
     'C_MountJournal.GetDisplayedMountInfo',
     'C_MountJournal.GetMountInfoByID',
     'C_MountJournal.GetNumDisplayedMounts',
