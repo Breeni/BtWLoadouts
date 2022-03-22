@@ -1,3 +1,8 @@
+# v1.5.4
+
+- Updated equipment to allow for covenant and race restrictions
+- Updated conditions to support Lords of Dread and Rygelon
+
 # v1.5.3
 
 - Updated for Eternity's End
