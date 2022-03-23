@@ -553,8 +553,12 @@ local function GetItemUniquenessCached(itemLink)
 	local uniqueFamily, maxEquipped
 
 	local _, _, _, _, _, _, bonusIDs = GetCompareItemInfo(itemLink)
-	if bonusIDs and bonusIDs[8127] then -- Unity Lego
-		return 496, 1
+	if bonusIDs then -- Unity Lego
+		for i=8119,8130 do
+			if bonusIDs[i] then
+				return 496, 1
+			end
+		end
 	end
 
 	if itemUniquenessCache[itemID] then
