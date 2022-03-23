@@ -1,3 +1,7 @@
+# v1.6.3-beta
+
+- Updated with bug fixes from stable branch
+
 # v1.6.2-beta
 
 - Fixed showing condition dropdown when all conditions are active
