@@ -1,3 +1,8 @@
+# v1.6.4
+
+- Updated so soulbinds are changed at the Forge of Bonds within Zereth Mortis without a tome
+- Fixed zone conditions not sometimes displaying when moving between zones
+
 # v1.6.3-beta
 
 - Updated with bug fixes from stable branch
