@@ -189,6 +189,7 @@ new_read_globals = {
     'C_RaidLocks.IsEncounterComplete',
     'C_Reputation.GetFactionParagonInfo',
     'C_Soulbinds.ActivateSoulbind',
+    'C_Soulbinds.CanModifySoulbind',
     'C_Soulbinds.GetActiveSoulbindID',
     'C_Soulbinds.GetNode',
     'C_Soulbinds.GetSoulbindData',
