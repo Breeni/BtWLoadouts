@@ -69,22 +69,38 @@ local function SettingsCreate(options)
 	end
 
 	local result = Mixin({}, options);
-	local mt = {};
-	function mt:__call (tbl)
-		setmetatable(tbl, {__index = defaults});
-		mt.__index = tbl;
-	end
-	function mt:__newindex (key, value)
-		mt.__index[key] = value;
+	local mt = {}
+    function mt.__call(_, tbl)
+        setmetatable(tbl, {__index = defaults});
+        mt.__index = tbl;
+    end
+    function mt.__newindex(self, key, value)
+        local option = optionsByKey[key];
+        if option then
+            local func = option.saveValue;
+            if func then
+                value = func(self, key, value)
+                if value ~= nil then
+                    mt.__index[key] = value
+                end
+            else
+                mt.__index[key] = value;
+            end
 
-		local option = optionsByKey[key];
-		if option then
-			local func = option.onChange;
-			if func then
-				func(key, value);
-			end
-		end
-	end
+            func = option.onChange;
+            if func then
+                func(self, key, value);
+            end
+        else
+            mt.__index[key] = value;
+        end
+    end
+    function mt.__add(self, option)
+        rawset(self, #self+1, option)
+        optionsByKey[option.key] = option;
+        defaults[option.key] = option.default;
+        return self
+    end
 	setmetatable(result, mt);
 	result({});
 
