@@ -1,3 +1,7 @@
+# v1.6.5
+
+- Updated interface number for 9.2.5
+
 # v1.6.4
 
 - Updated so soulbinds are changed at the Forge of Bonds within Zereth Mortis without a tome
