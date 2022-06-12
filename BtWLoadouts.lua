@@ -446,6 +446,44 @@ local function shallowcopy(tbl)
 	return result
 end
 
+BtWLoadoutsClassDropDownMixin = {}
+function BtWLoadoutsClassDropDownMixin:OnShow()
+	if not self.initialized then
+		UIDropDownMenu_Initialize(self, self.Init);
+		self.initialized = true
+	end
+end
+function BtWLoadoutsClassDropDownMixin:Init(level, menuList)
+	local info = UIDropDownMenu_CreateInfo();
+	local selected = self:GetValue();
+
+	info.func = function (button, arg1, arg2, checked)
+		self:SetValue(button, arg1, arg2, checked)
+	end
+
+	if (level or 1) == 1 then
+		if self.includeNone then
+			info.text = L["None"];
+			info.checked = selected == nil;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
+		for classIndex=1,GetNumClasses() do
+			local className, classFile = GetClassInfo(classIndex);
+			local classColor = C_ClassColor.GetClassColor(classFile);
+			info.text = classColor and classColor:WrapTextInColorCode(className) or className;
+			info.arg1 = classIndex;
+			info.arg2 = classFile;
+			info.checked = selected == classIndex;
+			UIDropDownMenu_AddButton(info, level);
+		end
+	end
+end
+function BtWLoadoutsClassDropDownMixin:GetValue()
+end
+function BtWLoadoutsClassDropDownMixin:SetValue(button, classIndex, classFile, checked)
+end
+
 local function SpecDropDown_OnClick(self, arg1, arg2, checked)
 	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
 	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);

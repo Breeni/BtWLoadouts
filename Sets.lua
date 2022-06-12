@@ -369,7 +369,8 @@ Internal.Filters = {
 			return function (tbl, index)
 				index = index + 1
 				if tbl[index] then
-					return index, tbl[index], C_Covenants.GetCovenantData(tbl[index]).name
+					local covenantData = C_Covenants.GetCovenantData(tbl[index])
+					return index, tbl[index], COVENANT_COLORS[covenantData.textureKit]:WrapTextInColorCode(covenantData.name)
 				elseif includeOther and index == #tbl + 1 then
 					return index, 0, L["Other"]
 				end
