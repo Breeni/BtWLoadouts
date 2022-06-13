@@ -19,6 +19,7 @@ Localizations.ruRU.lua
 Localizations.zhCN.lua
 Localizations.zhTW.lua
 
+Blockers.lua
 Characters.lua
 Instances.lua
 Sets.lua

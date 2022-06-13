@@ -237,13 +237,13 @@ local function CombineSets(result, state, ...)
         end
 
         local soulbindID = GetActiveSoulbindID()
-        if state and not IsSetActive(result) then
-            state.noCombatSwap = true
-            state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
-            state.blockedByJailersChains = true
-            if not C_Soulbinds.CanModifySoulbind() then
-                state.needTome = true
+        if state and state.blockers and not IsSetActive(result) then
+            if not C_Soulbinds.CanSwitchActiveSoulbindTreeBranch() then
+                state.blockers[Internal.GetRestedTomeBlocker()] = true
             end
+            state.blockers[Internal.GetCombatBlocker()] = true
+            state.blockers[Internal.GetMythicPlusBlocker()] = true
+            state.blockers[Internal.GetJailersChainBlocker()] = true
         end
     end
 
@@ -252,15 +252,19 @@ end
 local function ActivateSet(set, state)
     local complete = true;
 
-    if (not state or ((not state.ignoreTome or C_Soulbinds.CanModifySoulbind()) and not state.ignoreJailersChains)) and not IsSetActive(set) then
+    if (not state or C_Soulbinds.CanSwitchActiveSoulbindTreeBranch() or (not state.ignoreItem and not state.allowPartial)) and not IsSetActive(set) then
         local soulbindData = GetSoulbindData(set.soulbindID)
-        Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
 
-        ActivateSoulbind(set.soulbindID)
+        if C_Soulbinds.GetActiveSoulbindID() ~= set.soulbindID then
+            Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
+            ActivateSoulbind(set.soulbindID)
+        end
+
         if set.nodes then
             for nodeID in pairs(set.nodes) do
                 local node = GetSoulbindNode(nodeID)
                 if node.state ~= Enum.SoulbindNodeState.Selected and node.state ~= Enum.SoulbindNodeState.Unavailable then
+                    Internal.LogMessage("Switching soulbind free node to %d", nodeID)
                     SelectSoulbindNode(nodeID)
                 end
             end

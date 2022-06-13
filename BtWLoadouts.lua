@@ -239,66 +239,33 @@ StaticPopupDialogs["BTWLOADOUTS_REQUESTMULTIACTIVATE"] = {
 	timeout = 0,
 	hideOnEscape = 1
 };
-StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATERESTED"] = {
+StaticPopupDialogs["BTWLOADOUTS_PARTIAL"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = "Activate spec %s?\nThis set will require a tome or rested to activate",
+	text = L["%s, do you wish to partially continue instead?"],
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function(self)
-	end,
-	OnShow = function(self)
-		--
-	end,
-	hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWLOADOUTS_REQUESTACTIVATETOME"] = {
-	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = "Activate spec %s?\nThis will use a Tome",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self)
-
-	end,
-	OnShow = function(self, data)
-		tomeButton:SetParent(self);
-		tomeButton:ClearAllPoints();
-		tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
-		tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
-		tomeButton.button = self.button1;
-
-		tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
-		tomeButton:SetAttribute("item", data.name);
-		tomeButton:SetAttribute("active", true);
-	end,
-	OnHide = function(self)
-		tomeButton:SetParent(UIParent);
-		tomeButton:ClearAllPoints();
-		tomeButton.button = nil;
-		tomeButton:SetAttribute("active", false);
-	end,
-	hasItemFrame = 1,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
-	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["A tome or rested area is required to fully apply your loadout, do you wish to use a tome or partially continue without one?"],
-	button1 = YES,
-	button2 = NO,
-	button3 = CONTINUE,
-	selectCallbackByIndex = true,
-	OnButton1 = function(self, ...)
+	OnAccept = function(self, ...)
+		Internal.ContinuePartialActivateProfile();
 	end,
 	OnCancel = function(self, data, reason, ...)
 		if reason == "clicked" then
 			Internal.CancelActivateProfile();
 		end
 	end,
-	OnButton3 = function (self, data, reason, ...)
+	timeout = 0,
+	hideOnEscape = 1
+};
+StaticPopupDialogs["BTWLOADOUTS_NEEDITEM"] = {
+	preferredIndex = STATICPOPUP_NUMDIALOGS,
+	text = L["%s, do you wish to use a %s?"],
+	button1 = YES,
+	button2 = NO,
+	selectCallbackByIndex = true,
+	OnButton1 = function(self, ...)
+	end,
+	OnCancel = function(self, data, reason, ...)
 		if reason == "clicked" then
-			Internal.ContinueWithoutTomeActivateProfile();
+			Internal.CancelActivateProfile();
 		end
 	end,
 	OnShow = function(self, data)
@@ -323,37 +290,46 @@ StaticPopupDialogs["BTWLOADOUTS_NEEDTOME"] = {
 	hideOnEscape = 1,
 	noCancelOnReuse = 1,
 };
-StaticPopupDialogs["BTWLOADOUTS_JAILERSCHAINS"] = {
+StaticPopupDialogs["BTWLOADOUTS_NEEDITEMPARTIAL"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["Cannot fully apply your loadout while under the effects of the Jailer's Chains, do you wish to partially continue instead?"],
+	text = L["%s, do you wish to use a %s or partially continue without one?"],
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function(self, ...)
-		Internal.ContinueIgnoreChainsActivateProfile();
+	button3 = CONTINUE,
+	selectCallbackByIndex = true,
+	OnButton1 = function(self, ...)
 	end,
 	OnCancel = function(self, data, reason, ...)
 		if reason == "clicked" then
 			Internal.CancelActivateProfile();
 		end
 	end,
-	timeout = 0,
-	hideOnEscape = 1
-};
-StaticPopupDialogs["BTWLOADOUTS_NEEDRESTED"] = {
-	preferredIndex = STATICPOPUP_NUMDIALOGS,
-	text = L["A rested area or tome is needed to fully apply your loadout, do you wish to partially continue instead?"],
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(self, ...)
-		Internal.ContinueWithoutTomeActivateProfile();
-	end,
-	OnCancel = function(self, data, reason, ...)
+	OnButton3 = function (self, data, reason, ...)
 		if reason == "clicked" then
-			Internal.CancelActivateProfile();
+			Internal.ContinueIgnoreItemActivateProfile();
 		end
 	end,
+	OnShow = function(self, data)
+		tomeButton:SetParent(self);
+		tomeButton:ClearAllPoints();
+		tomeButton:SetPoint("TOPLEFT", self.button1, "TOPLEFT", 0, 0);
+		tomeButton:SetPoint("BOTTOMRIGHT", self.button1, "BOTTOMRIGHT", 0, 0);
+		tomeButton.button = self.button1;
+
+		tomeButton:SetFrameLevel(self.button1:GetFrameLevel() + 1);
+		tomeButton:SetAttribute("item", data.name);
+		tomeButton:SetAttribute("active", true);
+	end,
+	OnHide = function(self, ...)
+		tomeButton:SetParent(UIParent);
+		tomeButton:ClearAllPoints();
+		tomeButton.button = nil;
+		tomeButton:SetAttribute("active", false);
+	end,
+	hasItemFrame = 1,
 	timeout = 0,
-	hideOnEscape = 1
+	hideOnEscape = 1,
+	noCancelOnReuse = 1,
 };
 StaticPopupDialogs["BTWLOADOUTS_DELETESET"] = {
 	preferredIndex = STATICPOPUP_NUMDIALOGS,
