@@ -1,3 +1,9 @@
+# v1.6.6
+
+- Added an settings option to disabled Soulbinds
+- Updated Essence support to be disabled by default, can be enabled from the settings menu in the main window
+- Fixed issues with some settings options causing errors
+
 # v1.6.5
 
 - Updated interface number for 9.2.5
