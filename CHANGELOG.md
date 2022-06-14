@@ -1,3 +1,7 @@
+# v1.7.0-beta
+
+- Updated how activating loadouts decides when to wait or offer partial continuation
+
 # v1.6.6
 
 - Added an settings option to disabled Soulbinds
