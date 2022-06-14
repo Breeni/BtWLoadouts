@@ -142,6 +142,8 @@ local Settings = SettingsCreate({
 			Internal.SetLoadoutSegmentEnabled(id, value)
 			BtWLoadoutsFrame:Update()
         end,
+        default = false,
+    },
         default = true,
     },
     {
