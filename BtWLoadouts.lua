@@ -110,7 +110,7 @@ local Settings = SettingsCreate({
     {
         name = L["Show minimap icon"],
         key = "minimapShown",
-        onChange = function (id, value)
+        onChange = function (_, id, value)
 			if value then
 				Internal.ShowMinimap()
 			else
@@ -137,7 +137,7 @@ local Settings = SettingsCreate({
     {
         name = L["Enable Essences"],
         key = "essences",
-        onChange = function (id, value)
+        onChange = function (_, id, value)
 			BtWLoadoutsFrame.Essences:SetEnabled(value)
 			Internal.SetLoadoutSegmentEnabled(id, value)
 			BtWLoadoutsFrame:Update()
@@ -147,7 +147,7 @@ local Settings = SettingsCreate({
     {
         name = L["Sort classes by name"],
         key = "sortClassesByName",
-        onChange = function (id, value)
+        onChange = function (_, id, value)
 			if value then
 				Internal.SortClassesByName()
 			else
