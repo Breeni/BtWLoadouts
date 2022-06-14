@@ -850,6 +850,9 @@ function BtWLoadoutsSoulbindsMixin:Update()
         helpTipBox:Hide();
     end
 end
+function BtWLoadoutsSoulbindsMixin:SetEnabled(value)
+	BtWLoadoutsTabFrame_SetEnabled(self, value)
+end
 function BtWLoadoutsSoulbindsMixin:SetSetByID(setID)
 	self.set = GetSet(setID)
 end

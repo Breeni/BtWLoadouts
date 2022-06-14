@@ -144,6 +144,14 @@ local Settings = SettingsCreate({
         end,
         default = false,
     },
+    {
+        name = L["Enable Soulbinds"],
+        key = "soulbinds",
+        onChange = function (_, id, value)
+			BtWLoadoutsFrame.Soulbinds:SetEnabled(value)
+			Internal.SetLoadoutSegmentEnabled(id, value)
+			BtWLoadoutsFrame:Update()
+        end,
         default = true,
     },
     {
