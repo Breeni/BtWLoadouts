@@ -1,3 +1,7 @@
+# v1.7.1-beta
+
+- Added support for switching conduits
+
 # v1.7.0-beta
 
 - Updated how activating loadouts decides when to wait or offer partial continuation
