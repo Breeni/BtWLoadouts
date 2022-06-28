@@ -189,7 +189,6 @@ local function IsSetActive(set)
                 if set.soulbindID ~= soulbindID then
                     return false
                 end
-                print(set.nodes, set.conduits)
                 if set.nodes then
                     for nodeID in pairs(set.nodes) do
                         local node = GetSoulbindNode(nodeID)
@@ -263,7 +262,6 @@ local function ActivateSet(set, state)
             local socketedAny = false
             if set.conduits then
                 for nodeID,conduitID in pairs(set.conduits) do
-                    print(nodeID, conduitID, C_Soulbinds.GetInstalledConduitID(nodeID))
                     local node = GetSoulbindNode(nodeID)
                     if C_Soulbinds.GetInstalledConduitID(nodeID) ~= conduitID and node.state ~= Enum.SoulbindNodeState.Unavailable then
                         Internal.LogMessage("Socket conduit %d into node %d", conduitID, nodeID)
