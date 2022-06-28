@@ -252,6 +252,9 @@ local ForgeOfBondsBlockerMixin = CreateFromMixins(Internal.BlockerMixin)
 function ForgeOfBondsBlockerMixin:ShouldWait()
     return true
 end
+function ForgeOfBondsBlockerMixin:PopupMessagePartial()
+    return L["Cannot fully apply your loadout without visiting a Forge of Bonds"]
+end
 function ForgeOfBondsBlockerMixin:GetWaitReasonMessage()
     return L["Waiting for you to open the Forge of Bonds"]
 end
