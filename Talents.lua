@@ -152,18 +152,17 @@ end
 ]]
 local function ActivateTalentSet(set, state)
 	local success, complete = true, true;
-	if not state or (not state.ignoreItem and not state.allowPartial) then
-        for talentID in pairs(set.talents) do
-            local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
-            local available, currentColumn = GetTalentTierInfo(tier, 1)
-            if not selected and available then
-                if not state or not state.ignoreItem or currentColumn == 0 then
-                    local slotSuccess = LearnTalent(talentID)
-                    success = slotSuccess and success
-                    complete = false
+    local canChangeTalents = not Internal.GetRestedTomeBlocker():IsActive()
+    for talentID in pairs(set.talents) do
+        local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
+        local available, currentColumn = GetTalentTierInfo(tier, 1)
+        if not selected and available then
+            if canChangeTalents or currentColumn == 0 then
+                local slotSuccess = LearnTalent(talentID)
+                success = slotSuccess and success
+                complete = false
 
-                    Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
-                end
+                Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
             end
         end
     end
