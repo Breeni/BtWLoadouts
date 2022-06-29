@@ -247,36 +247,38 @@ end
 local function ActivateSet(set, state)
     local complete = true;
 
-    local soulbindData = GetSoulbindData(set.soulbindID)
-    if C_Soulbinds.GetActiveSoulbindID() ~= set.soulbindID then
-        Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
-        ActivateSoulbind(set.soulbindID)
-    end
-
-    if set.nodes and C_Soulbinds.CanSwitchActiveSoulbindTreeBranch() then
-        for nodeID in pairs(set.nodes) do
-            local node = GetSoulbindNode(nodeID)
-            if node.state ~= Enum.SoulbindNodeState.Selected and node.state ~= Enum.SoulbindNodeState.Unavailable then
-                Internal.LogMessage("Switching soulbind tree node to %d", nodeID)
-                SelectSoulbindNode(nodeID)
-                complete = false
-            end
+    if not IsSetActive(set) then
+        local soulbindData = GetSoulbindData(set.soulbindID)
+        if C_Soulbinds.GetActiveSoulbindID() ~= set.soulbindID then
+            Internal.LogMessage("Switching soulbind to %s", soulbindData.name)
+            ActivateSoulbind(set.soulbindID)
         end
-        local socketedAny = false
-        if set.conduits and C_Soulbinds.CanModifySoulbind() then
-            for nodeID,conduitID in pairs(set.conduits) do
+
+        if set.nodes and C_Soulbinds.CanSwitchActiveSoulbindTreeBranch() then
+            for nodeID in pairs(set.nodes) do
                 local node = GetSoulbindNode(nodeID)
-                if C_Soulbinds.GetInstalledConduitID(nodeID) ~= conduitID and node.state ~= Enum.SoulbindNodeState.Unavailable then
-                    Internal.LogMessage("Socket conduit %d into node %d", conduitID, nodeID)
-                    C_Soulbinds.ModifyNode(nodeID, conduitID, Enum.SoulbindConduitTransactionType.Install)
-                    socketedAny = true
+                if node.state ~= Enum.SoulbindNodeState.Selected and node.state ~= Enum.SoulbindNodeState.Unavailable then
+                    Internal.LogMessage("Switching soulbind tree node to %d", nodeID)
+                    SelectSoulbindNode(nodeID)
+                    complete = false
                 end
             end
-        end
+            local socketedAny = false
+            if set.conduits and C_Soulbinds.CanModifySoulbind() then
+                for nodeID,conduitID in pairs(set.conduits) do
+                    local node = GetSoulbindNode(nodeID)
+                    if C_Soulbinds.GetInstalledConduitID(nodeID) ~= conduitID and node.state ~= Enum.SoulbindNodeState.Unavailable then
+                        Internal.LogMessage("Socket conduit %d into node %d", conduitID, nodeID)
+                        C_Soulbinds.ModifyNode(nodeID, conduitID, Enum.SoulbindConduitTransactionType.Install)
+                        socketedAny = true
+                    end
+                end
+            end
 
-        if socketedAny then
-            C_Soulbinds.CommitPendingConduitsInSoulbind(set.soulbindID)
-            complete = false
+            if socketedAny then
+                C_Soulbinds.CommitPendingConduitsInSoulbind(set.soulbindID)
+                complete = false
+            end
         end
     end
 
