@@ -1,3 +1,7 @@
+# v1.7.2-beta
+
+- Fixed an error while activating a soulbind set that is already active
+
 # v1.7.1-beta
 
 - Added support for switching conduits
