@@ -1,3 +1,7 @@
+# v1.7.3-beta
+
+- Fixed an error while displaying soulbind conduit list under some circumstances
+
 # v1.7.2-beta
 
 - Fixed an error while activating a soulbind set that is already active
