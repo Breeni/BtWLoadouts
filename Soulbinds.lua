@@ -2593,10 +2593,12 @@ function BtWLoadoutsConduitListConduitButtonMixin:Update()
 	self:UpdateVisuals(self:GetState());
 end
 function BtWLoadoutsConduitListConduitButtonMixin:GetState()
-    local installed = self.owner:IsConduitSlotted(self.conduitData.conduitID)
-	if installed then
-		return BtWLoadoutsConduitListConduitButtonMixin.State.Installed;
-	end
+    if self.owner and self.conduitData then
+        local installed = self.owner:IsConduitSlotted(self.conduitData.conduitID)
+        if installed then
+            return BtWLoadoutsConduitListConduitButtonMixin.State.Installed;
+        end
+    end
 
 	-- local soulbindID = Soulbinds.GetOpenSoulbindID();
 	-- local conduitID = self.conduitData.conduitID;
