@@ -121,6 +121,7 @@ local function RefreshSet(set)
 
     set.nodes = nodes
     set.conduits = conduits
+    set.classID = select(3, UnitClass("player"))
 
     return UpdateSetFilters(set)
 end
