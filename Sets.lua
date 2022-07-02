@@ -414,6 +414,9 @@ Internal.Filters = {
 				if limitations.character then
 					local characterData = Internal.GetCharacterInfo(limitations.character)
 					limitClassFile = characterData.class
+				elseif limitations.class then
+					local classData = C_CreatureInfo.GetClassInfo(limitations.class)
+					limitClassFile = classData.classFile
 				end
 			end
 

@@ -3427,7 +3427,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
         
         set.restrictions = set.restrictions or {}
         self.RestrictionsDropDown:SetSelections(set.restrictions)
-        self.RestrictionsDropDown:SetLimitations()
+        self.RestrictionsDropDown:SetLimitations("class", set.classID)
 		self.RestrictionsButton:SetEnabled(true);
 
         if not self.Name:HasFocus() then
