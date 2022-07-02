@@ -573,6 +573,7 @@ do
 			info.func = OnClick
 			info.checked = true
 			info.keepShownOnClick = true
+			info.isNotRadio = true
 			for _,type,key,name, restricted in self:EnumerateSelected() do
 				info.text = restricted and string.format("|CFFFF8080%s|r", name) or name
 				info.arg1 = type
@@ -611,6 +612,7 @@ do
 		else
 			info.func = OnClick
 			info.keepShownOnClick = true
+			info.isNotRadio = true
 			for _,key,name in self:EnumerateType(menuList) do
 				info.text = name
 				info.arg1 = menuList
