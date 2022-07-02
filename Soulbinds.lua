@@ -756,7 +756,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
             self.Name:SetText(set.name or "");
         end
 
-        UIDropDownMenu_SetSelectedValue(self.SoulbindDropDown, soulbindID);
+        -- UIDropDownMenu_SetSelectedValue(self.SoulbindDropDown, soulbindID);
         UIDropDownMenu_SetText(self.SoulbindDropDown, soulbindData.name);
         UIDropDownMenu_EnableDropDown(self.SoulbindDropDown);
         

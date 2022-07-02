@@ -575,7 +575,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
 		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
 		local classColor = GetClassColor(classID);
-        UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
+        -- UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
 		UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 
 		do
@@ -633,7 +633,7 @@ function BtWLoadoutsPvPTalentsMixin:Update()
         local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
         local className = LOCALIZED_CLASS_NAMES_MALE[classID];
         local classColor = GetClassColor(classID);
-        UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
+        -- UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
         UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 
 		do
