@@ -211,6 +211,18 @@ local function IsSetActive(set, ignoreConduits)
 
     return true;
 end
+local function IsSetConduitsActive(set)
+    if set.conduits and next(set.conduits) then
+        for nodeID,conduitID in pairs(set.conduits) do
+            local node = GetSoulbindNode(nodeID)
+            if node and node.state ~= Enum.SoulbindNodeState.Unavailable and C_Soulbinds.GetInstalledConduitID(nodeID) ~= conduitID then
+                return false
+            end
+        end
+    end
+
+    return true;
+end
 local function CombineSets(result, state, ...)
 	result = result or {};
 
@@ -227,13 +239,14 @@ local function CombineSets(result, state, ...)
             end
         end
 
-        local soulbindID = GetActiveSoulbindID()
         if state and state.blockers and not IsSetActive(result) then
-            local nodesCorrect = IsSetActive(result, true)
-            if result.conduits and next(result.conduits) then
-                state.blockers[Internal.GetForgeOfBondsBlocker()] = nodesCorrect
+            local conduitsActive = IsSetConduitsActive(result)
+            if not conduitsActive then
+                state.blockers[Internal.GetForgeOfBondsBlocker()] = IsSetActive(result, true)
             end
-            if not C_Soulbinds.CanSwitchActiveSoulbindTreeBranch() and not nodesCorrect then
+            -- If the conduits are already set we wont need to go to a forge so we may need a tome or rested area
+            -- If we need to swap conduits but allowPartial has been set we may need a tome or rested area
+            if not C_Soulbinds.CanSwitchActiveSoulbindTreeBranch() and (conduitsActive or state.allowPartial) then
                 state.blockers[Internal.GetRestedTomeBlocker()] = true
             end
             state.blockers[Internal.GetCombatBlocker()] = true
