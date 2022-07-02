@@ -1,3 +1,7 @@
+# v1.7.4-beta
+
+- Fixed an issue where a Forge of Bonds would sometimes be requested even though conduits
+
 # v1.7.3-beta
 
 - Fixed an error while displaying soulbind conduit list under some circumstances
