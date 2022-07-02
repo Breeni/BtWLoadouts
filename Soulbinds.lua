@@ -3500,7 +3500,6 @@ function BtWLoadoutsSoulbindsMixin:Update()
             end
         end
 
-        UIDropDownMenu_SetSelectedValue(self.ClassDropDown, set.classID);
         if set.classID then
             local classInfo = C_CreatureInfo.GetClassInfo(set.classID)
             local classColor = C_ClassColor.GetClassColor(classInfo.classFile)
