@@ -152,18 +152,17 @@ end
 ]]
 local function ActivateTalentSet(set, state)
 	local success, complete = true, true;
-	if not state or not state.ignoreJailersChains then
-        for talentID in pairs(set.talents) do
-            local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
-            local available, currentColumn = GetTalentTierInfo(tier, 1)
-            if not selected and available then
-                if not state or not state.ignoreTome or currentColumn == 0 then
-                    local slotSuccess = LearnTalent(talentID)
-                    success = slotSuccess and success
-                    complete = false
+    local canChangeTalents = not Internal.GetRestedTomeBlocker():IsActive()
+    for talentID in pairs(set.talents) do
+        local selected, _, _, _, tier = select(4, GetTalentInfoByID(talentID, 1));
+        local available, currentColumn = GetTalentTierInfo(tier, 1)
+        if not selected and available then
+            if canChangeTalents or currentColumn == 0 then
+                local slotSuccess = LearnTalent(talentID)
+                success = slotSuccess and success
+                complete = false
 
-                    Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
-                end
+                Internal.LogMessage("Switching talent %d to %s (%s)", tier, GetTalentLink(talentID, 1), slotSuccess and "true" or "false")
             end
         end
     end
@@ -303,11 +302,14 @@ local function CombineTalentSets(result, state, ...)
         local isActive, waitForCooldown, anySelected = TalentSetRequirements(result)
 
         if not isActive then
-            state.needTome = state.needTome or anySelected
+            if state.blockers then
+                state.blockers[Internal.GetRestedTomeBlocker()] = true
+                state.blockers[Internal.GetCombatBlocker()] = true
+                state.blockers[Internal.GetMythicPlusBlocker()] = true
+                state.blockers[Internal.GetJailersChainBlocker()] = true
+            end
+            
             state.customWait = state.customWait or (waitForCooldown and L["Waiting for talent cooldown"])
-            state.noCombatSwap = true
-            state.noTaxiSwap = true -- Maybe check for rested area or tomb first?
-            state.blockedByJailersChains = true
         end
     end
 

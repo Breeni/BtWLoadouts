@@ -1,3 +1,23 @@
+# v1.7.4-beta
+
+- Fixed an issue where a Forge of Bonds would sometimes be requested even though conduits
+
+# v1.7.3-beta
+
+- Fixed an error while displaying soulbind conduit list under some circumstances
+
+# v1.7.2-beta
+
+- Fixed an error while activating a soulbind set that is already active
+
+# v1.7.1-beta
+
+- Added support for switching conduits
+
+# v1.7.0-beta
+
+- Updated how activating loadouts decides when to wait or offer partial continuation
+
 # v1.6.6
 
 - Added an settings option to disabled Soulbinds
