@@ -1,3 +1,7 @@
+# v1.7.5
+
+- Updated world conditions to support Oribos and Exile's Reach for zone
+
 # v1.7.4-beta
 
 - Fixed an issue where a Forge of Bonds would sometimes be requested even though conduits
