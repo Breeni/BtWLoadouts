@@ -1,3 +1,7 @@
+# v1.7.6
+
+Updated for 9.2.7
+
 # v1.7.5
 
 - Updated world conditions to support Oribos and Exile's Reach for zone
