@@ -717,6 +717,6 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 		helpTipBox:Hide();
 	end
 end
-function BtWLoadoutsTalentsMixin:SetSetByID(setID)
+function BtWLoadoutsPvPTalentsMixin:SetSetByID(setID)
 	self.set = GetPvPTalentSet(setID)
 end
