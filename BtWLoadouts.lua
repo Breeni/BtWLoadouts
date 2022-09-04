@@ -438,14 +438,6 @@ function Internal.DropDownSetOnChange(self, func)
 	self.OnChange = func;
 end
 
-local function shallowcopy(tbl)
-	local result = {}
-	for k,v in pairs(tbl) do
-		result[k] = v
-	end
-	return result
-end
-
 BtWLoadoutsClassDropDownMixin = {}
 function BtWLoadoutsClassDropDownMixin:OnShow()
 	if not self.initialized then
@@ -484,61 +476,25 @@ end
 function BtWLoadoutsClassDropDownMixin:SetValue(button, classIndex, classFile, checked)
 end
 
-local function SpecDropDown_OnClick(self, arg1, arg2, checked)
-	local selectedTab = PanelTemplates_GetSelectedTab(BtWLoadoutsFrame) or 1;
-	local tab = GetTabFrame(BtWLoadoutsFrame, selectedTab);
-
-	CloseDropDownMenus();
-	local set = tab.set;
-
-	if selectedTab == TAB_LOADOUTS then
-		local classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
-		tab.temp[classFile or "NONE"] = set.character
-
-		set.specID = arg1;
-
-		classFile = set.specID and select(6, GetSpecializationInfoByID(set.specID))
-		set.character = tab.temp[classFile or "NONE"] or shallowcopy(set.character)
-	elseif selectedTab == TAB_TALENTS or selectedTab == TAB_PVP_TALENTS then
-		local temp = tab.temp;
-		-- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
-		-- the temp table instead of copying the talentIDs around
-
-		-- We are going to copy the currently selected talents for the currently selected spec into
-		-- a temporary table incase the user switches specs back
-		local specID = set.specID;
-		if temp[specID] then
-			wipe(temp[specID]);
-		else
-			temp[specID] = {};
-		end
-		for talentID in pairs(set.talents) do
-			temp[specID][talentID] = true;
-		end
-
-		-- Clear the current talents and copy back the previously selected talents if they exist
-		specID = arg1;
-		set.specID = specID;
-		wipe(set.talents);
-		if temp[specID] then
-			for talentID in pairs(temp[specID]) do
-				set.talents[talentID] = true;
-			end
-		end
+BtWLoadoutsSpecDropDownMixin = {}
+function BtWLoadoutsSpecDropDownMixin:OnShow()
+	if not self.initialized then
+		UIDropDownMenu_Initialize(self, self.Init);
+		self.initialized = true
 	end
-	BtWLoadoutsFrame:Update();
 end
-local function SpecDropDownInit(self, level, menuList)
+function BtWLoadoutsSpecDropDownMixin:Init(level, menuList)
 	local info = UIDropDownMenu_CreateInfo();
+	local selectedSpecID, selectedClassID = self:GetValue();
 
-	local set = self:GetParent().set;
-	local selected = set and set.specID;
+	info.func = function (button, arg1, arg2, checked)
+		self:SetValue(button, arg1, arg2, checked)
+	end
 
 	if (level or 1) == 1 then
 		if self.includeNone then
 			info.text = L["None"];
-			info.func = SpecDropDown_OnClick;
-			info.checked = selected == nil;
+			info.checked = (not self.includeClass or selectedClassID == nil) and selectedSpecID == nil;
 			UIDropDownMenu_AddButton(info, level);
 		end
 
@@ -553,24 +509,33 @@ local function SpecDropDownInit(self, level, menuList)
 		end
 	else
 		local classID = menuList;
+
+		if self.includeClass then
+			local className, classFile = GetClassInfo(classID);
+			local classColor = C_ClassColor.GetClassColor(classFile);
+			info.text = classColor and classColor:WrapTextInColorCode(className) or className;
+			info.arg1 = nil;
+			info.arg2 = classID;
+			info.checked = selectedClassID == classID and selectedSpecID == nil;
+			UIDropDownMenu_AddButton(info, level);
+		end
+
 		for specIndex=1,GetNumSpecializationsForClassID(classID) do
 			local specID, name, _, icon, role = GetSpecializationInfoForClassID(classID, specIndex);
 			info.text = name;
 			info.icon = icon;
 			info.arg1 = specID;
-			info.func = SpecDropDown_OnClick;
-			info.checked = selected == specID;
+			info.arg2 = classID;
+			info.checked = selectedSpecID == specID;
 			UIDropDownMenu_AddButton(info, level);
 		end
 	end
 end
-
-BtWLoadoutsSpecDropDownMixin = {}
-function BtWLoadoutsSpecDropDownMixin:OnShow()
-	if not self.initialized then
-		UIDropDownMenu_Initialize(self, SpecDropDownInit);
-		self.initialized = true
-	end
+-- Override. return specID, classID (classID only needed if includeClass = true).
+function BtWLoadoutsSpecDropDownMixin:GetValue()
+end
+-- Override.
+function BtWLoadoutsSpecDropDownMixin:SetValue(button, specID, classID, checked)
 end
 
 -- Restrictions Drop Down, used by sets to handle limit activation

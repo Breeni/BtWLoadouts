@@ -404,8 +404,50 @@ function BtWLoadoutsPvPTalentsMixin:OnLoad()
 end
 function BtWLoadoutsPvPTalentsMixin:OnShow()
     if not self.initialized then
-        UIDropDownMenu_SetWidth(self.SpecDropDown, 170);
-        UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+		self.SpecDropDown.includeNone = false;
+		self.SpecDropDown.includeClass = false;
+		UIDropDownMenu_SetWidth(self.SpecDropDown, 170);
+		UIDropDownMenu_JustifyText(self.SpecDropDown, "LEFT");
+
+        self.SpecDropDown.GetValue = function ()
+            if self.set then
+                return self.set.specID
+            end
+        end
+        self.SpecDropDown.SetValue = function (_, _, arg1)
+            CloseDropDownMenus();
+
+            local set = self.set;
+            if set then
+                local temp = self.temp;
+                -- @TODO: If we always access talents by set.talents then we can just swap tables in and out of
+                -- the temp table instead of copying the talentIDs around
+        
+                -- We are going to copy the currently selected talents for the currently selected spec into
+                -- a temporary table incase the user switches specs back
+                local specID = set.specID;
+                if temp[specID] then
+                    wipe(temp[specID]);
+                else
+                    temp[specID] = {};
+                end
+                for talentID in pairs(set.talents) do
+                    temp[specID][talentID] = true;
+                end
+        
+                -- Clear the current talents and copy back the previously selected talents if they exist
+                specID = arg1;
+                set.specID = specID;
+                wipe(set.talents);
+                if temp[specID] then
+                    for talentID in pairs(temp[specID]) do
+                        set.talents[talentID] = true;
+                    end
+                end
+
+                self:Update()
+            end
+        end
 
         self.initialized = true;
     end
@@ -576,7 +618,6 @@ function BtWLoadoutsPvPTalentsMixin:Update()
 		local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
 		local className = LOCALIZED_CLASS_NAMES_MALE[classID];
 		local classColor = GetClassColor(classID);
-        -- UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
 		UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 
 		do
@@ -634,7 +675,6 @@ function BtWLoadoutsPvPTalentsMixin:Update()
         local _, specName, _, icon, _, classID = GetSpecializationInfoByID(specID);
         local className = LOCALIZED_CLASS_NAMES_MALE[classID];
         local classColor = GetClassColor(classID);
-        -- UIDropDownMenu_SetSelectedValue(self.SpecDropDown, specID);
         UIDropDownMenu_SetText(self.SpecDropDown, format("%s: %s", classColor:WrapTextInColorCode(className), specName));
 
 		do
