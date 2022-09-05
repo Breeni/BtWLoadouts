@@ -1,6 +1,10 @@
+# v1.7.7
+
+- Initial changes for Dragonflight
+
 # v1.7.6
 
-Updated for 9.2.7
+- Updated for 9.2.7
 
 # v1.7.5
 
