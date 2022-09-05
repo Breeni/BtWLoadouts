@@ -604,10 +604,7 @@
                 <Size x="575" y="377"/>
 				<KeyValues>
 					<KeyValue key="hideCharCount" value="true" type="boolean"/>
-					<!--
-					<KeyValue key="maxLetters" value="127" type="number"/>
-					<KeyValue key="instructions" value="INSTRUCTION_TEXT" type="global"/>
-					-->
+					<KeyValue key="maxLetters" value="0" type="number"/>
 				</KeyValues>
                 <Anchors>
 					<Anchor point="TOPLEFT" relativeKey="$parent.BodyInset" relativePoint="TOPLEFT" x="5" y="-5" />

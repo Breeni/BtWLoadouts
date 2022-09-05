@@ -137,6 +137,7 @@ function JailersChainBlockerMixin:GetWaitReasonMessage()
     return L["Waiting for you to be freed from the Jailer's Chains"]
 end
 function JailersChainBlockerMixin:IsActive()
+    local GetPlayerAuraBySpellID = C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID or GetPlayerAuraBySpellID
     return GetPlayerAuraBySpellID(338906) ~= nil
 end
 

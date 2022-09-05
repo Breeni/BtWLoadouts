@@ -142,7 +142,7 @@ local Settings = SettingsCreate({
 			Internal.SetLoadoutSegmentEnabled(id, value)
 			BtWLoadoutsFrame:Update()
         end,
-        default = false,
+        default = GetExpansionLevel() == 7,
     },
     {
         name = L["Enable Soulbinds"],
@@ -152,7 +152,7 @@ local Settings = SettingsCreate({
 			Internal.SetLoadoutSegmentEnabled(id, value)
 			BtWLoadoutsFrame:Update()
         end,
-        default = true,
+        default = GetExpansionLevel() == 8,
     },
     {
         name = L["Sort classes by name"],
@@ -1427,11 +1427,15 @@ do
 			tab:SetPoint("BOTTOMLEFT", 7, -30)
 		end
 
-		tab:SetShown(self.enabled ~= false)
-
 		if self.segment then
 			frame.TabSegments[self.segment] = self
+
+			if self.enabled == nil then
+				self.enabled = Internal.GetLoadoutSegmentEnabled(self.segment)
+			end
 		end
+
+		tab:SetShown(self.enabled ~= false)
 
 		PanelTemplates_SetNumTabs(frame, id);
 		if id == 1 then

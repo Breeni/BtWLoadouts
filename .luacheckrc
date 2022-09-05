@@ -115,6 +115,7 @@ new_read_globals = {
     'bit.bxor',
     'bit.lshift',
     'bit.rshift',
+    'C_UnitAuras.GetPlayerAuraBySpellID',
     'C_AzeriteEmpoweredItem.GetAllTierInfo',
     'C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem',
     'C_AzeriteEmpoweredItem.IsPowerSelected',

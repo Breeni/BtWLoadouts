@@ -1,8 +1,3 @@
--- if not C_Covenants or GetExpansionLevel() ~= 8 then -- Skip for pre-Shadowlands
---     return
--- end
-BTWLOADOUTS_SOULBINDS_ACTIVE = GetExpansionLevel() == 8
-
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
@@ -375,7 +370,6 @@ Internal.AddLoadoutSegment({
     id = "soulbinds",
     name = L["Soulbinds"],
     events = "SOULBIND_ACTIVATED",
-    enabled = BTWLOADOUTS_SOULBINDS_ACTIVE,
     add = AddSet,
     get = GetSets,
     combine = CombineSets,

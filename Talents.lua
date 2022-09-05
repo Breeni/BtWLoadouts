@@ -386,6 +386,7 @@ Internal.AddLoadoutSegment({
     id = "talents",
     name = L["Talents"],
     events = "PLAYER_TALENT_UPDATE",
+    enabled = select(4, GetBuildInfo()) < 100000,
     add = AddTalentSet,
     get = GetTalentSets,
     combine = CombineTalentSets,
