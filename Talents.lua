@@ -631,7 +631,7 @@ function BtWLoadoutsTalentsMixin:OnSidebarItemDragStart(button)
 	end
 end
 function BtWLoadoutsTalentsMixin:Update()
-    self:GetParent().TitleText:SetText(L["Talents"]);
+    self:GetParent():SetTitle(L["Talents"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
 	sidebar:SetSupportedFilters("spec", "class", "role", "character", "covenant", "race")

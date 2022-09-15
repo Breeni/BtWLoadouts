@@ -1483,8 +1483,19 @@ do
 		self.TabSegments = {}
 		self.TabPool = CreateFramePool("Button", self, "BtWLoadoutsTabTemplate")
 
-		self.TitleText:SetText(BTWLOADOUTS_LOADOUTS)
-		self.TitleText:SetHeight(24)
+		if self.TitleContainer then
+			self.TitleContainer.TitleText:SetText(BTWLOADOUTS_LOADOUTS)
+		else
+			self.TitleText:SetText(BTWLOADOUTS_LOADOUTS)
+			self.TitleText:SetHeight(24)
+		end
+	end
+	function BtWLoadoutsFrameMixin:SetTitle(text)
+		if self.TitleContainer then
+			self.TitleContainer.TitleText:SetText(text)
+		else
+			self.TitleText:SetText(text)
+		end
 	end
 	function BtWLoadoutsFrameMixin:OnDragStart()
 		self:StartMoving();
@@ -1650,7 +1661,7 @@ do
 	end
 	function BtWLoadoutsFrameMixin:SetExport(value)
 		PanelTemplates_SetTab(self, 0);
-		self.TitleText:SetText(L["Export"]);
+		self:SetTitle(L["Export"]);
 	
 		self.Sidebar:Hide()
 		for id,frame in ipairs(self.TabFrames) do
@@ -1941,8 +1952,12 @@ function BtWLoadoutsLogFrameMixin:OnLoad()
 	tinsert(UISpecialFrames, self:GetName());
 	self:RegisterForDrag("LeftButton");
 
-	self.TitleText:SetText(BTWLOADOUTS_LOG)
-	self.TitleText:SetHeight(24)
+	if self.TitleContainer then
+		self.TitleContainer.TitleText:SetText(BTWLOADOUTS_LOG)
+	else
+		self.TitleText:SetText(BTWLOADOUTS_LOG)
+		self.TitleText:SetHeight(24)
+	end
 end
 function BtWLoadoutsLogFrameMixin:OnDragStart()
 	self:StartMoving();

@@ -1408,7 +1408,7 @@ function BtWLoadoutsLoadoutsMixin:OnSidebarItemDragStart(button)
 	end
 end
 function BtWLoadoutsLoadoutsMixin:Update()
-	self:GetParent().TitleText:SetText(L["Loadouts"]);
+	self:GetParent():SetTitle(L["Loadouts"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
 	sidebar:SetSupportedFilters("spec", "class", "role", "character", "disabled")

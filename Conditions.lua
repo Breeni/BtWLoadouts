@@ -1277,7 +1277,7 @@ end
 function BtWLoadoutsConditionsMixin:OnSidebarItemDragStart(button)
 end
 function BtWLoadoutsConditionsMixin:Update()
-	self:GetParent().TitleText:SetText(L["Conditions"]);
+	self:GetParent():SetTitle(L["Conditions"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
 	sidebar:SetSupportedFilters("spec", "class", "role", "character", "instanceType", "disabled")

@@ -1249,7 +1249,7 @@ function BtWLoadoutsActionBarsMixin:OnSidebarItemDragStart(button)
 	end
 end
 function BtWLoadoutsActionBarsMixin:Update()
-	self:GetParent().TitleText:SetText(L["Action Bars"]);
+	self:GetParent():SetTitle(L["Action Bars"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
 	sidebar:SetSupportedFilters("covenant", "spec", "class", "role", "race")

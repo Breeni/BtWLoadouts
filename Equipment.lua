@@ -1906,7 +1906,7 @@ function BtWLoadoutsEquipmentMixin:OnSidebarItemDragStart(button)
 	end
 end
 function BtWLoadoutsEquipmentMixin:Update()
-	self:GetParent().TitleText:SetText(L["Equipment"]);
+	self:GetParent():SetTitle(L["Equipment"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
 	sidebar:SetSupportedFilters("covenant", "spec", "class", "role", "race", "character")

@@ -3392,7 +3392,7 @@ function BtWLoadoutsSoulbindsMixin:IsConduitSlotted(conduitID)
 end
 
 function BtWLoadoutsSoulbindsMixin:Update()
-    self:GetParent().TitleText:SetText(L["Soulbinds"]);
+    self:GetParent():SetTitle(L["Soulbinds"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
 	sidebar:SetSupportedFilters("covenant", "spec", "class", "role", "race")
