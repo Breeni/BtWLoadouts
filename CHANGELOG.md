@@ -1,3 +1,7 @@
+# v1.7.8
+
+- Fixed error setting title text on Dragonflight Beta 
+
 # v1.7.7
 
 - Initial changes for Dragonflight
