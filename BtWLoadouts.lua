@@ -461,13 +461,15 @@ function BtWLoadoutsClassDropDownMixin:Init(level, menuList)
 		end
 
 		for classIndex=1,GetNumClasses() do
-			local className, classFile = GetClassInfo(classIndex);
-			local classColor = C_ClassColor.GetClassColor(classFile);
-			info.text = classColor and classColor:WrapTextInColorCode(className) or className;
-			info.arg1 = classIndex;
-			info.arg2 = classFile;
-			info.checked = selected == classIndex;
-			UIDropDownMenu_AddButton(info, level);
+			if GetNumSpecializationsForClassID(classIndex) > 0 then
+				local className, classFile = GetClassInfo(classIndex);
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				info.text = classColor and classColor:WrapTextInColorCode(className) or className;
+				info.arg1 = classIndex;
+				info.arg2 = classFile;
+				info.checked = selected == classIndex;
+				UIDropDownMenu_AddButton(info, level);
+			end
 		end
 	end
 end
@@ -498,14 +500,17 @@ function BtWLoadoutsSpecDropDownMixin:Init(level, menuList)
 			UIDropDownMenu_AddButton(info, level);
 		end
 
+		info.func = nil;
 		for classIndex=1,GetNumClasses() do
-			local className, classFile = GetClassInfo(classIndex);
-			local classColor = C_ClassColor.GetClassColor(classFile);
-			info.text = classColor and classColor:WrapTextInColorCode(className) or className;
-			info.hasArrow, info.menuList = true, classIndex;
-			info.keepShownOnClick = true;
-			info.notCheckable = true;
-			UIDropDownMenu_AddButton(info, level);
+			if GetNumSpecializationsForClassID(classIndex) > 0 then
+				local className, classFile = GetClassInfo(classIndex);
+				local classColor = C_ClassColor.GetClassColor(classFile);
+				info.text = classColor and classColor:WrapTextInColorCode(className) or className;
+				info.hasArrow, info.menuList = true, classIndex;
+				info.keepShownOnClick = true;
+				info.notCheckable = true;
+				UIDropDownMenu_AddButton(info, level);
+			end
 		end
 	else
 		local classID = menuList;
