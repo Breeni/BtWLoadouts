@@ -1,3 +1,8 @@
+# v1.7.9
+
+- Added support for Dragonflight tabs
+- Fixed displaying Adventurer class in Dragonflight
+
 # v1.7.8
 
 - Fixed error setting title text on Dragonflight Beta 
