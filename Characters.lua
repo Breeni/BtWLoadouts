@@ -32,12 +32,14 @@ function Internal.IsClassRoleValid(classFile, role)
 end
 function Internal.UpdateClassInfo()
     for classIndex=1,GetNumClasses() do
-        local className, classFile, classID = GetClassInfo(classIndex);
-        classInfo[classFile] = {};
-        for specIndex=1,GetNumSpecializationsForClassID(classID) do
-            local role = select(5, GetSpecializationInfoForClassID(classID, specIndex));
-            classInfo[classFile][role] = true;
-        end
+		if GetNumSpecializationsForClassID(classIndex) > 0 then
+			local className, classFile, classID = GetClassInfo(classIndex);
+			classInfo[classFile] = {};
+			for specIndex=1,GetNumSpecializationsForClassID(classID) do
+				local role = select(5, GetSpecializationInfoForClassID(classID, specIndex));
+				classInfo[classFile][role] = true;
+			end
+		end
     end
 end
 
