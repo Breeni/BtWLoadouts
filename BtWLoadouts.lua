@@ -1427,7 +1427,11 @@ do
 		tab:SetText(self.name)
 
 		if previous then
-			tab:SetPoint("LEFT", previous, "RIGHT", -16, 0)
+			if select(4, GetBuildInfo()) >= 100000 then
+				tab:SetPoint("TOPLEFT", previous, "TOPRIGHT", 1, 0);
+			else
+				tab:SetPoint("LEFT", previous, "RIGHT", -16, 0);
+			end
 		else
 			tab:SetPoint("BOTTOMLEFT", 7, -30)
 		end
@@ -1442,7 +1446,7 @@ do
 
 		tab:SetShown(self.enabled ~= false)
 
-		PanelTemplates_SetNumTabs(frame, id);
+		frame.numTabs = id;
 		if id == 1 then
 			PanelTemplates_SetTab(frame, id);
 		end
@@ -1470,7 +1474,11 @@ do
 			tab:SetShown(tabFrame.enabled ~= false)
 			if tabFrame.enabled ~= false then
 				if previous then
-					tab:SetPoint("LEFT", previous, "RIGHT", -16, 0)
+					if select(4, GetBuildInfo()) >= 100000 then
+						tab:SetPoint("TOPLEFT", previous, "TOPRIGHT", 1, 0);
+					else
+						tab:SetPoint("LEFT", previous, "RIGHT", -16, 0);
+					end
 				else
 					tab:SetPoint("BOTTOMLEFT", 7, -30)
 				end
@@ -1486,7 +1494,11 @@ do
 
 		self.Tabs = {}
 		self.TabSegments = {}
-		self.TabPool = CreateFramePool("Button", self, "BtWLoadoutsTabTemplate")
+		if select(4, GetBuildInfo()) >= 100000 then
+			self.TabPool = CreateFramePool("Button", self, "BtWLoadoutsTabTemplateDragonflight")
+		else
+			self.TabPool = CreateFramePool("Button", self, "BtWLoadoutsTabTemplate")
+		end
 
 		if self.TitleContainer then
 			self.TitleContainer.TitleText:SetText(BTWLOADOUTS_LOADOUTS)
