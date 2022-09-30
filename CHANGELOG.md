@@ -1,3 +1,8 @@
+# v1.7.10
+
+- Updated talents and pvp talents
+- Updated for latest Dragonflight Beta build
+
 # v1.7.9
 
 - Added support for Dragonflight tabs
