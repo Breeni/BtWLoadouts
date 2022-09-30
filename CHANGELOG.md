@@ -1,3 +1,7 @@
+# v1.7.11
+
+- Removed some debug code, bad Breeni
+
 # v1.7.10
 
 - Updated talents and pvp talents
