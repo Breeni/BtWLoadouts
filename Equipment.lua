@@ -9,6 +9,7 @@ local GetContainerItemInfo = C_Container and C_Container.GetContainerItemInfo or
 local EquipmentManager_UnpackLocation = EquipmentManager_UnpackLocation
 local GetInventoryItemLink = GetInventoryItemLink
 local GetContainerItemLink = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
+local GetContainerNumSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
 local GetVoidItemHyperlinkString = GetVoidItemHyperlinkString
 local GetItemUniqueness = GetItemUniqueness
 
