@@ -40,8 +40,6 @@ else
 	end
 end
 
-print(Internal.IsDragonflight(), Internal.IsDragonflightPrepatch())
-
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};
 local classInfo = {};
