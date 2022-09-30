@@ -1523,6 +1523,10 @@ do
 			},
 		},
 	}
+
+	if type(specInfo.version) ~= "number" then
+		error("MISSING SPEC INFO VERSION NUMBER")
+	end
 	
 	function GetSpecInfoVersion()
 		return specInfo.version
