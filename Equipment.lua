@@ -3,11 +3,12 @@ local L = Internal.L
 
 local ClearCursor = ClearCursor
 local PickupInventoryItem = PickupInventoryItem
-local PickupContainerItem = PickupContainerItem
-local GetContainerFreeSlots = GetContainerFreeSlots
+local PickupContainerItem = C_Container and C_Container.PickupContainerItem or PickupContainerItem
+local GetContainerFreeSlots = C_Container and C_Container.GetContainerFreeSlots or GetContainerFreeSlots
+local GetContainerItemInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
 local EquipmentManager_UnpackLocation = EquipmentManager_UnpackLocation
 local GetInventoryItemLink = GetInventoryItemLink
-local GetContainerItemLink = GetContainerItemLink
+local GetContainerItemLink = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
 local GetVoidItemHyperlinkString = GetVoidItemHyperlinkString
 local GetItemUniqueness = GetItemUniqueness
 
@@ -1499,7 +1500,11 @@ do
 			wipe(currentCursorSource);
 		end
 	end
-	hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
+	if C_Container then
+		hooksecurefunc(C_Container, "PickupContainerItem", Hook_PickupContainerItem);
+	else
+		hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
+	end
 	local function Hook_PickupInventoryItem(slot)
 		if CursorHasItem() then
 			currentCursorSource.slot = slot;
@@ -2716,7 +2721,11 @@ do
 		local function hook_SocketContainerItem(bagId, slotId)
 			itemLocation:SetBagAndSlot(bagId, slotId)
 		end
-		hooksecurefunc("SocketContainerItem", hook_SocketContainerItem)
+		if C_Container then
+			hooksecurefunc(C_Container, "SocketContainerItem", hook_SocketContainerItem)
+		else
+			hooksecurefunc("SocketContainerItem", hook_SocketContainerItem)
+		end
 		Internal.GemApplied = GemApplied
 	end
 	do
@@ -2757,7 +2766,11 @@ do
 		local function hook_UseContainerItem(bagId, slotId)
 			itemLocation:SetBagAndSlot(bagId, slotId)
 		end
-		hooksecurefunc("UseContainerItem", hook_UseContainerItem)
+		if C_Container then
+			hooksecurefunc(C_Container, "UseContainerItem", hook_UseContainerItem)
+		else
+			hooksecurefunc("UseContainerItem", hook_UseContainerItem)
+		end
 		
 		local isRemovingDominationSocket = false
 		function Internal.CastedSoulFireChisel()
