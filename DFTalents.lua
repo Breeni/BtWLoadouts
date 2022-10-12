@@ -11,7 +11,9 @@ BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflight()
 local BtWLoadoutsTalentsMixin = false
 
 Internal.OnEvent("LOADOUT_CHANGE_END", function ()
-    C_Traits.RollbackConfig(C_ClassTalents.GetActiveConfigID()); -- Rollback to what we were at before starting a loadout
+    if C_Traits then
+        C_Traits.RollbackConfig(C_ClassTalents.GetActiveConfigID()); -- Rollback to what we were at before starting a loadout
+    end
 end)
 
 local function CompareSets(a, b)
