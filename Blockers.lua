@@ -267,3 +267,21 @@ local ForgeOfBondsBlocker = CreateFromMixins(ForgeOfBondsBlockerMixin);
 function Internal.GetForgeOfBondsBlocker()
     return ForgeOfBondsBlocker;
 end
+
+--[[ SPELL CASTING ]]
+
+local SpellCastingBlockerMixin = CreateFromMixins(Internal.BlockerMixin)
+function SpellCastingBlockerMixin:ShouldWait()
+    return true
+end
+function SpellCastingBlockerMixin:GetWaitReasonMessage()
+    return L["Waiting for spell cast to end"]
+end
+function SpellCastingBlockerMixin:IsActive()
+    return not not UnitCastingInfo("player")
+end
+
+local SpellCastingBlocker = CreateFromMixins(SpellCastingBlockerMixin);
+function Internal.GetSpellCastingBlocker()
+    return SpellCastingBlocker;
+end
