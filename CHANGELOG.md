@@ -1,3 +1,7 @@
+# v1.8.0-beta
+
+- Initial support for Dragonflight Talent trees
+
 # v1.7.11
 
 - Removed some debug code, bad Breeni
