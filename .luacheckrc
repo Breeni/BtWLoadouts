@@ -459,6 +459,7 @@ new_read_globals = {
     'AnchorUtil.CreateAnchor',
     'AnchorUtil.CreateGridLayout',
     'AnchorUtil.GridLayoutFactoryByCount',
+    'ApproximatelyEqual',
     'BackdropTemplateMixin.OnBackdropLoaded',
     'C_AzeriteEssence.GetMilestoneSpell',
     'ChatFrame_AddMessageEventFilter',
@@ -597,5 +598,6 @@ new_read_globals = {
     'TalentButtonBasicArtMixin',
     'TalentButtonSpendMixin',
     'TalentButtonSplitSelectMixin',
-    'TalentFrameBaseMixin'
+    'TalentFrameBaseMixin',
+    'TalentSelectionChoiceMixin'
 }
