@@ -535,6 +535,7 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
         BtWLoadoutsSpecInfo[specID] = spec;
     end
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
+    Internal.UpdateTraitInfoFromPlayer();
 end
 function frame:UPDATE_INSTANCE_INFO(...)
     local name, realm = UnitFullName("player")
