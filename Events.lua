@@ -186,7 +186,7 @@ function frame:ADDON_LOADED(...)
             BtWLoadoutsSpecInfo.version = Internal.GetSpecInfoVersion()
         end
         if BtWLoadoutsTraitsInfo.version ~= Internal.GetTraitInfoVersion() then
-            BtWLoadoutsTraitsInfo = {}
+            BtWLoadoutsTraitsInfo = {trees = {}, nodes = {}}
             BtWLoadoutsTraitsInfo.version = Internal.GetTraitInfoVersion()
         end
         -- Make sure equipment sets have all the tables needed
