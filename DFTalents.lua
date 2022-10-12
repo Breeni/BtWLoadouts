@@ -885,9 +885,18 @@ function BtWLoadoutsDFTalentsMixin:UpdateTreeCurrencyInfo(skipButtonUpdates)
     
 	self.treeCurrencyInfoMap = {};
     for _,currency in ipairs(treeInfo.currencies) do
-        currency.quantity = currency.maxQuantity;
-        currency.spent = 0;
-        self.treeCurrencyInfoMap[currency.traitCurrencyID] = currency;
+        if Internal.IsDragonflightPrepatch() then
+            self.treeCurrencyInfoMap[currency.traitCurrencyID] = {
+                traitCurrencyID = currency.traitCurrencyID,
+                maxQuantity = currency.maxQuantity - 5,
+                quantity = currency.maxQuantity - 5,
+                spent = 0,
+            }
+        else
+            currency.quantity = currency.maxQuantity;
+            currency.spent = 0;
+            self.treeCurrencyInfoMap[currency.traitCurrencyID] = currency;
+        end
     end
     
     -- Calculate spent currencies

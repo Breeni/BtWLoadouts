@@ -44109,6 +44109,22 @@ do
 		tree.minZoom = nil;
 
 		for _,currency in ipairs(currencies) do
+			if UnitLevel("player") ~= 70 then
+				local found = false;
+				for _,savedCurrency in ipairs(savedTree.currencies) do
+					if savedCurrency.traitCurrencyID == currency.traitCurrencyID then
+						found = true;
+						currency.maxQuantity = savedCurrency.maxQuantity;
+						break;
+					end
+				end
+
+				-- Although currencies have all the data we store their maxQuantity is incorrect on non max level characters
+				if not found then
+					return;
+				end
+			end
+
 			currency.quantity = nil;
 			currency.spent = nil;
 		end
