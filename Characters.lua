@@ -44063,6 +44063,10 @@ do
 		return result;
 	end
 	function Internal.UpdateTraitInfoFromPlayer()
+		if not C_ClassTalents then
+			return
+		end
+
 		local specID = GetSpecializationInfo(GetSpecialization());
 		local configID = C_ClassTalents.GetActiveConfigID();
         local configInfo = C_Traits.GetConfigInfo(configID);

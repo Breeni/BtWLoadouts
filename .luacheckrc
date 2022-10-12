@@ -47,7 +47,9 @@ globals = {
     'BtWLoadoutsConduitListConduitButtonMixin',
     'BtWLoadoutsConduitListMixin',
     'BtWLoadoutsConduitListSectionMixin',
+    'BtWLoadoutsDFTalentFrameBaseButtonsParentMixin',
     'BtWLoadoutsDFTalentsMixin',
+    'BtWLoadoutsDFTalentSelectionChoiceFrameMixin',
     'BtWLoadoutsEquipmentMixin',
     'BtWLoadoutsEssencesMixin',
     'BtWLoadoutsFrameMixin',
@@ -595,9 +597,11 @@ new_read_globals = {
     'CallbackRegistryMixin',
     'GridLayoutMixin',
     'ScrollBoxListMixin',
+    'TalentFrameBaseButtonsParentMixin',
     'TalentButtonBasicArtMixin',
     'TalentButtonSpendMixin',
     'TalentButtonSplitSelectMixin',
     'TalentFrameBaseMixin',
+    'TalentSelectionChoiceFrameMixin',
     'TalentSelectionChoiceMixin'
 }

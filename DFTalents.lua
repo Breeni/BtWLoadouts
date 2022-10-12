@@ -466,9 +466,20 @@ local function GetSpecializedMixin(nodeInfo, talentType)
     return DFTalentButtonMixin;
 end
 
+BtWLoadoutsDFTalentFrameBaseButtonsParentMixin = CreateFromMixins(TalentFrameBaseButtonsParentMixin or {})
+BtWLoadoutsDFTalentSelectionChoiceFrameMixin = CreateFromMixins(TalentSelectionChoiceFrameMixin or {})
+BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnLoad = BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnLoad or function () end
+BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnShow = BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnShow or function () end
+BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnHide = BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnHide or function () end
+BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnEvent = BtWLoadoutsDFTalentSelectionChoiceFrameMixin.OnEvent or function () end
+
 BtWLoadoutsDFTalentsMixin = CreateFromMixins(TalentFrameBaseMixin or CallbackRegistryMixin)
 function BtWLoadoutsDFTalentsMixin:OnLoad()
 	CallbackRegistryMixin.OnLoad(self);
+
+    if not C_ClassTalents then
+        return
+    end
 
 	self:SetBasePanOffset(0, 0);
 

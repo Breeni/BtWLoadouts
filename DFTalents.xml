@@ -2,6 +2,15 @@
 ..\FrameXML\UI.xsd">
 	<Script file="DFTalents.lua"/>
 
+	<Frame name="BtWLoadoutsTalentSelectionChoiceFrameTemplate" mixin="BtWLoadoutsDFTalentSelectionChoiceFrameMixin" inherits="ResizeLayoutFrame" virtual="true">
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnShow method="OnShow"/>
+			<OnHide method="OnHide"/>
+			<OnEvent method="OnEvent"/>
+		</Scripts>
+	</Frame>
+
 	<Frame name="BtWLoadoutsTalentFrameGateTemplate" mixin="TalentFrameGateMixin" clipChildren="true" virtual="true">
 		<Size x="50" y="30"/>
 		<Layers>
@@ -104,7 +113,7 @@
 					</OnMouseUp>
 				</Scripts>
 			</DropDownToggleButton>
-			<Frame parentKey="SelectionChoiceFrame" inherits="TalentSelectionChoiceFrameTemplate" enableMouse="true" frameLevel="2000"/>
+			<Frame parentKey="SelectionChoiceFrame" inherits="BtWLoadoutsTalentSelectionChoiceFrameTemplate" enableMouse="true" frameLevel="2000"/>
 			<ScrollFrame parentKey="Scroll" clipChildren="true" inherits="UIPanelScrollFrameCodeTemplate">
 				<Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-34" />
@@ -122,7 +131,7 @@
 					</Slider>
 				</Frames>
 				<ScrollChild>
-					<Frame mixin="TalentFrameBaseButtonsParentMixin">
+					<Frame mixin="BtWLoadoutsDFTalentFrameBaseButtonsParentMixin">
 						<Size x="1209" y="580.5"/>
 						<Anchors>
 							<Anchor point="TOPLEFT" x="0" y="0"/>
