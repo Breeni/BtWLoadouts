@@ -1501,7 +1501,7 @@ do
 			wipe(currentCursorSource);
 		end
 	end
-	if C_Container then
+	if C_Container and C_Container.PickupContainerItem then
 		hooksecurefunc(C_Container, "PickupContainerItem", Hook_PickupContainerItem);
 	else
 		hooksecurefunc("PickupContainerItem", Hook_PickupContainerItem);
@@ -2722,7 +2722,7 @@ do
 		local function hook_SocketContainerItem(bagId, slotId)
 			itemLocation:SetBagAndSlot(bagId, slotId)
 		end
-		if C_Container then
+		if C_Container and C_Container.SocketContainerItem then
 			hooksecurefunc(C_Container, "SocketContainerItem", hook_SocketContainerItem)
 		else
 			hooksecurefunc("SocketContainerItem", hook_SocketContainerItem)
@@ -2767,7 +2767,7 @@ do
 		local function hook_UseContainerItem(bagId, slotId)
 			itemLocation:SetBagAndSlot(bagId, slotId)
 		end
-		if C_Container then
+		if C_Container and C_Container.UseContainerItem then
 			hooksecurefunc(C_Container, "UseContainerItem", hook_UseContainerItem)
 		else
 			hooksecurefunc("UseContainerItem", hook_UseContainerItem)
