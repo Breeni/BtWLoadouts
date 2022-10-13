@@ -368,7 +368,7 @@ end
 Internal.AddLoadoutSegment({
     id = "dftalents",
     name = L["Talents"],
-    events = "TRAIT_CONFIG_UPDATED",
+    events = BTWLOADOUTS_DF_TALENTS_ACTIVE and "TRAIT_CONFIG_UPDATED" or nil,
     enabled = BTWLOADOUTS_DF_TALENTS_ACTIVE,
     add = AddSet,
     get = GetSets,
