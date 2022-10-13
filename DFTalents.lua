@@ -379,7 +379,7 @@ Internal.AddLoadoutSegment({
         assert(version == 1)
 
         local specID = source.specID or ...
-        return Internal.AddSet("soulbinds", UpdateSetFilters({
+        return Internal.AddSet("dftalents", UpdateSetFilters({
             specID = specID,
             treeID = source.treeID,
             name = name or source.name,
@@ -502,7 +502,6 @@ function BtWLoadoutsDFTalentsMixin:OnLoad()
     end)
 
     self.temp = {}
-    -- self.tempConduits = {} -- Conduits for different classes for currently selected soulbind
 
 	self.talentButtonCollection = CreateFramePoolCollection();
 	self.talentDislayFramePool = CreateFramePoolCollection();
