@@ -365,51 +365,61 @@ Internal.AddLoadoutSegment({
     checkerrors = CheckErrors,
     dropdowninit = SetDropDownInit,
 
-    -- export = function (set)
-    --     return {
-    --         version = 1,
-    --         name = set.name,
-    --         soulbindID = set.soulbindID,
-    --         nodes = set.nodes,
-    --         restrictions = set.restrictions,
-    --     }
-    -- end,
-    -- import = function (source, version, name, ...)
-    --     assert(version == 1)
+    export = function (set)
+        return {
+            version = 1,
+            name = set.name,
+            specID = set.specID,
+            treeID = set.treeID,
+            nodes = set.nodes,
+            restrictions = set.restrictions,
+        }
+    end,
+    import = function (source, version, name, ...)
+        assert(version == 1)
 
-    --     local soulbindID = source.soulbindID or ...
-    --     return Internal.AddSet("soulbinds", UpdateSetFilters({
-    --         soulbindID = soulbindID,
-    --         name = name or source.name,
-    --         useCount = 0,
-    --         nodes = source.nodes,
-    --         restrictions = source.restrictions,
-    --     }))
-    -- end,
-    -- getByValue = function (set)
-    --     -- If the nodes is missing then we just want the faux set
-    --     if set.nodes == nil then
-    --         return GetSet(-set.soulbindID)
-    --     else
-    --         return Internal.GetSetByValue(BtWLoadoutsSets.soulbinds, set, CompareSets)
-    --     end
-    -- end,
-    -- verify = function (source, ...)
-    --     local soulbindID = source.soulbindID or ...
-    --     if not soulbindID or not GetSoulbindData(soulbindID) then
-    --         return false, L["Invalid soulbind"]
-    --     end
-    --     if source.nodes ~= nil and type(source.nodes) ~= "table" then
-    --         return false, L["Invalid nodes"]
-    --     end
-    --     if source.restrictions ~= nil and type(source.restrictions) ~= "table" then
-    --         return false, L["Missing restrictions"]
-    --     end
+        local specID = source.specID or ...
+        return Internal.AddSet("soulbinds", UpdateSetFilters({
+            specID = specID,
+            treeID = source.treeID,
+            name = name or source.name,
+            useCount = 0,
+            nodes = source.nodes,
+            restrictions = source.restrictions,
+        }))
+    end,
+    getByValue = function (set)
+        return Internal.GetSetByValue(BtWLoadoutsSets.dftalents, set, CompareSets)
+    end,
+    verify = function (source, ...)
+        local specID = source.specID or ...
+        if not specID or not GetSpecializationInfoByID(specID) then
+            return false, L["Invalid specialization"]
+        end
+        local nodes = C_Traits.GetTreeNodes(source.treeID)
+        if next(nodes) == nil then
+            return false, L["Invalid talent tree"]
+        end
+        if  type(source.nodes) ~= "table" then
+            return false, L["Invalid nodes"]
+        end
+        if source.restrictions ~= nil and type(source.restrictions) ~= "table" then
+            return false, L["Missing restrictions"]
+        end
 
-    --     -- @TODO verify talent ids?
+        local nodeIDs = {}
+        for _,nodeID in ipairs(nodes) do
+            nodeIDs[nodeID] = true
+        end
 
-    --     return true
-    -- end,
+        for nodeID in pairs(source.nodes) do
+            if not nodeIDs[nodeID] then
+                return false, L["Invalid nodes"]
+            end
+        end
+
+        return true
+    end,
 })
 
 local DFTalentButtonMixin = CreateFromMixins(TalentButtonSpendMixin or {})
