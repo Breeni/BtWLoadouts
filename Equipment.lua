@@ -2846,7 +2846,11 @@ do
 				
 				if _G[name .. "PrefixText"]:GetText() == sellPricePrefix then
 					sellPriceFrame = moneyFrame
-					_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPoint("LEFT")
+					if sellPriceFrame.GetPointByName then
+						_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPointByName("LEFT")
+					else
+						_, sellPriceFrameAnchor, _, sellPriceFrameXOffset = sellPriceFrame:GetPoint("LEFT")
+					end
 					break
 				end
 			end
