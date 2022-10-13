@@ -1,3 +1,8 @@
+# v1.8.2-beta
+
+- Fixed error while loading Dragonflight talents on 9.2.7
+- Fixed error adding equipment sets to tooltips
+
 # v1.8.1-beta
 
 - Added import/export of Dragonflight talent trees
