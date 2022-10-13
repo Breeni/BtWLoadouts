@@ -308,6 +308,7 @@ Internal.AddLoadoutSegment({
     events = "AZERITE_ESSENCE_UPDATE",
     add = AddEssenceSet,
     get = GetEssenceSets,
+	getByName = GetEssenceSetByName,
     combine = CombineEssenceSets,
     isActive = IsEssenceSetActive,
 	activate = ActivateEssenceSet,

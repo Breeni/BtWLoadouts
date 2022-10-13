@@ -831,6 +831,7 @@ Internal.AddLoadoutSegment({
     events = "ACTIONBAR_SLOT_CHANGED",
     add = AddActionBarSet,
     get = GetActionBarSets,
+    getByName = GetActionBarSetByName,
     combine = CombineActionBarSets,
     isActive = IsActionBarSetActive,
     activate = ActivateActionBarSet,

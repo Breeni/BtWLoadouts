@@ -150,6 +150,19 @@ local function GetSets(id, ...)
         return GetSet(id), GetSets(...);
     end
 end
+-- In General, For Player, For Player Spec
+local function SetIsValid(set)
+	set = GetSet(set);
+
+	local playerSpecID = GetSpecializationInfo(GetSpecialization());
+	local playerClass = select(2, UnitClass("player"));
+	local specClass = select(6, GetSpecializationInfoByID(set.specID));
+
+	return true, (playerClass == specClass), (playerSpecID == set.specID)
+end
+local function GetByName(name)
+    return Internal.GetSetByName(BtWLoadoutsSets.dftalents, name, SetIsValid)
+end
 local function IsSetActive(set)
     local configID = C_ClassTalents.GetActiveConfigID();
     for nodeID,value in pairs(set.nodes) do
@@ -359,6 +372,7 @@ Internal.AddLoadoutSegment({
     enabled = BTWLOADOUTS_DF_TALENTS_ACTIVE,
     add = AddSet,
     get = GetSets,
+    getByName = GetByName,
     isActive = IsSetActive,
     combine = CombineSets,
     activate = ActivateSet,

@@ -389,6 +389,7 @@ Internal.AddLoadoutSegment({
     enabled = select(4, GetBuildInfo()) < 100000,
     add = AddTalentSet,
     get = GetTalentSets,
+    getByName = GetTalentSetByName,
     combine = CombineTalentSets,
     isActive = IsTalentSetActive,
     activate = ActivateTalentSet,

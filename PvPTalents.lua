@@ -330,6 +330,7 @@ Internal.AddLoadoutSegment({
     events = "PLAYER_PVP_TALENT_UPDATE",
     add = AddPvPTalentSet,
     get = GetPvPTalentSets,
+	getByName = GetPvPTalentSetByName,
     combine = CombinePvPTalentSets,
     isActive = IsPvPTalentSetActive,
 	activate = ActivatePvPTalentSet,

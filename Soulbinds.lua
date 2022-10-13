@@ -174,6 +174,18 @@ local function GetSets(id, ...)
 		return GetSet(id), GetSets(...);
 	end
 end
+-- In General, For Player, For Player Spec
+local function SetIsValid(set)
+	set = GetSet(set);
+
+    local soulbindData = GetSoulbindData(set.soulbindID)
+    local playerCovenantID = GetActiveCovenantID()
+
+	return true, (soulbindData.covenantID ==playerCovenantID )
+end
+local function GetByName(name)
+    return Internal.GetSetByName("soulbinds", name, SetIsValid)
+end
 local function IsSetActive(set, ignoreConduits)
     if set.soulbindID then
         local covenantID = GetActiveCovenantID()
@@ -372,6 +384,7 @@ Internal.AddLoadoutSegment({
     events = "SOULBIND_ACTIVATED",
     add = AddSet,
     get = GetSets,
+    getByName = GetSets,
     combine = CombineSets,
     isActive = IsSetActive,
 	activate = ActivateSet,

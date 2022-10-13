@@ -2031,79 +2031,41 @@ SlashCmdList["BTWLOADOUTS"] = function (msg)
 	if command == "activate" or command == "a" then
 		local aType, rest = rest:match("^[%s]*([^%s]+)(.*)");
 		local set;
+
+		if aType == "action-bars" then
+			aType = "actionbars"
+		end
+
 		if aType == "profile" or aType == "loadout" then
-			if tonumber(rest) then
-				set = Internal.GetProfile(tonumber(rest));
+			local num = tonumber(rest)
+			if num then
+				set = Internal.GetProfile(num);
 			else
 				set = Internal.GetProfileByName(rest);
-			end
-		elseif aType == "talents" then
-			local subset;
-			if tonumber(rest) then
-				subset = Internal.GetTalentSet(tonumber(rest));
-			else
-				subset = Internal.GetTalentSetByName(rest);
-			end
-			if subset then
-				set = {
-					talents = {subset.setID}
-				}
-			end
-		elseif aType == "pvptalents" then
-			local subset;
-			if tonumber(rest) then
-				subset = Internal.GetPvPTalentSet(tonumber(rest));
-			else
-				subset = Internal.GetPvPTalentSetByName(rest);
-			end
-			if subset then
-				set = {
-					pvptalents = {subset.setID}
-				}
-			end
-		elseif aType == "essences" then
-			local subset;
-			if tonumber(rest) then
-				subset = Internal.GetEssenceSet(tonumber(rest));
-			else
-				subset = Internal.GetEssenceSetByName(rest);
-			end
-			if subset then
-				set = {
-					essences = {subset.setID}
-				}
-			end
-		elseif aType == "equipment" then
-			local subset;
-			if tonumber(rest) then
-				subset = Internal.GetEquipmentSet(tonumber(rest));
-			else
-				subset = Internal.GetEquipmentSetByName(rest);
-			end
-			if subset then
-				set = {
-					equipment = {subset.setID}
-				}
-			end
-		elseif aType == "action-bars" or aType == "actionbars" then
-			local subset;
-			if tonumber(rest) then
-				subset = Internal.GetActionBarSet(tonumber(rest));
-			else
-				subset = Internal.GetActionBarSetByName(rest);
-			end
-			if subset then
-				set = {
-					actionbars = {subset.setID}
-				}
 			end
 		else
-			-- Assume profile
-			rest = aType .. rest;
-			if tonumber(rest) then
-				set = Internal.GetProfile(tonumber(rest));
+			local segment = Internal.GetLoadoutSegment(aType)
+			if segment then
+				local num = tonumber(rest)
+				local subset
+				if num then
+					subset = segment.get(num)
+				else
+					subset = segment.getByName(rest)
+				end
+				if subset then
+					set = {
+						[segment.id] = {subset.setID}
+					}
+				end
 			else
-				set = Internal.GetProfileByName(rest);
+				-- Assume profile
+				rest = aType .. rest;
+				if tonumber(rest) then
+					set = Internal.GetProfile(tonumber(rest));
+				else
+					set = Internal.GetProfileByName(rest);
+				end
 			end
 		end
 		if set and Internal.IsLoadoutActivatable(set) then

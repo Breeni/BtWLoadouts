@@ -1530,6 +1530,7 @@ Internal.AddLoadoutSegment({
     events = "PLAYER_EQUIPMENT_CHANGED",
     add = AddEquipmentSet,
     get = GetEquipmentSets,
+	getByName = GetEquipmentSetByName,
     combine = CombineEquipmentSets,
     isActive = IsEquipmentSetActive,
 	activate = ActivateEquipmentSet,
