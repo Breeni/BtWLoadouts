@@ -1,3 +1,10 @@
+# v1.8.1-beta
+
+- Added import/export of Dragonflight talent trees
+- Updated macros for sets to support soulbinds and Dragonflight talents
+- Fixed not correctly updating which loadouts are active after changing Dragonflight talents
+- Fixed error on loadout change for Dragonflight Talents on 9.2
+
 # v1.8.0-beta
 
 - Initial support for Dragonflight Talent trees
