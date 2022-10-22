@@ -389,6 +389,7 @@ new_read_globals = {
     'strtrim',
     'table.wipe',
     'tinsert',
+    'TooltipDataProcessor.AddTooltipPostCall',
     'tremove',
     'UnitAura',
     'UnitCastingInfo',

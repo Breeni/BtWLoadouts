@@ -1783,12 +1783,24 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 	self.ErrorOverlay:SetShown(errors ~= nil)
 	self.ignoreTexture:SetShown(ignored);
 end
-GameTooltip:HookScript("OnTooltipSetItem", function (self)
-	local name, link = self:GetItem()
-	if gameTooltipErrorLink == link and gameTooltipErrorText then
-		self:AddLine(format("\n|cffff0000%s|r", gameTooltipErrorText))
-	end
-end)
+if TooltipDataProcessor.AddTooltipPostCall then
+	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function (self, data)
+		if self ~= GameTooltip then
+			return
+		end
+		local name, link = self:GetItem()
+		if gameTooltipErrorLink == link and gameTooltipErrorText then
+			self:AddLine(format("\n|cffff0000%s|r", gameTooltipErrorText))
+		end
+	end)
+else
+	GameTooltip:HookScript("OnTooltipSetItem", function (self)
+		local name, link = self:GetItem()
+		if gameTooltipErrorLink == link and gameTooltipErrorText then
+			self:AddLine(format("\n|cffff0000%s|r", gameTooltipErrorText))
+		end
+	end)
+end
 
 BtWLoadoutsEquipmentMixin = {}
 function BtWLoadoutsEquipmentMixin:OnLoad()
@@ -2929,11 +2941,11 @@ do
 
 		self:Show()
 	end
-	GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
-		if location then
+	-- GameTooltip:HookScript("OnTooltipSetItem", function (self, ...)
+	-- 	if location then
 
-		end
-	end)
+	-- 	end
+	-- end)
 	hooksecurefunc(GameTooltip, "SetInventoryItem", function (self, unit, slot, nameOnly)
 		if not nameOnly and unit == "player" then
 			location = PackLocation(nil, slot)
