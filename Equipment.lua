@@ -1783,7 +1783,7 @@ function BtWLoadoutsItemSlotButtonMixin:Update()
 	self.ErrorOverlay:SetShown(errors ~= nil)
 	self.ignoreTexture:SetShown(ignored);
 end
-if TooltipDataProcessor.AddTooltipPostCall then
+if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
 	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function (self, data)
 		if self ~= GameTooltip then
 			return
