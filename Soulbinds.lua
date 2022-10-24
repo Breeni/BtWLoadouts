@@ -3541,7 +3541,7 @@ function BtWLoadoutsSoulbindsMixin:Update()
             local nodeFrame = self.nodes:Acquire()
             nodeFrame:SetFrameLevel(6)
             nodeFrame:SetPoint("TOP", self.Inset, "TOP", (node.column - 1) * (nodeFrame:GetWidth() + 30), -node.row * (nodeFrame:GetHeight() + 12) - 17)
-            nodeFrame:SetNode(node)
+            nodeFrame:Init(self, node)
             nodeFrame:SetSelected(false)
             nodeFrame:Show()
 
