@@ -1,3 +1,7 @@
+# v1.8.3
+
+- Fixed adding equipment errors to tooltips for Dragonflight
+
 # v1.8.2-beta
 
 - Fixed error while loading Dragonflight talents on 9.2.7
