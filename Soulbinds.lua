@@ -2817,9 +2817,15 @@ function BtWLoadoutsConduitListMixin:OnLoad()
 			return (#elementData.conduitDatas * buttonHeight) + expandedExtent;
 		end
 	end);
-	view:SetElementInitializer("EventFrame", "BtWLoadoutsConduitListSectionTemplate", function(list, elementData)
-		list:Init(self.owner, elementData);
-	end);
+    if Internal.IsDragonflight() then
+        view:SetElementInitializer("BtWLoadoutsConduitListSectionTemplate", function(list, elementData)
+            list:Init(self.owner, elementData);
+        end);
+    else
+        view:SetElementInitializer("EventFrame", "BtWLoadoutsConduitListSectionTemplate", function(list, elementData)
+            list:Init(self.owner, elementData);
+        end);
+    end
 
 	ScrollUtil.InitScrollBoxListWithScrollBar(self.ScrollBox, self.ScrollBar, view);
 	ScrollUtil.AddResizableChildrenBehavior(self.ScrollBox);
