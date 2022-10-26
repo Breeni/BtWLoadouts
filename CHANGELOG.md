@@ -1,3 +1,8 @@
+# v1.8.5
+
+- Fixed error displaying conduit list
+- Fixed error tracking macro changes
+
 # v1.8.4
 
 - Updated for Dragonflight prepatch
