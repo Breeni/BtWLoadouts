@@ -1,3 +1,8 @@
+# v1.8.6
+
+- Fixed some errors reading talent trees for some specs
+- Updated talent tree data for all specs
+
 # v1.8.5
 
 - Fixed error displaying conduit list
