@@ -44146,7 +44146,7 @@ do
 
 				for _,condID in ipairs(nodeInfo.conditionIDs) do
 					local condInfo = conditions[condID];
-					if condInfo.ranksGranted and C_SpecializationInfo.MatchesCurrentSpecSet(condInfo.specSetID) then
+					if condInfo.ranksGranted and (condInfo.specSetID == nil or C_SpecializationInfo.MatchesCurrentSpecSet(condInfo.specSetID)) then
 						grantedNodes[#grantedNodes+1] = nodeID;
 					end
 				end
@@ -44178,6 +44178,10 @@ do
 				end
 
 				local savedNodeInfo = Internal.GetNodeInfo(nodeID);
+				if not savedNodeInfo then
+					return
+				end
+
 				nodeInfo.edges = savedNodeInfo.edges;
 
 				nodeInfo.edgesBySpecID = savedNodeInfo and savedNodeInfo.edgesBySpecID or {};
