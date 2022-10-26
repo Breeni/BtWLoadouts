@@ -96,7 +96,7 @@ do
     local function BuildMacroMap()
         mapCreated = true
         if MacroFrame and MacroFrame:IsShown() then
-            MacroFrame_Update()
+            MacroFrame:Update()
         end
 
         local global, character = GetNumMacros()
