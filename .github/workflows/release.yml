@@ -21,4 +21,4 @@ jobs:
           args: "--no-color -q"
 
       - name: Package and release
-        uses: BigWigsMods/packager@v1
+        uses: BigWigsMods/packager@v2
