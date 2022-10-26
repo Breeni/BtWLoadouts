@@ -1,3 +1,8 @@
+# v1.8.4
+
+- Updated for Dragonflight prepatch
+- Fixed title bar settings button appearing behind the title bar 
+
 # v1.8.3
 
 - Fixed adding equipment errors to tooltips for Dragonflight
