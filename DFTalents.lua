@@ -340,9 +340,12 @@ local function ActivateSet(set, state)
         Internal.LogMessage("Commit talent config (%s)", success and "true" or "false");
     end
 
-    if ClassTalentFrame and complete then
-        ClassTalentFrame.TalentsTab:MarkTreeDirty(); --@TODO is this better than the next line?
-        -- ClassTalentFrame.TalentsTab:SetConfigID(C_ClassTalents.GetActiveConfigID(), true); -- Make sure the talents frame is up to date
+    if complete then
+        C_ClassTalents.UpdateLastSelectedSavedConfigID(260, nil) -- Set active loadout to "Default Loadout"
+        if ClassTalentFrame then
+            ClassTalentFrame.TalentsTab.LoadoutDropDown:ClearSelection() -- Make the loadout dropdown show "Default Loadout" if its already loaded
+            ClassTalentFrame.TalentsTab:MarkTreeDirty();
+        end
     end
 
     return complete
