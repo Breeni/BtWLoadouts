@@ -454,9 +454,12 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
                     local previousLocation = set.locations[inventorySlotId]
                     set.locations[inventorySlotId] = locations[inventorySlotId] -- Only update if the item has a location
 
-                    set.equipment[inventorySlotId] = Internal.GetItemLinkByLocation(location)
-                    set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
-                    set.data[inventorySlotId] = Internal.EncodeItemData(set.equipment[inventorySlotId], set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite)
+                    local itemLink = Internal.GetItemLinkByLocation(location)
+                    if itemLink then
+                        set.equipment[inventorySlotId] = itemLink
+                        set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
+                        set.data[inventorySlotId] = Internal.EncodeItemData(itemLink, set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite)
+                    end
 
                     if not isNewSet then
                         -- We force update because the blizzard manager should be correct
