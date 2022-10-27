@@ -532,7 +532,7 @@ local function PickupActionTable(tbl, test, settings, activating)
                         end
                     end
                 elseif tbl.subType == "spell" then
-                    if IsSpellKnown(tbl.id, false) then
+                    if IsSpellKnown(tbl.id, false) or IsPlayerSpell(tbl.id) then
                         success = true
                         if not test then
                             PickupSpell(tbl.id)

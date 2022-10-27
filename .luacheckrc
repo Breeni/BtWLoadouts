@@ -353,6 +353,7 @@ new_read_globals = {
     'IsModifiedClick',
     'IsModifierKeyDown',
     'IsPlayerMoving',
+    'IsPlayerSpell',
     'IsResting',
     'IsRightShiftKeyDown',
     'IsShiftKeyDown',
