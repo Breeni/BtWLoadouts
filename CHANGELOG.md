@@ -1,3 +1,9 @@
+# v1.8.7
+
+- Fixed a bug where the Blizzard talent tree may not always update correctly after activating a talent set
+- Fixed treating some spells as unknown even though they are available
+- Fixed error updating equipement manager sets when an item link is unavailable
+
 # v1.8.6
 
 - Fixed some errors reading talent trees for some specs
