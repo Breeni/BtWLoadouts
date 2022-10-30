@@ -341,9 +341,10 @@ local function ActivateSet(set, state)
     end
 
     if complete then
-        C_ClassTalents.UpdateLastSelectedSavedConfigID(260, nil) -- Set active loadout to "Default Loadout"
+        local specID = GetSpecializationInfo(GetSpecialization());
+        C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, nil) -- Set active loadout to "Default Loadout"
         if ClassTalentFrame then
-            ClassTalentFrame.TalentsTab.LoadoutDropDown:ClearSelection() -- Make the loadout dropdown show "Default Loadout" if its already loaded
+            ClassTalentFrame.TalentsTab:ClearLastSelectedConfigID();
             ClassTalentFrame.TalentsTab:MarkTreeDirty();
         end
     end
