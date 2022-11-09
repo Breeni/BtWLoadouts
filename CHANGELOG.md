@@ -1,3 +1,8 @@
+# v1.8.8
+
+- Fixed trying to load pvp talents that are higher level than the player
+- Updated talent and pvp talen data
+
 # v1.8.7
 
 - Fixed a bug where the Blizzard talent tree may not always update correctly after activating a talent set
