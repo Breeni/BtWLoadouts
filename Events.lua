@@ -268,6 +268,17 @@ function frame:PLAYER_LOGIN(...)
 
     frame:RegisterEvent("PLAYER_TALENT_UPDATE");
 
+    if (BtWLoadoutsSets.actionbars.version or 0) < 1 then
+        for _,set in pairs(BtWLoadoutsSets.actionbars) do
+            if type(set) == "table" then
+                for slot=121,181 do
+                    set.ignored[slot] = true
+                end
+            end
+        end
+        BtWLoadoutsSets.actionbars.version = 1
+    end
+
     for _,set in pairs(BtWLoadoutsSets.conditions) do
         if type(set) == "table" then
             if set.difficultyID ~= 8 then
