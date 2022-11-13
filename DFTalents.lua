@@ -932,7 +932,7 @@ function BtWLoadoutsDFTalentsMixin:UpdateTreeCurrencyInfo(skipButtonUpdates)
     
 	self.treeCurrencyInfoMap = {};
     for _,currency in ipairs(treeInfo.currencies) do
-        if Internal.IsDragonflightPrepatch() then
+        if GetMaxLevelForPlayerExpansion() == 60 then
             self.treeCurrencyInfoMap[currency.traitCurrencyID] = {
                 traitCurrencyID = currency.traitCurrencyID,
                 maxQuantity = currency.maxQuantity - 5,

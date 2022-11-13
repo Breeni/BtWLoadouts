@@ -30,15 +30,6 @@ else
 		return false
 	end
 end
-if select(4, GetBuildInfo()) == 100000 then
-	function Internal.IsDragonflightPrepatch()
-		return true
-	end
-else
-	function Internal.IsDragonflightPrepatch()
-		return false
-	end
-end
 
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};

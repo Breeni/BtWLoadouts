@@ -298,6 +298,7 @@ new_read_globals = {
     'GetMacroBody',
     'GetMacroIndexByName',
     'GetMacroInfo',
+    'GetMaxLevelForPlayerExpansion',
     'GetMoney',
     'GetNumClasses',
     'GetNumFactions',
