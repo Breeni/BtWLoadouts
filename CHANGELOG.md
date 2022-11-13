@@ -1,3 +1,9 @@
+# v1.8.9
+
+- Fixed not correctly switching to Default Loadout when activating talents on 10.0.2
+- Updated Action Bars sets with the 3 new action bars
+- Updated available talent points to better match the maximum level of the account
+
 # v1.8.8
 
 - Fixed trying to load pvp talents that are higher level than the player
