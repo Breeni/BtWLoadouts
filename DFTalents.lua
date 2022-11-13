@@ -281,8 +281,15 @@ local function ActivateSet(set, state)
     elseif not IsSetActive(set) and not state.dfTalentsAttempted then
         complete = false;
 
-        local configID = C_ClassTalents.GetActiveConfigID();
         local specID = GetSpecializationInfo(GetSpecialization());
+
+        if ClassTalentFrame then
+            ClassTalentFrame.TalentsTab:ClearLastSelectedConfigID();
+            ClassTalentFrame.TalentsTab:MarkTreeDirty();
+        end
+        C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, 0) -- Set active loadout to "Default Loadout"
+
+        local configID = C_ClassTalents.GetActiveConfigID();
         local configInfo = C_Traits.GetConfigInfo(configID);
         C_Traits.ResetTree(configID, configInfo.treeIDs[1]);
 
@@ -342,11 +349,11 @@ local function ActivateSet(set, state)
 
     if complete then
         local specID = GetSpecializationInfo(GetSpecialization());
-        C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, nil) -- Set active loadout to "Default Loadout"
         if ClassTalentFrame then
             ClassTalentFrame.TalentsTab:ClearLastSelectedConfigID();
             ClassTalentFrame.TalentsTab:MarkTreeDirty();
         end
+        C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, 0) -- Set active loadout to "Default Loadout"
     end
 
     return complete
