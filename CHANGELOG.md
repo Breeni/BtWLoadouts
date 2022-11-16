@@ -1,3 +1,7 @@
+# v1.8.11
+
+- Updated talent data for 10.0.2
+
 # v1.8.10
 
 - Updated for 10.0.2
