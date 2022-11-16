@@ -781,7 +781,7 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         local rect = {left = 65536, right = 0, top = 65536, bottom = 0}
         for _,nodeID in ipairs(nodes) do
             local nodeInfo = self:GetAndCacheNodeInfo(nodeID); -- /tinspect C_Traits.GetNodeInfo(C_ClassTalents.GetActiveConfigID(), 61086)
-            if nodeInfo then
+            if nodeInfo and nodeInfo.posY > 0 then
                 if rect.left > nodeInfo.posX then
                     rect.left = nodeInfo.posX
                 end
@@ -804,7 +804,7 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         local rightSide = {left = 65536, right = 0, top = 65536, bottom = 0}
         for _,nodeID in ipairs(nodes) do
             local nodeInfo = self:GetAndCacheNodeInfo(nodeID); -- /tinspect C_Traits.GetNodeInfo(C_ClassTalents.GetActiveConfigID(), 61086)
-            if nodeInfo then
+            if nodeInfo and nodeInfo.posY > 0 then
                 if nodeInfo.posX < center then
                     if leftSide.left > nodeInfo.posX then
                         leftSide.left = nodeInfo.posX
