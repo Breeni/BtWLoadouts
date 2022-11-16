@@ -1,3 +1,7 @@
+# v1.8.10
+
+- Updated for 10.0.2
+
 # v1.8.9
 
 - Fixed not correctly switching to Default Loadout when activating talents on 10.0.2
