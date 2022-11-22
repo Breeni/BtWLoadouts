@@ -70,6 +70,9 @@ local function RefreshSet(set)
     if specID == set.specID then
         wipe(nodes);
         local configID = C_ClassTalents.GetActiveConfigID();
+        if not configID then
+            return
+        end
         local configInfo = C_Traits.GetConfigInfo(configID);
         local treeID = configInfo.treeIDs[1];
 
@@ -210,6 +213,10 @@ local function SetRequirements(set)
     local isActive, waitForCooldown = true, false
 
     local configID = C_ClassTalents.GetActiveConfigID();
+    if not configID then
+        return
+    end
+
     local configInfo = C_Traits.GetConfigInfo(configID);
     local nodeIDs = C_Traits.GetTreeNodes(configInfo.treeIDs[1]);
     
@@ -290,6 +297,10 @@ local function ActivateSet(set, state)
         C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, 0) -- Set active loadout to "Default Loadout"
 
         local configID = C_ClassTalents.GetActiveConfigID();
+        if not configID then
+            return
+        end
+
         local configInfo = C_Traits.GetConfigInfo(configID);
         C_Traits.ResetTree(configID, configInfo.treeIDs[1]);
 

@@ -44222,8 +44222,11 @@ do
 			return
 		end
 
-		local specID = GetSpecializationInfo(GetSpecialization());
 		local configID = C_ClassTalents.GetActiveConfigID();
+		if not configID then
+			return
+		end
+		local specID = GetSpecializationInfo(GetSpecialization());
         local configInfo = C_Traits.GetConfigInfo(configID);
         local treeID = configInfo.treeIDs[1];
 		local tree = C_Traits.GetTreeInfo(configID, treeID);
