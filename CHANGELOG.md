@@ -1,3 +1,9 @@
+# v1.8.12
+
+- Fixed trying to cache Dragonflight talent data while on characters that have not unlocked talents
+- Fixed Shadowlands Covenants restrictions and Soulbinds trying to including Dragonflight Major Factions
+- Fixed a bug with the Demon Hunter talents layout
+
 # v1.8.11
 
 - Updated talent data for 10.0.2
