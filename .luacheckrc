@@ -151,6 +151,7 @@ new_read_globals = {
     'C_Container.GetContainerFreeSlots',
     'C_Container.GetContainerItemLink',
     'C_Container.GetContainerItemInfo',
+    'C_Container.GetContainerNumFreeSlots',
     'C_Container.GetContainerNumSlots',
     'C_Container.PickupContainerItem',
     'C_Container.SocketContainerItem',
