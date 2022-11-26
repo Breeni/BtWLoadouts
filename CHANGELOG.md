@@ -1,3 +1,7 @@
+# v1.8.13
+
+- Fixed an error clearing inventory slot with equipment sets
+
 # v1.8.12
 
 - Fixed trying to cache Dragonflight talent data while on characters that have not unlocked talents
