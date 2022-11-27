@@ -1,3 +1,8 @@
+# v1.9.0
+
+- Added an option to hide settings from showing in the loadouts menu
+- Updated conditions for Dragonflight release
+
 # v1.8.13
 
 - Fixed an error clearing inventory slot with equipment sets
