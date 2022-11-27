@@ -50,13 +50,20 @@ local function UpdateSetFilters(set)
     end
 
     -- Rebuild character list
-    filters.character = filters.character or {}
-    local characters = filters.character
-    table.wipe(characters)
-    local class = filters.class
-    for _,character in Internal.CharacterIterator() do
-        if class == Internal.GetCharacterInfo(character).class then
-            characters[#characters+1] = character
+    if type(filters.character) ~= "table" then
+        filters.character = {}
+    end
+    if set.character then
+        filters.character = {set.character}
+    else
+        filters.character = filters.character or {}
+        local characters = filters.character
+        table.wipe(characters)
+        local class = filters.class
+        for _,character in Internal.CharacterIterator() do
+            if class == Internal.GetCharacterInfo(character).class then
+                characters[#characters+1] = character
+            end
         end
     end
 
@@ -382,6 +389,54 @@ local function CheckErrors(errorState, set)
     end
 end
 
+function Internal.RefreshSetFromConfigID(set, configID)
+    local configInfo = C_Traits.GetConfigInfo(configID);
+    if not configInfo then
+        return
+    end
+    local character = Internal.GetCharacterSlug();
+    local treeID = configInfo.treeIDs[1];
+    local treeInfo = C_Traits.GetTreeInfo(configID, treeID);
+    local nodeIDs = C_Traits.GetTreeNodes(treeID);
+    local specID = GetSpecializationInfo(GetSpecialization());
+    local classID = select(3, UnitClass("player"))
+    local nodes = {};
+
+    for _,nodeID in ipairs(nodeIDs) do
+        local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID);
+        if nodeInfo.isVisible then
+            if #nodeInfo.entryIDs > 1 then
+                if nodeInfo.activeEntry then
+                    for index,entryID in ipairs(nodeInfo.entryIDs) do
+                        if entryID == nodeInfo.activeEntry.entryID then
+                            nodes[nodeID] = index;
+                            break;
+                        end
+                    end
+                end
+            elseif nodeInfo.ranksPurchased > 0 then
+                nodes[nodeID] = nodeInfo.ranksPurchased;
+            end
+        end
+    end
+
+    set.name = configInfo.name;
+    set.character = character;
+    set.configID = configID;
+    set.classID = classID;
+    set.specID = specID;
+    set.treeID = treeID;
+    set.nodes = nodes;
+
+    UpdateSetFilters(set)
+
+    if BtWLoadoutsFrameDFTalents:IsShown() and BtWLoadoutsFrameDFTalents.set == set then
+        BtWLoadoutsFrameDFTalents:Update()
+    end
+
+    return set
+end
+
 -- Initializes the set dropdown menu for the Loadouts page
 local function SetDropDownInit(self, set, index)
     Internal.SetDropDownInit(self, set, index, "dftalents", BtWLoadoutsFrame.DFTalents)
@@ -623,6 +678,9 @@ function BtWLoadoutsDFTalentsMixin:ChangeSet(set)
 end
 function BtWLoadoutsDFTalentsMixin:UpdateSetName(value)
     if self.set and self.set.name ~= not value then
+        if self.set.configID then
+            return
+        end
         self.set.name = value;
         self:Update(false, true);
     end
@@ -640,6 +698,9 @@ function BtWLoadoutsDFTalentsMixin:OnButtonClick(button)
         end)
     elseif button.isDelete then
         local set = self.set
+        if set.configID then
+            return
+        end
         if set.useCount > 0 then
             StaticPopup_Show("BTWLOADOUTS_DELETEINUSESET", set.name, nil, {
                 set = set,
@@ -653,6 +714,9 @@ function BtWLoadoutsDFTalentsMixin:OnButtonClick(button)
         end
     elseif button.isRefresh then
         local set = self.set;
+        if set.configID then
+            return
+        end
         RefreshSet(set)
         self:Update()
     elseif button.isExport then
@@ -866,7 +930,14 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         end
 
         local playerSpecIndex = GetSpecialization()
-        self:GetParent().RefreshButton:SetEnabled((playerSpecIndex and specID == GetSpecializationInfo(playerSpecIndex)) or (specID == nil and classID == select(3, UnitClass("player"))))
+        if set.configID then
+            UIDropDownMenu_DisableDropDown(self.SpecDropDown)
+        else
+            UIDropDownMenu_EnableDropDown(self.SpecDropDown)
+        end
+        self.Name:SetEnabled(not set.configID)
+        self:GetParent().DeleteButton:SetEnabled(not set.configID)
+        self:GetParent().RefreshButton:SetEnabled(not set.configID and ((playerSpecIndex and specID == GetSpecializationInfo(playerSpecIndex)) or (specID == nil and classID == select(3, UnitClass("player")))))
         self:GetParent().ActivateButton:SetEnabled(classID == select(3, UnitClass("player")));
 
         local helpTipBox = self:GetParent().HelpTipBox;
@@ -1143,6 +1214,10 @@ function BtWLoadoutsDFTalentsMixin:MarkNodeDirty(nodeID)
     self:MarkNodeInfoCacheDirty(nodeID);
 end
 function BtWLoadoutsDFTalentsMixin:PurchaseRank(nodeID)
+    if self.set.configID then
+        return
+    end
+
     local nodeInfo = self:GetAndCacheNodeInfo(nodeID);
     if nodeInfo.maxRanks > nodeInfo.activeRank then
         self.set.nodes[nodeID] = (self.set.nodes[nodeID] or 0) + 1;
@@ -1152,6 +1227,10 @@ function BtWLoadoutsDFTalentsMixin:PurchaseRank(nodeID)
     self:Update();
 end
 function BtWLoadoutsDFTalentsMixin:RefundRank(nodeID)
+    if self.set.configID then
+        return
+    end
+
     if self.set.nodes[nodeID] then
         self.set.nodes[nodeID] = (self.set.nodes[nodeID] or 0) - 1;
         if self.set.nodes[nodeID] <= 0 then
@@ -1165,6 +1244,10 @@ function BtWLoadoutsDFTalentsMixin:GetSpecializedSelectionChoiceMixin(entryInfo,
 	return DFTalentSelectionChoiceMixin;
 end
 function BtWLoadoutsDFTalentsMixin:SetSelection(nodeID, entryID)
+    if self.set.configID then
+        return
+    end
+
     if entryID == nil then
         self.set.nodes[nodeID] = nil;
     else

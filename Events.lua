@@ -11,6 +11,8 @@ local GetCharacterSlug = Internal.GetCharacterSlug
 
 -- A map from the equipment manager ids to our sets
 local equipmentSetMap = {};
+-- A map from the talent tree ids to our sets
+local dfTalentTreeSetMap = {};
 
 local frame = CreateFrame("Frame");
 frame:SetScript("OnEvent", function (self, event, ...)
@@ -312,6 +314,23 @@ function frame:PLAYER_LOGIN(...)
             end
         end
     end
+
+    if next(dfTalentTreeSetMap) == nil then
+        local character = GetCharacterSlug();
+        for setID,set in pairs(BtWLoadoutsSets.dftalents) do
+            if type(set) == "table" then
+                if set.character == character and set.configID ~= nil then
+                    dfTalentTreeSetMap[set.configID] = set
+                end
+            end
+        end
+    end
+
+    local specID = GetSpecializationInfo(GetSpecialization());
+    local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID);
+    for _,configID in ipairs(configIDs) do
+        self:TRAIT_CONFIG_UPDATED(configID);
+    end
 end
 local firstLogin = true
 function frame:PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi)
@@ -550,6 +569,12 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     end
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
     Internal.UpdateTraitInfoFromPlayer();
+
+    local specID = GetSpecializationInfo(GetSpecialization());
+    local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID);
+    for _,configID in ipairs(configIDs) do
+        self:TRAIT_CONFIG_UPDATED(configID);
+    end
 end
 function frame:UPDATE_INSTANCE_INFO(...)
     local name, realm = UnitFullName("player")
@@ -1577,6 +1602,34 @@ end
 function frame:SOCKET_INFO_SUCCESS(...)
     Internal.GemApplied()
 end
+function frame:TRAIT_CONFIG_UPDATED(configID)
+    local activeConfigID = C_ClassTalents.GetActiveConfigID();
+    if activeConfigID == configID then
+        return;
+    end
+
+    local set = dfTalentTreeSetMap[configID];
+    if not set then
+        set = Internal.AddSet("dftalents", {
+            name = "",
+            useCount = 0,
+        })
+        dfTalentTreeSetMap[configID] = set;
+    end
+
+    Internal.RefreshSetFromConfigID(set, configID)
+end
+function frame:TRAIT_CONFIG_DELETED(configID)
+    local activeConfigID = C_ClassTalents.GetActiveConfigID();
+    if activeConfigID == configID then
+        return;
+    end
+    if dfTalentTreeSetMap[configID] then
+        dfTalentTreeSetMap[configID].configID = nil;
+        dfTalentTreeSetMap[configID].character = nil;
+        dfTalentTreeSetMap[configID] = nil;
+    end
+end
 frame:RegisterEvent("ADDON_LOADED");
 frame:RegisterEvent("PLAYER_LOGIN");
 frame:RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -1596,3 +1649,5 @@ frame:RegisterEvent("BAG_UPDATE_DELAYED");
 frame:RegisterUnitEvent("UNIT_INVENTORY_CHANGED", "player");
 frame:RegisterEvent("SOCKET_INFO_SUCCESS");
 frame:RegisterEvent("ITEM_CHANGED");
+frame:RegisterEvent("TRAIT_CONFIG_UPDATED");
+frame:RegisterEvent("TRAIT_CONFIG_DELETED");

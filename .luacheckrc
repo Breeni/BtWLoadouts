@@ -31,6 +31,7 @@ globals = {
     -- BtWLoadouts Frames
     'BtWLoadoutsConditionsAffixesDropDownList',
     'BtWLoadoutsFrame',
+    'BtWLoadoutsFrameDFTalents',
     'BtWLoadoutsImportFrame',
     'BtWLoadoutsLogFrame',
     'BtWLoadoutsMinimapButton',
@@ -148,6 +149,7 @@ new_read_globals = {
     'C_ClassColor.GetClassColor',
     'C_ClassTalents.CommitConfig',
     'C_ClassTalents.GetActiveConfigID',
+    'C_ClassTalents.GetConfigIDsBySpecID',
     'C_ClassTalents.UpdateLastSelectedSavedConfigID',
     'C_Container.GetContainerFreeSlots',
     'C_Container.GetContainerItemLink',

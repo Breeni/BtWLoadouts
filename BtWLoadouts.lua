@@ -1115,7 +1115,7 @@ do
 					name = (set.name == nil or set.name == "") and L["Unnamed"] or set.name,
 					disabled = set.disabled,
 					selected = set == selected,
-					builtin = set.managerID ~= nil,
+					builtin = (set.managerID ~= nil) or (set.configID ~= nil),
 					depth = depth,
 				};
 			end
