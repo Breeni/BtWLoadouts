@@ -185,6 +185,11 @@ local Settings = SettingsCreate({
         end,
         default = true,
     },
+	{
+		name = L["Show Settings in Loadouts menu"],
+		key = "showSettingsInMenu",
+        default = true,
+	}
 });
 Internal.Settings = Settings;
 
