@@ -21,16 +21,6 @@ local GetNumSpecializationsForClassID = GetNumSpecializationsForClassID
 local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
 local GetEssenceInfo = C_AzeriteEssence.GetEssenceInfo;
 
-if select(4, GetBuildInfo()) >= 100000 then
-	function Internal.IsDragonflight()
-		return true
-	end
-else
-	function Internal.IsDragonflight()
-		return false
-	end
-end
-
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};
 local classInfo = {};
@@ -72,7 +62,7 @@ local GetTalentInfoForSpecID;
 local GetPvpTalentSlotInfoForSpecID;
 do
 	local specInfo
-	if Internal.IsDragonflight() then
+	if Internal.IsDragonflightPatch then
 		specInfo = {
 			version = 6,
 

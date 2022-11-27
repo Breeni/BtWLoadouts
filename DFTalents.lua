@@ -5,7 +5,7 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
-BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflight()
+BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflightPatch
 
 --@NOTE Copying parts of the original talents code over. Dont want to use wrong mixin
 local BtWLoadoutsTalentsMixin = false

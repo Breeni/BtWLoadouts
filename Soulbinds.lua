@@ -2816,7 +2816,7 @@ function BtWLoadoutsConduitListMixin:OnLoad()
 			return (#elementData.conduitDatas * buttonHeight) + expandedExtent;
 		end
 	end);
-    if Internal.IsDragonflight() then
+    if Internal.IsDragonflightPatch then
         view:SetElementInitializer("BtWLoadoutsConduitListSectionTemplate", function(list, elementData)
             list:Init(self.owner, elementData);
         end);
