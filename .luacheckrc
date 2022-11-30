@@ -22,6 +22,7 @@ ignore = {
     '311', -- overwritten variable before use
     '314', -- overwritten field in table
     '4..', -- redefining variables
+    '511', -- unreachable code
     '542', -- empty if branch
     '611', -- lines containing only whitespaces
 }

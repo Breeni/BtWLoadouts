@@ -63,7 +63,7 @@ local function CompareImportSets(set, import)
 end
 
 -- Track changes to macros
-do
+if false then
     local mapCreated = false
     local macros = setmetatable({}, {
         __index = function (self, key)
