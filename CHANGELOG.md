@@ -1,3 +1,8 @@
+# v1.9.1
+
+- Disable tracking macro changes to due to bug that was overwriting macros
+- Updated action bar tab tooltips to show macro name and text
+
 # v1.9.0
 
 - Added an option to hide settings from showing in the loadouts menu
