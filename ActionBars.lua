@@ -1056,12 +1056,43 @@ function BtWLoadoutsActionButtonMixin:Update()
 	self.ignoreTexture:SetShown(ignored);
 end
 function BtWLoadoutsActionButtonMixin:OnEnter()
-	if self.errors then
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText(string.format(L["Slot %d"], self:GetID()), 1, 1, 1)
-		GameTooltip:AddLine(format("\n|cffff0000%s|r", self.errors))
-		GameTooltip:Show()
-	end
+	local set = self:GetActionBarFrame().set;
+    local tbl = set and set.actions[self:GetID()]
+
+    if tbl and tbl.type == "macro" then
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddDoubleLine(tbl.name or L["Macro"], string.format(L["Slot %d"], self:GetID()), 1, 1, 1, 1, 1, 1)
+        for line in string.gmatch(tbl.macroText, "([^\r\n]*)\r?\n?") do
+            if #line > 40 then
+                local first = true
+                local section = "";
+                for item,separator in string.gmatch(line, "([^%s;%]]*)(%]?;?%s?)") do
+                    section = section .. item .. separator;
+                    if #section > 40 then
+                        GameTooltip:AddLine((first and "" or "    ") .. section)
+                        first = false
+                        section = ""
+                    end
+                end
+                if section ~= "" then
+                    GameTooltip:AddLine("    " .. section)
+                end
+            else
+                GameTooltip:AddLine(line)
+            end
+        end
+        if self.errors then
+            GameTooltip:AddLine(format("\n|cffff0000%s|r", self.errors))
+        end
+        GameTooltip:Show()
+    else
+        if self.errors then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(string.format(L["Slot %d"], self:GetID()))
+            GameTooltip:AddLine(format("\n|cffff0000%s|r", self.errors))
+            GameTooltip:Show()
+        end
+    end
 end
 function BtWLoadoutsActionButtonMixin:OnLeave()
 	GameTooltip:Hide();
