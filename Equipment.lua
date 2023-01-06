@@ -2266,7 +2266,7 @@ do
 							-- Item is in blizzard manager set, they know the knew location
 							local locations = C_EquipmentSet.GetItemLocations(set.managerID)
 							
-							if locations[setSlot] and locations[setSlot] > -1 then
+							if locations and locations[setSlot] and locations[setSlot] > -1 then
 								newLocationItems[locations[setSlot]] = locationItems[location]
 								newLocationSets[locations[setSlot]] = locationSets[location]
 
