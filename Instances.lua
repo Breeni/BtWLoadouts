@@ -672,6 +672,7 @@ local battlegroundInfo = {
 	}
 };
 -- List of bosses within an instance
+-- InstanceID to JournalInstanceID[]
 local instanceBosses = {
     -- Classic
     [  48] = { -- Blackfathom Deeps
@@ -1984,7 +1985,7 @@ local instanceBosses = {
         2499, -- Raszageth the Storm-Eater
     },
 }
--- A map of npc ids to boss ids, this might not be the bosses npc id,
+-- A map of npc ids to JournalInstanceID, this might not be the bosses npc id,
 -- just something that signifies the boss
 local npcIDToBossID = {
 	-- Shrine of the Storm
@@ -2057,17 +2058,17 @@ local npcIDToBossID = {
 
     --Dragonflight
     -- Vault of the Incarnates
-    [184972] = 2587, -- Eranog
-    [190496] = 2639, -- Terros
-    [187768] = 2590, -- The Primal Council
-    [187767] = 2590, -- The Primal Council
-    [187771] = 2590, -- The Primal Council
-    [187772] = 2590, -- The Primal Council
-    [187967] = 2592, -- Sennarth, The Cold Breath
-    [189813] = 2635, -- Dathea, Ascended
-    [184986] = 2605, -- Kurog Grimtotem
-    [190245] = 2614, -- Broodkeeper Diurna
-    -- [] = 2607, -- Raszageth the Storm-Eater
+    [184972] = 2480, -- Eranog
+    [190496] = 2500, -- Terros
+    [187768] = 2486, -- The Primal Council
+    [187767] = 2486, -- The Primal Council
+    [187771] = 2486, -- The Primal Council
+    [187772] = 2486, -- The Primal Council
+    [187967] = 2482, -- Sennarth, The Cold Breath
+    [189813] = 2502, -- Dathea, Ascended
+    [184986] = 2491, -- Kurog Grimtotem
+    [190245] = 2493, -- Broodkeeper Diurna
+    [189492] = 2499, -- Raszageth the Storm-Eater
 };
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
@@ -2475,6 +2476,7 @@ local uiMapIDToBossID = {
     [2119] = 2480, -- Eranog
     [2120] = 2486, -- The Primal Council
     [2121] = 2502, -- Dathea, Ascended
+    [2122] = {2500, 2482}, -- Terros, Sennarth, the Cold Breath
     [2124] = 2491, -- Kurog Grimtotem
     [2126] = 2493, -- Broodkeeper Diurna
     [2125] = 2499, -- Raszageth the Storm-Eater
@@ -2725,6 +2727,7 @@ end
 -- until other bosses are dead, see Lady Ashvane in The Eternal Palace
 
 -- Which bosses have to be dead for the other boss to be available
+-- JournalInstanceID to JournalInstanceID[]
 local bossRequirements = {
 	[2354] = {2347, 2353}, -- Lady Ashvane, requires Blackwater Behemoth and Radiance of Azshara
 	[2370] = {2377}, -- Vexiona, requires Dark Inquisitor Xanesh
@@ -2732,6 +2735,9 @@ local bossRequirements = {
 
     [2417] = {2401, 2390, 2389}, -- Mordretha, the Endless Empress, requires Gorechop, Xav the Unfallen, Kul'tharok
     [2410] = {2408, 2409, 2398}, -- Mueh'zala, requires Hakkar the Soulflayer, The Manastorms, and Dealer Xy'exa
+
+    [2482] = {2639}, -- Sennarth, the Cold Breath, requires Terros
+    [2491] = {2500, 2482}, -- Kurog Grimtotem, requires Terros and Sennarth, the Cold Breath
 }
 function Internal.BossAvailable(bossID)
 	if IsEncounterComplete(bossID) then
