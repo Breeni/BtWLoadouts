@@ -1,3 +1,9 @@
+# v1.9.2
+
+- Added some debug data to the minimap tooltip when holding Shift
+- Fixed conditions not working correctly for multiple Vault of the Incarnates bosses
+- Fixed an error when reading Blizzard equipment sets
+
 # v1.9.1
 
 - Disable tracking macro changes to due to bug that was overwriting macros
