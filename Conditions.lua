@@ -398,6 +398,10 @@ function Internal.UpdateConditionsForBoss(unitId)
 
 	return bossID
 end
+-- Get the current boss id for conditions
+function Internal.GetConditionBossID()
+	return previousConditionInfo.bossID
+end
 function Internal.UpdateConditionsForAffixes()
 	-- local affixesID;
 	local affixIDs = {}
