@@ -405,6 +405,7 @@ Internal.AddLoadoutSegment({
         return {
             version = 1,
             name = set.name,
+            classID = set.classID,
             specID = set.specID,
             treeID = set.treeID,
             nodes = set.nodes,
@@ -414,8 +415,12 @@ Internal.AddLoadoutSegment({
     import = function (source, version, name, ...)
         assert(version == 1)
 
-        local specID = source.specID or ...
+        local specID, classID = ...
+        specID = source.specID or specID
+        classID = source.classID or classID
+
         return Internal.AddSet("dftalents", UpdateSetFilters({
+            classID = classID,
             specID = specID,
             treeID = source.treeID,
             name = name or source.name,
@@ -428,10 +433,19 @@ Internal.AddLoadoutSegment({
         return Internal.GetSetByValue(BtWLoadoutsSets.dftalents, set, CompareSets)
     end,
     verify = function (source, ...)
-        local specID = source.specID or ...
+        local specID, classID = ...
+
+        specID = source.specID or specID
         if not specID or not GetSpecializationInfoByID(specID) then
             return false, L["Invalid specialization"]
         end
+
+        classID = source.classID or classID
+        local classFile = select(6, GetSpecializationInfoByID(specID))
+        if not classID or Internal.GetClassID(classFile) ~= classID then
+            return false, L["Invalid class"]
+        end
+
         local nodes = C_Traits.GetTreeNodes(source.treeID)
         if next(nodes) == nil then
             return false, L["Invalid talent tree"]
@@ -763,6 +777,11 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         local classID = set.classID
         local specID = set.specID
         local treeID = set.treeID
+        if not classID then
+            local classInfo = Internal.GetClassInfoBySpecID(specID)
+            set.classID = classInfo.classID
+            classID = classInfo.classID
+        end
 
         UpdateSetFilters(set)
         sidebar:Update()

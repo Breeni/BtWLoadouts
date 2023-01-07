@@ -24,21 +24,43 @@ local GetEssenceInfo = C_AzeriteEssence.GetEssenceInfo;
 local roles = {"TANK", "HEALER", "DAMAGER"};
 local roleIndexes = {["TANK"] = 1, ["HEALER"] = 2, ["DAMAGER"] = 3};
 local classInfo = {};
+local classInfoBySpecID = {};
 function Internal.Roles()
     return ipairs(roles)
 end
-function Internal.IsClassRoleValid(classFile, role)
-	return classInfo[classFile][role] and true or false;
+function Internal.GetClassInfo(class)
+	return classInfo[class]
+end
+function Internal.GetClassInfoBySpecID(spec)
+	return classInfoBySpecID[spec]
+end
+function Internal.GetClassID(class)
+	return classInfo[class] and classInfo[class].classID;
+end
+function Internal.GetClassFile(class)
+	return classInfo[class] and classInfo[class].classFile;
+end
+function Internal.IsClassRoleValid(class, role)
+	return (classInfo[class] and classInfo[class].roles[role]) and true or false;
 end
 function Internal.UpdateClassInfo()
     for classIndex=1,GetNumClasses() do
 		if GetNumSpecializationsForClassID(classIndex) > 0 then
-			local className, classFile, classID = GetClassInfo(classIndex);
-			classInfo[classFile] = {};
+			local info = C_CreatureInfo.GetClassInfo(classIndex);
+			local classID = info.classID;
+			
+			info.specs, info.roles = {}, {};
 			for specIndex=1,GetNumSpecializationsForClassID(classID) do
-				local role = select(5, GetSpecializationInfoForClassID(classID, specIndex));
-				classInfo[classFile][role] = true;
+				local id, _, _, _, role = GetSpecializationInfoForClassID(classID, specIndex);
+
+				info.specs[specIndex] = id;
+				info.roles[role] = true;
+				
+				classInfoBySpecID[id] = info;
 			end
+
+			classInfo[classID] = info;
+			classInfo[info.classFile] = info;
 		end
     end
 end
