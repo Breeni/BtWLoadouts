@@ -1,3 +1,7 @@
+# v1.10.0-beta
+
+- Added support for using built in talent tree loadouts
+
 # v1.9.2
 
 - Added some debug data to the minimap tooltip when holding Shift
