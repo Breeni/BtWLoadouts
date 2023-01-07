@@ -3,6 +3,7 @@
 - Added some debug data to the minimap tooltip when holding Shift
 - Fixed conditions not working correctly for multiple Vault of the Incarnates bosses
 - Fixed an error when reading Blizzard equipment sets
+- Fixed an issue with imported talent sets not being activatable
 
 # v1.9.1
 
