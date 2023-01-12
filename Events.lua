@@ -327,9 +327,18 @@ function frame:PLAYER_LOGIN(...)
     end
 
     local specID = GetSpecializationInfo(GetSpecialization());
+    local tree = Internal.GetTreeInfoBySpecID(specID);
     local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID);
     for _,configID in ipairs(configIDs) do
         self:TRAIT_CONFIG_UPDATED(configID);
+    end
+
+    -- Delete any trait trees that arent for the current spec but think they are
+    for configID,set in pairs(dfTalentTreeSetMap) do
+        local configInfo = C_Traits.GetConfigInfo(configID);
+        if not configInfo or configInfo.treeIDs[1] ~= tree.ID then
+            self:TRAIT_CONFIG_DELETED(configID);
+        end
     end
 end
 local firstLogin = true
@@ -1578,6 +1587,15 @@ function frame:TRAIT_CONFIG_UPDATED(configID)
     local activeConfigID = C_ClassTalents.GetActiveConfigID();
     if activeConfigID == configID then
         return;
+    end
+
+    -- Prevent adding trait trees that arent for the current spec
+    local specID = GetSpecializationInfo(GetSpecialization());
+    local tree = Internal.GetTreeInfoBySpecID(specID);
+
+    local configInfo = C_Traits.GetConfigInfo(configID);
+    if not configInfo or configInfo.treeIDs[1] ~= tree.ID then
+        return
     end
 
     local set = dfTalentTreeSetMap[configID];
