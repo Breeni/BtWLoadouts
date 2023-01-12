@@ -1,3 +1,7 @@
+# v1.10.1-beta
+
+- Fixed storing profession trait trees as talent trees
+
 # v1.10.0-beta
 
 - Added support for using built in talent tree loadouts
