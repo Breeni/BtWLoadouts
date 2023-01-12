@@ -21,6 +21,7 @@
 	Conditions level support
 	Option to show minimap menu on mouse over
 	Trigger system for changing loadouts, run custom code when a set is changed?
+	Duplicate sets button
 ]]
 
 local ADDON_NAME, Internal = ...;
