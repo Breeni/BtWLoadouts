@@ -243,6 +243,7 @@ new_read_globals = {
     'C_Traits.GetNodeCost',
     'C_Traits.GetNodeInfo',
     'C_Traits.GetTreeCurrencyInfo',
+    'C_Traits.GetTreeHash',
     'C_Traits.GetTreeInfo',
     'C_Traits.GetTreeNodes',
     'C_Traits.PurchaseRank',
@@ -445,6 +446,9 @@ new_read_globals = {
     'ITEM_SET_BONUS',
     'ITEM_SOCKETABLE',
     'ITEM_UNSELLABLE',
+    'LOADOUT_ERROR_BAD_STRING',
+    'LOADOUT_ERROR_SERIALIZATION_VERSION_MISMATCH',
+    'LOADOUT_ERROR_TREE_CHANGED',
     'LOCALE_TEXT_LABEL',
     'MYTHIC_DUNGEONS',
     'NAME',
@@ -489,6 +493,7 @@ new_read_globals = {
     'CreateTexturePool',
     'EditBox_ClearFocus',
     'EquipmentManager_UnpackLocation',
+    'ExportUtil.MakeImportDataStream',
     'FindSpellOverrideByID',
     'FlagsUtil.IsSet',
     'FrameDeltaLerp',
@@ -608,6 +613,7 @@ new_read_globals = {
 
     -- FrameXML Mixins
     'CallbackRegistryMixin',
+    'ClassTalentImportExportMixin',
     'GridLayoutMixin',
     'ScrollBoxListMixin',
     'TalentFrameBaseButtonsParentMixin',
