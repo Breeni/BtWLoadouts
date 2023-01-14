@@ -7,6 +7,9 @@ local L = Internal.L
 
 BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflightPatch
 
+BTWLOADOUTS_SPEC_TREE = L["Spec Tree"] .. " > ";
+BTWLOADOUTS_CLASS_TREE = " < " .. L["Class Tree"];
+
 --@NOTE Copying parts of the original talents code over. Dont want to use wrong mixin
 local BtWLoadoutsTalentsMixin = false
 
@@ -923,6 +926,13 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
 
         self.leftOffset = (((leftSide.right - leftSide.left) * 0.5 + leftSide.left) * 0.1) * scale - halfWidth;
         self.rightOffset = (((rightSide.right - rightSide.left) * 0.5 + rightSide.left) * 0.1) * scale - halfWidth;
+
+        local scrollChild = scroll:GetScrollChild();
+        self.SpecTreeButton:SetPoint("RIGHT", scrollChild, "LEFT", self.leftOffset + scroll:GetWidth() - scroll.ScrollBar:GetWidth(), 0)
+        self.ClassTreeButton:SetPoint("LEFT", self.rightOffset, 0)
+        
+        self.SpecTreeButton:SetPoint("TOP", 0, -scroll:GetVerticalScroll())
+        self.ClassTreeButton:SetPoint("TOP", 0, -scroll:GetVerticalScroll())
         
         if updatePosition then
             self.endScrolling = true;
@@ -978,7 +988,23 @@ function BtWLoadoutsDFTalentsMixin:OnDrag()
     if self.endScrolling then -- Maybe check which direction the drag was going in before hand?
         scrollX = scroll:GetHorizontalScroll();
         scrollY = scroll:GetVerticalScroll();
-        if ApproximatelyEqual(scrollX, minXScroll, 0.1) then
+        if self.scrollDelta then
+            if self.scrollDelta < 0 then
+                if ApproximatelyEqual(scrollX, minXScroll, 0.1) then
+                    scrollX = minXScroll;
+                    self.DragHandler:Hide();
+                else
+                    scrollX = FrameDeltaLerp(scrollX, minXScroll, 0.1);
+                end
+            else
+                if ApproximatelyEqual(scrollX, maxXScroll, 0.1) then
+                    scrollX = maxXScroll;
+                    self.DragHandler:Hide();
+                else
+                    scrollX = FrameDeltaLerp(scrollX, maxXScroll, 0.1);
+                end
+            end
+        elseif ApproximatelyEqual(scrollX, minXScroll, 0.1) then
             scrollX = minXScroll;
             self.DragHandler:Hide();
         elseif ApproximatelyEqual(scrollX, maxXScroll, 0.1) then
@@ -1001,6 +1027,9 @@ function BtWLoadoutsDFTalentsMixin:OnDrag()
         scrollY = min(max(mouseY - self.mouseY + self.scrollY, 0), maxYScroll)
     end
 
+    self.SpecTreeButton:SetAlpha(math.max(1 - math.abs(scrollX - self.leftOffset) * 0.005, 0))
+    self.ClassTreeButton:SetAlpha(math.max(1 - math.abs(scrollX - self.rightOffset) * 0.005, 0))
+
     scroll:SetHorizontalScroll(scrollX)
     scroll:SetVerticalScroll(scrollY)
 end
@@ -1013,12 +1042,26 @@ function BtWLoadoutsDFTalentsMixin:BeginScrollDrag()
     local scale = scroll:GetScrollChild():GetEffectiveScale()
     self.mouseX, self.mouseY = self.mouseX / scale, self.mouseY / scale
 
+    self.scrollDelta = nil;
     self.endScrolling = false;
-    -- self:SetScript("OnUpdate", self.OnDrag)
     self.DragHandler:Show();
 end
 function BtWLoadoutsDFTalentsMixin:EndScrollDrag()
     self.endScrolling = true;
+end
+function BtWLoadoutsDFTalentsMixin:OnVerticalScroll(scroll, offset)
+    self.SpecTreeButton:SetPoint("TOP", 0, -offset)
+    self.ClassTreeButton:SetPoint("TOP", 0, -offset)
+end
+function BtWLoadoutsDFTalentsMixin:ScrollToClassTree()
+    self.scrollDelta = -1;
+    self.endScrolling = true;
+    self.DragHandler:Show();
+end
+function BtWLoadoutsDFTalentsMixin:ScrollToSpecTree()
+    self.scrollDelta = 1;
+    self.endScrolling = true;
+    self.DragHandler:Show();
 end
 function BtWLoadoutsDFTalentsMixin:UpdateTreeInfo(skipButtonUpdates)
 	self.talentTreeInfo = Internal.GetTreeInfoBySpecID(self.set.specID);
