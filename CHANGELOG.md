@@ -1,3 +1,8 @@
+# v1.10.2
+
+- Added support for using Blizzard talent trees
+- Updated to support 10.0.5
+
 # v1.10.1-beta
 
 - Fixed storing profession trait trees as talent trees
