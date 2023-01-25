@@ -1,3 +1,7 @@
+# v1.10.3
+
+- Updated for 10.0.5
+
 # v1.10.2
 
 - Added support for using Blizzard talent trees
