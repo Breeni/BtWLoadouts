@@ -1,3 +1,7 @@
+# v1.11.0-beta
+
+- Added buttons to swap between Class and Spec talent trees
+
 # v1.10.3
 
 - Updated for 10.0.5
