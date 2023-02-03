@@ -1,3 +1,7 @@
+# v1.11.1
+
+- Added buttons to swap between Class and Spec talent trees
+
 # v1.11.0-beta
 
 - Added buttons to swap between Class and Spec talent trees
