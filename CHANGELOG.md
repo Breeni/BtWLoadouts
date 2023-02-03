@@ -1,3 +1,7 @@
+# v1.12.0-beta
+
+- Added support for importing Blizzard talent loadout strings directly in to BtWLoadouts
+
 # v1.11.1
 
 - Added buttons to swap between Class and Spec talent trees
