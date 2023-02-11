@@ -315,6 +315,7 @@ function frame:PLAYER_LOGIN(...)
         end
     end
 
+    local activeConfigID = C_ClassTalents.GetActiveConfigID();
     if next(dfTalentTreeSetMap) == nil then
         local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.dftalents) do
@@ -343,7 +344,7 @@ function frame:PLAYER_LOGIN(...)
     -- Delete any trait trees that arent for the current spec but think they are
     for configID,set in pairs(dfTalentTreeSetMap) do
         local configInfo = C_Traits.GetConfigInfo(configID);
-        if not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
+        if activeConfigID == configID or not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
             self:TRAIT_CONFIG_DELETED(configID);
         end
     end
@@ -586,6 +587,7 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     Internal.UpdateLauncher(Internal.GetActiveProfiles());
     Internal.UpdateTraitInfoFromPlayer();
 
+    local activeConfigID = C_ClassTalents.GetActiveConfigID();
     local specID = GetSpecializationInfo(GetSpecialization());
     local tree = Internal.GetTreeInfoBySpecID(specID);
     local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID);
@@ -596,7 +598,7 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     -- Delete any trait trees that arent for the current spec but think they are
     for configID,set in pairs(dfTalentTreeSetMap) do
         local configInfo = C_Traits.GetConfigInfo(configID);
-        if not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
+        if activeConfigID == configID or not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
             self:TRAIT_CONFIG_DELETED(configID);
         end
     end
@@ -1659,10 +1661,6 @@ function frame:TRAIT_CONFIG_UPDATED(configID)
     Internal.RefreshSetFromConfigID(set, configID)
 end
 function frame:TRAIT_CONFIG_DELETED(configID)
-    local activeConfigID = C_ClassTalents.GetActiveConfigID();
-    if activeConfigID == configID then
-        return;
-    end
     if dfTalentTreeSetMap[configID] then
         dfTalentTreeSetMap[configID].configID = nil;
         dfTalentTreeSetMap[configID].character = nil;
