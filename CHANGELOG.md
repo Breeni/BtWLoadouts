@@ -1,3 +1,7 @@
+# v1.12.3
+
+- Fixed clearing blizzard talent trees incorrectly when switch specialization
+
 # v1.12.2
 
 - Fixed an issue that could sometimes cause the active talent loadout to be saved like a normal loadout
