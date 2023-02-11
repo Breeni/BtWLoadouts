@@ -319,6 +319,13 @@ function frame:PLAYER_LOGIN(...)
         local character = GetCharacterSlug();
         for setID,set in pairs(BtWLoadoutsSets.dftalents) do
             if type(set) == "table" then
+                if set.character and set.configID then
+                    local info = Internal.GetCharacterInfo(set.character)
+                    if not info then -- Clear character specific data if the character is unknown
+                        set.character = nil
+                        set.configID = nil
+                    end
+                end
                 if set.character == character and set.configID ~= nil then
                     dfTalentTreeSetMap[set.configID] = set
                 end
@@ -336,7 +343,7 @@ function frame:PLAYER_LOGIN(...)
     -- Delete any trait trees that arent for the current spec but think they are
     for configID,set in pairs(dfTalentTreeSetMap) do
         local configInfo = C_Traits.GetConfigInfo(configID);
-        if not configInfo or configInfo.treeIDs[1] ~= tree.ID then
+        if not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
             self:TRAIT_CONFIG_DELETED(configID);
         end
     end
@@ -580,9 +587,18 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     Internal.UpdateTraitInfoFromPlayer();
 
     local specID = GetSpecializationInfo(GetSpecialization());
+    local tree = Internal.GetTreeInfoBySpecID(specID);
     local configIDs = C_ClassTalents.GetConfigIDsBySpecID(specID);
     for _,configID in ipairs(configIDs) do
         self:TRAIT_CONFIG_UPDATED(configID);
+    end
+
+    -- Delete any trait trees that arent for the current spec but think they are
+    for configID,set in pairs(dfTalentTreeSetMap) do
+        local configInfo = C_Traits.GetConfigInfo(configID);
+        if not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
+            self:TRAIT_CONFIG_DELETED(configID);
+        end
     end
 end
 function frame:UPDATE_INSTANCE_INFO(...)
@@ -1620,9 +1636,14 @@ function frame:TRAIT_CONFIG_UPDATED(configID)
     -- Prevent adding trait trees that arent for the current spec
     local specID = GetSpecializationInfo(GetSpecialization());
     local tree = Internal.GetTreeInfoBySpecID(specID);
+    
+    local validConfigIDs = C_ClassTalents.GetConfigIDsBySpecID(specID);
+    if not tContains(validConfigIDs, configID) then
+        return
+    end
 
     local configInfo = C_Traits.GetConfigInfo(configID);
-    if not configInfo or configInfo.treeIDs[1] ~= tree.ID then
+    if not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 then
         return
     end
 
