@@ -1,3 +1,7 @@
+# v1.12.1
+
+- Fixed an issue causing some invalid Blizzard loadouts to be saved incorrectly
+
 # v1.12.0-beta
 
 - Added support for importing Blizzard talent loadout strings directly in to BtWLoadouts
