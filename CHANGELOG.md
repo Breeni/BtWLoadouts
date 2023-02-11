@@ -1,3 +1,8 @@
+# v1.12.2
+
+- Fixed an issue that could sometimes cause the active talent loadout to be saved like a normal loadout
+- Fixed an issue causing the Blizzard talent tree window to sometimes lose the class icon
+
 # v1.12.1
 
 - Fixed an issue causing some invalid Blizzard loadouts to be saved incorrectly
