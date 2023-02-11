@@ -233,7 +233,7 @@ local function VerifySource(source, sourceType, version, name, ...)
     return true
 end
 
-local DFTalentImport = CreateFromMixins(ClassTalentImportExportMixin, {
+local DFTalentImportMixin = {
     ImportLoadout = function (self, importText, loadoutName)
         local importStream = ExportUtil.MakeImportDataStream(importText);
         local headerValid, serializationVersion, specID, treeHash = self:ReadLoadoutHeader(importStream);
@@ -293,7 +293,15 @@ local DFTalentImport = CreateFromMixins(ClassTalentImportExportMixin, {
         end
         return results;
     end,
-})
+}
+local DFTalentImport
+DFTalentImport = {
+    ImportLoadout = function (...)
+        LoadAddOn("Blizzard_ClassTalentUI")
+        Mixin(DFTalentImport, ClassTalentImportExportMixin, DFTalentImportMixin);
+        return DFTalentImport.ImportLoadout(...)
+    end
+}
 
 -- Import Frame
 do

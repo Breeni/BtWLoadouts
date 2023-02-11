@@ -366,6 +366,7 @@ new_read_globals = {
     'IsSpellKnown',
     'LearnPvpTalent',
     'LearnTalent',
+    'LoadAddOn',
     'max',
     'min',
     'mod',

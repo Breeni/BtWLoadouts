@@ -5,7 +5,6 @@
 ## Author: Breen
 ## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings, BtWLoadoutsTraitsInfo
 ## SavedVariablesPerCharacter: BtWLoadoutsCollapsed, BtWLoadoutsCategories, BtWLoadoutsFilters
-## Dependency: Blizzard_ClassTalentUI
 ## OptionalDeps: OPie, Adibags, Bagnon
 ## X-Curse-Project-ID: 336400
 ## X-WoWI-ID: 25156
