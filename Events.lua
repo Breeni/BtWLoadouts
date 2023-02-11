@@ -344,7 +344,7 @@ function frame:PLAYER_LOGIN(...)
     -- Delete any trait trees that arent for the current spec but think they are
     for configID,set in pairs(dfTalentTreeSetMap) do
         local configInfo = C_Traits.GetConfigInfo(configID);
-        if activeConfigID == configID or not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
+        if activeConfigID == configID or not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or (not tContains(configIDs, configID) and set.specID == specID) then
             self:TRAIT_CONFIG_DELETED(configID);
         end
     end
@@ -598,7 +598,7 @@ function frame:PLAYER_SPECIALIZATION_CHANGED(...)
     -- Delete any trait trees that arent for the current spec but think they are
     for configID,set in pairs(dfTalentTreeSetMap) do
         local configInfo = C_Traits.GetConfigInfo(configID);
-        if activeConfigID == configID or not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or not tContains(configIDs, configID) then
+        if activeConfigID == configID or not configInfo or configInfo.treeIDs[1] ~= tree.ID or configInfo.type ~= 1 or (not tContains(configIDs, configID) and set.specID == specID) then
             self:TRAIT_CONFIG_DELETED(configID);
         end
     end
@@ -1662,6 +1662,10 @@ function frame:TRAIT_CONFIG_UPDATED(configID)
 end
 function frame:TRAIT_CONFIG_DELETED(configID)
     if dfTalentTreeSetMap[configID] then
+--@debug@
+        local configInfo = C_Traits.GetConfigInfo(configID);
+        print(format(L["[BtWLoadouts]: Unflagged talent loadout \"%s\" as a blizzard talent tree."], configInfo.name));
+--@end-debug@
         dfTalentTreeSetMap[configID].configID = nil;
         dfTalentTreeSetMap[configID].character = nil;
         dfTalentTreeSetMap[configID] = nil;
