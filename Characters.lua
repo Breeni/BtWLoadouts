@@ -5073,9 +5073,6 @@ do
 		return result;
 	end
 	function Internal.UpdateTraitInfoFromPlayer()
---@debug@
-			print(format(L["[BtWLoadouts]: updating trait information for %s."], PlayerUtil.GetSpecName()));
---@end-debug@
 		if not C_ClassTalents then
 --@debug@
 			print(format(L["[BtWLoadouts]: failed to update trait information for %s, missing C_ClassTalents."], PlayerUtil.GetSpecName()));
@@ -5097,6 +5094,10 @@ do
 		local nodeIDs = C_Traits.GetTreeNodes(treeID);
 		local currencies = C_Traits.GetTreeCurrencyInfo(configID, treeID, true);
 		local incomingEdgesByNodeID = {}
+		
+--@debug@
+		print(format(L["[BtWLoadouts]: updating trait information for %s, configID: %d, treeID: %d."], PlayerUtil.GetSpecName(), configID, treeID));
+--@end-debug@
 
 		local conditions = setmetatable({}, {
 			__index = function (self, key)
@@ -5126,7 +5127,7 @@ do
 			-- without a lot of extra effort so we will just fail for now
 			if not found then
 --@debug@
-			print(format(L["[BtWLoadouts]: failed to update trait information for %s, compatible gates."], PlayerUtil.GetSpecName()));
+				print(format(L["[BtWLoadouts]: failed to update trait information for %s, compatible gates."], PlayerUtil.GetSpecName()));
 --@end-debug@
 				return;
 			end
@@ -5151,7 +5152,7 @@ do
 				-- Although currencies have all the data we store their maxQuantity is incorrect on non max level characters
 				if not found then
 --@debug@
-			print(format(L["[BtWLoadouts]: failed to update trait information for %s, incorrect currency max quantity."], PlayerUtil.GetSpecName()));
+					print(format(L["[BtWLoadouts]: failed to update trait information for %s, incorrect currency max quantity."], PlayerUtil.GetSpecName()));
 --@end-debug@
 					return;
 				end
