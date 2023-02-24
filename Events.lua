@@ -1663,8 +1663,7 @@ end
 function frame:TRAIT_CONFIG_DELETED(configID)
     if dfTalentTreeSetMap[configID] then
 --@debug@
-        local configInfo = C_Traits.GetConfigInfo(configID);
-        print(format(L["[BtWLoadouts]: Unflagged talent loadout \"%s\" as a blizzard talent tree."], configInfo.name));
+        print(format(L["[BtWLoadouts]: Unflagged talent loadout \"%s\" as a blizzard talent tree."], dfTalentTreeSetMap[configID].name));
 --@end-debug@
         dfTalentTreeSetMap[configID].configID = nil;
         dfTalentTreeSetMap[configID].character = nil;
