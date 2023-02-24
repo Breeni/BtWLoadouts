@@ -184,10 +184,16 @@ function frame:ADDON_LOADED(...)
             end
         end
         if BtWLoadoutsSpecInfo.version ~= Internal.GetSpecInfoVersion() then
+--@debug@
+            print(L["BtWLoadouts: Clearing spec info cache as internal spec data been updated"])
+--@end-debug@
             BtWLoadoutsSpecInfo = {}
             BtWLoadoutsSpecInfo.version = Internal.GetSpecInfoVersion()
         end
         if BtWLoadoutsTraitsInfo.version ~= Internal.GetTraitInfoVersion() then
+--@debug@
+            print(L["BtWLoadouts: Clearing trait info cache as internal trait data been updated"])
+--@end-debug@
             BtWLoadoutsTraitsInfo = {trees = {}, nodes = {}}
             BtWLoadoutsTraitsInfo.version = Internal.GetTraitInfoVersion()
         end
