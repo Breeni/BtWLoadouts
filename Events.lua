@@ -570,7 +570,7 @@ function frame:BANKFRAME_OPENED(...)
     self:EQUIPMENT_SETS_CHANGED()
     Internal.InitializeBankItems()
 end
-function frame:PLAYER_SPECIALIZATION_CHANGED(...)
+function frame:ACTIVE_PLAYER_SPECIALIZATION_CHANGED(...)
     do
         local specID = GetSpecializationInfo(GetSpecialization());
         local spec = BtWLoadoutsSpecInfo[specID] or {};
@@ -1685,7 +1685,7 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD");
 frame:RegisterEvent("CONSOLE_MESSAGE");
 frame:RegisterEvent("EQUIPMENT_SETS_CHANGED");
 frame:RegisterEvent("BANKFRAME_OPENED");
-frame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+frame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED");
 frame:RegisterEvent("UPDATE_INSTANCE_INFO");
 frame:RegisterEvent("ZONE_CHANGED");
 frame:RegisterEvent("ZONE_CHANGED_NEW_AREA");
