@@ -1629,6 +1629,9 @@ end
 function frame:SOCKET_INFO_SUCCESS(...)
     Internal.GemApplied()
 end
+function frame:TRAIT_CONFIG_CREATED(configInfo)
+    self:TRAIT_CONFIG_UPDATED(configInfo.ID)
+end
 function frame:TRAIT_CONFIG_UPDATED(configID)
     local activeConfigID = C_ClassTalents.GetActiveConfigID();
     if activeConfigID == configID then
@@ -1689,5 +1692,6 @@ frame:RegisterEvent("BAG_UPDATE_DELAYED");
 frame:RegisterUnitEvent("UNIT_INVENTORY_CHANGED", "player");
 frame:RegisterEvent("SOCKET_INFO_SUCCESS");
 frame:RegisterEvent("ITEM_CHANGED");
+frame:RegisterEvent("TRAIT_CONFIG_CREATED");
 frame:RegisterEvent("TRAIT_CONFIG_UPDATED");
 frame:RegisterEvent("TRAIT_CONFIG_DELETED");
