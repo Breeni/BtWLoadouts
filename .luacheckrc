@@ -526,6 +526,7 @@ new_read_globals = {
     'PanelTemplates_UpdateTabs',
     'PixelUtil.SetHeight',
     'PixelUtil.SetPoint',
+    'PlayerUtil.GetSpecName',
     'QuestEventListener.AddCallback',
     'QuestUtils_GetQuestName',
     'RegionUtil.CalculateAngleBetween',
