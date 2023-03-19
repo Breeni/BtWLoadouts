@@ -1,3 +1,8 @@
+# v1.13.0-beta
+
+- Added support for resizing the main window, including horizontal resizing for the talents tab.
+- Fixed a slight gap in the background of the main window
+
 # v1.12.4
 
 - Added log message for the internal trait tree version when changing Dragonflight Talents
