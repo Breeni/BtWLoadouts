@@ -3,7 +3,7 @@
 ## Version: @project-version@
 ## Notes: Change your characters spec, talents, equipment, essences, and action bars all at once
 ## Author: Breen
-## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings, BtWLoadoutsTraitsInfo
+## SavedVariables: BtWLoadoutsSets, BtWLoadoutsSpecInfo, BtWLoadoutsRoleInfo, BtWLoadoutsEssenceInfo, BtWLoadoutsCharacterInfo, BtWLoadoutsHelpTipFlags, BtWLoadoutsSettings, BtWLoadoutsTraitsInfo, BtWLoadoutsFrameSettings
 ## SavedVariablesPerCharacter: BtWLoadoutsCollapsed, BtWLoadoutsCategories, BtWLoadoutsFilters
 ## OptionalDeps: OPie, Adibags, Bagnon
 ## X-Curse-Project-ID: 336400

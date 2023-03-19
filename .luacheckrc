@@ -55,6 +55,7 @@ globals = {
     'BtWLoadoutsEquipmentMixin',
     'BtWLoadoutsEssencesMixin',
     'BtWLoadoutsFrameMixin',
+    'BtWLoadoutsFrameSettings',
     'BtWLoadoutsIgnoreActionBarMixin',
     'BtWLoadoutsImportFrameMixin',
     'BtWLoadoutsImportMixin',

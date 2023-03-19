@@ -1559,6 +1559,36 @@ do
 	function BtWLoadoutsFrameMixin:OnLeave()
 		SetCursor(nil);
 	end
+	function BtWLoadoutsFrameMixin:OnResizeStop()
+		BtWLoadoutsFrameSettings = BtWLoadoutsFrameSettings or {};
+		local frame = self:GetCurrentTab();
+		local w, h = self:GetSize();
+		BtWLoadoutsFrameSettings[frame.segment or frame:GetParentKey()] = {
+			w = w,
+			h = h,
+		};
+		self:Update();
+	end
+	function BtWLoadoutsFrameMixin:OnTabChanged()
+		local frame = self:GetCurrentTab();
+
+		local minW, minH, maxW, maxH = self:GetResizeBounds()
+		if frame.GetMaxWidth then
+			maxW = math.max(minW, frame:GetMaxWidth());
+		else
+			maxW = minW;
+		end
+
+		local w, h = minW, minH
+		if BtWLoadoutsFrameSettings then
+			local settings = BtWLoadoutsFrameSettings[frame.segment or frame:GetParentKey()];
+			if settings then
+				w, h = settings.w, settings.h;
+			end
+		end
+		self:SetResizeBounds(minW, minH, maxW, maxH)
+		self:SetWidth(math.max(minW, math.min(w, maxW)));
+	end
 	function BtWLoadoutsFrameMixin:SetLoadout(set)
 		self.Loadouts.set = set;
 		wipe(self.Loadouts.temp);
@@ -1735,6 +1765,7 @@ do
 			-- 	verticalAnchorY = 0,
 			-- };
 
+			self:OnTabChanged()
 			self.initialized = true;
 		end
 

@@ -871,10 +871,6 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
 
         self.talentTreeID = treeID;
         self:UpdateTreeInfo(true);
-
-        if not skipUpdateTree then
-            self:LoadTalentTreeInternal();
-        end
         
         local nodes = C_Traits.GetTreeNodes(treeID)
         local rect = {left = 65536, right = 0, top = 65536, bottom = 0}
@@ -896,7 +892,23 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
             end
         end
 
-        -- self.ButtonsParent:SetSize(rect.right * 0.1, rect.bottom * 0.1)
+        local scroll = self.Scroll;
+        local scale = self.ButtonsParent:GetScale();
+
+        -- How much to shift nodes vertically, calculated in node units
+        local actualHeight = self.Scroll:GetHeight() / scale * 10;
+        local requiredHeight = (rect.bottom - rect.top + 800);
+        if requiredHeight < actualHeight then
+            self.offsetY = -rect.top + (actualHeight - requiredHeight) * 0.5 + 400;
+            self.Scroll:GetScrollChild():SetHeight(self.Scroll:GetHeight());
+        else
+            self.offsetY = -rect.top + 400;
+            self.Scroll:GetScrollChild():SetHeight(requiredHeight * 0.1 * scale);
+        end
+
+        if not skipUpdateTree then
+            self:LoadTalentTreeInternal();
+        end
 
         local center = (rect.right - rect.left) * 0.5 + rect.left;
         local leftSide = {left = 65536, right = 0, top = 65536, bottom = 0}
@@ -922,11 +934,10 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
             end
         end
 
-        local scroll = self.Scroll;
-        local scale = self.ButtonsParent:GetScale();
         local halfWidth = scroll:GetWidth() * 0.5;
 
         self.leftOffset = (((leftSide.right - leftSide.left) * 0.5 + leftSide.left) * 0.1) * scale - halfWidth;
+        self.centerOffset = center * 0.1 * scale - halfWidth;
         self.rightOffset = (((rightSide.right - rightSide.left) * 0.5 + rightSide.left) * 0.1) * scale - halfWidth;
 
         local scrollChild = scroll:GetScrollChild();
@@ -981,59 +992,107 @@ end
 function BtWLoadoutsDFTalentsMixin:OnDrag()
     local scroll = self.Scroll;
 
-    local maxXScroll, maxYScroll = scroll:GetHorizontalScrollRange(), scroll:GetVerticalScrollRange()
-    local minXScroll = self.leftOffset;
-    local maxXScroll = self.rightOffset;
+    if self.Scroll:GetWidth() >= 1000 then -- Lock showing both trees
+        local scrollX = scroll:GetHorizontalScroll();
+        local scrollY = scroll:GetVerticalScroll();
+        local targetX = self.centerOffset - 20;
+        if ApproximatelyEqual(scrollX, targetX, 0.1) then
+            scrollX = targetX;
+            self.DragHandler:Hide();
+        else
+            scrollX = FrameDeltaLerp(scrollX, targetX, 0.1);
+        end
 
-    local scrollX, scrollY
+        self.SpecTreeButton:SetAlpha(0);
+        self.ClassTreeButton:SetAlpha(0);
 
-    if self.endScrolling then -- Maybe check which direction the drag was going in before hand?
-        scrollX = scroll:GetHorizontalScroll();
-        scrollY = scroll:GetVerticalScroll();
-        if self.scrollDelta then
-            if self.scrollDelta < 0 then
-                if ApproximatelyEqual(scrollX, minXScroll, 0.1) then
-                    scrollX = minXScroll;
-                    self.DragHandler:Hide();
+        scroll:SetHorizontalScroll(scrollX)
+        scroll:SetVerticalScroll(scrollY)
+    elseif self.Scroll:GetWidth() >= 620 then -- Lock showing both trees
+        local maxXScroll, maxYScroll = scroll:GetHorizontalScrollRange(), scroll:GetVerticalScrollRange()
+        local minXScroll = self.leftOffset;
+        local maxXScroll = self.rightOffset;
+
+        local scrollX = scroll:GetHorizontalScroll();
+        local scrollY = scroll:GetVerticalScroll();
+        
+        if self.endScrolling then
+            self.DragHandler:Hide();
+        else
+            local mouseX, mouseY = GetCursorPosition()
+            local scale = scroll:GetScrollChild():GetEffectiveScale()
+            mouseX, mouseY = mouseX / scale, mouseY / scale
+    
+            scrollX = min(max(self.mouseX - mouseX + self.scrollX, minXScroll), maxXScroll)
+            scrollY = min(max(mouseY - self.mouseY + self.scrollY, 0), maxYScroll)
+        end
+
+        self.SpecTreeButton:SetAlpha(0);
+        self.ClassTreeButton:SetAlpha(0);
+
+        scroll:SetHorizontalScroll(scrollX)
+        scroll:SetVerticalScroll(scrollY)
+    else
+        local maxXScroll, maxYScroll = scroll:GetHorizontalScrollRange(), scroll:GetVerticalScrollRange()
+        local minXScroll = self.leftOffset;
+        local maxXScroll = self.rightOffset;
+
+        local scrollX, scrollY
+
+        if self.endScrolling then -- Maybe check which direction the drag was going in before hand?
+            scrollX = scroll:GetHorizontalScroll();
+            scrollY = scroll:GetVerticalScroll();
+            if self.scrollDelta then
+                if self.scrollDelta < 0 then
+                    if ApproximatelyEqual(scrollX, minXScroll, 0.1) then
+                        scrollX = minXScroll;
+                        self.DragHandler:Hide();
+                    else
+                        scrollX = FrameDeltaLerp(scrollX, minXScroll, 0.1);
+                    end
                 else
-                    scrollX = FrameDeltaLerp(scrollX, minXScroll, 0.1);
+                    if ApproximatelyEqual(scrollX, maxXScroll, 0.1) then
+                        scrollX = maxXScroll;
+                        self.DragHandler:Hide();
+                    else
+                        scrollX = FrameDeltaLerp(scrollX, maxXScroll, 0.1);
+                    end
                 end
+            elseif ApproximatelyEqual(scrollX, minXScroll, 0.1) then
+                scrollX = minXScroll;
+                self.DragHandler:Hide();
+            elseif ApproximatelyEqual(scrollX, maxXScroll, 0.1) then
+                scrollX = maxXScroll;
+                self.DragHandler:Hide();
             else
-                if ApproximatelyEqual(scrollX, maxXScroll, 0.1) then
-                    scrollX = maxXScroll;
-                    self.DragHandler:Hide();
+                local halfWay = maxXScroll * 0.5;
+                if scrollX < maxXScroll * 0.5 then
+                    scrollX = FrameDeltaLerp(scrollX, minXScroll, 0.1);
                 else
                     scrollX = FrameDeltaLerp(scrollX, maxXScroll, 0.1);
                 end
             end
-        elseif ApproximatelyEqual(scrollX, minXScroll, 0.1) then
-            scrollX = minXScroll;
-            self.DragHandler:Hide();
-        elseif ApproximatelyEqual(scrollX, maxXScroll, 0.1) then
-            scrollX = maxXScroll;
-            self.DragHandler:Hide();
         else
-            local halfWay = maxXScroll * 0.5;
-            if scrollX < maxXScroll * 0.5 then
-                scrollX = FrameDeltaLerp(scrollX, minXScroll, 0.1);
-            else
-                scrollX = FrameDeltaLerp(scrollX, maxXScroll, 0.1);
-            end
+            local mouseX, mouseY = GetCursorPosition()
+            local scale = scroll:GetScrollChild():GetEffectiveScale()
+            mouseX, mouseY = mouseX / scale, mouseY / scale
+
+            scrollX = self.mouseX - mouseX + self.scrollX
+            scrollY = mouseY - self.mouseY + self.scrollY
         end
-    else
-        local mouseX, mouseY = GetCursorPosition()
-        local scale = scroll:GetScrollChild():GetEffectiveScale()
-        mouseX, mouseY = mouseX / scale, mouseY / scale
 
-        scrollX = min(max(self.mouseX - mouseX + self.scrollX, minXScroll), maxXScroll)
-        scrollY = min(max(mouseY - self.mouseY + self.scrollY, 0), maxYScroll)
+        scrollX = min(max(scrollX, minXScroll), maxXScroll)
+        scrollY = min(max(scrollY, 0), maxYScroll)
+
+        self.SpecTreeButton:SetAlpha(math.max(1 - math.abs(scrollX - self.leftOffset) * 0.005, 0))
+        self.ClassTreeButton:SetAlpha(math.max(1 - math.abs(scrollX - self.rightOffset) * 0.005, 0))
+
+        scroll:SetHorizontalScroll(scrollX)
+        scroll:SetVerticalScroll(scrollY)
     end
-
-    self.SpecTreeButton:SetAlpha(math.max(1 - math.abs(scrollX - self.leftOffset) * 0.005, 0))
-    self.ClassTreeButton:SetAlpha(math.max(1 - math.abs(scrollX - self.rightOffset) * 0.005, 0))
-
-    scroll:SetHorizontalScroll(scrollX)
-    scroll:SetVerticalScroll(scrollY)
+end
+function BtWLoadoutsDFTalentsMixin:GetMaxWidth()
+    return 1300
 end
 function BtWLoadoutsDFTalentsMixin:BeginScrollDrag()
     local scroll = self.Scroll;
@@ -1320,12 +1379,10 @@ function BtWLoadoutsDFTalentsMixin:InstantiateTalentButton(nodeID, nodeInfo)
 		newTalentButton:SetNodeID(nodeID);
 	end
 
-	local offsetX = nil;
-	local offsetY = nil;
-	local newTalentButton = self:AcquireTalentButton(nodeInfo, talentType, offsetX, offsetY, InitTalentButton);
+	local newTalentButton = self:AcquireTalentButton(nodeInfo, talentType, nil, nil, InitTalentButton);
 
 	if newTalentButton then
-		TalentButtonUtil.ApplyPosition(newTalentButton, self, nodeInfo.posX, nodeInfo.posY);
+		TalentButtonUtil.ApplyPosition(newTalentButton, self, nodeInfo.posX + (self.offsetX or 0), nodeInfo.posY + (self.offsetY or 0));
 
 		local frameLevel = newTalentButton:GetParent():GetFrameLevel() + self:GetFrameLevelForButton(nodeInfo);
 		self:SetElementFrameLevel(newTalentButton, frameLevel);
