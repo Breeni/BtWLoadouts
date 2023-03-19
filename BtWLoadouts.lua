@@ -1530,6 +1530,7 @@ do
 			self.TitleText:SetText(BTWLOADOUTS_LOADOUTS)
 			self.TitleText:SetHeight(24)
 		end
+		self.Bg:SetPoint("TOPLEFT", 0, -21) -- Fixed gap between border
 	end
 	function BtWLoadoutsFrameMixin:SetTitle(text)
 		if self.TitleContainer then
