@@ -1,3 +1,7 @@
+# v1.13.1
+
+- Updated for 10.0.7
+
 # v1.13.0-beta
 
 - Added support for resizing the main window, including horizontal resizing for the talents tab.
