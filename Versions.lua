@@ -22,6 +22,7 @@ Internal.IsDragonflightPatch = IsAtleastBuild(100000)
 Internal.Is100000 = IsBuild(100000)
 Internal.Is100002 = IsBuild(100002)
 Internal.Is100005 = IsBuild(100005)
+Internal.Is100007 = IsAtleastBuild(100007)
 
 Internal.IsBattleForAzeroth = IsExpansion(LE_EXPANSION_BATTLEFORAZEROTH or 7)
 Internal.IsShadowlands = IsExpansion(LE_EXPANSION_SHADOWLANDS or 8)

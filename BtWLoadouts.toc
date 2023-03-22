@@ -1,4 +1,4 @@
-## Interface: 100005
+## Interface: 100007
 ## Title: BtWLoadouts
 ## Version: @project-version@
 ## Notes: Change your characters spec, talents, equipment, essences, and action bars all at once
@@ -21,8 +21,8 @@ Localizations.zhTW.lua
 
 Versions.lua
 Blockers.lua
-DFTalents.100002.lua
 DFTalents.100005.lua
+DFTalents.100007.lua
 Characters.lua
 Instances.lua
 Sets.lua
