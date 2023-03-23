@@ -738,7 +738,7 @@ local function AddActionBarSet()
     elseif classFile == "DRUID" then
         ignoredStart = 121 -- After Form Bars
     end
-    for slot = ignoredStart,132 do
+    for slot = ignoredStart,144 do
         ignored[slot] = true
     end
 
@@ -749,7 +749,11 @@ local function AddActionBarSet()
     }))
 end
 local function GetActionBarSet(id)
-    return Internal.GetSet(BtWLoadoutsSets.actionbars, id)
+    local set = Internal.GetSet(BtWLoadoutsSets.actionbars, id)
+    for slot = 121,144 do
+        set.ignored[slot] = true
+    end
+    return set
 end
 local function GetActionBarSetByName(id)
     return Internal.GetSetByName(BtWLoadoutsSets.actionbars, id)
