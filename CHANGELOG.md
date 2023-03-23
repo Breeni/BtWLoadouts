@@ -1,3 +1,10 @@
+# v1.13.2
+
+- Updated so action bar sets will ignore items if none are available
+- Fixed an issue where equipment set errors could break other parts of the UI
+- Fixed an issue where some unused action bar slots were not being ignored
+- Fixed an issue where deleting a characters data would not delete the related Blizzard talent sets
+
 # v1.13.1
 
 - Updated for 10.0.7
