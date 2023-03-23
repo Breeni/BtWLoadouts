@@ -545,8 +545,12 @@ local function PickupActionTable(tbl, test, settings, activating)
                 msg = L["Spell not found"]
             end
         elseif tbl.type == "item" then
-            if not test then
-                PickupItem(tbl.id)
+            if IsUsableItem(tbl.id) and GetItemCount(tbl.id) > 0 then
+                if not test then
+                    PickupItem(tbl.id)
+                end
+            else
+                success, msg = false, L["Item unavailable"]
             end
         elseif tbl.type == "summonmount" then
             if tbl.id == 0xFFFFFFF then -- Random Favourite

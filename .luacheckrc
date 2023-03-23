@@ -356,6 +356,7 @@ new_read_globals = {
     'IsInGuild',
     'IsInRaid',
     'IsInventoryItemLocked',
+    'IsUsableItem',
     'IsLeftShiftKeyDown',
     'IsModifiedClick',
     'IsModifierKeyDown',
