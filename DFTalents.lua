@@ -1391,3 +1391,21 @@ function BtWLoadoutsDFTalentsMixin:InstantiateTalentButton(nodeID, nodeInfo)
 
 	return newTalentButton;
 end
+
+local function GetSetsForCharacter(tbl, slug)
+	tbl = tbl or {}
+	for _,set in pairs(BtWLoadoutsSets.dftalents) do
+		if type(set) == "table" and set.character == slug then
+			tbl[#tbl+1] = set
+		end
+	end
+	return tbl
+end
+-- Character deletion
+Internal.OnEvent("CHARACTER_DELETE", function (event, slug)
+	local sets = GetSetsForCharacter({}, slug)
+	for _,set in ipairs(sets) do
+		DeleteSet(set.setID)
+	end
+	return true
+end)
