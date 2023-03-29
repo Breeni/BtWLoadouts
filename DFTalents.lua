@@ -328,7 +328,7 @@ local function ActivateSet(set, state)
                     end
                 end
 
-                if #nodeInfo.entryIDs > 1 then
+                if nodeInfo.type == Enum.TraitNodeType.Selection then
                     local entryIndex = set.nodes[nodeID];
                     local success = C_Traits.SetSelection(configID, nodeID, nodeInfo.entryIDs[entryIndex]);
                     Internal.LogMessage("Set talent choice to %d for node %d (%s)", nodeInfo.entryIDs[entryIndex], nodeID, success and "true" or "false");
