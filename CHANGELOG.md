@@ -1,3 +1,7 @@
+# v1.13.3
+
+- Fixed an issue where some talents could incorrectly be treated as choice nodes
+
 # v1.13.2
 
 - Updated so action bar sets will ignore items if none are available
