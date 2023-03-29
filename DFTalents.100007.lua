@@ -5,7 +5,7 @@ if not Internal.Is100007 then
 end
 
 Internal.dftalents = {
-    version = 8,
+    version = 9,
     trees = {
         -- Warrior
         [71] = { -- Arms
@@ -24331,8 +24331,7 @@ Internal.dftalents = {
             },
             edges = {
                 { targetNode = 81509, type = 2, visualStyle = 1 },
-                { targetNode = 93165, type = 2, visualStyle = 1 },
-                { targetNode = 93168, type = 2, visualStyle = 1 }
+                { targetNode = 93165, type = 2, visualStyle = 1 }
             }
         },
         [81605] = {
