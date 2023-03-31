@@ -846,9 +846,16 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
             set.nodes = {};
         end
 
+        local treeID = set.treeID
+        local nodes = C_Traits.GetTreeNodes(treeID)
+        local oldNodes = set.nodes
+        set.nodes = {}
+        for _,nodeID in ipairs(nodes) do
+            set.nodes[nodeID] = oldNodes[nodeID]
+        end
+
         local classID = set.classID
         local specID = set.specID
-        local treeID = set.treeID
         if not classID then
             local classInfo = Internal.GetClassInfoBySpecID(specID)
             set.classID = classInfo.classID
@@ -875,7 +882,6 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         self.talentTreeID = treeID;
         self:UpdateTreeInfo(true);
         
-        local nodes = C_Traits.GetTreeNodes(treeID)
         local rect = {left = 65536, right = 0, top = 65536, bottom = 0}
         for _,nodeID in ipairs(nodes) do
             local nodeInfo = self:GetAndCacheNodeInfo(nodeID); -- /tinspect C_Traits.GetNodeInfo(C_ClassTalents.GetActiveConfigID(), 61086)
