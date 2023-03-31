@@ -1,3 +1,7 @@
+# v1.13.4
+
+- Fixed an error where old, removed talent nodes were not being removed from talent sets
+
 # v1.13.3
 
 - Fixed an issue where some talents could incorrectly be treated as choice nodes
