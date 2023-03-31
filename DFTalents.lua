@@ -267,9 +267,12 @@ end
 local function CombineSets(result, state, ...)
     result = result or {};
 
-	for i=1,select('#', ...) do
-		local set = GetSet(select(i, ...));
-        result.nodes = set.nodes; -- @TODO Proper Combining?
+	if select('#', ...) > 0 then
+		local set = GetSet(select(select('#', ...), ...));
+        result.nodes = {}
+        for _,nodeID in ipairs(C_Traits.GetTreeNodes(set.treeID)) do
+            result.nodes[nodeID] = set.nodes[nodeID]
+        end
     end
 
     if state then
