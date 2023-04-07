@@ -616,7 +616,7 @@ local function PickupActionTable(tbl, test, settings, activating)
                 end
                 if not index then -- Couldn't find the flyout in the spell book
                     success = false
-                    msg = L["Flyout is not is spell book"]
+                    msg = L["Flyout is not in spell book"]
                 elseif not test then
                     PickupSpellBookItem(index, "spell")
                 end
