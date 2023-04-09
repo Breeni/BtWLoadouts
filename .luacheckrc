@@ -237,6 +237,7 @@ new_read_globals = {
     'C_TaskQuest.GetQuestsForPlayerByMapID',
     'C_TaskQuest.GetQuestTimeLeftSeconds',
     'C_Timer.After',
+    'C_ToyBox.GetToyInfo',
     'C_Traits.GetConfigInfo',
     'C_Traits.GetConditionInfo',
     'C_Traits.GetDefinitionInfo',

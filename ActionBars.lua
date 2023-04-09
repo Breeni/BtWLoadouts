@@ -545,7 +545,9 @@ local function PickupActionTable(tbl, test, settings, activating)
                 msg = L["Spell not found"]
             end
         elseif tbl.type == "item" then
-            if IsUsableItem(tbl.id) and GetItemCount(tbl.id) > 0 then
+            local itemEquipLoc = select(4, GetItemInfoInstant(tbl.id))
+            -- Allowed items on bars: toys, equipment that there is at least 1 of in bags/equipped, or usable items
+            if C_ToyBox.GetToyInfo(tbl.id) or (itemEquipLoc ~= "" and GetItemCount(tbl.id) > 0) or (itemEquipLoc == "" and IsUsableItem(tbl.id)) then
                 if not test then
                     PickupItem(tbl.id)
                 end
