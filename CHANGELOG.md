@@ -1,3 +1,8 @@
+# v1.13.5
+
+- Updated action bar item handling to allow placing missing items on action bars unless they are equippable
+- Fixed a typo
+
 # v1.13.4
 
 - Fixed an error where old, removed talent nodes were not being removed from talent sets
