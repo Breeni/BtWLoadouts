@@ -1,3 +1,7 @@
+# v1.14.0
+
+- Initial support for 10.1
+
 # v1.13.5
 
 - Updated action bar item handling to allow placing missing items on action bars unless they are equippable
