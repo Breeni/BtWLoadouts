@@ -36,7 +36,7 @@ local function IsSeason(season)
     -- C_MythicPlus.GetCurrentSeason isnt always available during first login sp we fallback to date checking.
     -- In the future it might be worth using something else or delaying season checks
     local current = C_MythicPlus.GetCurrentSeason()
-    if current then
+    if current > 0 then
         return season == current
     end
 
