@@ -1,3 +1,7 @@
+# v1.14.1
+
+- Fixed an error while getting the current season on first login
+
 # v1.14.0
 
 - Initial support for 10.1
