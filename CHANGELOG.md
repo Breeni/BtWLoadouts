@@ -1,3 +1,9 @@
+# v1.14.2
+
+- Updated interface number for 10.1.0
+- Fixed an error where the sidebar wouldnt always show the correct number of buttons
+- Updated pvptalents for 10.1.0
+
 # v1.14.1
 
 - Fixed an error while getting the current season on first login
