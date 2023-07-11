@@ -1,3 +1,8 @@
+# v1.15.0
+
+- Updated talent tree caching to be more accurate
+- Updated for 10.1.5
+
 # v1.14.2
 
 - Updated interface number for 10.1.0
