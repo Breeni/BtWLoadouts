@@ -846,6 +846,11 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
             set.nodes = {};
         end
 
+		local configID = Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID; -- C_ClassTalents.GetActiveConfigID();
+		C_ClassTalents.InitializeViewLoadout(self.set.specID, 70);
+		local success = C_ClassTalents.ViewLoadout({});
+        Internal.UpdateTraitInfoFromConfig(self.set.specID, configID)
+
         local treeID = set.treeID
         local nodes = C_Traits.GetTreeNodes(treeID)
         local oldNodes = set.nodes

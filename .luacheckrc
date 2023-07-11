@@ -151,7 +151,10 @@ new_read_globals = {
     'C_ClassTalents.CommitConfig',
     'C_ClassTalents.GetActiveConfigID',
     'C_ClassTalents.GetConfigIDsBySpecID',
+    'C_ClassTalents.GetTraitTreeForSpec',
+    'C_ClassTalents.InitializeViewLoadout',
     'C_ClassTalents.UpdateLastSelectedSavedConfigID',
+    'C_ClassTalents.ViewLoadout',
     'C_Container.GetContainerFreeSlots',
     'C_Container.GetContainerItemLink',
     'C_Container.GetContainerItemInfo',
@@ -615,6 +618,7 @@ new_read_globals = {
     'SOUNDKIT',
     'STATICPOPUP_NUMDIALOGS',
     'TextureKitConstants',
+    'Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID',
 
     -- FrameXML Mixins
     'CallbackRegistryMixin',

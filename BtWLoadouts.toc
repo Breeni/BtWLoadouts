@@ -21,8 +21,7 @@ Localizations.zhTW.lua
 
 Versions.lua
 Blockers.lua
-DFTalents.100007.lua
-DFTalents.100100.lua
+DFTalents.100105.lua
 Characters.lua
 Instances.lua
 Sets.lua

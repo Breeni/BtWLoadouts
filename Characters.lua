@@ -6569,6 +6569,13 @@ do
 	end
 	function Internal.GetTreeInfoBySpecID(specID)
 		local result = BtWLoadoutsTraitsInfo.trees[specID] or trees[specID];
+		if not result then
+			C_ClassTalents.InitializeViewLoadout(specID, 70);
+			C_ClassTalents.ViewLoadout({});
+			Internal.UpdateTraitInfoFromConfig(specID, Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID);
+
+			result = BtWLoadoutsTraitsInfo.trees[specID] or trees[specID];
+		end
 		result.buttonSize = 40;
 		result.minZoom = 0.75;
 		result.maxZoom = 0.75;
@@ -6602,39 +6609,48 @@ do
 			result.visibleEdges = result.edgesBySpecID[specID];
 		else
 			result.visibleEdges = {}
-			for _,edge in ipairs(result.edges) do
-				if tree.visibleNodes[edge.targetNode] then
-					result.visibleEdges[#result.visibleEdges+1] = edge
-				end
-			end
 		end
 		return result;
 	end
 	function Internal.UpdateTraitInfoFromPlayer()
-		if not C_ClassTalents then
+		local specID = GetSpecializationInfo(GetSpecialization());
+		C_ClassTalents.InitializeViewLoadout(specID, 70);
+
+		local success = C_ClassTalents.ViewLoadout({});
+		if not success then
 --@debug@
-			print(format(L["[BtWLoadouts]: failed to update trait information for %s, missing C_ClassTalents."], PlayerUtil.GetSpecName()));
+			print(format(L["[BtWLoadouts]: failed to update trait information for %s, could not initialize trait tree."], select(2, GetSpecializationInfoByID(specID))));
+--@end-debug@
+			return
+		end
+		
+		local configID = Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID; -- C_ClassTalents.GetActiveConfigID();
+		if not configID then
+--@debug@
+			print(format(L["[BtWLoadouts]: failed to update trait information for %s, missing active config id."], select(2, GetSpecializationInfoByID(specID))));
 --@end-debug@
 			return
 		end
 
-		local configID = C_ClassTalents.GetActiveConfigID();
-		if not configID then
+		return Internal.UpdateTraitInfoFromConfig(specID, configID)
+	end
+	function Internal.UpdateTraitInfoFromConfig(specID, configID)
+		if not C_ClassTalents then
 --@debug@
-			print(format(L["[BtWLoadouts]: failed to update trait information for %s, missing active config id."], PlayerUtil.GetSpecName()));
+			print(format(L["[BtWLoadouts]: failed to update trait information for %s, missing C_ClassTalents."], select(2, GetSpecializationInfoByID(specID))));
 --@end-debug@
 			return
 		end
-		local specID = GetSpecializationInfo(GetSpecialization());
+
         local configInfo = C_Traits.GetConfigInfo(configID);
-        local treeID = configInfo.treeIDs[1];
+		local treeID = C_ClassTalents.GetTraitTreeForSpec(specID);
 		local tree = C_Traits.GetTreeInfo(configID, treeID);
 		local nodeIDs = C_Traits.GetTreeNodes(treeID);
 		local currencies = C_Traits.GetTreeCurrencyInfo(configID, treeID, true);
 		local incomingEdgesByNodeID = {}
 		
 --@debug@
-		print(format(L["[BtWLoadouts]: updating trait information for %s, configID: %d, treeID: %d."], PlayerUtil.GetSpecName(), configID, treeID));
+		print(format(L["[BtWLoadouts]: updating trait information for %s, configID: %d, treeID: %d."], select(2, GetSpecializationInfoByID(specID)), configID, treeID));
 --@end-debug@
 
 		local conditions = setmetatable({}, {
@@ -6647,28 +6663,10 @@ do
 			end
 		});
 
-		local savedTree = Internal.GetTreeInfoBySpecID(specID)
 		for _,gate in ipairs(tree.gates) do
 			local condInfo = conditions[gate.conditionID];
 			gate.traitCurrencyID = condInfo.traitCurrencyID;
-
-			local found = false;
-			for _,savedGate in ipairs(savedTree.gates) do
-				if savedGate.conditionID == gate.conditionID then
-					found = true;
-					gate.spentAmountRequired = savedGate.spentAmountRequired;
-					break;
-				end
-			end
-
-			-- Gates arent compatible with saved version so we cant get the spentAmountRequired
-			-- without a lot of extra effort so we will just fail for now
-			if not found then
---@debug@
-				print(format(L["[BtWLoadouts]: failed to update trait information for %s, compatible gates."], PlayerUtil.GetSpecName()));
---@end-debug@
-				return;
-			end
+			gate.spentAmountRequired = condInfo.spentAmountRequired;
 		end
 
 		tree.hideSingleRankNumbers = nil;
@@ -6677,25 +6675,6 @@ do
 		tree.minZoom = nil;
 
 		for _,currency in ipairs(currencies) do
-			if UnitLevel("player") ~= 70 then
-				local found = false;
-				for _,savedCurrency in ipairs(savedTree.currencies) do
-					if savedCurrency.traitCurrencyID == currency.traitCurrencyID then
-						found = true;
-						currency.maxQuantity = savedCurrency.maxQuantity;
-						break;
-					end
-				end
-
-				-- Although currencies have all the data we store their maxQuantity is incorrect on non max level characters
-				if not found then
---@debug@
-					print(format(L["[BtWLoadouts]: failed to update trait information for %s, incorrect currency max quantity."], PlayerUtil.GetSpecName()));
---@end-debug@
-					return;
-				end
-			end
-
 			currency.quantity = nil;
 			currency.spent = nil;
 		end
@@ -6713,7 +6692,7 @@ do
 
 				for _,condID in ipairs(nodeInfo.conditionIDs) do
 					local condInfo = conditions[condID];
-					if condInfo.ranksGranted and (condInfo.specSetID == nil or C_SpecializationInfo.MatchesCurrentSpecSet(condInfo.specSetID)) then
+					if condInfo.ranksGranted and (condInfo.specSetID == nil or tContains(C_SpecializationInfo.GetSpecIDs(condInfo.specSetID), specID)) then
 						grantedNodes[#grantedNodes+1] = nodeID;
 					end
 				end
@@ -6745,19 +6724,11 @@ do
 				end
 
 				local savedNodeInfo = Internal.GetNodeInfo(nodeID);
-				if not savedNodeInfo then
---@debug@
-			print(format(L["[BtWLoadouts]: failed to update trait information for %s, missing saved node info for node %d."], PlayerUtil.GetSpecName(), nodeID));
---@end-debug@
-					return
-				end
-
-				nodeInfo.edges = savedNodeInfo.edges;
 
 				nodeInfo.edgesBySpecID = savedNodeInfo and savedNodeInfo.edgesBySpecID or {};
 				nodeInfo.edgesBySpecID[specID] = nodeInfo.visibleEdges;
 
-				nodeInfo.incomingEdges = savedNodeInfo.incomingEdges;
+				nodeInfo.incomingEdges = savedNodeInfo and savedNodeInfo.incomingEdges;
 				nodeInfo.incomingEdgesBySpecID = savedNodeInfo and savedNodeInfo.incomingEdgesBySpecID or {};
 				nodeInfo.incomingEdgesBySpecID[specID] = incomingEdgesByNodeID[nodeID];
 
@@ -6765,6 +6736,21 @@ do
 				
 				local costs = C_Traits.GetNodeCost(configID, nodeID);
 				nodeInfo.costs = costs;
+
+				BtWLoadoutsTraitsInfo.nodes[nodeID] = nodeInfo;
+			elseif not BtWLoadoutsTraitsInfo.nodes[nodeID] then
+				nodeInfo.canPurchaseRank = nil;
+				nodeInfo.canRefundRank = nil;
+				nodeInfo.isAvailable = nil;
+				nodeInfo.isCascadeRepurchasable = nil;
+				nodeInfo.isVisible = nil;
+				nodeInfo.meetsEdgeRequirements = nil;
+				
+				nodeInfo.activeRank = nil;
+				nodeInfo.currentRank = nil;
+				nodeInfo.ranksPurchased = nil;
+				nodeInfo.activeEntry = nil;
+				nodeInfo.entryIDsWithCommittedRanks = nil;
 
 				BtWLoadoutsTraitsInfo.nodes[nodeID] = nodeInfo;
 			end

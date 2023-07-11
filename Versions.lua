@@ -31,6 +31,10 @@ local seasons = {
         [9] = 1671058800,
         [10] = 1683759600,
     },
+    [72] = {
+        [9] = 1671058800,
+        [10] = 1683759600,
+    },
 };
 local function IsSeason(season)
     -- C_MythicPlus.GetCurrentSeason isnt always available during first login sp we fallback to date checking.
@@ -65,6 +69,7 @@ Internal.Is100002 = IsBuild(100002)
 Internal.Is100005 = IsBuild(100005)
 Internal.Is100007 = IsBuild(100007)
 Internal.Is100100 = IsAtleastBuild(100100)
+Internal.Is100105 = IsAtleastBuild(100105)
 
 Internal.IsBattleForAzeroth = IsExpansion(LE_EXPANSION_BATTLEFORAZEROTH or 7)
 Internal.IsShadowlands = IsExpansion(LE_EXPANSION_SHADOWLANDS or 8)
