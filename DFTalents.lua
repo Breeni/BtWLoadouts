@@ -242,7 +242,7 @@ local function SetRequirements(set)
                         break -- We dont actually need to check anything more
                     end
                 else
-                    if not nodeInfo.ranksPurchased == 1 or not nodeInfo.activeEntry or nodeInfo.activeEntry.entryID ~= nodeInfo.entryIDs[value] then
+                    if nodeInfo.ranksPurchased ~= 1 or not nodeInfo.activeEntry or nodeInfo.activeEntry.entryID ~= nodeInfo.entryIDs[value] then
                         isActive = false;
                     end
                 end
