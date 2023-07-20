@@ -6582,7 +6582,7 @@ do
 		return result;
 	end
 	function Internal.GetNodeInfo(nodeID)
-		return nodes[nodeID];
+		return BtWLoadoutsTraitsInfo.nodes[nodeID] or nodes[nodeID];
 	end
 	function Internal.GetNodeInfoBySpecID(specID, nodeID)
 		local tree = Internal.GetTreeInfoBySpecID(specID);
