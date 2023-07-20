@@ -1,3 +1,7 @@
+# v1.15.1
+
+- Fixed an issue importing loadouts using Blizzard loadout string
+
 # v1.15.0
 
 - Updated talent tree caching to be more accurate
