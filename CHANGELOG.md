@@ -1,5 +1,10 @@
 # v1.15.2
 
+- Updated for 10.2
+- Fixed error selecting mythic plus affix in conditions
+
+# v1.15.2
+
 - Updated for 10.1.7
 
 # v1.15.1
