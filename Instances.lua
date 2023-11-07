@@ -2664,10 +2664,7 @@ local function PushAffixMask(a, b)
 end
 function Internal.GetExclusiveAffixes(affixesID)
 	affixesID = bit.band(affixesID or 0, 0xffffff)
-	if affixesID == 0 or GetExpansionLevel() == 8 then
-		return {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff}
-	end
-	return affixesMask[affixesID];
+	return affixesMask[affixesID] or {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
 end
 function Internal.CompareAffixMasks(a, b)
     return bit.band(a[1] or 0, b[1] or 0) == (a[1] or 0) and
