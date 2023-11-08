@@ -341,6 +341,18 @@ local function GetActionInfoTable(slot, tbl)
         elseif IsCovenantClassAbility(id) then
             id = GetCovenantClassAbility() or id
         end
+    elseif actionType == "macro" then
+        PickupAction(slot)
+
+        local cursorType, cursorId = GetCursorInfo()
+        if cursorType == "macro" then
+            id = cursorId
+        else
+            actionType = nil
+            id = nil
+        end
+
+        PlaceAction(slot)
     end
 
     -- There are some situations where actions can be "empty" but showing as macros with id 0
