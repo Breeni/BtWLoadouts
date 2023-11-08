@@ -1,3 +1,8 @@
+# v1.15.3
+
+- Fixed error creating and updating action bars
+- Updated verison for 10.2
+
 # v1.15.2
 
 - Updated for 10.2
