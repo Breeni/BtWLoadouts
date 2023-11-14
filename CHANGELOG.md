@@ -1,3 +1,7 @@
+# v1.15.4
+
+- Fixed an issue where macros were not being placed in action slots that already had macros
+
 # v1.15.3
 
 - Fixed error creating and updating action bars
