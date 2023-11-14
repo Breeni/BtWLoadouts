@@ -1,6 +1,10 @@
-# v1.15.4
+# v1.15.5
 
 - Fixed an issue where macros were not being placed in action slots that already had macros
+
+# v1.15.4
+
+- Fixed an issue where loadouts wouldnt show as active if they contained action bar sets with macros
 
 # v1.15.3
 
