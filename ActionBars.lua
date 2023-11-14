@@ -714,7 +714,7 @@ local function ActivateActionBarSet(set, state)
         if not set.ignored[slot] then
             local action = set.actions[slot]
 
-            if not CompareSlot(slot, action, set.settings) then
+            if not CompareSlot(slot, action, set.settings) or GetActionInfo(slot) == "macro" then
                 local success, done = SetActon(slot, action)
                 if not done then
                     complete = false
