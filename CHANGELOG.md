@@ -1,3 +1,7 @@
+# v1.15.6
+
+- Updated verison for 10.2.5
+
 # v1.15.5
 
 - Fixed an issue where macros were not being placed in action slots that already had macros
