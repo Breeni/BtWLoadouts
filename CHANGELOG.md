@@ -1,3 +1,7 @@
+# v1.15.8
+
+- Fixed an issue with unique-equipped items not being categorized correctly
+
 # v1.15.7
 
 - Updated verison for 10.2.5
