@@ -549,6 +549,20 @@ local itemUniquenessCache = {
     [132378] = {357, 2},
     [132369] = {357, 2},
 }
+local GetItemUniquenessByID = C_Item and C_Item.GetItemUniquenessByID;
+local GetItemUniqueness = GetItemUniquenessByID and function (itemInfo)
+	local isUnique, limitCategoryName, limitCategoryCount, limitCategoryID = GetItemUniquenessByID(itemInfo)
+
+	if not isUnique then
+		return nil, nil
+	end
+
+	if not limitCategoryName then
+		return -1, 1
+	end
+
+	return limitCategoryID, limitCategoryCount
+end or GetItemUniqueness;
 -- Returns the same as GetItemUniqueness except uses the above cache, also converts -1 family to itemID
 local function GetItemUniquenessCached(itemLink)
 	local itemID = GetItemInfoInstant(itemLink)
