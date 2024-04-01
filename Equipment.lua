@@ -3036,8 +3036,8 @@ if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
 			return nil
 		end)
 
-		-- Delete custom categories created by BtWLoadouts on haracter logout
-		-- This ensures only categories for sets of the current character are displayed
+		-- Delete custom categories created by BtWLoadouts on character logout
+		-- This ensures only categories for sets enabled for the current character are displayed
 		local frame = CreateFrame("Frame")
 		frame:SetScript("OnEvent", function ()
 			for category in pairs(setCategories) do
