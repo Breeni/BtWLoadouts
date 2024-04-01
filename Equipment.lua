@@ -3022,16 +3022,30 @@ if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
 	local BetterBags = LibStub("AceAddon-3.0"):GetAddon("BetterBags", true)
 
 	if BetterBags then
+		local setCategories = {}
 		local categories = BetterBags:GetModule('Categories')
 		categories:RegisterCategoryFunction("BtWLoadouts", function(data)
 			local location = PackLocation(data.bagid, data.slotid)
 			local sets = {}
 			local set = GetEnabledSetsForLocation(location, sets)[1]
 			if set then
-				return format(L["Set: %s"], set.name)
+				local category = format(L["Set: %s"], set.name)
+				setCategories[category] = true
+				return category
 			end
 			return nil
 		end)
+
+		-- Delete custom categories created by BtWLoadouts on haracter logout
+		-- This ensures only categories for sets of the current character are displayed
+		local frame = CreateFrame("Frame")
+		frame:SetScript("OnEvent", function ()
+			for category in pairs(setCategories) do
+				categories:DeleteCategory(category)
+			end
+		end)
+		frame:RegisterEvent("PLAYER_LOGOUT")
+		frame:Hide()
 	end
 end
 
