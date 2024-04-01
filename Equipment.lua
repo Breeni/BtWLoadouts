@@ -3017,6 +3017,24 @@ if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
 	end
 end
 
+-- BetterBags
+if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
+	local BetterBags = LibStub("AceAddon-3.0"):GetAddon("BetterBags", true)
+
+	if BetterBags then
+		local categories = BetterBags:GetModule('Categories')
+		categories:RegisterCategoryFunction("BtWLoadouts", function(data)
+			local location = PackLocation(data.bagid, data.slotid)
+			local sets = {}
+			local set = GetEnabledSetsForLocation(location, sets)[1]
+			if set then
+				return format(L["Set: %s"], set.name)
+			end
+			return nil
+		end)
+	end
+end
+
 -- LibItemSearch, used by Bagnon to display borders around items within equipment sets
 if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
 	local Lib = LibStub("LibItemSearch-1.2")
