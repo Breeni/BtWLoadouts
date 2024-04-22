@@ -8,6 +8,15 @@ local UnitClass = UnitClass
 local GetActionInfo = GetActionInfo
 local GetMacroBody = GetMacroBody
 local trim = strtrim
+local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
+local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
+local GetSpellInfo = C_Spell and C_Spell.GetSpellInfo and function (spell)
+	local tbl = C_Spell.GetSpellInfo(spell);
+	if not tbl then
+		return nil
+	end
+	return tbl.name, nil, tbl.iconID, tbl.castTime, tbl.minRange, tbl.maxRange, tbl.spellID, tbl.originalIconID
+end or GetSpellInfo
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;

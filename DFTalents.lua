@@ -636,6 +636,10 @@ function BtWLoadoutsDFTalentsMixin:OnLoad()
 
     self.ButtonsParent = self.Scroll:GetScrollChild():GetChildren();
 
+    if self.SelectionChoiceFrame.SetTalentFrame then
+	    self.SelectionChoiceFrame:SetTalentFrame(self);
+    end
+
     self.getSpecializedMixin = GetSpecializedMixin;
 end
 function BtWLoadoutsDFTalentsMixin:OnShow()

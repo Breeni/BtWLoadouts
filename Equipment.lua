@@ -12,6 +12,9 @@ local GetContainerItemLink = C_Container and C_Container.GetContainerItemLink or
 local GetContainerNumSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots
 local GetVoidItemHyperlinkString = GetVoidItemHyperlinkString
 local GetItemUniqueness = GetItemUniqueness
+local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
+local GetItemGem = C_Item and C_Item.GetItemGem or GetItemGem
+local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
