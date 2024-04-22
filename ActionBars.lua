@@ -1335,8 +1335,7 @@ function BtWLoadoutsActionBarsMixin:Update()
 	
 	local showingNPE = BtWLoadoutsFrame:SetNPEShown(set == nil, L["Action Bars"], L["Create different action bar layouts, including stealth, form, and stance bars. You can ignore specific action buttons or entire bars."])
         
-	self:GetParent().ExportButton:SetEnabled(true)
-    self:GetParent().RefreshButton:SetEnabled(true)
+	self:GetParent().ExportButton:SetEnabled(true);
     self:GetParent().ActivateButton:SetEnabled(true);
     self:GetParent().DeleteButton:SetEnabled(true);
 
@@ -1362,7 +1361,9 @@ function BtWLoadoutsActionBarsMixin:Update()
             if icon ~= nil and icon ~= 134400 then
                 slots[slot].icon = icon
             end
-		end
+        end
+
+        self:GetParent().RefreshButton:SetEnabled(Internal.AreRestrictionsValidForPlayer(set.restrictions));
 
 		local helpTipBox = self:GetParent().HelpTipBox;
         if not BtWLoadoutsHelpTipFlags["ACTIONBAR_IGNORE"] then
