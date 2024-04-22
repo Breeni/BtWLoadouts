@@ -15,7 +15,10 @@ local BtWLoadoutsTalentsMixin = false
 
 Internal.OnEvent("LOADOUT_CHANGE_END", function ()
     if C_Traits then
-        C_Traits.RollbackConfig(C_ClassTalents.GetActiveConfigID()); -- Rollback to what we were at before starting a loadout
+        local configID = C_ClassTalents.GetActiveConfigID();
+        if configID then
+            C_Traits.RollbackConfig(configID); -- Rollback to what we were at before starting a loadout
+        end
     end
 end)
 
@@ -178,6 +181,9 @@ local function GetByName(name)
 end
 local function IsSetActive(set)
     local configID = C_ClassTalents.GetActiveConfigID();
+    if not configID then -- New character without an active config?
+        return false
+    end
     for nodeID,value in pairs(set.nodes) do
         local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID);
         if not nodeInfo then -- Does this mean we cant activate this set at all?
@@ -204,7 +210,11 @@ local function IsSetActive(set)
     return true;
 end
 local function IsNodeEntryOnCooldown(nodeEntryID)
-    local entryInfo = C_Traits.GetEntryInfo(C_ClassTalents.GetActiveConfigID(), nodeEntryID);
+    local configID = C_ClassTalents.GetActiveConfigID();
+    if not configID then
+        return false;
+    end
+    local entryInfo = C_Traits.GetEntryInfo(configID, nodeEntryID);
     local definitionInfo = C_Traits.GetDefinitionInfo(entryInfo.definitionID);
     
     local spellID = definitionInfo.spellID;
@@ -312,65 +322,65 @@ local function ActivateSet(set, state)
         C_ClassTalents.UpdateLastSelectedSavedConfigID(specID, 0) -- Set active loadout to "Default Loadout"
 
         local configID = C_ClassTalents.GetActiveConfigID();
-        if not configID then
-            return
-        end
+        if configID then
+            local configInfo = C_Traits.GetConfigInfo(configID);
+            C_Traits.ResetTree(configID, configInfo.treeIDs[1]);
 
-        local configInfo = C_Traits.GetConfigInfo(configID);
-        C_Traits.ResetTree(configID, configInfo.treeIDs[1]);
-
-        local done = {};
-        local a, b = {}, {};
-        local function PurchaseNode(nodeID)
-            if not done[nodeID] and set.nodes[nodeID] then
-                local nodeInfo = Internal.GetNodeInfoBySpecID(specID, nodeID);
-                local incomingEdges = nodeInfo.incomingEdgesBySpecID and nodeInfo.incomingEdgesBySpecID[specID] or nodeInfo.incomingEdges
-                if incomingEdges then
-                    for _,sourceNode in ipairs(incomingEdges) do
-                        PurchaseNode(sourceNode);
+            local done = {};
+            local a, b = {}, {};
+            local function PurchaseNode(nodeID)
+                if not done[nodeID] and set.nodes[nodeID] then
+                    local nodeInfo = Internal.GetNodeInfoBySpecID(specID, nodeID);
+                    local incomingEdges = nodeInfo.incomingEdgesBySpecID and nodeInfo.incomingEdgesBySpecID[specID] or nodeInfo.incomingEdges
+                    if incomingEdges then
+                        for _,sourceNode in ipairs(incomingEdges) do
+                            PurchaseNode(sourceNode);
+                        end
                     end
-                end
 
-                if nodeInfo.type == Enum.TraitNodeType.Selection then
-                    local entryIndex = set.nodes[nodeID];
-                    local success = C_Traits.SetSelection(configID, nodeID, nodeInfo.entryIDs[entryIndex]);
-                    Internal.LogMessage("Set talent choice to %d for node %d (%s)", nodeInfo.entryIDs[entryIndex], nodeID, success and "true" or "false");
-                    if not success then
-                        b[nodeID] = true;
-                        return;
-                    end
-                else
-                    local points = set.nodes[nodeID];
-                    for i=1,points do
-                        local success = C_Traits.PurchaseRank(configID, nodeID);
-                        Internal.LogMessage("Purchase talent point %d of %d for node %d (%s)", i, points, nodeID, success and "true" or "false");
+                    if nodeInfo.type == Enum.TraitNodeType.Selection then
+                        local entryIndex = set.nodes[nodeID];
+                        local success = C_Traits.SetSelection(configID, nodeID, nodeInfo.entryIDs[entryIndex]);
+                        Internal.LogMessage("Set talent choice to %d for node %d (%s)", nodeInfo.entryIDs[entryIndex], nodeID, success and "true" or "false");
                         if not success then
                             b[nodeID] = true;
                             return;
                         end
+                    else
+                        local points = set.nodes[nodeID];
+                        for i=1,points do
+                            local success = C_Traits.PurchaseRank(configID, nodeID);
+                            Internal.LogMessage("Purchase talent point %d of %d for node %d (%s)", i, points, nodeID, success and "true" or "false");
+                            if not success then
+                                b[nodeID] = true;
+                                return;
+                            end
+                        end
                     end
+
+                    done[nodeID] = true;
                 end
-
-                done[nodeID] = true;
             end
-        end
-        for nodeID in pairs(set.nodes) do
-            a[nodeID] = true;
-        end
-        local tries = 10;
-        while next(a) and tries > 0 do
-            Internal.LogMessage("Talent loop %d", 11 - tries);
-            wipe(b);
-            for nodeID in pairs(a) do
-                PurchaseNode(nodeID);
+            for nodeID in pairs(set.nodes) do
+                a[nodeID] = true;
             end
-            b, a = a, b;
-            tries = tries - 1;
-        end
+            local tries = 10;
+            while next(a) and tries > 0 do
+                Internal.LogMessage("Talent loop %d", 11 - tries);
+                wipe(b);
+                for nodeID in pairs(a) do
+                    PurchaseNode(nodeID);
+                end
+                b, a = a, b;
+                tries = tries - 1;
+            end
 
-        state.dfTalentsAttempted = true
-        local success = C_ClassTalents.CommitConfig(configID);
-        Internal.LogMessage("Commit talent config (%s)", success and "true" or "false");
+            state.dfTalentsAttempted = true
+            local success = C_ClassTalents.CommitConfig(configID);
+            Internal.LogMessage("Commit talent config (%s)", success and "true" or "false");
+        else
+            complete = true; -- Cant change talents without an active config ID
+        end
     end
 
     if complete then
@@ -1282,7 +1292,7 @@ end
 function BtWLoadoutsDFTalentsMixin:GetAndCacheEntryInfo(entryID)
 	local function GetEntryInfoCallback()
 		-- self.dirtyEntryIDSet[entryID] = nil;
-		return C_Traits.GetEntryInfo(C_ClassTalents.GetActiveConfigID(), entryID);
+		return C_Traits.GetEntryInfo(C_ClassTalents.GetActiveConfigID() or Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID, entryID);
 	end
 
 	return GetOrCreateTableEntryByCallback(self.entryInfoCache, entryID, GetEntryInfoCallback);
