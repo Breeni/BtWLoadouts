@@ -1989,7 +1989,7 @@ function BtWLoadoutsEquipmentMixin:Update()
 		self.Name:SetEnabled(set.managerID == nil or set.character == playerCharacter);
 
 		local model = self.Model;
-		if not characterInfo or character == playerCharacter then
+		if not characterInfo or character == playerCharacter or not model.SetCustomRace then
 			model:SetUnit("player");
 		else
 			model:SetCustomRace(characterInfo.race, characterInfo.sex);
