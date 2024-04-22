@@ -1,3 +1,15 @@
+# v1.16.0
+
+- Fixed an error when getting the current season for wow versions that dont support seasons
+- Fixed an error when viewing Dragonflight talent trees with nodes that have no cost
+- Fixed an error when viewing equipment sets for other characters
+- Fixed an issue where equipment sets could not be filtered by class unless they had a specialization restriction set
+- Fixed an issue where specialization restrictions would block Exile's Reach characters
+- Fixed some errors for characters in Exile's Reach
+- Updated for initial support on The War Within alpha
+- Updated for Dragonflight Season 4 and boilerplate The War Within season 1
+- Updated to only allow updating action bar sets when the set restrictions match the current character
+
 # v1.15.8
 
 - Fixed an issue with unique-equipped items not being categorized correctly
