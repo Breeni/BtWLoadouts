@@ -799,7 +799,22 @@ do
 			end
 		end
 	end
+	local initialSpecs = {
+		[1446] = 71,
+		[1451] = 70,
+		[1448] = 253,
+		[1453] = 259,
+		[1452] = 256,
+		[1455] = 252,
+		[1444] = 262,
+		[1449] = 64,
+		[1454] = 265,
+		[1450] = 269,
+		[1447] = 102,
+		[1456] = 577,
+	};
 	function Internal.AreRestrictionsValidFor(restrictions, specID, covenantID, raceID)
+		specID = initialSpecs[specID] or specID;
 		if restrictions then
 			if restrictions.spec and next(restrictions.spec) and specID ~= nil then
 				if not restrictions.spec[specID] then
