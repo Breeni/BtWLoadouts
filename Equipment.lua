@@ -1237,6 +1237,8 @@ local function UpdateSetFilters(set)
     Internal.UpdateRestrictionFilters(set)
 
 	set.filters.character = set.character
+	local characterInfo = GetCharacterInfo(set.character);
+	set.filters.class = characterInfo and characterInfo.class;
 
     return set
 end
