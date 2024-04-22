@@ -1180,9 +1180,11 @@ function BtWLoadoutsDFTalentsMixin:UpdateTreeCurrencyInfo(skipButtonUpdates)
             if #nodeInfo.entryIDs > 1 then
                 value = 1;
             end
-            for _,cost in ipairs(nodeInfo.costs) do
-                self.treeCurrencyInfoMap[cost.ID].spent = self.treeCurrencyInfoMap[cost.ID].spent + (cost.amount * value);
-                self.treeCurrencyInfoMap[cost.ID].quantity = self.treeCurrencyInfoMap[cost.ID].quantity - (cost.amount * value);
+            if nodeInfo.costs then
+                for _,cost in ipairs(nodeInfo.costs) do
+                    self.treeCurrencyInfoMap[cost.ID].spent = self.treeCurrencyInfoMap[cost.ID].spent + (cost.amount * value);
+                    self.treeCurrencyInfoMap[cost.ID].quantity = self.treeCurrencyInfoMap[cost.ID].quantity - (cost.amount * value);
+                end
             end
         end
     end
@@ -1300,9 +1302,11 @@ function BtWLoadoutsDFTalentsMixin:GetAndCacheCondInfo(condID)
                     local nodeInfo = Internal.GetNodeInfoBySpecID(self.set.specID, nodeID);
                     if nodeInfo and self.set.nodes[nodeID] and not tContains(nodeInfo.conditionIDs, gate.conditionID) then
                         local purchased = #nodeInfo.entryIDs == 1 and self.set.nodes[nodeID] or 1;
-                        for _,cost in ipairs(nodeInfo.costs) do
-                            if cost.ID == gate.traitCurrencyID then
-                                spent = spent + (cost.amount * purchased);
+                        if nodeInfo.costs then
+                            for _,cost in ipairs(nodeInfo.costs) do
+                                if cost.ID == gate.traitCurrencyID then
+                                    spent = spent + (cost.amount * purchased);
+                                end
                             end
                         end
                     end
