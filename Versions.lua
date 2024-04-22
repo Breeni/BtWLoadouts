@@ -42,6 +42,9 @@ local seasons = {
         [11] = 1700089200,
     },
 };
+local GetCurrentSeason = C_MythicPlus and C_MythicPlus.GetCurrentSeason or function ()
+    return 0
+end
 local function IsSeason(season)
     -- C_MythicPlus.GetCurrentSeason isnt always available during first login sp we fallback to date checking.
     -- In the future it might be worth using something else or delaying season checks
