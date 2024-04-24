@@ -33,6 +33,9 @@ local UIDropDownMenu_EnableDropDown = UIDropDownMenu_EnableDropDown;
 local UIDropDownMenu_DisableDropDown = UIDropDownMenu_DisableDropDown;
 local UIDropDownMenu_SetSelectedValue = UIDropDownMenu_SetSelectedValue;
 
+local GetAddOnInfo = C_AddOns and C_AddOns.GetAddOnInfo or GetAddOnInfo;
+local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata;
+
 local format = string.format;
 
 local AddSet = Internal.AddSet;

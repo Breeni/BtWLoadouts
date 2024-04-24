@@ -5,6 +5,13 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
+local GetSpellCooldown = C_Spell and C_Spell.GetSpellCooldown and function (spellID)
+    local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID);
+    if spellCooldownInfo then
+        return spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.isEnabled, spellCooldownInfo.modRate;
+    end
+end or GetSpellCooldown;
+
 BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflightPatch
 
 BTWLOADOUTS_SPEC_TREE = L["Spec Tree"] .. " > ";
