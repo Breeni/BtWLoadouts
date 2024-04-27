@@ -1154,6 +1154,9 @@ local function DropDown_Initialize(self, level, menuList)
     if set then
 		if (level or 1) == 1 then
             local info = UIDropDownMenu_CreateInfo()
+            info.isNotRadio = true
+			info.keepShownOnClick = true
+
             info.func = function (self, arg1, arg2, checked)
                 set.settings = set.settings or {}
                 set.settings.adjustCovenant = not checked
