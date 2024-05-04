@@ -167,6 +167,8 @@ local function SetDropDownInit(self, set, index, segment, tab)
 
 		self:SetSelected(set[segment][index])
 
+		Internal.Call("LoadoutUpdated", set.setID);
+
 		CloseDropDownMenus()
         BtWLoadoutsFrame:Update();
     end)

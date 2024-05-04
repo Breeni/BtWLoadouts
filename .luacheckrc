@@ -508,6 +508,8 @@ new_read_globals = {
     'CreateTexturePool',
     'EditBox_ClearFocus',
     'EquipmentManager_UnpackLocation',
+    'EventRegistry.RegisterCallback',
+    'EventRegistry.TriggerEvent',
     'ExportUtil.MakeImportDataStream',
     'FindSpellOverrideByID',
     'FlagsUtil.IsSet',

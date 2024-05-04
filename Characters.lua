@@ -8413,7 +8413,7 @@ do
 	end
 end
 function Internal.DeleteCharacter(slug)
-	if Internal.Call("CHARACTER_DELETE", slug) then
+	if Internal.Call("CharacterDeleted", slug) then
 		BtWLoadoutsCharacterInfo[slug] = nil
 	end
 	BtWLoadoutsFrame:Update();

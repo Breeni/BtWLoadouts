@@ -536,6 +536,7 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
 
         if isNewSet then
             Internal.AddEquipmentSetToMapData(set)
+            Internal.Call("EquipmentSetCreated", set.setID);
         end
 
         equipmentSetMap[managerID] = set;

@@ -745,7 +745,11 @@ local function RefreshActionBarSet(set)
 
     set.actions = actions
 
-    return UpdateSetFilters(set)
+    UpdateSetFilters(set)
+                
+    Internal.Call("ActionBarSetUpdated", set.setID);
+
+    return set
 end
 local function AddActionBarSet()
     local classFile = select(2, UnitClass("player"))
@@ -766,11 +770,13 @@ local function AddActionBarSet()
         ignored[slot] = true
     end
 
-    return Internal.AddSet(BtWLoadoutsSets.actionbars, UpdateSetFilters({
+    local set = Internal.AddSet(BtWLoadoutsSets.actionbars, UpdateSetFilters({
         name = name,
         ignored = ignored,
         actions = actions,
     }))
+    Internal.Call("ActionBarSetCreated", set.setID);
+    return set
 end
 local function GetActionBarSet(id)
     local set = Internal.GetSet(BtWLoadoutsSets.actionbars, id)
@@ -833,6 +839,8 @@ local function DeleteActionBarSet(id)
             end
         end
 	end
+    
+	Internal.Call("ActionBarSetDeleted", id);
 
 	local frame = BtWLoadoutsFrame.ActionBars;
 	local set = frame.set;
@@ -1007,6 +1015,8 @@ function BtWLoadoutsActionButtonMixin:SetAction(actionType, ...)
 	local set = self:GetActionBarFrame().set;
 	if actionType == nil then -- Clearing slot
 		set.actions[self:GetID()] = nil;
+        
+        Internal.Call("ActionBarSetUpdated", set.setID);
 
 		self:Update();
 		return true;
@@ -1016,12 +1026,15 @@ function BtWLoadoutsActionButtonMixin:SetAction(actionType, ...)
 		tbl.type, tbl.id, tbl.subType, tbl.icon, tbl.name, tbl.macroText = actionType, ...
 
 		set.actions[self:GetID()] = tbl;
+        
+        Internal.Call("ActionBarSetUpdated", set.setID);
 		self:Update()
 	end
 end
 function BtWLoadoutsActionButtonMixin:SetIgnored(ignored)
 	local set = self:GetActionBarFrame().set;
 	set.ignored[self:GetID()] = ignored and true or nil;
+    Internal.Call("ActionBarSetUpdated", set.setID);
 	self:Update();
 end
 function BtWLoadoutsActionButtonMixin:Update()
@@ -1147,6 +1160,8 @@ function BtWLoadoutsIgnoreActionBarMixin:OnClick()
 		set.ignored[id] = setIgnored
 		self:GetParent().Slots[id]:Update()
 	end
+        
+    Internal.Call("ActionBarSetUpdated", set.setID);
 end
 
 local function DropDown_Initialize(self, level, menuList)
@@ -1160,6 +1175,8 @@ local function DropDown_Initialize(self, level, menuList)
             info.func = function (self, arg1, arg2, checked)
                 set.settings = set.settings or {}
                 set.settings.adjustCovenant = not checked
+                
+		        Internal.Call("ActionBarSetUpdated", set.setID);
 
                 BtWLoadoutsFrame:Update()
             end
@@ -1172,6 +1189,8 @@ local function DropDown_Initialize(self, level, menuList)
                 set.settings = set.settings or {}
                 set.settings.createMissingMacros = not checked
                 set.settings.createMissingMacrosCharacter = false
+                
+		        Internal.Call("ActionBarSetUpdated", set.setID);
 
                 BtWLoadoutsFrame:Update()
             end
@@ -1184,6 +1203,8 @@ local function DropDown_Initialize(self, level, menuList)
                 set.settings = set.settings or {}
                 set.settings.createMissingMacrosCharacter = not checked
                 set.settings.createMissingMacros = false
+                
+		        Internal.Call("ActionBarSetUpdated", set.setID);
 
                 BtWLoadoutsFrame:Update()
             end
@@ -1205,6 +1226,8 @@ BtWLoadoutsActionBarsMixin = {}
 function BtWLoadoutsActionBarsMixin:OnLoad()
     self.SettingsDropDown:SetSupportedTypes("covenant", "spec", "race")
     self.SettingsDropDown:SetScript("OnChange", function ()
+        Internal.Call("ActionBarSetUpdated", self.set.setID);
+
         self:Update()
     end)
 end
@@ -1218,6 +1241,7 @@ end
 function BtWLoadoutsActionBarsMixin:UpdateSetName(value)
 	if self.set and self.set.name ~= not value then
 		self.set.name = value;
+        Internal.Call("ActionBarSetUpdated", self.set.setID);
 		self:Update();
 	end
 end

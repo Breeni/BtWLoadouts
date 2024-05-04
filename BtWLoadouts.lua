@@ -1943,6 +1943,12 @@ function BtWLoadoutsTalentButtonMixin:OnClick()
 		selected[talentID] = true;
 	end
 
+	if self.isPvP then
+		Internal.Call("PvPTalentSetUpdated", frame.set.setID);
+	else
+		Internal.Call("TalentSetUpdated", frame.set.setID);
+	end
+
 	grid:Update()
 end
 function BtWLoadoutsTalentButtonMixin:OnEnter()
@@ -2125,25 +2131,11 @@ end
 
 -- [[ CUSTOM EVENT HANDLING ]]
 
-local eventHandlers = {}
 function Internal.OnEvent(event, callback)
-	if not eventHandlers[event] then
-		eventHandlers[event] = {}
-	end
-
-	eventHandlers[event][callback] = true
+	EventRegistry:RegisterCallback("BtWLoadouts." .. event, callback);
 end
 function Internal.Call(event, ...)
-	local callbacks = eventHandlers[event]
-	local result = true
-	if callbacks then
-		for callback in pairs(callbacks) do
-			if callback(event, ...) == false then
-				result = false
-			end
-		end
-	end
-	return result
+	EventRegistry:TriggerEvent("BtWLoadouts." .. event, ...);
 end
 
 -- [[ Slash Command ]]

@@ -1326,7 +1326,11 @@ local function RefreshEquipmentSet(set)
 		C_EquipmentSet.SaveEquipmentSet(set.managerID)
 	end
 
-	return UpdateSetFilters(set)
+	UpdateSetFilters(set)
+	
+	Internal.Call("EquipmentSetUpdated", set.setID);
+
+	return set
 end
 local function AddEquipmentSet()
     local characterName, characterRealm = UnitFullName("player");
@@ -1344,6 +1348,7 @@ local function AddEquipmentSet()
         data = {},
 	}))
 	AddSetToMapData(result)
+    Internal.Call("EquipmentSetCreated", result.setID);
 	return result
 end
 local function GetEquipmentSetsByName(name)
@@ -1457,6 +1462,8 @@ local function DeleteEquipmentSet(id)
 			set.character = nil
 		end
 	end
+    
+	Internal.Call("EquipmentSetDeleted", id);
 
 	local frame = BtWLoadoutsFrame.Equipment;
 	local set = frame.set;
@@ -1726,6 +1733,7 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 
 		Internal.UpdateEquipmentSetItemInMapData(set, self:GetID(), previousLocation, nil)
 
+		Internal.Call("EquipmentSetUpdated", set.setID);
 		self:Update();
 		return true;
 	else
@@ -1764,6 +1772,8 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 			set.data[self:GetID()] = EncodeItemData(itemLink, set.extras[self:GetID()] and set.extras[self:GetID()].azerite);
 
 			Internal.UpdateEquipmentSetItemInMapData(set, self:GetID(), previousLocation, set.locations[self:GetID()])
+			
+			Internal.Call("EquipmentSetUpdated", set.setID);
 
 			BtWLoadoutsFrame:Update(); -- Refresh everything, this'll update the error handling too
 			return true;
@@ -1774,6 +1784,7 @@ end
 function BtWLoadoutsItemSlotButtonMixin:SetIgnored(ignored)
 	local set = self:GetParent().set;
 	set.ignored[self:GetID()] = ignored and true or nil;
+	Internal.Call("EquipmentSetUpdated", set.setID);
 	BtWLoadoutsFrame:Update(); -- Refresh everything, this'll update the error handling too
 end
 function BtWLoadoutsItemSlotButtonMixin:Update()
@@ -1825,6 +1836,7 @@ BtWLoadoutsEquipmentMixin = {}
 function BtWLoadoutsEquipmentMixin:OnLoad()
     self.RestrictionsDropDown:SetSupportedTypes("covenant", "spec", "race")
     self.RestrictionsDropDown:SetScript("OnChange", function ()
+		Internal.Call("EquipmentSetUpdated", self.set.setID);
         self:Update()
     end)
 end
@@ -3039,7 +3051,7 @@ if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
 end
 
 -- Character deletion
-Internal.OnEvent("CHARACTER_DELETE", function (event, slug)
+Internal.OnEvent("CharacterDeleted", function (event, slug)
 	local sets = GetSetsForCharacter({}, slug)
 	for _,set in ipairs(sets) do
 		DeleteEquipmentSet(set.setID)
