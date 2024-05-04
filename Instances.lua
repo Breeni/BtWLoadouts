@@ -219,6 +219,8 @@ if Internal.IsDragonflightPatch then
     instanceDifficulties[2441] = {2, 23} -- Tazavesh, the Veiled Market
 
     instanceDifficulties[2522] = raidDifficultiesAll -- Vault of the Incarnates
+    instanceDifficulties[2569] = raidDifficultiesAll -- Aberrus, the Shadowed Crucible
+    instanceDifficulties[2549] = raidDifficultiesAll -- Amirdrassil, the Dream's Hope
 
     if Internal.IsDragonflightSeason1 then
         instanceDifficulties[2519] = dungeonNonMythicPlus -- Neltharus
@@ -237,8 +239,6 @@ if Internal.IsDragonflightPatch then
         instanceDifficulties[1477] = { 8 } -- Halls of Valor
         instanceDifficulties[1571] = { 8 } -- Court of Stars
     elseif Internal.IsDragonflightSeason2 then
-        instanceDifficulties[2569] = raidDifficultiesAll -- Aberrus, the Shadowed Crucible
-
         instanceDifficulties[2519] = dungeonDifficultiesAll -- Neltharus
         instanceDifficulties[2520] = dungeonDifficultiesAll -- Brackenhide Hollow
         instanceDifficulties[2527] = dungeonDifficultiesAll -- Halls of Infusion
@@ -255,8 +255,6 @@ if Internal.IsDragonflightPatch then
         instanceDifficulties[1754] = { 8 } -- Freehold
         instanceDifficulties[1841] = { 8 } -- The Underrot
     elseif Internal.IsDragonflightSeason3 then
-        instanceDifficulties[2549] = raidDifficultiesAll -- Amirdrassil, the Dream's Hope
-
         instanceDifficulties[2519] = dungeonNonMythicPlus -- Neltharus
         instanceDifficulties[2520] = dungeonNonMythicPlus -- Brackenhide Hollow
         instanceDifficulties[2527] = dungeonNonMythicPlus -- Halls of Infusion
@@ -276,8 +274,6 @@ if Internal.IsDragonflightPatch then
         instanceDifficulties[1862] = { 8 } -- Waycrest Manor
         instanceDifficulties[2579] = { 2, 23,  8} -- Dawn of the Infinites
     else
-        instanceDifficulties[2549] = raidDifficultiesAll -- Amirdrassil, the Dream's Hope
-
         instanceDifficulties[2519] = dungeonDifficultiesAll -- Neltharus
         instanceDifficulties[2520] = dungeonDifficultiesAll -- Brackenhide Hollow
         instanceDifficulties[2527] = dungeonDifficultiesAll -- Halls of Infusion
