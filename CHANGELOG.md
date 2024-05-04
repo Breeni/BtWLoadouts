@@ -1,3 +1,10 @@
+# v1.17.0
+
+- Updated internal events to use the global EventRegistry and added events for all sets
+- Updated action bar restrictions dropdown items to be checkboxes
+- Fixed an error when creating conditions for Aberrus, the Shadowed Crucible raid
+- Fixed some errors with missing functions in The War Within
+
 # v1.16.0
 
 - Fixed an error when getting the current season for wow versions that dont support seasons
