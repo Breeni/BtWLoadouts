@@ -1,3 +1,7 @@
+# v1.17.1
+
+- Updated for 10.2.7
+
 # v1.17.0
 
 - Updated internal events to use the global EventRegistry and added events for all sets
