@@ -508,7 +508,7 @@ function frame:EQUIPMENT_SETS_CHANGED(...)
                     set.locations[inventorySlotId] = locations[inventorySlotId] -- Only update if the item has a location
 
                     local itemLink = Internal.GetItemLinkByLocation(location)
-                    if itemLink then
+                    if itemLink and itemLink ~= "" then
                         set.equipment[inventorySlotId] = itemLink
                         set.extras[inventorySlotId] = Internal.GetExtrasForLocation(location, set.extras[inventorySlotId] or {})
                         set.data[inventorySlotId] = Internal.EncodeItemData(itemLink, set.extras[inventorySlotId] and set.extras[inventorySlotId].azerite)
