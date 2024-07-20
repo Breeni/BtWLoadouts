@@ -723,6 +723,9 @@ function eventHandler:UNIT_SPELLCAST_INTERRUPTED(_, castGUID, spellId, ...)
 	if spellId == specChangeInfo.spellId and IsChangingSpec(castGUID) then
 		CancelActivateProfile();
 		Internal.UpdateLauncher(GetActiveProfiles());
+	elseif spellId == 384255 then
+		CancelActivateProfile();
+		Internal.UpdateLauncher(GetActiveProfiles());
 	end
 end
 
