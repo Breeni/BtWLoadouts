@@ -1,3 +1,9 @@
+# v1.18.0-beta
+
+- Added support for Hero Talent sets
+- Updated to cancel loading switching when the talent change spell is cancelled
+- Fixed an error when empty item links are found in Blizzard equipment sets
+
 # v1.17.1
 
 - Updated for 10.2.7
