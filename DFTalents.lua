@@ -101,7 +101,8 @@ local function RefreshSet(set)
             local nodeIDs = C_Traits.GetTreeNodes(configInfo.treeIDs[1]);
             for _,nodeID in ipairs(nodeIDs) do
                 local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID);
-                if nodeInfo.isVisible then
+                -- Ignore invisible nodes and hero talents
+                if nodeInfo.isVisible and nodeInfo.type ~= Enum.TraitNodeType.SubTreeSelection and nodeInfo.subTreeID == nil then
                     if #nodeInfo.entryIDs > 1 then
                         if nodeInfo.activeEntry then
                             for index,entryID in ipairs(nodeInfo.entryIDs) do
@@ -195,27 +196,22 @@ end
 local function IsSetActive(set)
     local configID = C_ClassTalents.GetActiveConfigID();
     if not configID then -- New character without an active config?
-        return false
+        return true
     end
     for nodeID,value in pairs(set.nodes) do
         local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID);
-        if not nodeInfo then -- Does this mean we cant activate this set at all?
-            return false;
-        end
-        if not nodeInfo.isVisible then
-            return false;
-        end
-
-        if #nodeInfo.entryIDs > 1 then
-            if not nodeInfo.activeEntry then
-                return false;
-            end
-            if nodeInfo.activeEntry.entryID ~= nodeInfo.entryIDs[value] then
-                return false;
-            end
-        else
-            if nodeInfo.activeRank ~= value then
-                return false;
+        if nodeInfo and nodeInfo.isVisible then
+            if #nodeInfo.entryIDs > 1 then
+                if not nodeInfo.activeEntry then
+                    return false;
+                end
+                if nodeInfo.activeEntry.entryID ~= nodeInfo.entryIDs[value] then
+                    return false;
+                end
+            else
+                if nodeInfo.ranksPurchased ~= value then
+                    return false;
+                end
             end
         end
     end
@@ -228,15 +224,17 @@ local function IsNodeEntryOnCooldown(nodeEntryID)
         return false;
     end
     local entryInfo = C_Traits.GetEntryInfo(configID, nodeEntryID);
-    local definitionInfo = C_Traits.GetDefinitionInfo(entryInfo.definitionID);
-    
-    local spellID = definitionInfo.spellID;
-    if spellID then
-        spellID = FindSpellOverrideByID(spellID);
-        local start, duration = GetSpellCooldown(spellID);
-        if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
-            Internal.DirtyAfter((start + duration) - GetTime() + 1);
-            return true;
+    if entryInfo.definitionID then
+        local definitionInfo = C_Traits.GetDefinitionInfo(entryInfo.definitionID);
+        
+        local spellID = definitionInfo.spellID;
+        if spellID then
+            spellID = FindSpellOverrideByID(spellID);
+            local start, duration = GetSpellCooldown(spellID);
+            if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+                Internal.DirtyAfter((start + duration) - GetTime() + 1);
+                return true;
+            end
         end
     end
 
@@ -247,7 +245,7 @@ local function SetRequirements(set)
 
     local configID = C_ClassTalents.GetActiveConfigID();
     if not configID then
-        return
+        return true
     end
 
     local configInfo = C_Traits.GetConfigInfo(configID);
@@ -255,9 +253,10 @@ local function SetRequirements(set)
     
     for _,nodeID in ipairs(nodeIDs) do
         local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID);
-        if nodeInfo.isVisible then
+        if nodeInfo.isVisible and nodeInfo.subTreeID == nil then
             local value = set.nodes[nodeID];
             if #nodeInfo.entryIDs > 1 then
+                -- Talent is selected, we either dont want a talent or its the wront talent
                 if nodeInfo.activeEntry and nodeInfo.activeEntry.entryID and (not value or nodeInfo.entryIDs[value] ~= nodeInfo.activeEntry.entryID) then
                     isActive = false;
                     waitForCooldown = waitForCooldown or IsNodeEntryOnCooldown(nodeInfo.activeEntry.entryID);
@@ -265,15 +264,18 @@ local function SetRequirements(set)
                         break -- We dont actually need to check anything more
                     end
                 else
-                    if nodeInfo.ranksPurchased ~= 1 or not nodeInfo.activeEntry or nodeInfo.activeEntry.entryID ~= nodeInfo.entryIDs[value] then
+                    -- We want a talent but none is selected, or its the wrong one
+                    if value and (nodeInfo.ranksPurchased ~= 1 or not nodeInfo.activeEntry or nodeInfo.activeEntry.entryID ~= nodeInfo.entryIDs[value]) then
                         isActive = false;
                     end
                 end
             else
                 if value then
+                    -- We want points in this talent but the wrong amount of points are purchased
                     if nodeInfo.ranksPurchased ~= value then
                         isActive = false;
                     end
+                -- We dont want this talent but points are purchased
                 elseif nodeInfo.ranksPurchased > 0 then
                     waitForCooldown = waitForCooldown or IsNodeEntryOnCooldown(nodeInfo.activeEntry.entryID);
                     isActive = false;
@@ -302,6 +304,8 @@ local function CombineSets(result, state, ...)
         local isActive, waitForCooldown, anySelected = SetRequirements(result)
 
         if not isActive then
+            state.dfTalents = true -- We will need to activate DF talents, this tells the hero talents to let DF talents handle it
+
             if state.blockers then
                 state.blockers[Internal.GetSpellCastingBlocker()] = true
                 state.blockers[Internal.GetCombatBlocker()] = true
@@ -315,13 +319,24 @@ local function CombineSets(result, state, ...)
 
     return result;
 end
+local function GetSelectionNode(configID, subTreeID)
+    local subTreeInfo = C_Traits.GetSubTreeInfo(configID, subTreeID);
+    if subTreeInfo and subTreeInfo.subTreeSelectionNodeIDs then
+        for _, selectionNodeID in ipairs(subTreeInfo.subTreeSelectionNodeIDs) do
+            local nodeInfo = C_Traits.GetNodeInfo(configID, selectionNodeID);
+            if nodeInfo and nodeInfo.isVisible and nodeInfo.isAvailable then
+                return nodeInfo;
+            end
+        end
+    end
+end
 local function ActivateSet(set, state)
     local complete = true;
 
     local spellId = select(9, UnitCastingInfo("player"));
     if spellId == 384255 then
         complete = false;
-    elseif not IsSetActive(set) and not state.dfTalentsAttempted then
+    elseif (not IsSetActive(set) or state.heroTalents) and not state.dfTalentsAttempted then
         Internal.LogMessage("Activate talent tree version %d", Internal.GetTraitInfoVersion());
 
         complete = false;
@@ -337,7 +352,38 @@ local function ActivateSet(set, state)
         local configID = C_ClassTalents.GetActiveConfigID();
         if configID then
             local configInfo = C_Traits.GetConfigInfo(configID);
-            C_Traits.ResetTree(configID, configInfo.treeIDs[1]);
+            local treeID = configInfo.treeIDs[1];
+            
+            local treeCurrencyInfo = C_Traits.GetTreeCurrencyInfo(configID, treeID, true);
+            local classTraitCurrencyID = treeCurrencyInfo and treeCurrencyInfo[1] and treeCurrencyInfo[1].traitCurrencyID;
+            local specTraitCurrencyID = treeCurrencyInfo and treeCurrencyInfo[2] and treeCurrencyInfo[2].traitCurrencyID;
+            C_Traits.ResetTreeByCurrency(configID, treeID, classTraitCurrencyID);
+            C_Traits.ResetTreeByCurrency(configID, treeID, specTraitCurrencyID);
+
+            if state.heroTalents then
+                local nodeInfo = GetSelectionNode(configID, state.heroTalents.subTreeID);
+                if nodeInfo then
+                    for index, entryID in ipairs(nodeInfo.entryIDs) do
+                        local entryInfo = C_Traits.GetEntryInfo(configID, entryID);
+                        if entryInfo.subTreeID == state.heroTalents.subTreeID then
+                            set.nodes[nodeInfo.ID] = index
+
+                            for _,nodeID in ipairs(C_Traits.GetTreeNodes(treeID)) do
+                                local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID);
+                                if nodeInfo.subTreeID == state.heroTalents.subTreeID and #nodeInfo.entryIDs == 1 then
+                                    set.nodes[nodeID] = 1
+                                end
+                            end
+
+                            for nodeID, value in pairs(state.heroTalents.nodes) do
+                                set.nodes[nodeID] = value
+                            end
+
+                            break;
+                        end
+                    end
+                end
+            end
 
             local done = {};
             local a, b = {}, {};
@@ -351,7 +397,7 @@ local function ActivateSet(set, state)
                         end
                     end
 
-                    if nodeInfo.type == Enum.TraitNodeType.Selection then
+                    if nodeInfo.type == Enum.TraitNodeType.Selection or nodeInfo.type == Enum.TraitNodeType.SubTreeSelection then
                         local entryIndex = set.nodes[nodeID];
                         local success = C_Traits.SetSelection(configID, nodeID, nodeInfo.entryIDs[entryIndex]);
                         Internal.LogMessage("Set talent choice to %d for node %d (%s)", nodeInfo.entryIDs[entryIndex], nodeID, success and "true" or "false");
@@ -391,6 +437,9 @@ local function ActivateSet(set, state)
             state.dfTalentsAttempted = true
             local success = C_ClassTalents.CommitConfig(configID);
             Internal.LogMessage("Commit talent config (%s)", success and "true" or "false");
+            if not success then
+                complete = true;
+            end
         else
             complete = true; -- Cant change talents without an active config ID
         end
@@ -435,7 +484,8 @@ function Internal.RefreshSetFromConfigID(set, configID)
 
     for _,nodeID in ipairs(nodeIDs) do
         local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID);
-        if nodeInfo.isVisible then
+        -- Ignore invisible nodes and hero talents
+        if nodeInfo.isVisible and nodeInfo.type ~= Enum.TraitNodeType.SubTreeSelection and nodeInfo.subTreeID == nil then
             if #nodeInfo.entryIDs > 1 then
                 if nodeInfo.activeEntry then
                     for index,entryID in ipairs(nodeInfo.entryIDs) do
@@ -476,6 +526,7 @@ end
 Internal.AddLoadoutSegment({
     id = "dftalents",
     name = L["Talents"],
+    after = "herotalents",
     events = BTWLOADOUTS_DF_TALENTS_ACTIVE and "TRAIT_CONFIG_UPDATED" or nil,
     enabled = BTWLOADOUTS_DF_TALENTS_ACTIVE,
     add = AddSet,
@@ -643,7 +694,7 @@ function BtWLoadoutsDFTalentsMixin:OnLoad()
 	self.talentButtonCollection = CreateFramePoolCollection();
 	self.talentDislayFramePool = CreateFramePoolCollection();
 	self.edgePool = CreateFramePoolCollection();
-	self.gatePool = CreateFramePool("FRAME", self.Scroll:GetScrollChild(), "BtWLoadoutsTalentFrameGateTemplate");
+	self.gatePool = CreateFramePool("FRAME", self.Scroll:GetScrollChild(), "BtWLoadoutsDFTalentFrameGateTemplate");
 	self.nodeIDToButton = {};
 	self.buttonsWithDirtyEdges = {};
 	self.treeInfoDirty = false;
@@ -878,7 +929,7 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         end
 
 		local configID = Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID; -- C_ClassTalents.GetActiveConfigID();
-		C_ClassTalents.InitializeViewLoadout(self.set.specID, 70);
+		C_ClassTalents.InitializeViewLoadout(self.set.specID, GetMaxLevelForPlayerExpansion());
 		local success = C_ClassTalents.ViewLoadout({});
         Internal.UpdateTraitInfoFromConfig(self.set.specID, configID)
 
@@ -921,7 +972,7 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         local rect = {left = 65536, right = 0, top = 65536, bottom = 0}
         for _,nodeID in ipairs(nodes) do
             local nodeInfo = self:GetAndCacheNodeInfo(nodeID); -- /tinspect C_Traits.GetNodeInfo(C_ClassTalents.GetActiveConfigID(), 61086)
-            if nodeInfo and nodeInfo.posY > 0 then
+            if nodeInfo and nodeInfo.posY > 0 and nodeInfo.subTreeID == nil and nodeInfo.type ~= Enum.TraitNodeType.SubTreeSelection then
                 if rect.left > nodeInfo.posX then
                     rect.left = nodeInfo.posX
                 end
@@ -960,24 +1011,38 @@ function BtWLoadoutsDFTalentsMixin:Update(updatePosition, skipUpdateTree)
         local rightSide = {left = 65536, right = 0, top = 65536, bottom = 0}
         for _,nodeID in ipairs(nodes) do
             local nodeInfo = self:GetAndCacheNodeInfo(nodeID); -- /tinspect C_Traits.GetNodeInfo(C_ClassTalents.GetActiveConfigID(), 61086)
-            if nodeInfo and nodeInfo.posY > 0 then
+            if nodeInfo and nodeInfo.posY > 0 and nodeInfo.subTreeID == nil and nodeInfo.type ~= Enum.TraitNodeType.SubTreeSelection then
                 if nodeInfo.posX < center then
                     if leftSide.left > nodeInfo.posX then
                         leftSide.left = nodeInfo.posX
+                        
+                        leftSide.leftNode = nodeInfo;
                     end
                     if leftSide.right < nodeInfo.posX then
                         leftSide.right = nodeInfo.posX
+                        
+                        leftSide.rightNode = nodeInfo;
                     end
                 else
                     if rightSide.left > nodeInfo.posX then
                         rightSide.left = nodeInfo.posX
+                        
+                        rightSide.leftNode = nodeInfo;
                     end
                     if rightSide.right < nodeInfo.posX then
                         rightSide.right = nodeInfo.posX
+                        
+                        rightSide.rightNode = nodeInfo;
                     end
                 end
             end
         end
+
+        self.LeftSideArea:SetPoint("TOPLEFT", leftSide.left * 0.1 * scale, -400 * 0.1 * scale)
+        self.LeftSideArea:SetSize((leftSide.right - leftSide.left) * 0.1 * scale, (rect.bottom - rect.top) * 0.1 * scale)
+        
+        self.RightSideArea:SetPoint("TOPLEFT", rightSide.left * 0.1 * scale, -400 * 0.1 * scale)
+        self.RightSideArea:SetSize((rightSide.right - rightSide.left) * 0.1 * scale, (rect.bottom - rect.top) * 0.1 * scale)
 
         local halfWidth = scroll:GetWidth() * 0.5;
 
@@ -1417,10 +1482,15 @@ function BtWLoadoutsDFTalentsMixin:SetSelection(nodeID, entryID)
     -- self:MarkNodeDirty(nodeID);
     self:Update();
 end
+function BtWLoadoutsDFTalentsMixin:ShouldInstantiateNode(nodeID, nodeInfo)
+	-- Overrides TalentFrameBaseMixin.
+	-- SubTreeSelection nodes are used to track what SubTrees are active under the hood, but we use a bespoke UI for them for Hero Talents (see HeroTalentsContainer)
+	return nodeInfo.type ~= Enum.TraitNodeType.SubTreeSelection;
+end
 function BtWLoadoutsDFTalentsMixin:InstantiateTalentButton(nodeID, nodeInfo)
 	nodeInfo = nodeInfo or self:GetAndCacheNodeInfo(nodeID);
 
-	if not nodeInfo.isVisible and not self:ShouldInstantiateInvisibleButtons() then
+	if (not nodeInfo.isVisible and not self:ShouldInstantiateInvisibleButtons()) or not self:ShouldInstantiateNode(nodeID, nodeInfo) then
 		return nil;
 	end
 
@@ -1428,7 +1498,7 @@ function BtWLoadoutsDFTalentsMixin:InstantiateTalentButton(nodeID, nodeInfo)
 	local entryInfo = (activeEntryID ~= nil) and self:GetAndCacheEntryInfo(activeEntryID) or nil;
 	local talentType = (entryInfo ~= nil) and entryInfo.type or nil;
 	local function InitTalentButton(newTalentButton)
-		newTalentButton:SetNodeID(nodeID);
+        newTalentButton:SetNodeID(nodeID);
 	end
 
 	local newTalentButton = self:AcquireTalentButton(nodeInfo, talentType, nil, nil, InitTalentButton);

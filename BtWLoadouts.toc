@@ -31,6 +31,7 @@ BtWLoadouts.xml
 Loadouts.xml
 Talents.xml
 DFTalents.xml
+HeroTalents.xml
 PvPTalents.xml
 Essences.xml
 Soulbinds.xml

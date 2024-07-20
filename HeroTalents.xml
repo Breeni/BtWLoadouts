@@ -1,8 +1,14 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
-	<Script file="DFTalents.lua"/>
+	<Script file="HeroTalents.lua"/>
 
-	<Frame name="BtWLoadoutsDFTalentSelectionChoiceFrameTemplate" mixin="BtWLoadoutsDFTalentSelectionChoiceFrameMixin" inherits="ResizeLayoutFrame" virtual="true">
+	<Frame name="BtWLoadoutsHeroTalentTreeDropDownTemplate" mixin="BtWLoadoutsHeroTalentTreeDropDownMixin" inherits="UIDropDownMenuTemplate" enableMouse="true" virtual="true">
+		<Scripts>
+			<OnShow method="OnShow"/>
+		</Scripts>
+	</Frame>
+
+	<Frame name="BtWLoadoutsHeroTalentSelectionChoiceFrameTemplate" mixin="BtWLoadoutsHeroTalentSelectionChoiceFrameMixin" inherits="ResizeLayoutFrame" virtual="true">
 		<Scripts>
 			<OnLoad method="OnLoad"/>
 			<OnShow method="OnShow"/>
@@ -11,42 +17,10 @@
 		</Scripts>
 	</Frame>
 
-	<Frame name="BtWLoadoutsDFTalentFrameGateTemplate" mixin="TalentFrameGateMixin" clipChildren="true" virtual="true">
-		<Size x="50" y="30"/>
-		<Layers>
-			<Layer level="OVERLAY">
-				<FontString parentKey="GateText" inherits="GameFontHighlightHuge2" hidden="true" justifyV="RIGHT">
-					<Size x="30" y="30"/>
-					<KeyValues>
-						<KeyValue key="ignoreInLayout" value="true" type="boolean"/>
-					</KeyValues>
-					<Anchors>
-						<Anchor point="LEFT" x="0" y="1"/>
-					</Anchors>
-					<Color r="1" g="0.64" b="0.56"/>
-				</FontString>
-			</Layer>
-			<Layer level="ARTWORK">
-				<Texture parentKey="LockIcon" atlas="talents-gate" useAtlasSize="true">
-					<Anchors>
-						<Anchor point="LEFT" relativeKey="$parent.GateText" relativePoint="RIGHT" x="10" y="1"/>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Scripts>
-			<OnLoad>
-				self.GateText:SetTextScale(0.8);
-			</OnLoad>
-			<OnEnter method="OnEnter"/>
-			<OnLeave method="OnLeave"/>
-		</Scripts>
-	</Frame>
-
-    <Frame name="$parentDFTalents" parentKey="DFTalents" mixin="BtWLoadoutsDFTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
+    <Frame name="$parentHeroTalents" parentKey="HeroTalents" mixin="BtWLoadoutsHeroTalentsMixin" inherits="BtWLoadoutsTabFrameTemplate">
         <KeyValues>
-            <KeyValue key="segment" value="dftalents" type="string"/>
-            <KeyValue key="name" value="BTWLOADOUTS_TALENTS" type="global"/>
+            <KeyValue key="segment" value="herotalents" type="string"/>
+            <KeyValue key="name" value="BTWLOADOUTS_HERO_TALENTS" type="global"/>
 			<KeyValue key="getTemplateType" value="TalentButtonUtil.GetTemplateForTalentType" type="global"/>
 			<KeyValue key="getEdgeTemplateType" value="TalentButtonUtil.GetTemplateForEdgeVisualStyle" type="global"/>
 			<KeyValue key="buttonSize" value="40" type="number"/>
@@ -66,7 +40,7 @@
                     <Anchor point="BOTTOMRIGHT" x="4" y="-2" />
                 </Anchors>
             </Frame>
-            <Frame name="$parentSpecDropDown" parentKey="SpecDropDown" inherits="BtWLoadoutsSpecDropDownTemplate">
+            <Frame name="$parentHeroTreeDropDown" parentKey="HeroTreeDropDown" inherits="BtWLoadoutsHeroTalentTreeDropDownTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0"/>
                 </Anchors>
@@ -74,7 +48,7 @@
             <EditBox name="$parentName" letters="50" parentKey="Name" autoFocus="false" inherits="InputBoxTemplate">
                 <Size x="0" y="22"/>
                 <Anchors>
-                    <Anchor point="LEFT" relativeKey="$parent.SpecDropDown" relativePoint="RIGHT" x="10" y="2"/>
+                    <Anchor point="LEFT" relativeKey="$parent.HeroTreeDropDown" relativePoint="RIGHT" x="10" y="2"/>
 					<Anchor point="RIGHT" x="-30" y="0"/>
                 </Anchors>
                 <Scripts>
@@ -113,7 +87,7 @@
 					</OnMouseUp>
 				</Scripts>
 			</DropDownToggleButton>
-			<Frame parentKey="SelectionChoiceFrame" inherits="BtWLoadoutsDFTalentSelectionChoiceFrameTemplate" enableMouse="true" frameLevel="2000" fixedFrameLevel="true"/>
+			<Frame parentKey="SelectionChoiceFrame" inherits="BtWLoadoutsHeroTalentSelectionChoiceFrameTemplate" enableMouse="true" frameLevel="2000" fixedFrameLevel="true"/>
 			<ScrollFrame parentKey="Scroll" clipChildren="true" inherits="UIPanelScrollFrameCodeTemplate">
 				<Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-34" />
@@ -123,7 +97,7 @@
 					<KeyValue key="scrollBarHideable" value="true" type="boolean"/>
 				</KeyValues>
 				<Frames>
-					<Slider name="$parentScrollBar" inherits="UIPanelScrollBarTemplate" parentKey="ScrollBar">
+					<Slider name="$parentScrollBar" inherits="UIPanelScrollBarTemplate" parentKey="ScrollBar" hidden="true">
 						<Anchors>
 							<Anchor point="TOPRIGHT" x="1.5" y="-16"/>
 							<Anchor point="BOTTOMRIGHT" x="1.5" y="15"/>
@@ -131,8 +105,8 @@
 					</Slider>
 				</Frames>
 				<ScrollChild>
-					<Frame mixin="BtWLoadoutsDFTalentFrameBaseButtonsParentMixin">
-						<Size x="1209" y="580.5"/>
+					<Frame mixin="BtWLoadoutsHeroTalentFrameBaseButtonsParentMixin">
+						<Size x="1" y="1"/>
 						<Anchors>
 							<Anchor point="TOPLEFT" x="0" y="0"/>
 						</Anchors>
@@ -142,42 +116,6 @@
 								<Anchors>
 									<Anchor point="TOPLEFT" x="0" y="0"/>
 								</Anchors>
-							</Frame>
-							<Frame parentKey="LeftSideArea" hidden="true">
-								<Size x="1" y="1"/>
-								<Anchors>
-									<Anchor point="TOPLEFT" x="0" y="0"/>
-								</Anchors>
-								<Layers>
-									<Layer level="BACKGROUND">
-										<Texture setAllPoints="true">
-											<Color r="0.65" g="0.80" b="1" a="0.3"/>
-										</Texture>
-									</Layer>
-								</Layers>
-								<Scripts>
-									<OnLoad>
-										self:GetParent():GetParent():GetParent().LeftSideArea = self;
-									</OnLoad>
-								</Scripts>
-							</Frame>
-							<Frame parentKey="RightSideArea" hidden="true">
-								<Size x="1" y="1"/>
-								<Anchors>
-									<Anchor point="TOPLEFT" x="0" y="0"/>
-								</Anchors>
-								<Layers>
-									<Layer level="BACKGROUND">
-										<Texture setAllPoints="true">
-											<Color r="0.1" g="0.80" b="0.65" a="0.3"/>
-										</Texture>
-									</Layer>
-								</Layers>
-								<Scripts>
-									<OnLoad>
-										self:GetParent():GetParent():GetParent().RightSideArea = self;
-									</OnLoad>
-								</Scripts>
 							</Frame>
 							<Button text="BTWLOADOUTS_SPEC_TREE" parentKey="SpecTreeButton">
 								<Size x="100" y="22"/>
@@ -212,17 +150,6 @@
 						</Frames>
 					</Frame>
 				</ScrollChild>
-				<Scripts>
-					<OnDragStart>
-						self:GetParent():BeginScrollDrag();
-					</OnDragStart>
-					<OnDragStop>
-						self:GetParent():EndScrollDrag();
-					</OnDragStop>
-					<OnVerticalScroll>
-						self:GetParent():OnVerticalScroll(self, offset)
-					</OnVerticalScroll>
-				</Scripts>
 			</ScrollFrame>
 			<Frame parentKey="DragHandler" hidden="true">
 				<Scripts>

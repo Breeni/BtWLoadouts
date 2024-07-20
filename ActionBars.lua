@@ -501,11 +501,22 @@ local function PickupActionTable(tbl, test, settings, activating)
             local index
             success = false
             if tbl.subType == "spell" then
-                for tabIndex = 1,min(2,GetNumSpellTabs()) do
-                    local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
-                    for spellIndex = offset,offset+numEntries do
-                        local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
-                        if skillType == "SPELL" and id == tbl.id then
+                if GetNumSpellTabs then
+                    for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                        local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
+                        for spellIndex = offset,offset+numEntries do
+                            local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                            if skillType == "SPELL" and id == tbl.id then
+                                index = spellIndex
+                                break
+                            end
+                        end
+                    end
+                else
+                    local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(Enum.SpellBookSkillLineIndex.MainSpec);
+                    for spellIndex = 1,skillLineInfo.itemIndexOffset + skillLineInfo.numSpellBookItems do
+                        local spellBookItem = C_SpellBook.GetSpellBookItemInfo(spellIndex, Enum.SpellBookSpellBank.Player);
+                        if spellBookItem.id == tbl.id then
                             index = spellIndex
                             break
                         end
@@ -527,7 +538,11 @@ local function PickupActionTable(tbl, test, settings, activating)
             if index then
                 success = true
                 if not test then
-                    PickupSpellBookItem(index, tbl.subType)
+                    if PickupSpellBookItem then
+                        PickupSpellBookItem(index, tbl.subType)
+                    else
+                        C_SpellBook.PickupSpellBookItem(index, Enum.SpellBookSpellBank.Player)
+                    end
                 end
             end
 
@@ -557,7 +572,11 @@ local function PickupActionTable(tbl, test, settings, activating)
                     if IsSpellKnown(tbl.id, false) or IsPlayerSpell(tbl.id) then
                         success = true
                         if not test then
-                            PickupSpell(tbl.id)
+                            if C_Spell and C_Spell.PickupSpell then
+                                C_Spell.PickupSpell(tbl.id)
+                            else
+                                PickupSpell(tbl.id)
+                            end
                         end
                     end
                 end
@@ -1174,7 +1193,7 @@ local function DropDown_Initialize(self, level, menuList)
 
             info.func = function (self, arg1, arg2, checked)
                 set.settings = set.settings or {}
-                set.settings.adjustCovenant = not checked
+                set.settings.adjustCovenant = checked
                 
 		        Internal.Call("ActionBarSetUpdated", set.setID);
 
@@ -1184,10 +1203,10 @@ local function DropDown_Initialize(self, level, menuList)
             info.text = L["Adjust Covenant Abilities"]
             UIDropDownMenu_AddButton(info, level)
 
-            
+            info.isNotRadio = false
             info.func = function (self, arg1, arg2, checked)
                 set.settings = set.settings or {}
-                set.settings.createMissingMacros = not checked
+                set.settings.createMissingMacros = checked
                 set.settings.createMissingMacrosCharacter = false
                 
 		        Internal.Call("ActionBarSetUpdated", set.setID);
@@ -1198,10 +1217,9 @@ local function DropDown_Initialize(self, level, menuList)
             info.text = L["Create Missing Macros"]
             UIDropDownMenu_AddButton(info, level)
 
-            
             info.func = function (self, arg1, arg2, checked)
                 set.settings = set.settings or {}
-                set.settings.createMissingMacrosCharacter = not checked
+                set.settings.createMissingMacrosCharacter = checked
                 set.settings.createMissingMacros = false
                 
 		        Internal.Call("ActionBarSetUpdated", set.setID);
