@@ -1,3 +1,7 @@
+# v1.18.1
+
+- Updated verison for 10.0.0
+
 # v1.18.0-beta
 
 - Added support for Hero Talent sets
