@@ -1,6 +1,10 @@
+# v1.18.2
+
+- Fixed an issue with processing action bar items from the spell book
+
 # v1.18.1
 
-- Updated verison for 10.0.0
+- Updated verison for 11.0.0
 
 # v1.18.0-beta
 
