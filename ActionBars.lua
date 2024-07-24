@@ -501,7 +501,16 @@ local function PickupActionTable(tbl, test, settings, activating)
             local index
             success = false
             if tbl.subType == "spell" then
-                if GetNumSpellTabs then
+                if C_SpellBook and C_SpellBook.GetSpellBookSkillLineInfo then
+                    local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(Enum.SpellBookSkillLineIndex.MainSpec);
+                    for spellIndex = 1,skillLineInfo.itemIndexOffset + skillLineInfo.numSpellBookItems do
+                        local spellBookItem = C_SpellBook.GetSpellBookItemInfo(spellIndex, Enum.SpellBookSpellBank.Player);
+                        if spellBookItem.itemType == Enum.SpellBookItemType.Spell and spellBookItem.spellID == tbl.id then
+                            index = spellIndex
+                            break
+                        end
+                    end
+                else
                     for tabIndex = 1,min(2,GetNumSpellTabs()) do
                         local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
                         for spellIndex = offset,offset+numEntries do
@@ -510,15 +519,6 @@ local function PickupActionTable(tbl, test, settings, activating)
                                 index = spellIndex
                                 break
                             end
-                        end
-                    end
-                else
-                    local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(Enum.SpellBookSkillLineIndex.MainSpec);
-                    for spellIndex = 1,skillLineInfo.itemIndexOffset + skillLineInfo.numSpellBookItems do
-                        local spellBookItem = C_SpellBook.GetSpellBookItemInfo(spellIndex, Enum.SpellBookSpellBank.Player);
-                        if spellBookItem.id == tbl.id then
-                            index = spellIndex
-                            break
                         end
                     end
                 end
@@ -538,10 +538,10 @@ local function PickupActionTable(tbl, test, settings, activating)
             if index then
                 success = true
                 if not test then
-                    if PickupSpellBookItem then
-                        PickupSpellBookItem(index, tbl.subType)
-                    else
+                    if C_SpellBook and C_SpellBook.PickupSpellBookItem then
                         C_SpellBook.PickupSpellBookItem(index, Enum.SpellBookSpellBank.Player)
+                    else
+                        PickupSpellBookItem(index, tbl.subType)
                     end
                 end
             end
@@ -645,15 +645,26 @@ local function PickupActionTable(tbl, test, settings, activating)
                 success = false
                 msg = L["Flyout is not available"]
             else
-                -- Find the spell book index for the flyout
                 local index
-                for tabIndex = 1,min(2,GetNumSpellTabs()) do
-                    local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
-                    for spellIndex = offset,offset+numEntries do
-                        local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
-                        if skillType == "FLYOUT" and id == tbl.id then
+                -- Find the spell book index for the flyout
+                if C_SpellBook and C_SpellBook.GetSpellBookSkillLineInfo then
+                    local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(Enum.SpellBookSkillLineIndex.MainSpec);
+                    for spellIndex = 1,skillLineInfo.itemIndexOffset + skillLineInfo.numSpellBookItems do
+                        local spellBookItem = C_SpellBook.GetSpellBookItemInfo(spellIndex, Enum.SpellBookSpellBank.Player);
+                        if spellBookItem.itemType == Enum.SpellBookItemType.Flyout and spellBookItem.actionID == tbl.id then
                             index = spellIndex
                             break
+                        end
+                    end
+                else
+                    for tabIndex = 1,min(2,GetNumSpellTabs()) do
+                        local offset, numEntries = select(3, GetSpellTabInfo(tabIndex))
+                        for spellIndex = offset,offset+numEntries do
+                            local skillType, id = GetSpellBookItemInfo(spellIndex, "spell")
+                            if skillType == "FLYOUT" and id == tbl.id then
+                                index = spellIndex
+                                break
+                            end
                         end
                     end
                 end
@@ -661,7 +672,11 @@ local function PickupActionTable(tbl, test, settings, activating)
                     success = false
                     msg = L["Flyout is not in spell book"]
                 elseif not test then
-                    PickupSpellBookItem(index, "spell")
+                    if C_SpellBook and C_SpellBook.PickupSpellBookItem then
+                        C_SpellBook.PickupSpellBookItem(index, Enum.SpellBookSpellBank.Player)
+                    else
+                        PickupSpellBookItem(index, "spell")
+                    end
                 end
             end
         end
