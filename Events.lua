@@ -1680,12 +1680,22 @@ function frame:TRAIT_CONFIG_UPDATED(configID)
     Internal.RefreshSetFromConfigID(set, configID)
 end
 function frame:TRAIT_CONFIG_DELETED(configID)
-    if dfTalentTreeSetMap[configID] then
+    local set = dfTalentTreeSetMap[configID]
+    if set then
 --@debug@
-        print(format(L["[BtWLoadouts]: Unflagged talent loadout \"%s\" as a blizzard talent tree."], dfTalentTreeSetMap[configID].name));
+        print(format(L["[BtWLoadouts]: Unflagged talent loadout \"%s\" as a blizzard talent tree."], set.name));
 --@end-debug@
-        dfTalentTreeSetMap[configID].configID = nil;
-        dfTalentTreeSetMap[configID].character = nil;
+
+        -- If the set is in use we disconnect it from the Blizzard manager
+        -- otherwise we delete it
+        if set.useCount > 0 then
+            set.configID = nil;
+            set.character = nil;
+        else
+            Internal.DeleteSet(BtWLoadoutsSets.dftalents, set);
+        end
+
+        -- Clear map
         dfTalentTreeSetMap[configID] = nil;
     end
 end
