@@ -1,3 +1,8 @@
+# v1.18.3
+
+- Updated talent sets to be automatically deleted if they are not in use when they are removed from the Blizzard loadouts
+- Fixed an error when toggling ignore on or off for action bar 8
+
 # v1.18.2
 
 - Fixed an issue with processing action bar items from the spell book
