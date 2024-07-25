@@ -1290,7 +1290,7 @@
 							<Button parentKey="IgnoreBar15" inherits="BtWLoadoutsIgnoreActionBarTemplate">
 								<KeyValues>
 									<KeyValue type="number" key="startID" value="169"/>
-									<KeyValue type="number" key="endID" value="181"/>
+									<KeyValue type="number" key="endID" value="180"/>
 								</KeyValues>
 								<Anchors>
 									<Anchor point="TOPLEFT" relativeKey="$parent.Bar15Slot12" relativePoint="TOPRIGHT" x="2" y="0"/>
