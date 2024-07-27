@@ -242,7 +242,8 @@ local DFTalentImportMixin = {
             return false, LOADOUT_ERROR_BAD_STRING
         end
 
-        if serializationVersion ~= 1 then
+        local currentSerializationVersion = C_Traits.GetLoadoutSerializationVersion();
+        if serializationVersion ~= currentSerializationVersion then
             return false, LOADOUT_ERROR_SERIALIZATION_VERSION_MISMATCH
         end
 
