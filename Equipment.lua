@@ -3034,6 +3034,38 @@ if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
 	end
 end
 
+-- BetterBags
+if LibStub and LibStub:GetLibrary("AceAddon-3.0", true) then
+	local BetterBags = LibStub("AceAddon-3.0"):GetAddon("BetterBags", true)
+
+	if BetterBags then
+		local setCategories = {}
+		local categories = BetterBags:GetModule('Categories')
+		categories:RegisterCategoryFunction("BtWLoadouts", function(data)
+			local location = PackLocation(data.bagid, data.slotid)
+			local sets = {}
+			local set = GetEnabledSetsForLocation(location, sets)[1]
+			if set then
+				local category = format(L["Set: %s"], set.name)
+				setCategories[category] = true
+				return category
+			end
+			return nil
+		end)
+
+		-- Delete custom categories created by BtWLoadouts on character logout
+		-- This ensures only categories for sets enabled for the current character are displayed
+		local frame = CreateFrame("Frame")
+		frame:SetScript("OnEvent", function ()
+			for category in pairs(setCategories) do
+				categories:DeleteCategory(category)
+			end
+		end)
+		frame:RegisterEvent("PLAYER_LOGOUT")
+		frame:Hide()
+	end
+end
+
 -- LibItemSearch, used by Bagnon to display borders around items within equipment sets
 if LibStub and LibStub:GetLibrary("LibItemSearch-1.2", true) then
 	local Lib = LibStub("LibItemSearch-1.2")
