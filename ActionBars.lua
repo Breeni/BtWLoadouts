@@ -732,9 +732,6 @@ local function SetActon(slot, tbl)
 end
 
 local function IsActionBarSetActive(set)
-    for slot = 121,144 do
-        set.ignored[slot] = true
-    end
     for slot=1,181 do
         if not set.ignored[slot] then
             local action = set.actions[slot]
@@ -749,9 +746,6 @@ local function IsActionBarSetActive(set)
     return true;
 end
 local function ActivateActionBarSet(set, state)
-    for slot = 121,144 do
-        set.ignored[slot] = true
-    end
     local complete = true
     for slot=1,181 do
         if not set.ignored[slot] then
@@ -770,9 +764,6 @@ end
 local function RefreshActionBarSet(set)
     local actions = set.actions or {}
 
-    for slot = 121,144 do
-        set.ignored[slot] = true
-    end
     for slot = 1,181 do
         actions[slot] = GetActionInfoTable(slot)
     end
@@ -814,9 +805,6 @@ local function AddActionBarSet()
 end
 local function GetActionBarSet(id)
     local set = Internal.GetSet(BtWLoadoutsSets.actionbars, id)
-    for slot = 121,144 do
-        set.ignored[slot] = true
-    end
     return set
 end
 local function GetActionBarSetByName(id)
