@@ -1,3 +1,8 @@
+# v1.19.0
+
+- Added support for Skyriding action bar
+- Fixed an issue importing Blizzard talent loadouts
+
 # v1.18.3
 
 - Updated talent sets to be automatically deleted if they are not in use when they are removed from the Blizzard loadouts
