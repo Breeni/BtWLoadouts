@@ -4952,7 +4952,7 @@ do
 				},
 			},
 		}
-	elseif Internal.IsDragonflightPatch then
+	elseif Internal.Is100000 then
 		specInfo = {
 			version = 6,
 

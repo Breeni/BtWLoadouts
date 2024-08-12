@@ -12,7 +12,7 @@ local GetSpellCooldown = C_Spell and C_Spell.GetSpellCooldown and function (spel
     end
 end or GetSpellCooldown;
 
-BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflightPatch
+BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflightOrBeyond
 
 BTWLOADOUTS_SPEC_TREE = L["Spec Tree"] .. " > ";
 BTWLOADOUTS_CLASS_TREE = " < " .. L["Class Tree"];

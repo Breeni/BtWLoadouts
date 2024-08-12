@@ -1,7 +1,7 @@
 local ADDON_NAME,Internal = ...
 local L = Internal.L
 
-BTWLOADOUTS_HERO_TALENTS_ACTIVE = Internal.IsTheWarWithinPatch
+BTWLOADOUTS_HERO_TALENTS_ACTIVE = Internal.IsTheWarWithinOrBeyond
 
 BtWLoadoutsHeroTalentTreeDropDownMixin = {}
 function BtWLoadoutsHeroTalentTreeDropDownMixin:OnShow()
