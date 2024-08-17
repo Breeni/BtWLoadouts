@@ -93,7 +93,7 @@ Internal.Is100200 = IsAtleastBuild(100105)
 Internal.IsBattleForAzeroth = IsExpansion(LE_EXPANSION_BATTLE_FOR_AZEROTH or 7)
 Internal.IsShadowlands = IsExpansion(LE_EXPANSION_SHADOWLANDS or 8)
 Internal.IsDragonflight = IsExpansion(LE_EXPANSION_DRAGONFLIGHT or 9)
-Internal.IsTheWarWithin = IsExpansion(LE_EXPANSION_11_0 or 10)
+Internal.IsTheWarWithin = IsExpansion(LE_EXPANSION_WAR_WITHIN or 10)
 
 Internal.IsBattleForAzerothSeason1 = Internal.IsBattleForAzeroth and IsSeason(4)
 Internal.IsShadowlandsSeason1 = Internal.IsShadowlands and IsSeason(5)
