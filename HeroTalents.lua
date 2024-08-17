@@ -1221,7 +1221,9 @@ end
 function BtWLoadoutsHeroTalentsMixin:GetAndCacheEntryInfo(entryID)
 	local function GetEntryInfoCallback()
 		-- self.dirtyEntryIDSet[entryID] = nil;
-		return C_Traits.GetEntryInfo(C_ClassTalents.GetActiveConfigID() or Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID, entryID);
+		local entryInfo = C_Traits.GetEntryInfo(C_ClassTalents.GetActiveConfigID() or Constants.TraitConsts.VIEW_TRAIT_CONFIG_ID, entryID);
+        entryInfo.isDisplayError = nil;
+        return entryInfo
 	end
 
 	return GetOrCreateTableEntryByCallback(self.entryInfoCache, entryID, GetEntryInfoCallback);

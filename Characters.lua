@@ -11616,6 +11616,7 @@ do
 				nodeInfo.canRefundRank = nil;
 				nodeInfo.isAvailable = nil;
 				nodeInfo.isCascadeRepurchasable = nil;
+				nodeInfo.isDisplayError = nil;
 				nodeInfo.isVisible = nil;
 				nodeInfo.meetsEdgeRequirements = nil;
 				
