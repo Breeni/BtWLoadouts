@@ -1,3 +1,9 @@
+# v1.19.1
+
+- Updated conditions for Nerub-ar Palace
+- Fixed The War Within expansion check
+- Fixed hero talents showing errors when the current character is missing a required talent
+
 # v1.19.0
 
 - Added support for Skyriding action bar
