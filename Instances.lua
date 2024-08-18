@@ -2270,6 +2270,7 @@ local npcIDToBossID = {
     [202375] = 2532, -- The Vigilant Steward, Zskarn
     [201579] = 2527, -- Magmorax
 
+    -- Amirdrassil, the Dream's Hope
     [209333] = 2564, -- Gnarlroot
     [200926] = 2554, -- Igira the Cruel
     [208478] = 2557, -- Volcoross
@@ -2280,7 +2281,19 @@ local npcIDToBossID = {
     [206172] = 2556, -- Nymue, Weaver of the Cycle
     [200927] = 2563, -- Smolderon
     [209090] = 2565, -- Tindral Sageswift, Seer of the Flame
-    -- [] = 2519, -- Fyrakk the Blazing
+    -- [204931] = 2519, -- Fyrakk the Blazing
+
+    --The war Within
+    -- Nerub-ar Palace
+    [215657] = 2607, -- Ulgrax the Devourer
+    [214502] = 2611, -- The Bloodbound Horror
+    [214503] = 2599, -- Sikran, Captain of the Sureki
+    [214504] = 2609, -- Rasha'nan
+    [214506] = 2612, -- Broodtwister Ovi'nax
+    [217748] = 2601, -- Nexus-Princess Ky'veza
+    [217489] = 2608, -- The Silken Court
+    [217491] = 2608, -- The Silken Court
+    -- [0] = 2602, -- Queen Ansurek
 };
 -- Although area ids are unique we map them with instance ids so we can translate
 -- area names by instance. We translate them because we cant get the area id where
