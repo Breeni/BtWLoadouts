@@ -1,3 +1,7 @@
+# v1.19.2
+
+- Fixed the order of action bars 2 through 5
+
 # v1.19.1
 
 - Updated conditions for Nerub-ar Palace
