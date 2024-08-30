@@ -227,7 +227,7 @@ local instanceDifficulties = {
     [2661] = { 205, 1,  2, 23 }, -- Cinderbrew Meadery
     [2652] = { 205, 1,  2, 23 }, -- The Stonevault
     [2669] = { 205, 1,  2, 23 }, -- City of Threads
-    [2657] = { 220, 14, 15, 16, 17 }, -- Nerub-ar Palace
+    [2657] = { 220, 17, 14, 15, 16 }, -- Nerub-ar Palace
 }
 if Internal.IsDragonflightSeason1 then
     instanceDifficulties[2515] = { 1, 2, 23, 8 } -- The Azure Vault
