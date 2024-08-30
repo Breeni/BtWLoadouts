@@ -670,6 +670,7 @@ local scenarioInfo = {
 	{
 		name = L["The War Within"],
 		instances = {
+			{nil, 208, (function () return GetDifficultyInfo(208) end)()}, -- Delves
 		},
 	}
 };
