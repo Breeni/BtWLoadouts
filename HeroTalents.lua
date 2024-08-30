@@ -102,7 +102,7 @@ local function UpdateSetFilters(set)
 
     local filters = set.filters
     filters.herotalents = set.subTreeID
-    filters.spec = filters.spec or Internal.GetSpecIDsByHeroTalentTreeID(set.subTreeID)
+    filters.spec = filters.spec or {unpack(Internal.GetSpecIDsByHeroTalentTreeID(set.subTreeID))} -- Clone the table
     
     local specID = filters.spec
     if type(specID) == "table" then
@@ -928,7 +928,7 @@ function BtWLoadoutsHeroTalentsMixin:Update(updatePosition, skipUpdateTree)
         
         set.restrictions = set.restrictions or {}
         self.RestrictionsDropDown:SetSelections(set.restrictions)
-        self.RestrictionsDropDown:SetLimitations("herotalents", treeID)
+        self.RestrictionsDropDown:SetLimitations("herotalents", subTreeID)
         self.RestrictionsButton:SetEnabled(true);
 
         if not self.Name:HasFocus() then
