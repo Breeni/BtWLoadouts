@@ -99,6 +99,28 @@ do -- Build role list
 		roleEnumertorList[#roleEnumertorList+1] = { role, _G[role] }
 	end
 end
+local instances = {}
+do
+    for _,expansion in ipairs(Internal.raidInfo) do
+        for _,instanceID in ipairs(expansion.instances) do
+            instances[#instances+1] = instanceID
+        end
+    end
+    for _,expansion in ipairs(Internal.dungeonInfo) do
+        for _,instanceID in ipairs(expansion.instances) do
+            instances[#instances+1] = instanceID
+        end
+    end
+end
+local difficulties = {220, 17, 14, 15, 16, 205, 1, 2, 23, 8}
+local bosses = {}
+do
+    for _,instanceID in ipairs(instances) do
+        for _,bossID in ipairs(Internal.instanceBosses[instanceID]) do
+            bosses[#bosses+1] = bossID
+        end
+    end
+end
 local charaterEnumertorList = {} -- Reused for building character lists
 Internal.Filters = {
 	covenant = {
@@ -267,6 +289,45 @@ Internal.Filters = {
 					return index, 0, L["Other"]
 				end
 			end, instanceTypeEnumeratorList, 0
+		end,
+	},
+	instance = {
+		name = L["Instance"],
+		enumerate = function (limitations, includeLimitations, includeOther)
+			return function (tbl, index)
+				index = index + 1
+				if tbl[index] then
+					return index, tbl[index], GetRealZoneText(tbl[index])
+				elseif includeOther and index == #tbl + 1 then
+					return index, 0, L["Other"]
+				end
+			end, instances, 0
+		end,
+	},
+	difficulty = {
+		name = L["Difficulty"],
+		enumerate = function (limitations, includeLimitations, includeOther)
+			return function (tbl, index)
+				index = index + 1
+				if tbl[index] then
+					return index, tbl[index], GetDifficultyInfo(tbl[index])
+				elseif includeOther and index == #tbl + 1 then
+					return index, 0, L["Other"]
+				end
+			end, difficulties, 0
+		end,
+	},
+	boss = {
+		name = L["Boss"],
+		enumerate = function (limitations, includeLimitations, includeOther)
+			return function (tbl, index)
+				index = index + 1
+				if tbl[index] then
+					return index, tbl[index], EJ_GetEncounterInfo(tbl[index])
+				elseif includeOther and index == #tbl + 1 then
+					return index, 0, L["Other"]
+				end
+			end, bosses, 0
 		end,
 	},
 	disabled = {

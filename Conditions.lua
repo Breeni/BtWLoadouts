@@ -249,6 +249,8 @@ local function UpdateSetFilters(set)
 	end
 
 	filters.instanceType = set.type
+	filters.instance = set.instanceID
+	filters.difficulty = set.difficultyID
 
 	filters.disabled = set.disabled ~= true and 0 or 1
 
@@ -1345,7 +1347,7 @@ function BtWLoadoutsConditionsMixin:Update()
 	self:GetParent():SetTitle(L["Conditions"]);
 	local sidebar = BtWLoadoutsFrame.Sidebar
 
-	sidebar:SetSupportedFilters("spec", "class", "role", "character", "instanceType", "disabled")
+	sidebar:SetSupportedFilters("spec", "class", "role", "character", "instanceType", "instance", "difficulty", "disabled")
 	sidebar:SetSets(BtWLoadoutsSets.conditions)
 	sidebar:SetCollapsed(BtWLoadoutsCollapsed.conditions)
 	sidebar:SetCategories(BtWLoadoutsCategories.conditions)
