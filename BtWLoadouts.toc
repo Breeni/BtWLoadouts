@@ -24,6 +24,7 @@ Blockers.lua
 DFTalents.100105.lua
 Characters.lua
 Instances.lua
+Filters.lua
 Sets.lua
 
 BtWLoadouts.xml
