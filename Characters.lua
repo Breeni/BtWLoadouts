@@ -11735,9 +11735,8 @@ do
 	end
 end
 function Internal.DeleteCharacter(slug)
-	if Internal.Call("CharacterDeleted", slug) then
-		BtWLoadoutsCharacterInfo[slug] = nil
-	end
+	Internal.Call("CharacterDeleted", slug)
+	BtWLoadoutsCharacterInfo[slug] = nil
 	BtWLoadoutsFrame:Update();
 end
 function Internal.UpdatePlayerInfo()
