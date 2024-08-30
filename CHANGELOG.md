@@ -1,3 +1,8 @@
+# v1.19.3
+
+- Fixed Delete Character Data not deleting character data
+- Fixed issues selecting specialization restrictions for hero talents
+
 # v1.19.2
 
 - Fixed the order of action bars 2 through 5
