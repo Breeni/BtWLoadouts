@@ -1061,9 +1061,6 @@ function BtWLoadoutsHeroTalentsMixin:OnDrag()
         scroll:SetVerticalScroll(scrollY)
     end
 end
-function BtWLoadoutsHeroTalentsMixin:GetMaxWidth()
-    return 1300
-end
 function BtWLoadoutsHeroTalentsMixin:BeginScrollDrag()
     local scroll = self.Scroll;
 
