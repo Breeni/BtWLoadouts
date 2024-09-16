@@ -1202,7 +1202,7 @@ function BtWLoadoutsDFTalentsMixin:OnDrag()
     end
 end
 function BtWLoadoutsDFTalentsMixin:GetMaxWidth()
-    return 1300
+    return 1400
 end
 function BtWLoadoutsDFTalentsMixin:BeginScrollDrag()
     local scroll = self.Scroll;
