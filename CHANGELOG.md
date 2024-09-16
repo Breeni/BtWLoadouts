@@ -1,3 +1,8 @@
+# v1.20.1
+
+- Updated the maximum width of the talent pane
+- Updated the Hero Talents pane to no longer allowed horizontal resizing
+
 # v1.20.0
 
 - Added support for instance and difficulty filtering in the conditions sidebar
