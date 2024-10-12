@@ -1,3 +1,7 @@
+# v1.20.2
+
+- Fixed missing Dracthyr and Earthern from the race restrictions
+
 # v1.20.1
 
 - Updated the maximum width of the talent pane
