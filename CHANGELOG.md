@@ -1,3 +1,7 @@
+# v1.20.3
+
+- Updated for 11.0.5
+
 # v1.20.2
 
 - Fixed missing Dracthyr and Earthern from the race restrictions
