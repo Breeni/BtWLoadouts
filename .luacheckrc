@@ -160,6 +160,7 @@ new_read_globals = {
     'C_ClassTalents.GetConfigIDsBySpecID',
     'C_ClassTalents.GetHeroTalentSpecsForClassSpec',
     'C_ClassTalents.GetTraitTreeForSpec',
+    'C_ClassTalents.HasUnspentHeroTalentPoints',
     'C_ClassTalents.InitializeViewLoadout',
     'C_ClassTalents.UpdateLastSelectedSavedConfigID',
     'C_ClassTalents.ViewLoadout',

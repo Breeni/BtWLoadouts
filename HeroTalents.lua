@@ -291,7 +291,7 @@ local function IsSetActive(set)
         end
     end
 
-    return true;
+    return not (C_ClassTalents.HasUnspentHeroTalentPoints());
 end
 local function IsNodeEntryOnCooldown(nodeEntryID)
     local configID = C_ClassTalents.GetActiveConfigID();
