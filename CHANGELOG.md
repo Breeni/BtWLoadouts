@@ -1,3 +1,7 @@
+# v1.20.4
+
+- Fixed an issue where Hero Talent trees would be considered active when there are still points available
+
 # v1.20.3
 
 - Updated for 11.0.5
