@@ -245,6 +245,7 @@ new_read_globals = {
     'C_Soulbinds.GetSoulbindData',
     'C_Soulbinds.ModifyNode',
     'C_Soulbinds.SelectNode',
+    'C_SpecializationInfo.CanPlayerUseTalentSpecUI',
     'C_SpecializationInfo.GetAllSelectedPvpTalentIDs',
     'C_SpecializationInfo.GetPvpTalentSlotInfo',
     'C_SpecializationInfo.GetPvpTalentUnlockLevel',
