@@ -82,6 +82,9 @@ end
 
 local function GetSelectedHeroSubTree()
     local subTreeIDs = C_ClassTalents.GetHeroTalentSpecsForClassSpec();
+    if not subTreeIDs then
+        return nil
+    end
 
     local configID = C_ClassTalents.GetActiveConfigID();
     if configID ~= nil then
