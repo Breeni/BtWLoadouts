@@ -1,4 +1,4 @@
-# v1.20.4
+# v1.20.5
 
 - Fixed error trying to get hero talents when unavailable
 - Fixed an issue trying to activate talent sets on characters below level 10
