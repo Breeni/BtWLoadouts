@@ -1,3 +1,7 @@
+# v1.20.6
+
+- Fixed a issue showing some debug info
+
 # v1.20.5
 
 - Fixed error trying to get hero talents when unavailable
