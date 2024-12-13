@@ -1496,16 +1496,16 @@ end
 function BtWLoadoutsDFTalentsMixin:ShouldInstantiateNode(nodeID, nodeInfo)
 	-- Overrides TalentFrameBaseMixin.
 	-- SubTreeSelection nodes are used to track what SubTrees are active under the hood, but we use a bespoke UI for them for Hero Talents (see HeroTalentsContainer)
-    return true; -- nodeInfo.type ~= Enum.TraitNodeType.SubTreeSelection;
+    return nodeInfo.type ~= Enum.TraitNodeType.SubTreeSelection;
 end
 function BtWLoadoutsDFTalentsMixin:InstantiateTalentButton(nodeID, nodeInfo)
 	nodeInfo = nodeInfo or self:GetAndCacheNodeInfo(nodeID);
 
-    if nodeInfo.type == Enum.TraitNodeType.SubTreeSelection then
-        print(nodeInfo.posX, nodeInfo.posY);
-        nodeInfo.posX = 8250
-        nodeInfo.posY = 1800
-    end
+    -- if nodeInfo.type == Enum.TraitNodeType.SubTreeSelection then
+    --     print(nodeInfo.posX, nodeInfo.posY);
+    --     nodeInfo.posX = 8250
+    --     nodeInfo.posY = 1800
+    -- end
 
 	if (not nodeInfo.isVisible and not self:ShouldInstantiateInvisibleButtons()) or not self:ShouldInstantiateNode(nodeID, nodeInfo) then
 		return nil;
