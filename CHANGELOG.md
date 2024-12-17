@@ -1,3 +1,7 @@
+# v1.20.7
+
+- Updated for 11.0.7
+
 # v1.20.6
 
 - Fixed a issue showing some debug info
