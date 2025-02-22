@@ -17,6 +17,7 @@ local seasons = {
         [11] = 1699974000,
         [12] = 1713884400,
         [13] = 1725980400,
+        [14] = 1741100400,
     },
     [2] = {
         [9] = 1671058800,
@@ -24,6 +25,7 @@ local seasons = {
         [11] = 1700089200,
         [12] = 1713999600,
         [13] = 1726095600,
+        [14] = 1741215600,
     },
     [3] = {
         [9] = 1670990400,
@@ -31,6 +33,7 @@ local seasons = {
         [11] = 1700020800,
         [12] = 1713931200,
         [13] = 1726027200,
+        [14] = 1741147200,
     },
     [4] = {
         [9] = 1671058800,
@@ -38,6 +41,7 @@ local seasons = {
         [11] = 1700089200,
         [12] = 1713999600,
         [13] = 1726095600,
+        [14] = 1741215600,
     },
     [5] = {
         [9] = 1671058800,
@@ -45,6 +49,7 @@ local seasons = {
         [11] = 1700089200,
         [12] = 1713999600,
         [13] = 1726095600,
+        [14] = 1741215600,
     },
     [72] = {
         [9] = 1671058800,
@@ -52,6 +57,15 @@ local seasons = {
         [11] = 1700089200,
         [12] = 1713999600,
         [13] = 1726095600,
+        [14] = 1741215600,
+    },
+    [90] = {
+        [9] = 1671058800,
+        [10] = 1683759600,
+        [11] = 1700089200,
+        [12] = 1713999600,
+        [13] = 1726095600,
+        [14] = 1741215600,
     },
 };
 local GetCurrentSeason = C_MythicPlus and C_MythicPlus.GetCurrentSeason or function ()
@@ -108,4 +122,5 @@ Internal.IsDragonflightSeason1 = Internal.IsDragonflight and IsSeason(9)
 Internal.IsDragonflightSeason2 = Internal.IsDragonflight and IsSeason(10)
 Internal.IsDragonflightSeason3 = Internal.IsDragonflight and IsSeason(11)
 Internal.IsDragonflightSeason4 = Internal.IsDragonflight and IsSeason(12)
-Internal.IsTheWarWithinSeason1 = Internal.IsTheWarWithin -- and IsSeason(13)
+Internal.IsTheWarWithinSeason1 = Internal.IsTheWarWithin and IsSeason(13)
+Internal.IsTheWarWithinSeason2 = Internal.IsTheWarWithin -- and IsSeason(14)
