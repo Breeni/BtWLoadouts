@@ -2886,9 +2886,16 @@ elseif Internal.IsDragonflightSeason4 then
         [7] = {135, 136, 134, 124, 3},
         [10] = {},
     }
-else -- if Internal.IsTheWarWithinSeason1 then
+elseif Internal.IsTheWarWithinSeason1 then
     affixesByLevel = {
         [2] = {148, 158, 159, 160, 147},
+        [4] = {10, 9},
+        [7] = {152},
+        [10] = {},
+    }
+else -- if Internal.IsTheWarWithinSeason2 then
+    affixesByLevel = {
+        [2] = {148, 158, 162, 160, 147},
         [4] = {10, 9},
         [7] = {152},
         [10] = {},
