@@ -2934,6 +2934,11 @@ if TooltipDataProcessor then
 			AddEquipmentSetLine(self)
 		end
 	end)
+	TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function (self, data)
+		if not added then
+			AddEquipmentSetLine(self)
+		end
+	end)
 else
 	local tooltipMatch = "^" .. string.gsub(EQUIPMENT_SETS, "%%s", "(.*)") .. "$"
 	local tooltipSellMatch = "^" .. SELL_PRICE .. ": .*$"
