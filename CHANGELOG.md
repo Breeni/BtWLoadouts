@@ -1,3 +1,8 @@
+# v1.20.8
+
+- Updated for 11.1.0
+- Fixed a bug where adding Equipment Set tooltip lines could break other lines wrapping
+
 # v1.20.7
 
 - Updated for 11.0.7
