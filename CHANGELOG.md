@@ -1,3 +1,7 @@
+# v1.20.9
+
+- Fixed an error switching specializations
+
 # v1.20.8
 
 - Updated for 11.1.0
