@@ -1,3 +1,7 @@
+# v1.20.10
+
+- Fixed an issue causing some talents to be partially treated as selection nodes
+
 # v1.20.9
 
 - Fixed an error switching specializations
