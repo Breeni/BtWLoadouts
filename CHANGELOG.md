@@ -1,3 +1,8 @@
+# v1.20.11
+
+- Updated for 11.1.5
+- Fixed the add and remove icons in the loadouts tab
+
 # v1.20.10
 
 - Fixed an issue causing some talents to be partially treated as selection nodes
