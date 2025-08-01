@@ -341,6 +341,11 @@ local function GetActionInfoTable(slot, tbl)
 
     tbl = tbl or {}
 
+    if subType == "assistedcombat" then
+        id = 1229376
+        subType = "spell"
+    end
+
     -- If we use the base version of the spell it should always work
     if actionType == "spell" then
         id = FindBaseSpellByID(id) or id
