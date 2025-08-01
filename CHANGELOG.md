@@ -1,3 +1,9 @@
+# v1.20.13
+
+- Updated for 11.2 and The War Within Season 3
+- Updated equipment management to handle new bank tabs
+- Fixed an issue where Single-Button Assistant would not be saved correctly
+
 # v1.20.12
 
 - Updated for 11.1.7
