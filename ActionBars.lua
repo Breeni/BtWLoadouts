@@ -406,6 +406,12 @@ local function GetMacroByText(text)
 end
 local function CompareSlot(slot, tbl, settings)
     local actionType, id, subType = GetActionInfo(slot)
+
+    if subType == "assistedcombat" then
+        id = 1229376
+        subType = "spell"
+    end
+    
     if actionType == "spell" then
         id = FindBaseSpellByID(id) or id
 
