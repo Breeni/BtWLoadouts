@@ -396,9 +396,7 @@ end
 local function ActivateSet(set, state)
     -- Let the DF talents handle hero talents
     if state.dfTalents then
-        if not IsSetActive(set) then
-            state.heroTalents = set
-        end
+        state.heroTalents = set
         return true
     else
         local complete = true;
