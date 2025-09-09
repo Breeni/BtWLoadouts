@@ -386,6 +386,16 @@ local function ActivateSet(set, state)
                         end
                     end
                 end
+            else
+                local _, _, classID = UnitClass("player");
+                for _,subTreeID in ipairs(Internal.GetHeroTalentTreeIDsByClassID(classID)) do
+                    local subTreeInfo = C_Traits.GetSubTreeInfo(configID, subTreeID);
+                    if subTreeInfo and subTreeInfo.subTreeSelectionNodeIDs then
+                        for _, selectionNodeID in ipairs(subTreeInfo.subTreeSelectionNodeIDs) do
+                            set.nodes[selectionNodeID] = nil;
+                        end
+                    end
+                end
             end
 
             local done = {};
