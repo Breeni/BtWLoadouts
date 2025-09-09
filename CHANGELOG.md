@@ -1,3 +1,10 @@
+# v1.20.14
+
+- Fixed activating talent trees sometimes selecting a hero talent tree incorrectly
+- Fixed an issue where hero talent trees could be swapped back and forth
+- Fixed an error reading item data
+- Fixed an error while scanning for missing items
+
 # v1.20.13
 
 - Updated for 11.2 and The War Within Season 3
