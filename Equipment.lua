@@ -2433,13 +2433,15 @@ do
 			end
 
 			if not skipBank and next(missingItemDatas) ~= nil then
-				for slotId=1,GetContainerNumSlots(BANK_CONTAINER) do
-					if next(missingItemDatas) == nil then
-						break
-					end
+				if BANK_CONTAINER then
+					for slotId=1,GetContainerNumSlots(BANK_CONTAINER) do
+						if next(missingItemDatas) == nil then
+							break
+						end
 
-					local newLocation = PackLocation(BANK_CONTAINER, slotId)
-					UpdateLocation(newLocation)
+						local newLocation = PackLocation(BANK_CONTAINER, slotId)
+						UpdateLocation(newLocation)
+					end
 				end
 				
 				for bagId=FIRST_BANK_BAG_SLOT,LAST_BANK_BAG_SLOT do
