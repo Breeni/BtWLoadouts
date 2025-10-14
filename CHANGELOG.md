@@ -1,3 +1,8 @@
+# v1.20.15
+
+- Fixed an issue where the talents and hero talents panes were empty
+- Updated for 11.2.5
+
 # v1.20.14
 
 - Fixed activating talent trees sometimes selecting a hero talent tree incorrectly

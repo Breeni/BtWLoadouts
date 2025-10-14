@@ -1,4 +1,4 @@
-## Interface: 110107, 110200
+## Interface: 110200, 110205
 ## Title: BtWLoadouts
 ## Version: @project-version@
 ## Notes: Change your characters spec, talents, equipment, essences, and action bars all at once
