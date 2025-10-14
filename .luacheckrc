@@ -661,7 +661,7 @@ new_read_globals = {
     'GridLayoutMixin',
     'ScrollBoxListMixin',
     'TalentFrameBaseButtonsParentMixin',
-    'TalentButtonBasicArtMixin',
+    'TalentButtonArtMixin',
     'TalentButtonSpendMixin',
     'TalentButtonSplitSelectMixin',
     'TalentFrameBaseMixin',
