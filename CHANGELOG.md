@@ -1,3 +1,7 @@
+# v1.20.16
+
+- Updated for 11.2.7
+
 # v1.20.15
 
 - Fixed an issue where the talents and hero talents panes were empty
