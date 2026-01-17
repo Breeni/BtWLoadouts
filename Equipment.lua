@@ -6,7 +6,12 @@ local PickupInventoryItem = PickupInventoryItem
 local PickupContainerItem = C_Container and C_Container.PickupContainerItem or PickupContainerItem
 local GetContainerFreeSlots = C_Container and C_Container.GetContainerFreeSlots or GetContainerFreeSlots
 local GetContainerItemInfo = C_Container and C_Container.GetContainerItemInfo or GetContainerItemInfo
-local EquipmentManager_UnpackLocation = EquipmentManager_UnpackLocation
+local EquipmentManager_UnpackLocation = EquipmentManager_UnpackLocation or function (packedLocation)
+	local locationData = EquipmentManager_GetLocationData(packedLocation);
+	-- Void Storage is being deprecated in 11.2.0
+	local voidStorage, tab, voidSlot = false, nil, nil;
+	return locationData.isPlayer or false, locationData.isBank or false, locationData.isBags or false, voidStorage, locationData.slot, locationData.bag, tab, voidSlot;
+end
 local GetInventoryItemLink = GetInventoryItemLink
 local GetContainerItemLink = C_Container and C_Container.GetContainerItemLink or GetContainerItemLink
 local GetContainerNumSlots = C_Container and C_Container.GetContainerNumSlots or GetContainerNumSlots

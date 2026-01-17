@@ -530,6 +530,7 @@ new_read_globals = {
     'CreateScrollBoxListLinearView',
     'CreateTexturePool',
     'EditBox_ClearFocus',
+    'EquipmentManager_GetLocationData',
     'EquipmentManager_UnpackLocation',
     'EventRegistry.RegisterCallback',
     'EventRegistry.TriggerEvent',
