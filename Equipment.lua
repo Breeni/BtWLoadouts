@@ -2947,6 +2947,9 @@ if TooltipDataProcessor then
 	TooltipDataProcessor.AddLinePreCall(Enum.TooltipDataLineType.SellPrice, AddEquipmentSetLine)
 	TooltipDataProcessor.AddLinePostCall(Enum.TooltipDataLineType.None, function (self, lineData)
 		local leftText = lineData.leftText
+		if issecretvalue(leftText) then
+			return
+		end
 		if leftText == ITEM_SOCKETABLE or leftText == ITEM_ARTIFACT_VIEWABLE or leftText == ITEM_AZERITE_EMPOWERED_VIEWABLE or leftText == ITEM_AZERITE_ESSENCES_VIEWABLE or leftText:match(itemCreatedPattern) or leftText:match(durabilityPattern) then
 			AddEquipmentSetLine(self)
 		end
