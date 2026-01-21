@@ -1,3 +1,8 @@
+# v1.20.18
+
+- Fixed an error checking talent cooldowns while in combat
+- Fixed an error when updating equipment tooltips
+
 # v1.20.17
 
 - Updated for 12.0.0
