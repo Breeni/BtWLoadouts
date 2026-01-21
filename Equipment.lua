@@ -2917,6 +2917,9 @@ if TooltipDataProcessor then
 			return
 		end
 
+		if issecretvalue(lineData.leftText) then
+			return
+		end
 		if lineData.leftText:match(equipmentSetPattern) then
 			local sets = GetEquipmentSetLine(self.processingInfo)
 			if sets then
@@ -2933,7 +2936,7 @@ if TooltipDataProcessor then
 
 		local tooltipData = self.processingInfo.tooltipData
 		for _,line in ipairs(tooltipData.lines) do
-			if line.leftText:match(equipmentSetPattern) then
+			if not issecretvalue(line.leftText) and line.leftText:match(equipmentSetPattern) then
 				return -- Already has equipment set line
 			end
 		end
