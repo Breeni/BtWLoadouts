@@ -1,3 +1,7 @@
+# v1.20.19
+
+- Fixed an error checking boss conditions, it may cause some bosses to not proc conditions correctly
+
 # v1.20.18
 
 - Fixed an error checking talent cooldowns while in combat
