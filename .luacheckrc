@@ -442,6 +442,7 @@ new_read_globals = {
     'UnitAura',
     'UnitCastingInfo',
     'UnitClass',
+    'UnitCreatureID',
     'UnitFullName',
     'UnitGUID',
     'UnitIsDead',

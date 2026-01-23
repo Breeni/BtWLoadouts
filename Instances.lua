@@ -3284,6 +3284,13 @@ function Internal.BossAvailable(bossID)
 	return true
 end
 
+local UnitCreatureID = UnitCreatureID or function (unit)
+    local guid = UnitGUID(unit);
+    if not guid then return nil end
+    local _, _, _, _, _, npcID = strsplit("-", guid);
+    return tonumber(npcID);
+end
+
 function Internal.GetCurrentBoss(unitId)
 	local bossID = nil
 	local _, instanceType, difficultyID, _, _, _, _, instanceID = GetInstanceInfo();
@@ -3306,12 +3313,9 @@ function Internal.GetCurrentBoss(unitId)
 			bossID = InstanceAreaIDToBossID[instanceID][areaID] or bossID;
         end
 		if unitId then
-			local unitGUID = UnitGUID(unitId);
-			if unitGUID and not UnitIsDead(unitId) then
-				local type, zero, serverId, instanceId, zone_uid, npcId, spawn_uid = strsplit("-", unitGUID);
-				if (type == "Creature" or type == "Vehicle") and tonumber(npcId) then
-					bossID = npcIDToBossID[tonumber(npcId)] or bossID;
-				end
+            local npcId = UnitCreatureID(unitId)
+			if npcId and not UnitIsDead(unitId) and not issecretvalue(npcId) then
+                bossID = npcIDToBossID[npcId] or bossID;
 			end
 		end
 	end
