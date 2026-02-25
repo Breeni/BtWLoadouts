@@ -16251,7 +16251,7 @@ do
 			error("Missing Node " .. nodeID);
 		end
 		result.isVisible = tree.visibleNodes[nodeID] and true or false;
-		if tContains(tree.grantedNodes, nodeID) then
+		if tContains(tree.grantedNodes, nodeID) and result.maxRanks == 1 then
 			result.activeRank = result.maxRanks;
 			result.currentRank = result.maxRanks;
 		else
