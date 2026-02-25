@@ -2923,8 +2923,12 @@ if TooltipDataProcessor then
 		if lineData.leftText:match(equipmentSetPattern) then
 			local sets = GetEquipmentSetLine(self.processingInfo)
 			if sets then
-				lineData.leftText = sets
-				added = true
+				-- Updating the equipment set line was causing an issue with the money frame,
+				-- so now we remove the line, and readd it
+				lineData.btwloadouts = true
+				-- lineData.leftText = sets
+				-- added = true
+				return true
 			end
 		end
 	end)
@@ -2936,7 +2940,7 @@ if TooltipDataProcessor then
 
 		local tooltipData = self.processingInfo.tooltipData
 		for _,line in ipairs(tooltipData.lines) do
-			if not issecretvalue(line.leftText) and line.leftText:match(equipmentSetPattern) then
+			if not issecretvalue(line.leftText) and line.leftText:match(equipmentSetPattern) and not line.btwloadouts then
 				return -- Already has equipment set line
 			end
 		end
