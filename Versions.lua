@@ -139,5 +139,6 @@ Internal.IsDragonflightSeason3 = Internal.IsDragonflight and IsSeason(11)
 Internal.IsDragonflightSeason4 = Internal.IsDragonflight and IsSeason(12)
 Internal.IsTheWarWithinSeason1 = Internal.IsTheWarWithin and IsSeason(13)
 Internal.IsTheWarWithinSeason2 = Internal.IsTheWarWithin and IsSeason(14)
-Internal.IsTheWarWithinSeason3 = Internal.IsTheWarWithin -- and IsSeason(15)
+Internal.IsTheWarWithinSeason3 = Internal.IsTheWarWithin and IsSeason(15)
 Internal.IsMidnightPrepatch = Internal.IsMidnight
+Internal.IsMidnightSeason1 = Internal.IsMidnight -- and IsSeason(15)

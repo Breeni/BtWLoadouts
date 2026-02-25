@@ -235,14 +235,14 @@ local instanceDifficulties = {
     [2810] = { 220, 14, 15, 16, 17 }, -- Manaforge Omega
 
     -- Midnight
-    [2805] = { 1,  2,  8, 23, 205}, -- Windrunner Spire
-    [2813] = { 1,  2,  8, 23, 205}, -- Murder Row
-    [2811] = { 1,  2,  8, 23, 205}, -- Magisters' Terrace
-    [2859] = { 1,  2,  8, 23, 205}, -- The Blinding Vale
-    [2825] = { 1,  2,  8, 23, 205}, -- Den of Nalorakk
-    [2923] = { 1,  2,  8, 23, 205}, -- Voidscar Arena
-    [2874] = { 1,  2,  8, 23, 205}, -- Maisara Caverns
-    [2915] = { 1,  2,  8, 23, 205}, -- Nexus-Point Xenas
+    [2805] = { 1,  2, 23, 205}, -- Windrunner Spire
+    [2813] = { 1,  2, 23, 205}, -- Murder Row
+    [2811] = { 1,  2, 23, 205}, -- Magisters' Terrace
+    [2859] = { 1,  2, 23, 205}, -- The Blinding Vale
+    [2825] = { 1,  2, 23, 205}, -- Den of Nalorakk
+    [2923] = { 1,  2, 23, 205}, -- Voidscar Arena
+    [2874] = { 1,  2, 23, 205}, -- Maisara Caverns
+    [2915] = { 1,  2, 23, 205}, -- Nexus-Point Xenas
     [2912] = {14, 15, 16, 17, 220}, -- The Voidspire
     [2913] = {14, 15, 16, 17, 220}, -- March on Quel'Danas
     [2939] = {14, 15, 16, 17}, -- The Dreamrift
@@ -314,6 +314,16 @@ elseif Internal.IsTheWarWithinSeason3 then
 
     instanceDifficulties[2287] = { 8 } -- Halls of Atonement
     instanceDifficulties[2441] = { 8 } -- Tazavesh, the Veiled Market
+else--if Internal.IsMidnightSeason1 then
+    instanceDifficulties[2811] = { 1, 2, 23, 8, 205 } -- Magisters' Terrace
+    instanceDifficulties[2874] = { 1, 2, 23, 8, 205 } -- Maisara Caverns
+    instanceDifficulties[2915] = { 1, 2, 23, 8, 205 } -- Nexus-Point Xenas
+    instanceDifficulties[2805] = { 1, 2, 23, 8, 205 } -- Windrunner Spire
+
+    instanceDifficulties[2526] = { 1, 2, 23, 8, 205 } -- Algeth'ar Academy
+    instanceDifficulties[1753] = { 2, 23, 8 } -- Seat of the Triumvirate
+    instanceDifficulties[1209] = { 1, 2, 23, 8 } -- Skyreach
+    instanceDifficulties[ 658] = { 1, 2, 23} -- Pit of Saron
 end
 Internal.dungeonDifficultiesAll = { 205, 1, 2, 23, 8 };
 Internal.raidDifficultiesAll = { 220, 17, 14, 15, 16 };
@@ -560,6 +570,12 @@ elseif Internal.IsTheWarWithinSeason3 then
     local instances = dungeonInfo[11].instances;
     instances[#instances+1] = 2287 -- Halls of Atonement
     instances[#instances+1] = 2441 -- Tazavesh, the Veiled Market
+else--if Internal.IsMidnightSeason1 then
+    local instances = dungeonInfo[12].instances;
+    instances[#instances+1] = 2526 -- Algeth'ar Academy
+    instances[#instances+1] = 1753 -- Seat of the Triumvirate
+    instances[#instances+1] = 1209 -- Skyreach
+    instances[#instances+1] =  658 -- Pit of Saron
 end
 local raidInfo = {
     {
@@ -748,6 +764,12 @@ local scenarioInfo = {
 		instances = {
 			{nil, 208, (function () return GetDifficultyInfo(208) end)()}, -- Delves
 		},
+	},
+	{
+		name = L["Midnight"],
+		instances = {
+			{nil, 208, (function () return GetDifficultyInfo(208) end)()}, -- Delves
+		},
 	}
 };
 local battlegroundInfo = {
@@ -831,6 +853,25 @@ local battlegroundInfo = {
 	},
 	{
 		name = L["The War Within"],
+		instances = {
+			2106, -- Warsong Gulch
+			2107, -- Arathi Basin
+			30,   -- Alterac Valley
+			566,  -- Eye of the Storm
+            968,  -- Rated Eye of the Storm
+			628,  -- Isle of Conquest
+			761,  -- The Battle for Gilneas
+			2118, -- Battle for Wintergrasp
+			1191, -- Ashran
+			726,  -- Twin Peaks
+			727,  -- Silvershard Mines
+			998,  -- Temple of Kotmogu
+			1803, -- Seething Shore
+			2245, -- Deepwind Gorge
+		},
+	},
+	{
+		name = L["Midnight"],
 		instances = {
 			2106, -- Warsong Gulch
 			2107, -- Arathi Basin
@@ -2969,6 +3010,8 @@ local uiMapIDToBossID = {
     [2520] = 2662, -- Degentrius
     -- Den of Nalorakk
     [2513] = 2778, -- Nalorakk
+    -- Voidscar Arena
+    [2572] = 2791, -- Taz'Rah
     -- The Voidspire
     [2530] = 2738, -- Crown of the Cosmos
     -- March on Quel'Danas
