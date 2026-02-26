@@ -1,3 +1,9 @@
+# v1.20.20
+
+- Updated for 12.0.1
+- Fixed an error when updating equipment set tooltip lines
+- Fixed an issue where the end of tree nodes were being granted when they had no points
+
 # v1.20.19
 
 - Fixed an error checking boss conditions, it may cause some bosses to not proc conditions correctly
