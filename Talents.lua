@@ -211,7 +211,7 @@ local function TalentSetDelay(set)
         if selectedTalentID ~= talentID and spellID then
 			spellID = FindSpellOverrideByID(spellID)
 			local start, duration = GetSpellCooldown(spellID)
-			if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+			if canaccessvalue(start) and start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
 				Internal.DirtyAfter((start + duration) - GetTime() + 1)
 				return true
 			end
@@ -238,7 +238,7 @@ local function TalentSetRequirements(set)
                 if spellID then
                     spellID = FindSpellOverrideByID(spellID)
                     local start, duration = GetSpellCooldown(spellID)
-                    if start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
+                    if canaccessvalue(start) and start ~= 0 then -- Talent spell on cooldown, we need to wait before switching
                         Internal.DirtyAfter((start + duration) - GetTime() + 1)
                         waitForCooldown = true
                         break -- We dont actually need to check anything more

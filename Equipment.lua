@@ -1768,7 +1768,7 @@ function BtWLoadoutsItemSlotButtonMixin:SetItem(itemLink, bag, slot)
 
 			set.locations[self:GetID()] = GetLocationFromItemLocation(itemLocation)
 
-			if itemLocation and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
+			if itemLocation and itemLocation:HasAnyLocation() and itemLocation:IsValid() and C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLocation) then
 				set.extras[self:GetID()] = set.extras[self:GetID()] or {};
 				local extras = set.extras[self:GetID()];
 				extras.azerite = extras.azerite or {};
