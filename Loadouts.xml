@@ -64,7 +64,7 @@
 					</OnClick>
 					<OnLeave>
 						local parent = self:GetParent()
-						if not MouseIsOver(parent) then
+						if not parent:IsMouseOver() then
 							parent.MoveButton:Hide()
 							parent.RemoveButton:Hide()
 						end
@@ -106,7 +106,7 @@
 					</OnMouseDown>
 					<OnLeave>
 						local parent = self:GetParent()
-						if not MouseIsOver(parent) then
+						if not parent:IsMouseOver() then
 							parent.MoveButton:Hide()
 							parent.RemoveButton:Hide()
 						end
