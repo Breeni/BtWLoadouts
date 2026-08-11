@@ -30,6 +30,8 @@ local DeleteSet = Internal.DeleteSet;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
+
 do -- Filter chat spam
     local filters = {
         string.gsub(ERR_LEARN_ABILITY_S, "%%s", "(.*)"),

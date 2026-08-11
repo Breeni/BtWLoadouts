@@ -12,6 +12,8 @@ local SelectSoulbindNode = C_Soulbinds.SelectNode
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
+
 local function CompareSets(a, b)
     if a.soulbindID ~= b.soulbindID then
         return false

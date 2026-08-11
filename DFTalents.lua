@@ -11,6 +11,7 @@ local GetSpellCooldown = C_Spell and C_Spell.GetSpellCooldown and function (spel
         return spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.isEnabled, spellCooldownInfo.modRate;
     end
 end or GetSpellCooldown;
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
 
 BTWLOADOUTS_DF_TALENTS_ACTIVE = Internal.IsDragonflightOrBeyond
 

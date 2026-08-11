@@ -40,6 +40,8 @@ local NUM_BAG_SLOTS = Enum.BagIndex.ReagentBag or NUM_BAG_SLOTS;
 local FIRST_BANK_BAG_SLOT = Enum.BagIndex.CharacterBankTab_1 or Enum.BagIndex.BankBag_1 or NUM_BAG_SLOTS + 1;
 local LAST_BANK_BAG_SLOT = Enum.BagIndex.CharacterBankTab_6 or Enum.BagIndex.BankBag_7 or FIRST_BANK_BAG_SLOT + 6;
 
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
+
 local function PackLocation(bag, slot)
 	if bag == nil then -- Inventory slot
 		if slot >= 52 and slot <= 79 then -- Bank Slot

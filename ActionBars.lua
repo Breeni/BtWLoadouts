@@ -17,6 +17,7 @@ local GetSpellInfo = C_Spell and C_Spell.GetSpellInfo and function (spell)
 	end
 	return tbl.name, nil, tbl.iconID, tbl.castTime, tbl.minRange, tbl.maxRange, tbl.spellID, tbl.originalIconID
 end or GetSpellInfo
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;

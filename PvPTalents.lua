@@ -27,6 +27,8 @@ local format = string.format;
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
 
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
+
 local function CompareSets(a, b)
     if not tCompare(a.talents, b.talents, 10) then
         return false

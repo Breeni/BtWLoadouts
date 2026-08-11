@@ -5,6 +5,7 @@ local GetMilestoneEssence = C_AzeriteEssence.GetMilestoneEssence;
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
 
 local AddSet = Internal.AddSet
 

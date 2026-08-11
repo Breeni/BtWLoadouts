@@ -47,6 +47,8 @@ local loadoutSegments = {}
 local loadoutSegmentsByID = {}
 local loadoutSegmentsUIOrder = {}
 
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
+
 -- We need to add a small delay after switching specs before changing other things because Blizzard is
 -- still changing things after the cast is finished
 local specChangeInfo = {
@@ -1059,7 +1061,7 @@ function BtWLoadoutsSetsScrollListItemMixin:OnEnter()
 	end
 end
 function BtWLoadoutsSetsScrollListItemMixin:OnLeave()
-	if not MouseIsOver(self) then
+	if not self:IsMouseOver() then
 		self.MoveButton:Hide()
 		self.RemoveButton:Hide()
 	end

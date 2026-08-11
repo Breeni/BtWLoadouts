@@ -65,6 +65,8 @@ local GetSpellCooldown = C_Spell and C_Spell.GetSpellCooldown and function (spel
     end
 end or GetSpellCooldown;
 
+local MAX_ACCOUNT_MACROS = MAX_ACCOUNT_MACROS or 120
+
 local function CompareSets(a, b)
     if a.treeID ~= b.treeID then
         return false

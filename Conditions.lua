@@ -1142,7 +1142,7 @@ do
 		self:SetWidth(x - 40)
 		self:SetHeight(5 * 20 + 32)
 		hooksecurefunc("CloseDropDownMenus", function ()
-			if not MouseIsOver(self) then
+			if not self:IsMouseOver() then
 				self:Hide();
 			end
 		end)
