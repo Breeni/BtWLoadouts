@@ -1,3 +1,8 @@
+# v1.20.22
+
+- Updated for 12.1.0
+- Fixed some issues with reading secure values during combat
+
 # v1.20.21
 
 - Updated for 12.0.5
