@@ -20,6 +20,7 @@ local GetItemUniqueness = GetItemUniqueness
 local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
 local GetItemGem = C_Item and C_Item.GetItemGem or GetItemGem
 local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
+local IsEquippableItem = C_Item and C_Item.IsEquippableItem or IsEquippableItem
 
 local HelpTipBox_Anchor = Internal.HelpTipBox_Anchor;
 local HelpTipBox_SetText = Internal.HelpTipBox_SetText;
