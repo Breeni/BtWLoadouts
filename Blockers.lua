@@ -5,6 +5,9 @@
 local _, Internal = ...;
 local L = Internal.L;
 
+local GetItemCount = C_Item and C_Item.GetItemCount or GetItemCount;
+local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo;
+
 --[[ BASE MIXIN ]]
 
 Internal.BlockerMixin = {}

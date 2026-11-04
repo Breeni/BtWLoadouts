@@ -15,8 +15,9 @@ local UnitCastingInfo = UnitCastingInfo;
 local GetClassColor = C_ClassColor.GetClassColor;
 local LOCALIZED_CLASS_NAMES_MALE = LOCALIZED_CLASS_NAMES_MALE;
 
-local GetItemCount = GetItemCount;
-local GetItemInfo = GetItemInfo;
+local GetItemCount = C_Item and C_Item.GetItemCount or GetItemCount;
+local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo;
+local GetItemQualityColor = C_Item and C_Item.GetItemQualityColor or GetItemQualityColor;
 
 local SetSpecialization = C_SpecializationInfo and C_SpecializationInfo.SetSpecialization or SetSpecialization;
 local GetSpecialization = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization;
