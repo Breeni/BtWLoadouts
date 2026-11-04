@@ -243,9 +243,14 @@ local instanceDifficulties = {
     [2923] = { 1,  2, 23, 205}, -- Voidscar Arena
     [2874] = { 1,  2, 23, 205}, -- Maisara Caverns
     [2915] = { 1,  2, 23, 205}, -- Nexus-Point Xenas
+    [2993] = { 1,  2, 23, 205}, -- Altar of Fangs
     [2912] = {14, 15, 16, 17, 220}, -- The Voidspire
     [2913] = {14, 15, 16, 17, 220}, -- March on Quel'Danas
     [2939] = {14, 15, 16, 17}, -- The Dreamrift
+    [1592] = {14, 15, 17, 233}, -- Sporefall
+    [2987] = {14, 15, 233, 250}, -- The Tidebound Grotto
+    [3004] = {14, 15, 16, 17, 220, 241}, -- The Venomous Abyss
+    [3095] = {14, 15, 17, 220, 233}, -- The Unbinding of Kith'ix
 }
 if Internal.IsDragonflightSeason1 then
     instanceDifficulties[2515] = { 1, 2, 23, 8 } -- The Azure Vault
@@ -314,7 +319,7 @@ elseif Internal.IsTheWarWithinSeason3 then
 
     instanceDifficulties[2287] = { 8 } -- Halls of Atonement
     instanceDifficulties[2441] = { 8 } -- Tazavesh, the Veiled Market
-else--if Internal.IsMidnightSeason1 then
+elseif Internal.IsMidnightSeason1 then
     instanceDifficulties[2811] = { 1, 2, 23, 8, 205 } -- Magisters' Terrace
     instanceDifficulties[2874] = { 1, 2, 23, 8, 205 } -- Maisara Caverns
     instanceDifficulties[2915] = { 1, 2, 23, 8, 205 } -- Nexus-Point Xenas
@@ -324,6 +329,16 @@ else--if Internal.IsMidnightSeason1 then
     instanceDifficulties[1753] = { 2, 23, 8 } -- Seat of the Triumvirate
     instanceDifficulties[1209] = { 1, 2, 23, 8 } -- Skyreach
     instanceDifficulties[ 658] = { 1, 2, 23} -- Pit of Saron
+else--if Internal.IsMidnightSeason2 then
+    instanceDifficulties[2993] = { 1, 2, 23, 8, 205 } -- Altar of Fangs
+    instanceDifficulties[2825] = { 1, 2, 23, 8, 205 } -- Den of Nalorakk
+    instanceDifficulties[2813] = { 1, 2, 23, 8, 205 } -- Murder Row
+    instanceDifficulties[2859] = { 1, 2, 23, 8, 205 } -- The Blinding Val
+    instanceDifficulties[2923] = { 1, 2, 23, 8, 205 } -- Voidscar Arena
+
+    instanceDifficulties[1762] = { 2, 23, 8 } -- Kings' Rest
+    instanceDifficulties[1877] = { 1, 2, 23, 8 } -- Temple of Sethraliss
+    instanceDifficulties[2521] = { 205, 1,  2, 23, 8 } -- Ruby Life Pools
 end
 Internal.dungeonDifficultiesAll = { 205, 1, 2, 23, 8 };
 Internal.raidDifficultiesAll = { 220, 17, 14, 15, 16 };
@@ -532,6 +547,7 @@ local dungeonInfo = {
             2923, -- Voidscar Arena
             2874, -- Maisara Caverns
             2915, -- Nexus-Point Xenas
+            2993, -- Altar of Fangs
         }
     },
 }
@@ -570,12 +586,17 @@ elseif Internal.IsTheWarWithinSeason3 then
     local instances = dungeonInfo[11].instances;
     instances[#instances+1] = 2287 -- Halls of Atonement
     instances[#instances+1] = 2441 -- Tazavesh, the Veiled Market
-else--if Internal.IsMidnightSeason1 then
+elseif Internal.IsMidnightSeason1 then
     local instances = dungeonInfo[12].instances;
     instances[#instances+1] = 2526 -- Algeth'ar Academy
     instances[#instances+1] = 1753 -- Seat of the Triumvirate
     instances[#instances+1] = 1209 -- Skyreach
     instances[#instances+1] =  658 -- Pit of Saron
+else--if Internal.IsMidnightSeason2 then
+    local instances = dungeonInfo[12].instances;
+    instances[#instances+1] = 1762 -- Kings' Rest
+    instances[#instances+1] = 1877 -- Temple of Sethraliss
+    instances[#instances+1] = 2521 -- Ruby Life Pools
 end
 local raidInfo = {
     {
@@ -694,6 +715,10 @@ local raidInfo = {
             2912, -- The Voidspire
             2913, -- March on Quel'Danas
             2939, -- The Dreamrift
+            1592, -- Sporefall
+            2987, -- The Tidebound Grotto
+            3004, -- The Venomous Abyss
+            3095, -- The Unbinding of Kith'ix
         }
     },
 }
@@ -2380,6 +2405,11 @@ local instanceBosses = {
         2814, -- Corewarden Nysarra
         2815, -- Lothraxion
     },
+    [2993] = { -- Altar of Fangs
+        2878, -- Rav'i
+        2879, -- The Writhing Coil
+        2880, -- Zul'jan
+    },
     [2912] = { -- The Voidspire
         2733, -- Imperator Averzian
         2734, -- Vorasius
@@ -2394,6 +2424,25 @@ local instanceBosses = {
     },
     [2939] = { -- The Dreamrift
         2795, -- Chimaerus the Undreamt God
+    },
+    [1592] = { -- Sporefall
+        2711, -- Rotmire
+    },
+    [2987] = { -- The Tidebound Grotto
+        2849, -- Nymrissa Wavecaller
+    },
+    [3004] = { -- The Venomous Abyss
+        2888, -- Nek'zali the Soulcoiler
+        2874, -- Entombed Sentinels
+        2894, -- The Lost Explorers
+        2882, -- Vashnik the Malignant
+        2871, -- Sszorak
+        2887, -- The Twin Fangs
+        2883, -- The Coiled Altar
+        2895, -- Ula'tek
+    },
+    [3095] = { -- The Unbinding of Kith'ix
+        2896, -- Kith'ix
     },
 }
 -- A map of npc ids to JournalInstanceID, this might not be the bosses npc id,
@@ -3012,6 +3061,10 @@ local uiMapIDToBossID = {
     [2513] = 2778, -- Nalorakk
     -- Voidscar Arena
     [2572] = 2791, -- Taz'Rah
+    -- Altar of Fangs
+    [2588] = 2878, -- Rav'i
+    [2589] = 2879, -- The Writhing Coil
+    [2590] = 2880, -- Zul'jan
     -- The Voidspire
     [2530] = 2738, -- Crown of the Cosmos
     -- March on Quel'Danas
@@ -3019,6 +3072,15 @@ local uiMapIDToBossID = {
     [2534] = 2740, -- Midnight Falls
     -- The Dreamrift
     [2532] = 2795, -- Chimaerus the Undreamt God
+    -- Sporefall
+    [2427] = 2711, -- Rotmire
+    -- The Tidebound Grotto
+    [2632] = 2849, -- Nymrissa Wavecaller
+    -- The Venomous Abyss
+    [2606] = 2888, -- Nek'zali the Soulcoiler
+    [2607] = 2887, -- The Twin Fangs
+    -- The Unbinding of Kith'ix
+    [2669] = 2896, -- Kith'ix
 }
 Internal.instanceDifficulties = instanceDifficulties;
 Internal.dungeonInfo = dungeonInfo;

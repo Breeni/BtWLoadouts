@@ -1656,6 +1656,12 @@ local enchantBySpellID = {
     [1262341] = 8614, -- Farstrider's Hawkeye
     [1262344] = 8615, -- Farstrider's Hawkeye
     [1269474] = 8638, -- Midnight Angler's Grand Line
+    [1272695] = 8646, -- FX Testing - Enchant Visual [DNT]
+    [1297585] = 8702, -- R0CKY
+    [1314402] = 8727, -- Falco Strikes
+    [1315082] = 8728, -- Ursine's Ironhide
+    [1315083] = 8729, -- Heat Wave
+    [1315084] = 8730, -- Eye of the Lynx
 }
 
 local itemChangedData = {}
