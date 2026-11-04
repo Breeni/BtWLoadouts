@@ -1,3 +1,8 @@
+# v1.20.25
+
+- Updated instance and character data for Midnight Season 2
+- Fixed some errors from missing globals
+
 # v1.20.24
 
 - Updated for 12.1.5
